@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { databaseConfig, jwtConfig, sherpaDevConfig, sherpaProdConfig } from 'config'
+import { databaseConfig, jwtConfig, sherpaDevConfig, sherpaProdConfig } from './config'
 import { AuthModule } from './auth/auth.module'
 import { BcryptModule } from './bcrypt/bcrypt.module'
 import { BgmModule } from './bgm/bgm.module'

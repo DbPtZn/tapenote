@@ -6,7 +6,7 @@ import wav from 'wav'
 // import sherpa_onnx from 'sherpa-onnx'
 import { Readable } from 'stream'
 import { ConfigService, ConfigType } from '@nestjs/config'
-import { sherpaDevConfig } from 'config'
+import { sherpaDevConfig } from '../config'
 // // 读取 wasm 模块文件
 // import sherpa_onnx from 'wasm'
 let sherpa_onnx: any
