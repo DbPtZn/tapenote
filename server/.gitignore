@@ -3,6 +3,13 @@
 /node_modules
 /build
 
+# user files
+/public
+/private
+
+# sherpa model
+/sherpa
+
 # Logs
 logs
 *.log

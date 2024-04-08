@@ -1,0 +1,571 @@
+import { creator, CreatorApi } from '@/api'
+import { defineStore } from 'pinia'
+import _ from 'lodash'
+import { isDiff } from '@/utils'
+import router from '@/router'
+import { LibraryEnum } from '@/enums'
+import useStore from '..'
+
+interface Fragment {
+  id: string
+  audio: string
+  duration: number
+  // 文本
+  txt: string
+  // 转录文字
+  transcript: Array<string>
+  // 标记数字
+  tags: Array<string | null>
+  // 动画编号
+  promoters: Array<string | null>
+  timestamps: Array<number>
+  // 排序号
+  // sortNum: number
+  projectId: string
+  role: number
+  removed: 'never' | 'active' | 'passive'
+}
+
+interface Detial {
+  penname: string; email: string; homepage: string, wordage: number; filesize: number
+}
+
+export interface Project {
+  account: string
+  hostname: string
+
+  id: string
+  library: LibraryEnum
+  folderId: string
+  title: string
+  content: string
+  abbrev: string
+
+  fragments: Fragment[]
+  sequence: Array<string>
+  removedSequence: Array<string>
+
+  audio: string
+  duration: number
+  promoterSequence: Array<string>
+  keyframeSequence: Array<number>
+  subtitleSequence: Array<string>
+  subtitleKeyframeSequence: Array<number>
+  sidenote: string
+  annotations: Array<any>
+
+  detial: Detial
+  createAt: string
+  updateAt: string
+}
+
+interface State {
+  data: Project[]
+}
+
+export const useProjectStore = defineStore('projectStore', {
+  state(): State {
+    return {
+      data: []
+    }
+  },
+  actions: {
+    creatorApi(account: string, hostname: string) {
+      return creator.getCreatorApi(account, hostname)!
+    },
+    create(folderId: string, library: LibraryEnum, account: string, hostname: string) {
+      const { userStore } = useStore()
+      const author = { penname: userStore.nickname, email: userStore.email, homepage: userStore.homepage }
+      // console.log(author)
+      return this.creatorApi(account, hostname).project.create<Project>({ folderId, library, ...author }).then(res => {
+        // 这里不能设置state，否则在创建后自动切换页面时不会更新state，因为它已经存在
+        res.data.account = account
+        res.data.hostname = hostname
+        return res.data
+      })
+    },
+    createBy(args : {folderId: string, sourceId: string, library: LibraryEnum, account: string, hostname: string}) {
+      const { folderId, sourceId, library, account, hostname } = args
+      const { userStore } = useStore()
+      const author = { penname: userStore.nickname, email: userStore.email, homepage: userStore.homepage }
+      return new Promise<Project>((resolve, reject) => {
+        if (library === LibraryEnum.NOTE) {
+          const noteId = sourceId
+          return this.creatorApi(account, hostname).project.create<Project>({ folderId, noteId, library: LibraryEnum.PROCEDURE, ...author }).then(res => {
+            res.data.account = account
+            res.data.hostname = hostname
+            resolve(res.data)
+          }).catch(err => reject(err))
+        }
+        if (library === LibraryEnum.PROCEDURE) {
+          const procedureId = sourceId
+          return this.creatorApi(account, hostname).project.create<Project>({ folderId, procedureId, library: LibraryEnum.COURSE, ...author }).then(res => {
+            res.data.account = account
+            res.data.hostname = hostname
+            resolve(res.data)
+          }).catch(err => reject(err))
+        }
+      })
+
+    },
+    fetchAndSet(id: string, account: string, hostname: string) {
+      return new Promise<Project>((resolve, reject) => {
+        // console.log('fetchAndset')
+        const index = this.data.findIndex(i => i.id === id)
+        if (index !== -1) {
+          resolve(this.data[index])
+        } else {
+          this.creatorApi(account, hostname).project.get(id)
+            .then(res => {
+              const newItem = this.set(res.data, account, hostname)
+              resolve(newItem)
+            })
+            .catch(err => {
+              reject(err)
+            })
+        }
+      })
+    },
+    set(data: any, account: string, hostname: string) {
+      const item: Project = {
+        account: account || '',
+        hostname: hostname || '',
+        id: data._id || '',
+        library: data.library || '',
+        folderId: data.folderId || '',
+        title: data.title || '',
+        content: data.content || '',
+        abbrev: data.abbrev || '',
+        fragments: data.fragments || [],
+        sequence: data.sequence || [],
+        removedSequence: data.removedSequence || [],
+        audio: data.audio || '',
+        duration: data.duration || 0,
+        promoterSequence: data.promoterSequence || [],
+        keyframeSequence: data.keyframeSequence || [],
+        subtitleSequence: data.subtitleSequence || [],
+        subtitleKeyframeSequence: data.subtitleKeyframeSequence || [],
+        sidenote: data.sidenote || '',
+        annotations: data.annotations || [],
+        detial: data.detial || { penname: '', email: '', homepage: '', wordage: 0, filesize: 0 },
+        createAt: data.createAt || '',
+        updateAt: data.updateAt || ''
+      }
+      // console.log(item)
+      this.data.push(item)
+      return item
+    },
+    get(id: string) {
+      const index = this.data.findIndex(i => i.id === id)
+      if (index !== -1) return this.data[index]
+      return undefined
+    },
+    remove(id: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.remove(id).then(() => {
+        this.cleanCache(id)
+      })
+    },
+    restore(id: string, folderId: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.restore<{ updateAt: string }>(id, folderId)
+    },
+    delete(id: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.delete(id)
+    },
+    move(id: string, folderId: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.move(id, folderId).then(() => {
+        // TODO 不一定要删除缓存，也可以更新，再考虑考虑
+        this.cleanCache(id)
+      })
+    },
+    copy(id: string, folderId: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.copy(id, folderId)
+    },
+    /** 更新标题 */
+    updateTitle(params: Parameters<typeof CreatorApi.prototype.project.updateTitle>[0], savingcb?: () => void) {
+      return new Promise((resolve, reject) => {
+        debounce2000A(() => {
+          const index = this.data.findIndex(i => i.id === params.id)
+          const account = this.data[index].account
+          const hostname = this.data[index].hostname
+          if (isDiff(this.data[index].title, params.title)) {
+            savingcb && savingcb()
+            this.creatorApi(account, hostname).project
+              .updateTitle<{ updateAt: string }>(params)
+              .then(res => {
+                if (this.data[index].id === params.id) {
+                  this.data[index].updateAt = res.data.updateAt
+                  this.data[index].title = params.title
+                }
+                resolve(true)
+              })
+              .catch(err => {
+                resolve(false)
+              })
+          } else {
+            resolve(true)
+          }
+        })
+      })
+    },
+    /** 更新内容 */
+    updateContent(params: Parameters<typeof CreatorApi.prototype.project.updateContent>[0], savingcb?: () => void) {
+      return new Promise((resolve, reject) => {
+        debounce2000B(() => {
+          const index = this.data.findIndex(i => i.id === params.id)
+          const account = this.data[index].account
+          const hostname = this.data[index].hostname
+          if (isDiff(this.data[index].content, params.content)) {
+            savingcb && savingcb()
+            this.creatorApi(account, hostname).project
+              .updateContent<{ updateAt: string, abbrev: string, wordage: number }>(params)
+              .then(res => {
+                // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才对 store 更新数据
+                if (this.data[index].id === params.id) {
+                  this.data[index].content = params.content
+                  this.data[index].updateAt = res.data.updateAt
+                  this.data[index].detial.wordage = res.data.wordage
+                  this.data[index].abbrev = res.data.abbrev
+                }
+                resolve(true)
+              })
+              .catch(err => {
+                resolve(false)
+              })
+          } else {
+            resolve(true)
+          }
+        })
+      })
+    },
+    updateSidenoteContent(params: Parameters<typeof CreatorApi.prototype.project.updateSidenoteContent>[0], savingcb?: () => void) {
+      return new Promise((resolve, reject) => {
+        debounce2000C(() => {
+          const index = this.data.findIndex(i => i.id === params.id)
+          const account = this.data[index].account
+          const hostname = this.data[index].hostname
+          if (isDiff(this.data[index].content, params.content)) {
+            savingcb && savingcb()
+            this.creatorApi(account, hostname).project
+              .updateSidenoteContent<{ updateAt: string }>(params)
+              .then(res => {
+                // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才进行 store 数据更新
+                if (this.data[index].id === params.id) {
+                  this.data[index].updateAt = res.data.updateAt
+                  this.data[index].sidenote = params.content
+                }
+                resolve(true)
+              })
+              .catch(err => {
+                resolve(false)
+              })
+          } else {
+            resolve(true)
+          }
+        })
+      })
+    },
+    /** 清理缓存 */
+    cleanCache(id: string) {
+      const index = this.data.findIndex(i => i.id === id)
+      if (index !== -1) {
+        // console.log('移除')
+        const result = this.data.splice(index, 1)
+        // console.log(result)
+      }
+    },
+    cleanCacheByFolderId(folderId: string) {
+      const index = this.data.findIndex(i => i.folderId === folderId)
+      if (index !== -1) {
+        const result = this.data.splice(index, 1)
+      }
+    },
+
+
+    setUpdateAt(procedureId: string | undefined, updateAt: string) {
+      const { folderStore } = useStore()
+      if (!procedureId) return
+      const index = this.data.findIndex(i => i.id === procedureId)
+      if (index !== -1) {
+        this.data[index].updateAt = updateAt
+      }
+      /** 更新卡片的时间 */
+      if (this.data[index].folderId === folderStore.id) {
+        folderStore.subfiles?.some((item, index, arr) => {
+          if (item.id === procedureId) {
+            arr[index].updateAt = updateAt
+            return true
+          }
+          return false
+        })
+      }
+    },
+    pasteFragment(params: Parameters<typeof CreatorApi.prototype.fragment.copyFragment>[0], account: string, hostname: string) {
+      return this.creatorApi(account, hostname).fragment.copyFragment<{ fragment: Fragment, updateAt: string }>(params).then(res => {
+        const { fragment, updateAt } = res.data
+        const { sourceFragmentId, targetFragmentId, sourceProejctId, targetProejctId, type, position } = params
+        const source = this.get(sourceProejctId)!
+        const target = this.get(targetProejctId)!
+        // 查找目标片段位置
+        const index = target.sequence.findIndex(id => id === targetFragmentId)
+        if (index === -1) return console.error('目标片段不存在')
+        if (position === 'before') {
+          // 在目标片段之前插入
+          target.sequence.splice(index, 0, fragment.id)
+        }
+        if (position === 'after') {
+          // 在目标片段之后插入
+          target.sequence.splice(index + 1, 0, fragment.id)
+        }
+        target.fragments.push(fragment)
+
+        if (type === 'cut') {
+          if (sourceProejctId !== targetProejctId) {
+            source.fragments.splice(
+              source.fragments.findIndex(i => i.id === sourceFragmentId),
+              1
+            )
+            source.sequence.splice(
+              source.sequence.findIndex(id => id === sourceFragmentId),
+              1
+            )
+          } else {
+            target.fragments.splice(
+              target.fragments.findIndex(i => i.id === sourceFragmentId),
+              1
+            )
+            target.sequence.splice(
+              target.sequence.findIndex(id => id === sourceFragmentId),
+              1
+            )
+          }
+        }
+        if (sourceProejctId === targetProejctId) {
+          // 源项目与目标项目相同，只需要更新目标项目
+          this.setUpdateAt(targetProejctId, updateAt)
+        }
+        if (sourceProejctId !== targetProejctId) {
+          // 源项目与目标项目不相同，需要同时保存更新源项目与目标项目
+          this.setUpdateAt(targetProejctId, updateAt)
+          this.setUpdateAt(sourceProejctId, updateAt)
+        }
+
+      })
+    },
+
+    // /** 批量导出（待开发） */
+    // batchdownload(id: string, account: string, hostname: string) {
+    //   //
+    // },
+
+    /** ------------------------------- fragment ------------------------------------------- */
+    fragment(procedureId: string) {
+      const sequence = this.get(procedureId)?.sequence
+      const removedSequence = this.get(procedureId)?.removedSequence
+      const account = this.get(procedureId)?.account
+      const hostname = this.get(procedureId)?.hostname
+      /** 获取片段 */
+      const get = () => {
+        return this.data.find(i => i.id === procedureId && i.account === account && i.hostname === hostname)?.fragments || []
+      }
+      /** 获取正常片段（排序） */
+      const getBySort = () => {
+        return (
+          this.data
+            .find(i => i.id === procedureId && i.account === account && i.hostname === hostname)
+            ?.fragments.filter(i => i.removed === 'never')
+            .sort((a, b) => {
+              return sequence!.indexOf(a.id) - sequence!.indexOf(b.id)
+            }) || []
+        )
+      }
+      /** 获取被移除片段（排序） */
+      const getRemovedBySort = () => {
+        return (
+          this.data
+            .find(i => i.id === procedureId && i.account === account && i.hostname === hostname)
+            ?.fragments.filter(i => i.removed !== 'never')
+            .sort((a, b) => {
+              return removedSequence!.indexOf(a.id) - removedSequence!.indexOf(b.id)
+            }) || []
+        )
+      }
+      /** 设置片段数据到缓存中 */
+      const set = (data: Fragment[]) => {
+        get()?.splice(0, get()?.length) // 清空数组
+        get()?.push(...data) // 赋值
+      }
+      /** 通过文本创建片段 */
+      const createByText = (params: Parameters<typeof CreatorApi.prototype.fragment.createByText>[0]) => {
+        params.procedureId = procedureId
+        return this.creatorApi(account!, hostname!).fragment.createByText<Fragment>(params).then(res => {
+          get()?.push(res.data)
+          sequence?.push(res.data.id)
+        })
+      }
+      /** 通过音频创建片段 */
+      const createByAudio = (params: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0]) => {
+        params.procedureId = procedureId
+        return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment>(params).then(res => {
+          get()?.push(res.data)
+          sequence?.push(res.data.id)
+        })
+      }
+      /** 创建空白片段 */
+      const createBlank = (params: Parameters<typeof CreatorApi.prototype.fragment.createBlank>[0]) => {
+        params.procedureId = procedureId
+        return this.creatorApi(account!, hostname!).fragment.createBlank<Fragment>(params).then(res => {
+          get()?.push(res.data)
+          sequence?.push(res.data.id)
+        })
+      }
+      /** 更新转写文字 */
+      const updateTranscript = (params: Parameters<typeof CreatorApi.prototype.fragment.updateTranscript>[0]) => {
+        params.procedureId = procedureId
+        return this.creatorApi(account!, hostname!).fragment.updateTranscript<{ updateAt: string }>(params).then(res => {
+          this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
+        })
+      }
+      /** 移除片段 */
+      const remove = (params: Parameters<typeof CreatorApi.prototype.fragment.remove>[0]) => {
+        params.procedureId = procedureId
+        return this.creatorApi(account!, hostname!).fragment.remove<{ updateAt: string }>(params).then(res => {
+          get()?.some((item) => {
+            if (item.id === params.fragmentId) {
+              item.removed = 'active'
+              item.tags.fill(null)
+              item.promoters.fill(null)
+              return true
+            }
+          })
+          sequence?.some((item, index, arr) => {
+            if (item === params.fragmentId) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          removedSequence?.push(params.fragmentId)
+          this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
+        })
+      }
+      /** 恢复片段 */
+      const restore = (params: Parameters<typeof CreatorApi.prototype.fragment.restore>[0]) => {
+        params.procedureId = procedureId
+        return this.creatorApi(account!, hostname!).fragment.restore<{ updateAt: string }>(params).then(res => {
+          get()?.some((item) => {
+            if (item.id === params.fragmentId) {
+              item.removed = 'never'
+              return true
+            }
+          })
+          sequence?.push(params.fragmentId)
+          removedSequence?.some((item, index, arr) => {
+            if (item === params.fragmentId) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
+        })
+      }
+      /** 彻底删除 */
+      const dele = (params: Parameters<typeof CreatorApi.prototype.fragment.delete>[0]) => {
+        params.procedureId = procedureId
+        return this.creatorApi(account!, hostname!).fragment.delete<{ updateAt: string }>(params).then(res => {
+          get()?.some((item, index, arr) => {
+            if (item.id === params.fragmentId) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          removedSequence?.some((item, index, arr) => {
+            if (item === params.fragmentId) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          this.setUpdateAt(procedureId, res.data.updateAt) // 更新时间
+        })
+      }
+      /** 更新 */
+      const updateFragmentsTags = () => {
+        const data: Parameters<typeof CreatorApi.prototype.fragment.updateFragmentsTags>[0] = getBySort()?.map(i => {
+          return {
+            fragmentId: i.id,
+            tags: i.tags
+          }
+        })
+        return this.creatorApi(account!, hostname!).fragment.updateFragmentsTags<{ updateAt: string }>(data, procedureId).then(res => {
+          this.setUpdateAt(procedureId, res.data.updateAt) // 更新时间
+        })
+      }
+      const updateSequence = (params: Parameters<typeof CreatorApi.prototype.fragment.updateSequence>[0]) => {
+        params.procedureId = procedureId
+        return this.creatorApi(account!, hostname!).fragment.updateSequence<{ updateAt: string }>(params).then(res => {
+          this.get(procedureId)?.sequence.splice(params.oldIndex, 1)
+          this.get(procedureId)?.sequence.splice(params.newIndex, 0, params.fragmentId)
+          this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
+        })
+      }
+      const addPromoter = (params: Parameters<typeof CreatorApi.prototype.fragment.addPromoter>[0], cb?: (aniId: string) => void) => {
+        getBySort()?.some((item, index, arr) => {
+          if (item.id === params.fragmentId) {
+            arr[index].tags[params.promoterIndex] = params.promoterSerial
+            arr[index].promoters[params.promoterIndex] = params.promoterId
+            // 更新至数据库
+            params.procedureId = procedureId
+            this.creatorApi(account!, hostname!).fragment.addPromoter<{ updateAt: string }>(params).then(res => {
+              this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
+              cb && cb(params.promoterId) // 设置动画状态的回调（确认成功后才会设置动画状态）
+            })
+            return true
+          }
+        })
+      }
+      const removePromoter = (params: Parameters<typeof CreatorApi.prototype.fragment.removePromoter>[0], cb?: (aniId: string) => void) => {
+        getBySort()?.some((item, index, arr) => {
+          if (item.id === params.fragmentId) {
+            const aniId = arr[index].promoters[params.promoterIndex]
+            arr[index].tags[params.promoterIndex] = null
+            arr[index].promoters[params.promoterIndex] = null
+            // 更新至数据库
+            params.procedureId = procedureId
+            return this.creatorApi(account!, hostname!).fragment.removePromoter<{ updateAt: string }>(params).then(res => {
+              this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
+              cb && aniId && cb(aniId)
+            })
+          }
+        })
+      } 
+      return {
+        set,
+        get,
+        getBySort,
+        getRemovedBySort,
+        createByText,
+        createByAudio,
+        createBlank,
+        updateTranscript,
+        remove,
+        restore,
+        dele,
+        updateFragmentsTags,
+        addPromoter,
+        removePromoter,
+        updateSequence
+      }
+    }
+  },
+  getters: {}
+})
+
+
+/** 同一防抖函数被不同地方同时调用，只会接收最后一个 */
+const debounce2000A = _.debounce(func => {
+  func()
+}, 2000)
+const debounce2000B = _.debounce(func => {
+  func()
+}, 2000)
+const debounce2000C = _.debounce(func => {
+  func()
+}, 2000)
