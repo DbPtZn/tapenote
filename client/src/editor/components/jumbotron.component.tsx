@@ -8,17 +8,12 @@ import {
   useSlots,
   useState,
   VElement,
-  RenderMode
+  RenderMode,
+  Injector
 } from '@textbus/core'
+import { headingComponent, Dialog, I18n, FileUploader, Form, FormTextField } from '@textbus/editor'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
-import { Injector } from '@tanbo/di'
-import { headingComponent } from './heading.component'
-import { paragraphComponent } from './paragraph.component'
-import { Dialog } from '../dialog'
-import { Form } from '../uikit/forms/form'
-import { I18n } from '../i18n'
-import { FormTextField } from '../uikit/forms/form-text-field'
-import { FileUploader } from '../file-uploader'
+import { paragraphComponent } from '.'
 
 export interface JumbotronComponentState {
   minHeight: string

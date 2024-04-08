@@ -1,10 +1,11 @@
-import { Injector } from '@tanbo/di'
+// import { Injector } from '@tanbo/di'
 import {
   ComponentInitData,
   ComponentInstance,
   ContentType,
   defineComponent,
   Formatter,
+  Injector,
   onBreak,
   onContextMenu,
   onPaste,
