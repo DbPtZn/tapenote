@@ -22,9 +22,9 @@ const props = defineProps<{
 const formRef = ref<FormInst | null>(null)
 const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true' // 是否开放注册入口
 const model = ref<ModelType>({
-  hostname: import.meta.env.VITE_BASE_URL,
-  account: import.meta.env.VITE_ACCOUNT,
-  password: import.meta.env.VITE_PASSWORD,
+  hostname: import.meta.env.VITE_BASE_URL || '',
+  account: import.meta.env.VITE_ACCOUNT || '',
+  password: import.meta.env.VITE_PASSWORD || '',
 })
 const rules: FormRules = {
   hostname: [

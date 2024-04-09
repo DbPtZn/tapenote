@@ -17,11 +17,12 @@ const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true'
 const message = useMessage()
 /** 表单数据 */
 const model = ref<ModelType>({
-  hostname: import.meta.env.VITE_BASE_URL,
-  account: import.meta.env.VITE_ACCOUNT,
-  password: import.meta.env.VITE_PASSWORD,
+  hostname: import.meta.env.VITE_BASE_URL || '',
+  account: import.meta.env.VITE_ACCOUNT || '',
+  password: import.meta.env.VITE_PASSWORD || '',
   nickname: '',
 })
+console.log(model.value)
 /** 表单规则 */
 const rules: FormRules = {
   hostname: [
