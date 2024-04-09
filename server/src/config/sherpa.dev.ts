@@ -17,7 +17,7 @@ export default registerAs('sherpa', () => ({
         debug: 1,
         provider: 'cpu'
       },
-      ruleFsts: 'sherpa/vits-zh-hf-fanchen-C/rule.fst',
+      ruleFars: 'sherpa/vits-zh-hf-fanchen-C/rule.fst',
       maxNumSentences: 1
     },
     asrConfig: {
