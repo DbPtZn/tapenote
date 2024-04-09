@@ -41,10 +41,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 
   const headings = playerRef.querySelectorAll('h1, h2, h3, h4, h5, h6')
 
-  if (headings.length === 0) {
-    outline.innerHTML = ''
-    return
-  }
+  const hasHeadings = headings.length > 0
 
   const list = document.createElement('ul')
   outline.appendChild(list)
@@ -116,10 +113,10 @@ document.addEventListener("DOMContentLoaded", async function() {
   }
 
   // Listen for scroll events and update active link accordingly
-  scroller.addEventListener('scroll', setActiveLink);
+  hasHeadings && scroller.addEventListener('scroll', setActiveLink);
 
   // Initial call to set active link on page load
-  setActiveLink();
+  hasHeadings && setActiveLink();
 
   // 主题切换
   const screenControl = document.getElementById('screen-control')
