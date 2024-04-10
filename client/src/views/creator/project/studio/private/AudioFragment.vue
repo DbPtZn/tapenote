@@ -16,6 +16,8 @@ const props = defineProps<{
   duration: number
   // 是否被剪切
   isCut: boolean
+  // 加载中
+  isLoading: boolean
   // 只读
   readonly: boolean
 }>()
@@ -78,7 +80,7 @@ function useClickoutside() {
 <template>
   <div
     ref="fragmentRef"
-    :class="['fragment', isFocus ? 'focus' : '', readonly ? 'disabled' : '', isCut ? 'cut' : '']"
+    :class="['fragment', isFocus ? 'focus' : '', readonly || isLoading ? 'disabled' : '', isCut ? 'cut' : '']"
     draggable="true"
     @click="handleClick"
     @contextmenu="handleContextmenu"
@@ -96,7 +98,12 @@ function useClickoutside() {
         <div class="msg msg-left">
           <slot name="txt" />
         </div>
-        <div v-if="!isFocus" class="toolbar toolbar-left">
+        <div v-if="isLoading" class="loading">
+          <span>
+            <slot name="loading" />
+          </span>
+        </div>
+        <div v-if="!isFocus && !isLoading" class="toolbar toolbar-left">
           <span>
             <slot name="delete" />
           </span>
@@ -107,7 +114,7 @@ function useClickoutside() {
             <slot name="play" />
           </span>
         </div>
-        <div v-if="isFocus" class="duration">{{ utils.durationFormat(duration || 0) }}</div> 
+        <div v-if="isFocus && !isLoading" class="duration">{{ utils.durationFormat(duration || 0) }}</div> 
       </MiddleSide>
       <!-- 右侧 -->
       <RightSide :width="50">
@@ -122,8 +129,13 @@ function useClickoutside() {
       </LeftSide>
       <!-- 中间 -->
       <MiddleSide :flex="1" class="middle">
-        <div v-if="isFocus" class="duration">{{ utils.durationFormat(duration || 0) }}</div> 
-        <div v-if="!isFocus" class="toolbar toolbar-right">
+        <div v-if="isFocus && !isLoading" class="duration">{{ utils.durationFormat(duration || 0) }}</div> 
+        <div v-if="isLoading" class="loading">
+          <span>
+            <slot name="loading" />
+          </span>
+        </div>
+        <div v-if="!isFocus && !isLoading" class="toolbar toolbar-right">
           <span>
             <slot name="play" />
           </span>
@@ -213,6 +225,12 @@ function useClickoutside() {
 }
 .msg-right {
   border-radius: 12px 0px 12px 12px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  opacity: 1;
 }
 
 .toolbar {

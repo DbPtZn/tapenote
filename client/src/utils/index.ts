@@ -1,4 +1,4 @@
-export * from './diff'
+// export * from './diff'
 import { isDiff } from './diff'
 import { dateFormat } from './date-format'
 import { durationFormat } from './durationFormatter'

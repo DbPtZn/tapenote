@@ -1,12 +1,14 @@
 import { creator, CreatorApi } from '@/api'
 import { defineStore } from 'pinia'
 import _ from 'lodash'
-import { isDiff } from '@/utils'
+import utils from '@/utils'
 import router from '@/router'
 import { LibraryEnum } from '@/enums'
 import useStore from '..'
 
+
 interface Fragment {
+  key?: string
   id: string
   audio: string
   duration: number
@@ -187,7 +189,7 @@ export const useProjectStore = defineStore('projectStore', {
           const index = this.data.findIndex(i => i.id === params.id)
           const account = this.data[index].account
           const hostname = this.data[index].hostname
-          if (isDiff(this.data[index].title, params.title)) {
+          if (utils.isDiff(this.data[index].title, params.title)) {
             savingcb && savingcb()
             this.creatorApi(account, hostname).project
               .updateTitle<{ updateAt: string }>(params)
@@ -214,7 +216,7 @@ export const useProjectStore = defineStore('projectStore', {
           const index = this.data.findIndex(i => i.id === params.id)
           const account = this.data[index].account
           const hostname = this.data[index].hostname
-          if (isDiff(this.data[index].content, params.content)) {
+          if (utils.isDiff(this.data[index].content, params.content)) {
             savingcb && savingcb()
             this.creatorApi(account, hostname).project
               .updateContent<{ updateAt: string, abbrev: string, wordage: number }>(params)
@@ -243,7 +245,7 @@ export const useProjectStore = defineStore('projectStore', {
           const index = this.data.findIndex(i => i.id === params.id)
           const account = this.data[index].account
           const hostname = this.data[index].hostname
-          if (isDiff(this.data[index].content, params.content)) {
+          if (utils.isDiff(this.data[index].content, params.content)) {
             savingcb && savingcb()
             this.creatorApi(account, hostname).project
               .updateSidenoteContent<{ updateAt: string }>(params)
@@ -396,10 +398,67 @@ export const useProjectStore = defineStore('projectStore', {
       }
       /** 通过文本创建片段 */
       const createByText = (params: Parameters<typeof CreatorApi.prototype.fragment.createByText>[0]) => {
+        const key = utils.randomString()
+        const txt = params.txt.replace(/\s*/g, '')
         params.procedureId = procedureId
+        params.key = key
+        // 立即创建临时文本片段并插入到片段序列中
+        const fragment: Fragment = {
+          key,
+          id: key,
+          audio: '',
+          duration: 0,
+          txt: txt,
+          transcript: Array.from(txt),
+          tags: new Array(txt.length),
+          promoters: new Array(txt.length),
+          timestamps: [],
+          projectId: procedureId,
+          role: params.role,
+          removed: 'never'
+        }
+        get()?.push(fragment) // 不完全片段
+        sequence?.push(key) // 用 key 占位
         return this.creatorApi(account!, hostname!).fragment.createByText<Fragment>(params).then(res => {
-          get()?.push(res.data)
-          sequence?.push(res.data.id)
+          const data = res.data
+          if(data.key) {
+            // 用片段 id 替换排序信息中的占位 key
+            sequence?.some((item, index, arr) => {
+              if(item === data.key) {
+                arr[index] = data.id
+                return true
+              }
+            })
+            // 替换成完整片段
+            get()?.some((item, index, arr) => {
+              if(item.key === data.key) {
+                arr[index] = data
+                delete arr[index].key // 会影响到 data, 所以放序列处理后面
+                return true
+              }
+            })
+            // 完成替换期间应禁止的操作：（如果用户完成替换期间跳出不会影响后端数据）
+            // 1. 片段移动（当前的 sequence 是临时的 key 值占位）
+            // 2. 片段移除（当前没有正确 id，无法完成移除操作）
+            // 3. 片段更新（当前没有正确 id，无法完成更新操作, 包括启动子的添加移除等操作均无法完成）
+          } else {
+            console.error('异常，未读取到合成片段返回的 key 值')
+          }
+        }).catch(err => {
+          // 片段创建失败的时候，应移除前端的临时片段
+          get()?.some((item, index, arr) => {
+            if(item.key === key) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          sequence?.some((item, index, arr) => {
+            if(item === key) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          console.error(err)
         })
       }
       /** 通过音频创建片段 */

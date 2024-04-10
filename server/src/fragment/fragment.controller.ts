@@ -45,6 +45,7 @@ export class FragmentController {
       const fragment = await this.fragmentService.createByText(createTTSFragmentDto, req.user._id, req.user.dirname)
       // console.log(fragment.audio)
       const data = {
+        key: createTTSFragmentDto.key, // 返回的信息中添加 key 值标识
         id: fragment._id,
         audio: 'http://' + req.headers.host + '/public' + fragment.audio.split('public')[1],
         duration: fragment.duration,

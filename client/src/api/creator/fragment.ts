@@ -7,6 +7,7 @@ interface CreateASRFragmentDto {
 }
 interface CreateTTSFragmentDto {
   procedureId?: string
+  key?: string
   txt: string
   role: number
   speed: number

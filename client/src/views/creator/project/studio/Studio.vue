@@ -2,7 +2,7 @@
 import Draggable from 'vuedraggable'
 import { Character, AudioFragment, TTS, ASR, StudioToolbar, RoleSelectList, TxtEdit, FragmentTrash, CreateBlankFragment } from './private'
 import useStore from '@/store'
-import { computed, h, inject, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, h, inject, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { NIcon, NMessageProvider, useDialog, useThemeVars } from 'naive-ui'
 import { Bridge } from '../bridge'
 import _ from 'lodash'
@@ -25,6 +25,7 @@ const props = defineProps<{
 const { projectStore, userStore, timbreStore, clipboardStore } = useStore()
 const dialog = useDialog()
 const themeVars = useThemeVars()
+const scrollerRef = ref()
 const state = reactive({
   isReadonly: computed(() => props.readonly()),
   isFocus: computed(() => props.focus()),
@@ -136,8 +137,15 @@ const { handleRoleChange, handleTrashManage, handleAddBlank } = {
 
 const { dropdownState, selectedFragments, playerState, studioOptions, handleContextmenu, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge)
 const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, checkAnimeState, checkPromoter } = usePromoter(props.id, bridge)
-const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort()) 
+const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort())
+const fragmentsLength = computed(() => fragments.value.length)
 watch(() => projectStore.fragment(props.id).getBySort(), (fragmentsData) => {
+  if (fragmentsLength.value < fragmentsData.length) {
+    nextTick(() => {
+      // 新增片段时，将滚动条滚动到底部
+      scrollerRef.value.scrollTop = scrollerRef.value.scrollHeight
+    })
+  }
   fragments.value = fragmentsData
 })
 const removedFragments = ref<Fragment[]>(projectStore.fragment(props.id).getRemovedBySort())
@@ -202,11 +210,12 @@ const totalDuration = computed(() => {
         <!-- <DpzIcon class="arrow" :icon="`${MaterialTypeEnum.FILLED}arrow_drop_down`" :size="24" /> -->
       </n-dropdown>
     </Header>
-    <Main class="main" :flex="1" @contextmenu="ev => ev.preventDefault()">
+    <div ref="scrollerRef" class="main" @contextmenu="ev => ev.preventDefault()">
       <Draggable class="draggable" v-model="fragments" :itemKey="'id'" @change="handleMove">
         <template #item="{ element }">
           <AudioFragment
             :key="element.id"
+            :is-loading="!!element.key"
             :role="Number(element.role)"
             :role-list="timbreStore.get(account, hostname)?.roleList"
             :robot-list="timbreStore.get(account, hostname)?.robotList"
@@ -237,9 +246,12 @@ const totalDuration = computed(() => {
                 </n-badge>
               </Character>
             </template>
+            <template #loading>
+              <n-spin v-if="element.key" size="small" />
+            </template>
             <!-- 播放音频 -->
             <template #play>
-              <n-icon :component="HeadsetOutlined" :size="18" @click="handlePlay(element)" />
+              <n-icon v-if="!element.key" :component="HeadsetOutlined" :size="18" @click="handlePlay(element)" />
               <!-- <DpzIcon :icon="'material-icons-outlined-headset'" :size="18" @click="handlePlay(element)"/> -->
             </template>
             <!-- 编辑文字 -->
@@ -260,7 +272,7 @@ const totalDuration = computed(() => {
           </AudioFragment>
         </template>
       </Draggable>
-    </Main>
+    </div>
     <Footer :height="200" :overflow-x="'unset'">
       <StudioToolbar>
         <template #left>
@@ -395,6 +407,10 @@ const totalDuration = computed(() => {
   }
 }
 .main {
+  position: relative;
+  display: flex;
+  flex: 1;
+  box-sizing: border-box;
   // background-color: v-bind('themeVars.cardColor');
   background-color:  v-bind('themeVars.bodyColor');
   overflow-y: auto;
