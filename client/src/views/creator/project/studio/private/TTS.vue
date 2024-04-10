@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useThemeVars } from 'naive-ui';
+import { useMessage, useThemeVars } from 'naive-ui'
 import { ref } from 'vue'
 const props = defineProps<{
   readonly: boolean
@@ -7,9 +7,21 @@ const props = defineProps<{
 const emits = defineEmits(['onTextOutput'])
 const themeVars = useThemeVars()
 const inputValue = ref('')
+const message = useMessage()
 const output = () => {
+  if (containsEnglish(inputValue.value)) {
+    message.warning('目前语音合成模型暂不支持英文！')
+    return
+  }
   emits('onTextOutput', inputValue.value)
   inputValue.value = ''
+}
+/** 检测字符串是否包含英文 */
+function containsEnglish(text: string) {
+  // 使用正则表达式匹配英文字符
+  const englishRegex = /[a-zA-Z]/;
+  // 检查字符串中是否包含英文字符
+  return englishRegex.test(text);
 }
 </script>
 
@@ -22,10 +34,10 @@ const output = () => {
       rows="1"
       placeholder="输入合成文字"
       :disabled="readonly"
-      @keyup.enter="output()"
+      @keyup.enter="output"
     ></textarea>
     <div class="btn-wrapper">
-      <button :class="['btn', readonly ? 'disabled' :'']" @click="output()" :disabled="readonly">合成</button>
+      <button :class="['btn', readonly ? 'disabled' :'']" @click="output" :disabled="readonly">合成</button>
     </div>
   </div>
 </template>
