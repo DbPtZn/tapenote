@@ -1,6 +1,7 @@
 import { AxiosInstance } from 'axios'
 interface CreateASRFragmentDto {
   procedureId?: string
+  key?: string
   audio: Blob
   duration: number
   role: number
@@ -74,6 +75,7 @@ export const fragment = (axios: AxiosInstance) => {
       formdata.append('audio', dto.audio, 'audio.wav') // 必须添加文件名和后缀
       formdata.append('duration', dto.duration.toString())
       formdata.append('role', dto.role.toString())
+      formdata.append('key', dto.key!)
       return axios.post<T>('/fragment/write/create/asr', formdata, {
         headers: {
           'Content-Type':'multipart/form-data'

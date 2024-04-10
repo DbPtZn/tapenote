@@ -463,10 +463,63 @@ export const useProjectStore = defineStore('projectStore', {
       }
       /** 通过音频创建片段 */
       const createByAudio = (params: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0]) => {
+        const key = utils.randomString()
         params.procedureId = procedureId
+        params.key = key
+        // 立即创建临时文本片段并插入到片段序列中
+        const fragment: Fragment = {
+          key,
+          id: key,
+          audio: '',
+          duration: 0,
+          txt: '',
+          transcript: ['识','别','中','...'],
+          tags: [],
+          promoters: [],
+          timestamps: [],
+          projectId: procedureId,
+          role: params.role,
+          removed: 'never'
+        }
+        console.log(key)
+        get()?.push(fragment) // 不完全片段
+        sequence?.push(key) // 用 key 占位
         return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment>(params).then(res => {
-          get()?.push(res.data)
-          sequence?.push(res.data.id)
+          const data = res.data
+          if(data.key) {
+            // 用片段 id 替换排序信息中的占位 key
+            sequence?.some((item, index, arr) => {
+              if(item === data.key) {
+                arr[index] = data.id
+                return true
+              }
+            })
+            // 替换成完整片段
+            get()?.some((item, index, arr) => {
+              if(item.key === data.key) {
+                arr[index] = data
+                delete arr[index].key // 会影响到 data, 所以放序列处理后面
+                return true
+              }
+            })
+          } else {
+            console.error('异常，未读取到合成片段返回的 key 值')
+          }
+        }).catch(err => {
+          // 片段创建失败的时候，应移除前端的临时片段
+          get()?.some((item, index, arr) => {
+            if(item.key === key) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          sequence?.some((item, index, arr) => {
+            if(item === key) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          console.error(err)
         })
       }
       /** 创建空白片段 */

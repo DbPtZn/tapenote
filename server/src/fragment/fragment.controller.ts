@@ -78,7 +78,9 @@ export class FragmentController {
         req.user._id,
         req.user.dirname
       )
+      console.log(formData)
       const data = {
+        key: formData.key, // 返回的信息中添加 key 值标识
         id: fragment._id,
         audio: 'http://' + req.headers.host + '/public' + fragment.audio.split('public')[1],
         duration: fragment.duration,

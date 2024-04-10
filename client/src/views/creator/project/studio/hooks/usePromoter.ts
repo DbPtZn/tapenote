@@ -27,7 +27,6 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
   }
   /** 开启预设进程 */
   function makePresetStart(fragmentId: string, subscript: number, oldAniId: string | null) {
-    
     // 每次开启预设启动子进程时，取消之前的订阅并清空 subs, 确保有且只有一个订阅生效 （使得每次点击 character 时都能获得一个新的监听）
     makePresetEnd() // 结束上一个订阅
     subs.push(
@@ -42,7 +41,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
         makePresetEnd()
       }),
       fromEvent(document, 'click', true).pipe(auditTime(5)).subscribe(event => {
-        // 点击动画标记意外的任意位置取消预设动画进程
+        // 点击动画标记以外的任意位置取消预设动画进程
         // 设置一定时间延迟，确保点击动画标记时不会触发该订阅
         // 点击动画标记后结束进程时会销毁所有订阅，所以该订阅也不会触发
         makePresetEnd()
