@@ -53,6 +53,7 @@ export class FragmentService {
 
   async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: ObjectId, dirname: string) {
     const { procedureId, txt, role, speed } = createTTSFragmentDto
+    const _procedureId = new ObjectId(procedureId)
     if (speed > 2 || speed <= 0) throw '语速不能大于2或小于等于0'
     if (!txt || !procedureId || !dirname) {
       console.log('输入错误')
@@ -63,18 +64,29 @@ export class FragmentService {
     //   throw { msg: '找不到项目工程文件！' }
     // }
     const text = txt.replace(/\s*/g, '')
+    const fragmentId = new ObjectId()
+    /** 创建音频存储地址 */
+    const { filepath, filename } = this.storageService.createFilePath({
+      dirname,
+      category: 'audio',
+      originalname: fragmentId.toHexString(),
+      extname: '.wav'
+    })
     const fragment: Fragment = {
       _id: new ObjectId(),
-      audio: '',
+      audio: filename,
       duration: 0,
       txt: text,
-      transcript: Array.from(text),
+      transcript: ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'], // Array.from(text)
       tags: new Array(text.length),
       promoters: new Array(text.length),
       timestamps: [],
       role: Number(role) || 0,
       removed: RemovedEnum.NEVER
     }
+
+    /** 先添加到项目工程文件中（占位） */
+    await this.projectService.addFragment(_procedureId, userId, fragment)
 
     const temppath1 = this.storageService.createTempFilePath('.wav')
     // console.log(fragment.audio)
@@ -84,35 +96,35 @@ export class FragmentService {
       filepath: temppath1,
       speed: speed | 1
     })
-    const temppath2 = this.storageService.createTempFilePath('.wav')
-    /** 清理静音 */
-    await this.ffmpegService.clearSilence(temppath1, temppath2)
+      .then(async () => {
+        fragment.transcript = Array.from(text) // 合成成功，将正确内容替换回去
 
-    /** 获取音频存储地址 */
-    const { filepath, filename } = this.storageService.createFilePath({
-      dirname,
-      category: 'audio',
-      originalname: fragment._id.toHexString(),
-      extname: '.wav'
-    })
-    /** 格式化音频文件 */
-    await this.ffmpegService.audioformat(temppath2, filepath)
+        const temppath2 = this.storageService.createTempFilePath('.wav')
+        /** 清理静音 */
+        await this.ffmpegService.clearSilence(temppath1, temppath2)
 
-    fragment.audio = filename
+        /** 格式化音频文件 */
+        await this.ffmpegService.audioformat(temppath2, filepath)
 
-    /** 计算合成音频的时长 */
-    fragment.duration = await this.ffmpegService.calculateDuration(filepath)
-    // console.log(fragment.duration)
-    /** 计算 timestamps */
-    const section = fragment.duration / fragment.transcript.length
-    const timestamps = fragment.transcript.map((char, index) => {
-      return Number((section * index).toFixed(3))
-    })
-    // console.log(timestamps)
-    fragment.timestamps = timestamps
-    if (filepath && fragment.duration !== 0) {
-      const result = await this.projectService.addFragment(new ObjectId(procedureId), userId, fragment)
-    }
+        /** 计算合成音频的时长 */
+        fragment.duration = await this.ffmpegService.calculateDuration(filepath)
+        // console.log(fragment.duration)
+        /** 计算 timestamps */
+        const section = fragment.duration / fragment.transcript.length
+        const timestamps = fragment.transcript.map((char, index) => {
+          return Number((section * index).toFixed(3))
+        })
+        // console.log(timestamps)
+        fragment.timestamps = timestamps
+        if (filepath && fragment.duration !== 0) {
+          // console.log(fragment)
+          await this.projectService.updateFragment(_procedureId, fragment, userId)
+        }
+      })
+      .catch(async err => {
+        await this.projectService.removeErrorFragment(_procedureId, fragmentId, userId)
+      })
+
     // console.log(fragment)
     fragment.audio = filepath // 替换成完整地址返回给前端
     return fragment
@@ -124,10 +136,6 @@ export class FragmentService {
     dirname: string
   ) {
     const { procedureId, audio, duration, role } = createASRFragmentDto
-    // console.log(createASRFragmentDto)
-    // console.log(userId)
-    // console.log(dirname)
-    // console.log(duration)
     if (!audio || !procedureId || !dirname) {
       console.log('输入错误, 缺少必要参数!')
       throw new Error('输入错误, 缺少必要参数！')
@@ -135,7 +143,7 @@ export class FragmentService {
     if (duration === 0 || Number(duration) === 0) {
       throw new Error('音频时长为 0 秒，录入音频数据失败，请检查录音设备是否存在问题')
     }
-    const procudure = await this.projectService.findOneById(new ObjectId(procedureId), userId)
+    const procudure = await this.projectService.findOneById(procedureId, userId)
     if (!procudure) {
       throw { msg: '找不到项目工程文件！' }
     }
@@ -144,13 +152,16 @@ export class FragmentService {
       audio: '',
       duration: Number(duration),
       txt: '',
-      transcript: [],
+      transcript: ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'],
       tags: [],
       promoters: [],
       timestamps: [],
       role: Number(role) || 9999,
       removed: RemovedEnum.NEVER
     }
+    /** 先添加到项目工程文件中（占位） */
+    await this.projectService.addFragment(procedureId, userId, fragment)
+
     const temppath = this.storageService.createTempFilePath('.wav')
     // const d1 = await this.ffmpegService.calculateDuration(audio)
     /** 清理静音 */
@@ -172,33 +183,40 @@ export class FragmentService {
     /** 重新计算处理后音频的时长 */
     fragment.duration = await this.ffmpegService.calculateDuration(filepath)
 
-    const result = await this.sherpaService.asr(filepath)
-    // console.log(result)
-    if (result) {
-      fragment.txt = result.text
-      fragment.timestamps = result.timestamps
-      const length = result.tokens?.length
-      const tokens = result.tokens.map(token => {
-        if (token.includes('@')) {
-          const txt = token
-            .split('')
-            .filter(char => char !== '@')
-            .join('')
-          return txt
+    await this.sherpaService
+      .asr(filepath)
+      .then(async result => {
+        if (result) {
+          fragment.txt = result.text
+          fragment.timestamps = result.timestamps
+          const length = result.tokens?.length
+          const tokens = result.tokens.map(token => {
+            if (token.includes('@')) {
+              const txt = token
+                .split('')
+                .filter(char => char !== '@')
+                .join('')
+              return txt
+            }
+            return token
+          })
+          fragment.transcript = tokens
+          fragment.tags = new Array(length)
+          fragment.promoters = new Array(length)
         }
-        return token
+        if (filepath && fragment.transcript.length !== 0 && fragment.duration !== 0) {
+          await this.projectService.updateFragment(procedureId, fragment, userId)
+        } else {
+          this.storageService.deleteSync(filepath)
+          throw new Error('语音识别失败！')
+        }
       })
-      fragment.transcript = tokens
-      fragment.tags = new Array(length)
-      fragment.promoters = new Array(length)
-    }
-    // throw 'err'
-    if (filepath && fragment.transcript.length !== 0 && fragment.duration !== 0) {
-      await this.projectService.addFragment(new ObjectId(procedureId), userId, fragment)
-    } else {
-      this.storageService.deleteSync(filepath)
-      throw new Error('语音识别失败！')
-    }
+      .catch(async err => {
+        console.log(err)
+        this.storageService.deleteSync(filepath)
+        await this.projectService.removeErrorFragment(procedureId, fragment._id, userId)
+      })
+
     fragment.audio = filepath
     return fragment
   }

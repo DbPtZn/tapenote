@@ -78,7 +78,7 @@ export class FragmentController {
         req.user._id,
         req.user.dirname
       )
-      console.log(formData)
+      // console.log(formData)
       const data = {
         key: formData.key, // 返回的信息中添加 key 值标识
         id: fragment._id,

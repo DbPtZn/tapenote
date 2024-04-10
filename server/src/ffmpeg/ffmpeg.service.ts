@@ -124,7 +124,11 @@ export class FfmpegService {
           reject(stderr)
           return
         }
-        const durationInSeconds = parseFloat(stdout.trim())
+        let durationInSeconds = parseFloat(stdout.trim())
+        // 非数字或 NaNs 的情况
+        if (typeof durationInSeconds !== 'number' || isNaN(durationInSeconds)) {
+          durationInSeconds = 0
+        }
         // console.log('音频时长:', durationInSeconds, '秒')
         resolve(durationInSeconds)
       })

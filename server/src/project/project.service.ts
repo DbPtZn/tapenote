@@ -580,6 +580,34 @@ export class ProjectService {
     else throw new Error(`插入新片段失败,项目id:${procedureId.toHexString()}`)
   }
 
+  async updateFragment(procedureId: ObjectId, data: Fragment, userId: ObjectId) {
+    const procedure = await this.projectsRepository.findOneBy({ _id: procedureId, userId })
+    procedure.fragments.some((fragment, index, arr) => {
+      if (fragment._id.equals(data._id)) {
+        arr[index] = data
+        return true
+      }
+    })
+    await this.projectsRepository.save(procedure)
+  }
+  /** 移除错误片段 */
+  async removeErrorFragment(procedureId: ObjectId, fragmentId: ObjectId, userId: ObjectId) {
+    const procedure = await this.projectsRepository.findOneBy({ _id: procedureId, userId })
+    procedure.fragments.some((fragment, index, arr) => {
+      if (fragment._id.equals(fragmentId)) {
+        arr.splice(index, 1)
+        return true
+      }
+    })
+    procedure.sequence.some((item, index, arr) => {
+      if (item.equals(fragmentId)) {
+        arr.splice(index, 1)
+        return true
+      }
+    })
+    await this.projectsRepository.save(procedure)
+  }
+
   async updateFragmentTranscript(
     procedureId: ObjectId,
     fragmentId: ObjectId,
