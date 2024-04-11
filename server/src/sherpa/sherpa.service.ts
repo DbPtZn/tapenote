@@ -8,12 +8,14 @@ import { Readable } from 'stream'
 import { ConfigService, ConfigType } from '@nestjs/config'
 import { sherpaDevConfig } from '../config'
 import { Worker } from 'worker_threads'
+// import myPlugin from 'build/Release/my_plugin.node'
 // // 读取 wasm 模块文件
 // import sherpa_onnx from 'wasm'
 // let sherpa_onnx: any
 // const __rootdirname = process.cwd()
-// import(path.resolve(__rootdirname, 'wasm')).then(module => {
-//   sherpa_onnx = module
+// import(path.resolve(__rootdirname, 'build', 'Release', 'cpp_plugin.node')).then(plugin => {
+//   console.log(plugin)
+//   console.log(plugin.sayHello())
 // })
 
 interface RecognizerResult {
@@ -31,6 +33,9 @@ export class SherpaService {
     private sherpaConfig: ConfigType<typeof sherpaDevConfig>
   ) {
     // console.log(this.sherpaConfig.offline.asrConfig)
+    // index.js
+    // const addon = require('./build/Release/addon')
+    // console.log(addon.sayHello());
   }
   asr(filepath: string) {
     return new Promise<RecognizerResult>((resolve, reject) => {
