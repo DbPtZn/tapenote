@@ -20,7 +20,7 @@ export function animeToolConfigFactory(injector: Injector): AnimeSegmentPopoverT
       return query.queryFormat(animeFormatter)
     },
 
-    useValue(value: string) {
+    useValue(state: { value: string, label: string }) {
 
       // 检查选中内容所在的组件的祖先节点是否包含动画忽略组件
       const component = selection.commonAncestorComponent
@@ -48,9 +48,9 @@ export function animeToolConfigFactory(injector: Injector): AnimeSegmentPopoverT
       commander.applyFormat(animeFormatter, {
         dataId,
         dataSerial,
-        dataEffect: value,
+        dataEffect: state.value,
         dataState: '',
-        title: value
+        dataTitle: state.label
       })
     }
   }

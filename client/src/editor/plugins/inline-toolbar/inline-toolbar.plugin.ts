@@ -93,7 +93,7 @@ export class InlineToolbarPlugin implements Plugin {
             //     container
             //   )
             // }),
-            fromEvent(container, 'mouseup').subscribe(() => {
+            fromEvent(container, 'mouseup').pipe(auditTime(5)).subscribe(() => {
               this.onSelectionChange(
                 document,
                 selection,

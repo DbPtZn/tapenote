@@ -12,7 +12,7 @@ const props = defineProps<{
   /** 当鼠标放在控件上的提示文字 */
   tooltip?: string;
   options: AnimeOption[]
-  onSelected: (value: any) => void
+  onSelected: (args: { value: string, label: string }) => void
   currentValue: () => any
   highlight: () => boolean
   disabled: () => boolean
@@ -31,14 +31,15 @@ const btnRef = ref<HTMLElement>()
 // const currentVal = computed(() => props.currentValue)
 const currentOption = ref<AnimeOption>(props.options[0])
 function handleSelect(option: AnimeOption) {
+  console.log(option)
   currentOption.value = option
-  props.onSelected(option.value)
+  props.onSelected({ value: option.value, label: option.label })
   if (isLock.value) return
   isShow.value = false
 }
 /** 左侧按钮点击事件 */
 function handleLeftBtnClick() {
-  props.onSelected(currentOption.value.value)
+  props.onSelected({ value: currentOption.value.value, label: currentOption.value.label })
 }
 /** 外部点击事件 */
 function handleClickoutside(ev: MouseEvent) {
@@ -60,6 +61,9 @@ if (props.keymap) {
 
 <template>
   <div class="segment-popover-tool">
+    <!-- :to="false" 弹窗在 container 内会导致点击弹窗时触发 inline-toolbar 行内工具条的选区变化导致工具条立即消失 -->
+    <!-- 在 inline-toolbar 中通过对 container 容器监听事件事务进行 5ms 的延迟发射，确保选择选项优先于容器点击事件 -->
+    <!-- 该问题暂时解决，在此保留问题记录 -->
     <n-popover trigger="click" placement="bottom-start" :to="false" :show-arrow="false" :show="isShow" :disabled="state.disabled" @clickoutside="handleClickoutside">
       <template #trigger>
         <div :class="['trigger', state.disabled ? 'disabled' : '']" :title="tooltip">

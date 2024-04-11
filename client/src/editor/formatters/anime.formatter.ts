@@ -36,7 +36,8 @@ export class AnimeFormatter implements Formatter<any> {
         'data-serial': formatValue.dataSerial,
         'data-effect': formatValue.dataEffect,
         'data-state': formatValue.dataState,
-        'data-title': formatValue.dataTitle
+        'data-title': formatValue.dataTitle,
+        'title': formatValue.dataTitle, // 鼠标在标记上时显示动画名称
       },
       children
     )

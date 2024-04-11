@@ -47,8 +47,8 @@ export class AnimeSegmentPopoverTool implements Tool {
       keymap: config.keymap,
       iconClasses: config.iconClasses,
       options: animeOptions,
-      onSelected: (value: string) => {
-        config.useValue && config.useValue(value)
+      onSelected: (state: { value: string, label: string }) => {
+        config.useValue && config.useValue(state)
       },
       currentValue: () => this.currentValue.value,
       highlight: () => this.isHighlight.value,
