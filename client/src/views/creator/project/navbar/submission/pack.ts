@@ -83,6 +83,7 @@ export class Pack {
           if (img2base64.tasks === 0) {
             // console.log('ready')
             resolve({ content: editor.getHTML(), resources: editor.getResources() })
+            editor.destroy()
           }
         }, 1000)
       })
@@ -96,6 +97,7 @@ export class Pack {
         console.log('base64 img replace finish')
         // 导出富文本数据
         resolve({ content: editor.getHTML(), resources: editor.getResources() })
+        editor.destroy()
       })
 
       img2base64.onError.subscribe(error => {
