@@ -48,6 +48,7 @@ onBeforeMount(() => {
 onMounted(() => {
   // loadingBar.finish()
 })
+
 let player: Player
 let editor: Editor
 let lastContent = ''
@@ -68,20 +69,21 @@ useEditor({
   lastContent = content
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
-      editor.onChange.pipe(debounceTime(2000)).subscribe((ev) => {
+      editor.onChange.pipe(debounceTime(2000)).subscribe(() => {
         if(props.readonly()) return
         const content = editor.getHTML()
         if(lastContent === content) return
-        // console.log('更新 onChnage')
-        handleContentSave(content, props.id)
-        lastContent = content
+        // console.log('更新 onSave')
+        handleContentSave(content, props.id, props.account, props.hostname)
+        lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
+        // 标题就不管 onSave 了，因为标题没有保存影响也比较小
       }),
       editor.onSave.subscribe(() => {
         if(props.readonly()) return
         const content = editor.getHTML()
         if(lastContent === content) return
         // console.log('更新 onSave')
-        handleContentSave(content, props.id)
+        handleContentSave(content, props.id, props.account, props.hostname)
         lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
         // 标题就不管 onSave 了，因为标题没有保存影响也比较小
       })
@@ -115,13 +117,13 @@ if (props.lib !== LibraryEnum.COURSE) {
 }
 
 /** 更新只读模式 */
-// watch(() => props.readonly(), (isReadOnly) => {
-//   editor.readonly = isReadOnly
-// })
+if(props.lib !== LibraryEnum.COURSE){
+  watch(() => props.readonly(), isReadOnly => {
+    editor.readonly = isReadOnly
+  })
+}
 
-const debounce = _.debounce(func => {
-  func()
-}, 2000)
+const debounceA = _.debounce(func => func(), 2000)
 const methods = {
   /** 文件更新同步 */
   handleSavingStart() {
@@ -136,13 +138,13 @@ const methods = {
       }, 1000)
     })
   },
-  handleTitleInput(value: string, id: string) {
+  handleTitleInput(value: string) {
     // 标题输入，加入防抖保存
-    debounce(() => handleTitleSave(value, id))
+    debounceA(() => handleTitleSave(value, props.id, props.account, props.hostname))
   },
-  handleTitleSave(value: string, id: string) {
+  handleTitleSave(value: string, id: string, account: string, hostname: string) {
     // console.log('保存标题')
-    projectStore.updateTitle({ title: value, id: id }, handleSavingStart, props.account, props.hostname).then(res => {
+    projectStore.updateTitle({ title: value, id: id }, handleSavingStart, account, hostname).then(res => {
       if (res) {
         handleSavingEnd()
         folderStore.updateCard(value, id, 'title', data.value?.folderId)
@@ -155,9 +157,9 @@ const methods = {
       message.error('更新失败:' + err)
     })
   },
-  handleContentSave(value: string, id: string) {
+  handleContentSave(value: string, id: string, account: string, hostname: string) {
     // console.log('保存内容')
-    projectStore.updateContent({ content: value, id: id }, handleSavingStart, props.account, props.hostname).then(res => {
+    projectStore.updateContent({ content: value, id: id }, handleSavingStart, account, hostname).then(res => {
       if (res) {
         handleSavingEnd()
         folderStore.updateCard(value, id, 'content', data.value?.folderId)
@@ -179,17 +181,33 @@ const methods = {
 const { handleContentSave, handleSavingEnd, handleTitleSave, handleSavingStart, handleTitleEnter, handleTitleInput } = methods
 
 /** 离开页面前 */
+const debounceB = _.debounce(func => func(), 2000)
 onBeforeUnmount(() => {
-  //
+  if(props.lib !== LibraryEnum.COURSE) {
+    // 离开页面前立即保存, 设置一定延迟，否则卡片会立即更新，影响体验
+    const content = editor.getHTML()
+    const id = props.id
+    const account = props.account
+    const hostname = props.hostname
+    debounceB(() => {
+      if(props.readonly()) return
+      if(lastContent === content) return
+      // console.log('离开前更新')
+      handleContentSave(content, id, account, hostname)
+      lastContent = content
+    })
+    // 有个疑问？通过防抖延迟了保存事务，为什么事务中不会拿到切换后的数据状态？可能因为 const props 是一个具名常量，并不会在切换项目后改变
+  }
 })
 
 /** 离开页面 */
 onUnmounted(() => {
   try {
+    // console.log('离开页面')
     editor?.destroy()
     subs.forEach(sub => sub.unsubscribe())
   } catch (error) {
-    message.error('编辑器创建失败！')
+    message.error('编辑器销毁失败！')
   }
 })
 
@@ -214,7 +232,7 @@ onUnmounted(() => {
       </div>
       <!-- 滚动区 -->
       <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100vh - ${state.toolbarHeight}px)` }">
-        <TitleInput @input="handleTitleInput($event, id)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
+        <TitleInput @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
         <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
       </div>
     </div>

@@ -126,6 +126,9 @@ onUnmounted(() => {
         <span class="saving-text">{{ state.isSaving ? '正在保存 ... ' : '' }}</span>
         <n-icon v-if="state.isSaving" class="rotate" :component="AutorenewOutlined" :size="22" />
       </div>
+      <!-- <DpzButton v-if="lib !== LibraryEnum.COURSE" >
+        {{ `${ data?.content !== birdge.content ? '保存' : '已保存' }` }}
+      </DpzButton> -->
       <DpzButton v-if="lib !== LibraryEnum.COURSE" :active="state.isToolbarShow" :disabled="state.isReadonly" @click="handleToolbarCollapse" >
         <n-icon :component="TextSharp" :size="16" />
       </DpzButton>

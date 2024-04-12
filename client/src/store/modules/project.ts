@@ -188,6 +188,7 @@ export const useProjectStore = defineStore('projectStore', {
         const index = this.data.findIndex(i => i.id === params.id)
         const account = this.data[index].account
         const hostname = this.data[index].hostname
+        console.log([params.id, account, hostname])
         if (utils.isDiff(this.data[index].title, params.title)) {
           savingcb && savingcb()
           this.creatorApi(account, hostname).project
@@ -213,6 +214,7 @@ export const useProjectStore = defineStore('projectStore', {
         const index = this.data.findIndex(i => i.id === params.id)
         const account = this.data[index].account
         const hostname = this.data[index].hostname
+        console.log([params.id, account, hostname])
         if (utils.isDiff(this.data[index].content, params.content)) {
           savingcb && savingcb()
           this.creatorApi(account, hostname).project
