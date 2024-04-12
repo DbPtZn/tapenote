@@ -4,6 +4,7 @@ import { Subject } from '@tanbo/stream'
 import _ from 'lodash'
 import { defineStore } from 'pinia'
 import useStore from '..'
+import { nextTick } from 'vue'
 export interface SubmissionConfig {
   id: string
   name: string
@@ -84,7 +85,7 @@ export const useUserListStore = defineStore('userListStore', {
             creator.createCreatorApi(params.account, hostname)
             this.fetch(params.account, hostname).then(state => {
               if(state) {
-                console.log(state)
+                // console.log(state)
                 this.set(state)
                 this.addSequence(params.account, hostname)
                 userStore.$patch(state)
@@ -101,7 +102,7 @@ export const useUserListStore = defineStore('userListStore', {
       })
     },
     logout(account: string, hostname: string) {
-      const { folderTreeStore, folderStore, userStore } = useStore()
+      const { folderTreeStore, folderStore, userStore, projectStore } = useStore()
       // 用户列表中移除登出用户
       const index = this.data.findIndex(item => item.account === account && item.hostname === hostname)
       this.data.splice(index, 1)
@@ -113,6 +114,7 @@ export const useUserListStore = defineStore('userListStore', {
       sessionStorage.removeItem(userkey)
       localStorage.removeItem(folderTreeKey)
       localStorage.removeItem(folderKey)
+      projectStore.cleanCacheByUser(account, hostname)
       // 登出用户与当前用户相同，退出后重置用户状态、文件目录状态、文件夹状态
       if (account === userStore.account && hostname === userStore.hostname) {
         userStore.$reset()

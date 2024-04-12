@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { RoutePathEnum } from '@/enums'
 import { useDialog, useMessage, useThemeVars } from 'naive-ui'
-import { h, onMounted, onUnmounted,  reactive,  ref, watch } from 'vue'
+import { h, nextTick, onMounted, onUnmounted,  reactive,  ref, watch } from 'vue'
 import useStore from '@/store'
 import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import { useShell } from '@/renderer'

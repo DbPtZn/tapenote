@@ -10,13 +10,19 @@ const parentContainer = ref()
 const containerHeight = ref()
 onMounted(() => {
   parentContainer.value = controllerRef.value.parentElement.parentElement
-  erd.listenTo(parentContainer.value, () => {
-    containerHeight.value = parentContainer.value.offsetHeight
-  })
+  if (parentContainer.value) {
+    erd.listenTo(parentContainer.value, () => {
+      containerHeight.value = parentContainer.value.offsetHeight
+    })
+  }
 })
 onUnmounted(() => {
   if (parentContainer.value) {
-    erd.uninstall(parentContainer.value)
+    try {
+      erd.uninstall(parentContainer.value)
+    } catch (e) {
+      console.log(e)
+    }
   }
 })
 /** 遮罩层 */
@@ -30,7 +36,7 @@ const handleResize = (e: MouseEvent) => {
   document.body.style.cursor = 's-resize'
   emits('onResizeStart')
   const initial_position = e.clientY // 鼠标初始位置
-  const onMouseMove = fromEvent<MouseEvent>(document, 'mousemove').subscribe((e) => {
+  const onMouseMove = fromEvent<MouseEvent>(document, 'mousemove').subscribe(e => {
     const end_position = e.clientY // 鼠标移动后的位置
     const distance = initial_position - end_position // 鼠标移动的距离
     const distance_pct = (distance / containerHeight.value) * 100

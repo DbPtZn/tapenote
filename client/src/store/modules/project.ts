@@ -164,7 +164,7 @@ export const useProjectStore = defineStore('projectStore', {
     },
     remove(id: string, account: string, hostname: string) {
       return this.creatorApi(account, hostname).project.remove(id).then(() => {
-        this.cleanCache(id)
+        this.cleanCache(id, account, hostname)
       })
     },
     restore(id: string, folderId: string, account: string, hostname: string) {
@@ -176,7 +176,7 @@ export const useProjectStore = defineStore('projectStore', {
     move(id: string, folderId: string, account: string, hostname: string) {
       return this.creatorApi(account, hostname).project.move(id, folderId).then(() => {
         // TODO 不一定要删除缓存，也可以更新，再考虑考虑
-        this.cleanCache(id)
+        this.cleanCache(id, account, hostname)
       })
     },
     copy(id: string, folderId: string, account: string, hostname: string) {
@@ -267,21 +267,30 @@ export const useProjectStore = defineStore('projectStore', {
       })
     },
     /** 清理缓存 */
-    cleanCache(id: string) {
-      const index = this.data.findIndex(i => i.id === id)
+    cleanCache(id: string, account: string, hostname: string) {
+      const index = this.data.findIndex(i => i.id === id && i.account === account && i.hostname === hostname)
       if (index !== -1) {
-        // console.log('移除')
-        const result = this.data.splice(index, 1)
-        // console.log(result)
+        this.data.splice(index, 1)
       }
     },
     cleanCacheByFolderId(folderId: string) {
-      const index = this.data.findIndex(i => i.folderId === folderId)
-      if (index !== -1) {
-        const result = this.data.splice(index, 1)
+      for(let i = 0; i < this.data.length; i++) {
+        const data = this.data[i]
+        if (data.folderId === folderId) {
+          this.data.splice(i, 1)
+          i -- // 移除后数组已发生改变，回退一位
+        }
       }
     },
-
+    cleanCacheByUser(account: string, hostname: string) {
+      for(let i = 0; i < this.data.length; i++) {
+        const data = this.data[i]
+        if (data.account === account && data.hostname === hostname) {
+          this.data.splice(i, 1)
+          i -- // 移除后数组已发生改变，回退一位
+        }
+      }
+    },
 
     setUpdateAt(procedureId: string | undefined, updateAt: string) {
       const { folderStore } = useStore()

@@ -10,13 +10,19 @@ const parentContainer = ref()
 const containerWidth = ref()
 onMounted(() => {
   parentContainer.value = controllerRef.value.parentElement.parentElement
-  erd.listenTo(parentContainer.value, () => {
-    containerWidth.value = parentContainer.value.offsetWidth
-  })
+  if (parentContainer.value) {
+    erd.listenTo(parentContainer.value, () => {
+      containerWidth.value = parentContainer.value.offsetWidth
+    })
+  }
 })
 onUnmounted(() => {
   if (parentContainer.value) {
-    erd.uninstall(parentContainer.value)
+    try {
+      erd.uninstall(parentContainer.value)
+    } catch (e) {
+      console.log(e)
+    }
   }
 })
 /** 遮罩层 */
