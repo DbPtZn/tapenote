@@ -68,7 +68,7 @@ export class ImgToUrlService {
       const formdata = new FormData()
       const file = this.base64ImgtoFile(img)
       formdata.append('file', file) //图片文件
-      console.log(this.axios)
+      // console.log(this.axios)
       if(this.axios) {
         this.axios.post(this.uploadImgUrl, formdata).then(res => {
           const url = res.config.baseURL + res.data
@@ -139,6 +139,10 @@ export class ImgToUrlService {
   //     })
   //   })
   // }
+  isBase64(str: string) {
+    const regex = /^data:image\/([a-zA-Z]+);base64,/
+    return regex.test(str)
+  }
 
   /**
    * 图片base64转url链接

@@ -1,14 +1,19 @@
 <script lang="ts" setup>
 import { inject, ref } from 'vue'
-import { FormInst, FormItemRule, FormRules, UploadFileInfo, useThemeVars } from 'naive-ui'
+import { FormInst, FormItemRule, FormRules, UploadFileInfo, useMessage, useThemeVars } from 'naive-ui'
+import { ImgToUrlService } from '@/editor'
+import { Injector } from '@textbus/core'
 interface ModelType {
   src: string
 }
+const injector = inject('injector') as Injector
 const useClose = inject('useClose') as () => void
+const message = useMessage()
 const props = defineProps<{
   onConfirm?: (res: ModelType) => void
   onConfirmEnd?: () => void
 }>()
+const imgToUrlService = injector.get(ImgToUrlService)
 const formRef = ref<FormInst | null>(null)
 const model = ref<ModelType>({
   src: ''
@@ -37,13 +42,34 @@ function handleConfirm(e: MouseEvent) {
   })
 }
 const handleFinish = (options: { file: UploadFileInfo; fileList: UploadFileInfo[] }) => {
+  const acceptedImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp', 'image/svg+xml']
+  if (options.file.file?.type && !acceptedImageTypes.includes(options.file.file.type)) {
+    // console.log('非图片类型无法上传')
+    message.error('非图片类型无法上传')
+    return false
+  }
   const reader = new FileReader()
   if (options.file.file) {
     const file = options.file.file
     reader.readAsDataURL(file)
-    reader.onload = function (event: ProgressEvent<FileReader>) {
+    reader.onload = async function (event: ProgressEvent<FileReader>) {
       if (event.target) {
-        model.value.src = event.target.result as string
+        let src = event.target.result
+        if (typeof src !== 'string') {
+          return
+        }
+        if (imgToUrlService.isBase64(src)) {
+          await imgToUrlService
+            .uploadImg(src)
+            .then(url => {
+              src = url
+            })
+            .catch(err => {
+              console.log(err)
+              src = ''
+            })
+        }
+        model.value.src = src as string
       }
     }
   }

@@ -56,10 +56,10 @@ function handleConfirm(e: MouseEvent) {
 <template>
   <div class="link-form">
     <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
-      <n-form-item path="url" label="图片链接地址">
-        <n-input v-model:value="model.url" :type="'text'" placeholder="请输入图片链接" />
+      <n-form-item path="url" label="外部链接地址">
+        <n-input v-model:value="model.url" :type="'text'" placeholder="请输入链接" />
       </n-form-item>
-      <n-form-item path="window" label="上传图片">
+      <n-form-item path="window" label="打开窗口方式">
         <n-flex>
           <n-radio
             :checked="model.target === '_blank'"
@@ -69,6 +69,7 @@ function handleConfirm(e: MouseEvent) {
           >
             新窗口
           </n-radio>
+          <!-- FIXME: _self 目前无效 -->
           <n-radio
             :checked="model.target === '_self'"
             value="_self"
