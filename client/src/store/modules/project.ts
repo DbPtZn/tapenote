@@ -64,7 +64,7 @@ export interface Project {
 interface State {
   data: Project[]
 }
-const debounceMap = new Map<string, ((func: any) => void)[]>()
+
 export const useProjectStore = defineStore('projectStore', {
   state(): State {
     return {
@@ -155,8 +155,6 @@ export const useProjectStore = defineStore('projectStore', {
       }
       // console.log(item)
       this.data.push(item)
-      // 每缓存一个新项目，须同步创建一组防抖函数
-      debounceMap.set(`${account}&${hostname}&${item.id}`, [_.debounce(func => func(), 2000), _.debounce(func => func(), 2000), _.debounce(func => func(), 2000)])
       return item
     },
     get(id: string) {
@@ -186,92 +184,80 @@ export const useProjectStore = defineStore('projectStore', {
     },
     /** 更新标题 */
     updateTitle(params: Parameters<typeof CreatorApi.prototype.project.updateTitle>[0], savingcb: () => void, account: string, hostname: string) {
-      const debounce = debounceMap.get(`${account}&${hostname}&${params.id}`)
       return new Promise((resolve, reject) => {
-        if (!debounce) return reject('获取防抖函数失败！')
-        debounce[0](() => {
-          const index = this.data.findIndex(i => i.id === params.id)
-          const account = this.data[index].account
-          const hostname = this.data[index].hostname
-          if (utils.isDiff(this.data[index].title, params.title)) {
-            savingcb && savingcb()
-            this.creatorApi(account, hostname).project
-              .updateTitle<{ updateAt: string }>(params)
-              .then(res => {
-                if (this.data[index].id === params.id) {
-                  this.data[index].updateAt = res.data.updateAt
-                  this.data[index].title = params.title
-                }
-                resolve(true)
-              })
-              .catch(err => {
-                resolve(false)
-              })
-          } else {
-            resolve(true)
-          }
-        })
+        const index = this.data.findIndex(i => i.id === params.id)
+        const account = this.data[index].account
+        const hostname = this.data[index].hostname
+        if (utils.isDiff(this.data[index].title, params.title)) {
+          savingcb && savingcb()
+          this.creatorApi(account, hostname).project
+            .updateTitle<{ updateAt: string }>(params)
+            .then(res => {
+              if (this.data[index].id === params.id) {
+                this.data[index].updateAt = res.data.updateAt
+                this.data[index].title = params.title
+              }
+              resolve(true)
+            })
+            .catch(err => {
+              resolve(false)
+            })
+        } else {
+          resolve(true)
+        }
       })
     },
     /** 更新内容 */
     updateContent(params: Parameters<typeof CreatorApi.prototype.project.updateContent>[0], savingcb: () => void, account: string, hostname: string) {
-      const debounce = debounceMap.get(`${account}&${hostname}&${params.id}`)
       return new Promise((resolve, reject) => {
-        if (!debounce) return reject('获取防抖函数失败！')
-        debounce[1](() => {
-          const index = this.data.findIndex(i => i.id === params.id)
-          const account = this.data[index].account
-          const hostname = this.data[index].hostname
-          if (utils.isDiff(this.data[index].content, params.content)) {
-            savingcb && savingcb()
-            this.creatorApi(account, hostname).project
-              .updateContent<{ updateAt: string, abbrev: string, wordage: number }>(params)
-              .then(res => {
-                // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才对 store 更新数据
-                if (this.data[index].id === params.id) {
-                  this.data[index].content = params.content
-                  this.data[index].updateAt = res.data.updateAt
-                  this.data[index].detial.wordage = res.data.wordage
-                  this.data[index].abbrev = res.data.abbrev
-                }
-                resolve(true)
-              })
-              .catch(err => {
-                resolve(false)
-              })
-          } else {
-            resolve(true)
-          }
-        })
+        const index = this.data.findIndex(i => i.id === params.id)
+        const account = this.data[index].account
+        const hostname = this.data[index].hostname
+        if (utils.isDiff(this.data[index].content, params.content)) {
+          savingcb && savingcb()
+          this.creatorApi(account, hostname).project
+            .updateContent<{ updateAt: string, abbrev: string, wordage: number }>(params)
+            .then(res => {
+              // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才对 store 更新数据
+              if (this.data[index].id === params.id) {
+                this.data[index].content = params.content
+                this.data[index].updateAt = res.data.updateAt
+                this.data[index].detial.wordage = res.data.wordage
+                this.data[index].abbrev = res.data.abbrev
+              }
+              resolve(true)
+            })
+            .catch(err => {
+              resolve(false)
+            })
+        } else {
+          resolve(true)
+        }
       })
     },
     updateSidenoteContent(params: Parameters<typeof CreatorApi.prototype.project.updateSidenoteContent>[0], savingcb: () => void, account: string, hostname: string) {
-      const debounce = debounceMap.get(`${account}&${hostname}&${params.id}`)
       return new Promise((resolve, reject) => {
-        if (!debounce) return reject('获取防抖函数失败！')
-        debounce[2](() => {
-          const index = this.data.findIndex(i => i.id === params.id)
-          const account = this.data[index].account
-          const hostname = this.data[index].hostname
-          if (utils.isDiff(this.data[index].content, params.content)) {
-            savingcb && savingcb()
-            this.creatorApi(account, hostname).project
-              .updateSidenoteContent<{ updateAt: string }>(params)
-              .then(res => {
-                // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才进行 store 数据更新
-                if (this.data[index].id === params.id) {
-                  this.data[index].updateAt = res.data.updateAt
-                  this.data[index].sidenote = params.content
-                }
-                resolve(true)
-              })
-              .catch(err => {
-                resolve(false)
-              })
-          } else {
-            resolve(true)
-          }
-        })
+        const index = this.data.findIndex(i => i.id === params.id)
+        const account = this.data[index].account
+        const hostname = this.data[index].hostname
+        if (utils.isDiff(this.data[index].content, params.content)) {
+          savingcb && savingcb()
+          this.creatorApi(account, hostname).project
+            .updateSidenoteContent<{ updateAt: string }>(params)
+            .then(res => {
+              // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才进行 store 数据更新
+              if (this.data[index].id === params.id) {
+                this.data[index].updateAt = res.data.updateAt
+                this.data[index].sidenote = params.content
+              }
+              resolve(true)
+            })
+            .catch(err => {
+              resolve(false)
+            })
+        } else {
+          resolve(true)
+        }
       })
     },
     /** 清理缓存 */
@@ -279,14 +265,12 @@ export const useProjectStore = defineStore('projectStore', {
       const index = this.data.findIndex(i => i.id === id && i.account === account && i.hostname === hostname)
       if (index !== -1) {
         this.data.splice(index, 1)
-        debounceMap.delete(`${account}&${hostname}&${id}`)
       }
     },
     cleanCacheByFolderId(folderId: string) {
       for(let i = 0; i < this.data.length; i++) {
         const data = this.data[i]
         if (data.folderId === folderId) {
-          debounceMap.delete(`${this.data[i].account}&${this.data[i].hostname}&${this.data[i].id}`)
           this.data.splice(i, 1)
           i -- // 移除后数组已发生改变，回退一位
         }
@@ -296,7 +280,6 @@ export const useProjectStore = defineStore('projectStore', {
       for(let i = 0; i < this.data.length; i++) {
         const data = this.data[i]
         if (data.account === account && data.hostname === hostname) {
-          debounceMap.delete(`${account}&${hostname}&${this.data[i].id}`)
           this.data.splice(i, 1)
           i -- // 移除后数组已发生改变，回退一位
         }
@@ -690,14 +673,3 @@ export const useProjectStore = defineStore('projectStore', {
   getters: {}
 })
 
-
-/** 同一防抖函数被不同地方同时调用，只会接收最后一个 */
-const debounce2000A = _.debounce(func => {
-  func()
-}, 2000)
-const debounce2000B = _.debounce(func => {
-  func()
-}, 2000)
-const debounce2000C = _.debounce(func => {
-  func()
-}, 2000)

@@ -4,7 +4,7 @@ import { useSidenoteEditor } from './hooks/_index'
 import useStore from '@/store'
 import { useMessage, useThemeVars } from 'naive-ui'
 import { Editor } from '@textbus/editor'
-import { Subscription } from '@tanbo/stream'
+import { Subscription, debounceTime } from '@tanbo/stream'
 import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
 const props = defineProps<{
@@ -46,11 +46,19 @@ useSidenoteEditor({
   editor = edi
   lastContent = content
   subs.push(
-    editor.onChange.subscribe(ev => {
+    editor.onChange.pipe(debounceTime(2000)).subscribe(ev => {
       if (props.readonly()) return
       const content = editor.getHTML()
       if(lastContent === content) return
-      handleContentInput(content, props.id)
+      handleContentSave(content, props.id)
+      lastContent = content
+    }),
+    editor.onSave.subscribe(() => {
+      if(props.readonly()) return
+      const content = editor.getHTML()
+      if(lastContent === content) return
+      // console.log('更新 onSave')
+      handleContentSave(content, props.id)
       lastContent = content
     }),
     bridge.onToolbarCollapse.subscribe(value => {
@@ -73,7 +81,7 @@ function handleSavingEnd() {
     }, 1000)
   })
 }
-function handleContentInput(value: string, id: string) {
+function handleContentSave(value: string, id: string) {
   projectStore.updateSidenoteContent({ content: value, id: id }, handleSavingStart, props.account, props.hostname).then(res => {
     if (res) {
       handleSavingEnd()

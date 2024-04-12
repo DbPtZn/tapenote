@@ -68,12 +68,22 @@ useEditor({
   lastContent = content
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
-      editor.onChange.subscribe((ev) => {
+      editor.onChange.pipe(debounceTime(2000)).subscribe((ev) => {
         if(props.readonly()) return
         const content = editor.getHTML()
         if(lastContent === content) return
-        handleContentInput(content, props.id)
+        // console.log('更新 onChnage')
+        handleContentSave(content, props.id)
         lastContent = content
+      }),
+      editor.onSave.subscribe(() => {
+        if(props.readonly()) return
+        const content = editor.getHTML()
+        if(lastContent === content) return
+        // console.log('更新 onSave')
+        handleContentSave(content, props.id)
+        lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
+        // 标题就不管 onSave 了，因为标题没有保存影响也比较小
       })
     )
   }
@@ -109,6 +119,9 @@ if (props.lib !== LibraryEnum.COURSE) {
 //   editor.readonly = isReadOnly
 // })
 
+const debounce = _.debounce(func => {
+  func()
+}, 2000)
 const methods = {
   /** 文件更新同步 */
   handleSavingStart() {
@@ -124,6 +137,11 @@ const methods = {
     })
   },
   handleTitleInput(value: string, id: string) {
+    // 标题输入，加入防抖保存
+    debounce(() => handleTitleSave(value, id))
+  },
+  handleTitleSave(value: string, id: string) {
+    // console.log('保存标题')
     projectStore.updateTitle({ title: value, id: id }, handleSavingStart, props.account, props.hostname).then(res => {
       if (res) {
         handleSavingEnd()
@@ -137,7 +155,8 @@ const methods = {
       message.error('更新失败:' + err)
     })
   },
-  handleContentInput(value: string, id: string) {
+  handleContentSave(value: string, id: string) {
+    // console.log('保存内容')
     projectStore.updateContent({ content: value, id: id }, handleSavingStart, props.account, props.hostname).then(res => {
       if (res) {
         handleSavingEnd()
@@ -157,7 +176,7 @@ const methods = {
   }
 }
 
-const { handleContentInput, handleSavingEnd, handleTitleInput, handleSavingStart, handleTitleEnter } = methods
+const { handleContentSave, handleSavingEnd, handleTitleSave, handleSavingStart, handleTitleEnter, handleTitleInput } = methods
 
 /** 离开页面前 */
 onBeforeUnmount(() => {
