@@ -124,7 +124,7 @@ const methods = {
     })
   },
   handleTitleInput(value: string, id: string) {
-    projectStore.updateTitle({ title: value, id: id }, handleSavingStart).then(res => {
+    projectStore.updateTitle({ title: value, id: id }, handleSavingStart, props.account, props.hostname).then(res => {
       if (res) {
         handleSavingEnd()
         folderStore.updateCard(value, id, 'title', data.value?.folderId)
@@ -133,10 +133,12 @@ const methods = {
           .then(() => message.error('更新失败！'))
           .catch()
       }
+    }).catch(err => {
+      message.error('更新失败:' + err)
     })
   },
   handleContentInput(value: string, id: string) {
-    projectStore.updateContent({ content: value, id: id }, handleSavingStart).then(res => {
+    projectStore.updateContent({ content: value, id: id }, handleSavingStart, props.account, props.hostname).then(res => {
       if (res) {
         handleSavingEnd()
         folderStore.updateCard(value, id, 'content', data.value?.folderId)
@@ -145,6 +147,8 @@ const methods = {
           .then(() => message.error('更新失败！'))
           .catch()
       }
+    }).catch(err => {
+      message.error('更新失败:' + err)
     })
   },
   /** 标题输入时按下 enter 将焦点切换到编辑器 */

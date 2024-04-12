@@ -64,7 +64,7 @@ export interface Project {
 interface State {
   data: Project[]
 }
-
+const debounceMap = new Map<string, ((func: any) => void)[]>()
 export const useProjectStore = defineStore('projectStore', {
   state(): State {
     return {
@@ -155,6 +155,8 @@ export const useProjectStore = defineStore('projectStore', {
       }
       // console.log(item)
       this.data.push(item)
+      // 每缓存一个新项目，须同步创建一组防抖函数
+      debounceMap.set(`${account}&${hostname}&${item.id}`, [_.debounce(func => func(), 2000), _.debounce(func => func(), 2000), _.debounce(func => func(), 2000)])
       return item
     },
     get(id: string) {
@@ -183,9 +185,11 @@ export const useProjectStore = defineStore('projectStore', {
       return this.creatorApi(account, hostname).project.copy(id, folderId)
     },
     /** 更新标题 */
-    updateTitle(params: Parameters<typeof CreatorApi.prototype.project.updateTitle>[0], savingcb?: () => void) {
+    updateTitle(params: Parameters<typeof CreatorApi.prototype.project.updateTitle>[0], savingcb: () => void, account: string, hostname: string) {
+      const debounce = debounceMap.get(`${account}&${hostname}&${params.id}`)
       return new Promise((resolve, reject) => {
-        debounce2000A(() => {
+        if (!debounce) return reject('获取防抖函数失败！')
+        debounce[0](() => {
           const index = this.data.findIndex(i => i.id === params.id)
           const account = this.data[index].account
           const hostname = this.data[index].hostname
@@ -210,9 +214,11 @@ export const useProjectStore = defineStore('projectStore', {
       })
     },
     /** 更新内容 */
-    updateContent(params: Parameters<typeof CreatorApi.prototype.project.updateContent>[0], savingcb?: () => void) {
+    updateContent(params: Parameters<typeof CreatorApi.prototype.project.updateContent>[0], savingcb: () => void, account: string, hostname: string) {
+      const debounce = debounceMap.get(`${account}&${hostname}&${params.id}`)
       return new Promise((resolve, reject) => {
-        debounce2000B(() => {
+        if (!debounce) return reject('获取防抖函数失败！')
+        debounce[1](() => {
           const index = this.data.findIndex(i => i.id === params.id)
           const account = this.data[index].account
           const hostname = this.data[index].hostname
@@ -239,9 +245,11 @@ export const useProjectStore = defineStore('projectStore', {
         })
       })
     },
-    updateSidenoteContent(params: Parameters<typeof CreatorApi.prototype.project.updateSidenoteContent>[0], savingcb?: () => void) {
+    updateSidenoteContent(params: Parameters<typeof CreatorApi.prototype.project.updateSidenoteContent>[0], savingcb: () => void, account: string, hostname: string) {
+      const debounce = debounceMap.get(`${account}&${hostname}&${params.id}`)
       return new Promise((resolve, reject) => {
-        debounce2000C(() => {
+        if (!debounce) return reject('获取防抖函数失败！')
+        debounce[2](() => {
           const index = this.data.findIndex(i => i.id === params.id)
           const account = this.data[index].account
           const hostname = this.data[index].hostname
@@ -271,12 +279,14 @@ export const useProjectStore = defineStore('projectStore', {
       const index = this.data.findIndex(i => i.id === id && i.account === account && i.hostname === hostname)
       if (index !== -1) {
         this.data.splice(index, 1)
+        debounceMap.delete(`${account}&${hostname}&${id}`)
       }
     },
     cleanCacheByFolderId(folderId: string) {
       for(let i = 0; i < this.data.length; i++) {
         const data = this.data[i]
         if (data.folderId === folderId) {
+          debounceMap.delete(`${this.data[i].account}&${this.data[i].hostname}&${this.data[i].id}`)
           this.data.splice(i, 1)
           i -- // 移除后数组已发生改变，回退一位
         }
@@ -286,6 +296,7 @@ export const useProjectStore = defineStore('projectStore', {
       for(let i = 0; i < this.data.length; i++) {
         const data = this.data[i]
         if (data.account === account && data.hostname === hostname) {
+          debounceMap.delete(`${account}&${hostname}&${this.data[i].id}`)
           this.data.splice(i, 1)
           i -- // 移除后数组已发生改变，回退一位
         }

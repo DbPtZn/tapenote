@@ -74,7 +74,7 @@ function handleSavingEnd() {
   })
 }
 function handleContentInput(value: string, id: string) {
-  projectStore.updateSidenoteContent({ content: value, id: id }, handleSavingStart).then(res => {
+  projectStore.updateSidenoteContent({ content: value, id: id }, handleSavingStart, props.account, props.hostname).then(res => {
     if (res) {
       handleSavingEnd()
     } else {
@@ -82,6 +82,8 @@ function handleContentInput(value: string, id: string) {
         .then(() => message.error('更新失败！'))
         .catch()
     }
+  }).catch(err => {
+    message.error('更新失败:' + err)
   })
 }
 /** 更新只读模式 */
