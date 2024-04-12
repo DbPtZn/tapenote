@@ -33,6 +33,7 @@ const state = reactive({
   isReadonly: computed(() => props.readonly())
 })
 let editor: Editor
+let lastContent = ''
 useSidenoteEditor({
   id: props.id,
   account: props.account,
@@ -41,12 +42,16 @@ useSidenoteEditor({
   scrollerRef,
   toolbarRef,
   bridge
-}).then(edi => {
+}).then(({ editor: edi, content }) => {
   editor = edi
+  lastContent = content
   subs.push(
     editor.onChange.subscribe(ev => {
       if (props.readonly()) return
-      handleContentInput(editor.getHTML(), props.id)
+      const content = editor.getHTML()
+      if(lastContent === content) return
+      handleContentInput(content, props.id)
+      lastContent = content
     }),
     bridge.onToolbarCollapse.subscribe(value => {
       state.isToolbarShow = value

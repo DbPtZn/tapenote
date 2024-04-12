@@ -28,7 +28,7 @@ export function createPlayer(args: {
     }
   )
   // console.log([id, editorRef, scrollerRef, controllerRef])
-  return new Promise<Editor>((resolve, reject) => {
+  return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {
     onMounted(() => {
       projectStore
         .fetchAndSet(id, account, hostname)
@@ -61,7 +61,7 @@ export function createPlayer(args: {
               player.loadData([courseData])
             })
 
-            resolve(editor)
+            resolve({ editor, content: project.content })
           } catch (error) {
             console.log(error)
             reject(error)

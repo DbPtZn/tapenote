@@ -27,7 +27,7 @@ export function createTextEditor(args: {
       themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
     }
   )
-  return new Promise<Editor>((resolve, reject) => {
+  return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {
     onMounted(() => {
       projectStore.fetchAndSet(id, account, hostname).then(project => {
         try {
@@ -45,7 +45,7 @@ export function createTextEditor(args: {
             themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme()) 
           })
           
-          resolve(editor)
+          resolve({ editor, content: project.content })
         } catch (error) {
           console.log(error)
           reject(error)

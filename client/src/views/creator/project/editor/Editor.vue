@@ -50,6 +50,7 @@ onMounted(() => {
 })
 let player: Player
 let editor: Editor
+let lastContent = ''
 useEditor({
   id: props.id,
   lib: props.lib,
@@ -61,14 +62,18 @@ useEditor({
   toolbarRef: toolbarRef,
   controllerRef: controllerRef,
   bridge: bridge,
-}).then(edi => {
+}).then(({ editor: edi, content }) => {
   // loadingBar.finish() // 加载条完成
   editor = edi
+  lastContent = content
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
       editor.onChange.subscribe((ev) => {
         if(props.readonly()) return
-        handleContentInput(editor.getHTML(), props.id)
+        const content = editor.getHTML()
+        if(lastContent === content) return
+        handleContentInput(content, props.id)
+        lastContent = content
       })
     )
   }

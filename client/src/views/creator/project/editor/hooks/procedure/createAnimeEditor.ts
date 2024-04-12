@@ -30,7 +30,7 @@ export function createAnimeEditor(args: {
     }
   )
   // console.log([id, editorRef, scrollerRef, toolbarRef])
-  return new Promise<Editor>((resolve, reject) => {
+  return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {
     onMounted(() => {
       projectStore
         .fetchAndSet(id, account, hostname)
@@ -80,7 +80,7 @@ export function createAnimeEditor(args: {
               //   console.log(state)
               // })
             })
-            resolve(editor)
+            resolve({ editor, content: project.content })
           } catch (error) {
             console.log(error)
             reject(error)

@@ -18,7 +18,7 @@ export function useEditor(args: {
   bridge: Bridge
 }) {
   const { id, lib, account, hostname, editorRef, scrollerRef, controllerRef, toolbarRef, rootRef, bridge } = args
-  return new Promise<Editor>((resolve, reject) => {
+  return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {
     switch (lib) {
       case LibraryEnum.NOTE:
         createTextEditor({
@@ -29,8 +29,8 @@ export function useEditor(args: {
           editorRef, 
           scrollerRef, 
           toolbarRef
-        }).then(editor => {
-          resolve(editor)
+        }).then(res => {
+          resolve(res)
         }).catch(err => {
           console.log(err)
           reject(err)
@@ -46,8 +46,8 @@ export function useEditor(args: {
           scrollerRef, 
           toolbarRef,
           controllerRef
-        }).then(editor => {
-          resolve(editor)
+        }).then(res => {
+          resolve(res)
         }).catch(err => {
           console.log(err)
           reject(err)
@@ -62,8 +62,8 @@ export function useEditor(args: {
           editorRef,
           scrollerRef,
           controllerRef
-        }).then(editor => {
-          resolve(editor)
+        }).then(res => {
+          resolve(res)
         }).catch(err => {
           console.log(err)
           reject(err)

@@ -23,9 +23,10 @@
 <script lang="ts" setup>
 import { computed, Ref, ref } from 'vue'
 import { watchOnce } from '@vueuse/core'
-import { useThemeVars } from 'naive-ui'
+import { useMessage, useThemeVars } from 'naive-ui'
 import { LockRound, LockOpenRound } from '@vicons/material'
 const themeVars = useThemeVars()
+const message = useMessage()
 const emits = defineEmits<{
   input: [string], 
   sticky: [boolean],
@@ -59,16 +60,18 @@ const maxWidthVal = computed<string>(() => {
 })
 const textarea = ref()
 const titleInput: Ref<string> = ref(props.value)
-const inputEvent = (ev: any) => {
-  let inputVal = ev.target.innerText.trim()
-  if (inputVal.length > 500) {
+  const inputEvent = (ev: any) => {
+  // .trim() 不能在输入的时候清理两段空白字符，这会导致光标跳回起始位置
+  let inputVal = ev.target.innerText
+  if (inputVal.length > 200) {
+    message.warning('标题不应大于 200 个字符')
     // 截取前500个字符重新赋值给文本框
-    inputVal = inputVal.slice(0, 500)
+    inputVal = inputVal.slice(0, 200)
     textarea.value.innerText = inputVal
     // keepCursorEnd(e.target)
   }
   titleInput.value = inputVal
-  emits('input', titleInput.value)
+  emits('input', titleInput.value.trim())
 }
 
 const handleEnter = (ev: any) => {

@@ -30,7 +30,7 @@ export function useSidenoteEditor(args: {
     }
   )
   // console.log([id, editorRef, scrollerRef, toolbarRef])
-  return new Promise<Editor>((resolve, reject) => {
+  return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {
     onMounted(() => {
       bridge.onEditorReady.subscribe(() => {
         try {
@@ -59,7 +59,7 @@ export function useSidenoteEditor(args: {
             //   uploadImgUrl: '/upload/img'
             // }) 
           })
-          resolve(editor)
+          resolve({ editor, content: data.sidenote})
         } catch (error) {
           console.log(error)
           reject(error)
