@@ -7,6 +7,8 @@ import { Readable } from 'stream'
 const { filepath, config } = workerData
 // console.log(workerData)
 const recognizer = sherpa_onnx.createOfflineRecognizer(config)
+// console.log('recognizer')
+// console.log(recognizer)
 const stream = recognizer.createStream()
 const waveFilename = filepath
 
@@ -46,6 +48,8 @@ fs.createReadStream(waveFilename, { highWaterMark: 4096 })
 
     /** getTimestamps */
     const r = recognizer.Module._GetOfflineStreamResult(stream.handle)
+    // console.log('r')
+    // console.log(r)
     // 读取 tokens 值
     // const tokensPtr = recognizer.Module.getValue(r + 4, 'i8*')
     // const tokens = recognizer.Module.UTF8ToString(tokensPtr)
@@ -77,11 +81,11 @@ fs.createReadStream(waveFilename, { highWaterMark: 4096 })
     // }
     // console.log(timestamps)
     // const text = recognizer.getResult(stream)
-
+    // console.log(text)
     //  读取 json 值
-    const jsonPtr = recognizer.Module.getValue(r + 20, 'i8*')
+    const jsonPtr = recognizer.Module.getValue(r + 12, 'i8*')
     const json = recognizer.Module.UTF8ToString(jsonPtr)
-
+    console.log(json)
     // 将结果发送回主线程
     parentPort.postMessage(JSON.parse(json))
     // 释放内存
