@@ -43,6 +43,10 @@ function freeConfig(config, Module) {
     freeConfig(config.lm, Module)
   }
 
+  if ('ctcFstDecoder' in config) {
+    freeConfig(config.ctcFstDecoder, Module)
+  }
+
   Module._free(config.ptr);
 }
 
@@ -193,11 +197,26 @@ function initSherpaOnnxFeatureConfig(config, Module) {
   return {ptr: ptr, len: len};
 }
 
+function initSherpaOnnxOnlineCtcFstDecoderConfig(config, Module) {
+  const len = 2 * 4;
+  const ptr = Module._malloc(len);
+
+  const graphLen = Module.lengthBytesUTF8(config.graph) + 1;
+  const buffer = Module._malloc(graphLen);
+  Module.stringToUTF8(config.graph, buffer, graphLen);
+
+  Module.setValue(ptr, buffer, 'i8*');
+  Module.setValue(ptr + 4, config.maxActive, 'i32');
+  return {ptr: ptr, len: len, buffer: buffer};
+}
+
 function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   const feat = initSherpaOnnxFeatureConfig(config.featConfig, Module);
   const model = initSherpaOnnxOnlineModelConfig(config.modelConfig, Module);
+  const ctcFstDecoder = initSherpaOnnxOnlineCtcFstDecoderConfig(
+      config.ctcFstDecoderConfig, Module)
 
-  const len = feat.len + model.len + 8 * 4;
+  const len = feat.len + model.len + 8 * 4 + ctcFstDecoder.len;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -243,8 +262,11 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   Module.setValue(ptr + offset, config.hotwordsScore, 'float');
   offset += 4;
 
+  Module._CopyHeap(ctcFstDecoder.ptr, ctcFstDecoder.len, ptr + offset);
+
   return {
-    buffer: buffer, ptr: ptr, len: len, feat: feat, model: model
+    buffer: buffer, ptr: ptr, len: len, feat: feat, model: model,
+        ctcFstDecoder: ctcFstDecoder
   }
 }
 
@@ -313,6 +335,10 @@ function createOnlineRecognizer(Module, myConfig) {
     rule3MinUtteranceLength: 20,
     hotwordsFile: '',
     hotwordsScore: 1.5,
+    ctcFstDecoderConfig: {
+      graph: '',
+      maxActive: 3000,
+    }
   };
   if (myConfig) {
     recognizerConfig = myConfig;
@@ -393,9 +419,6 @@ function initSherpaOnnxOfflineNemoEncDecCtcModelConfig(config, Module) {
 function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   const encoderLen = Module.lengthBytesUTF8(config.encoder) + 1;
   const decoderLen = Module.lengthBytesUTF8(config.decoder) + 1;
-  // console.log(Module)
-  // console.log(Module.lengthBytesUTF8)
-  // console.log(config.language)
   const languageLen = Module.lengthBytesUTF8(config.language) + 1;
   const taskLen = Module.lengthBytesUTF8(config.task) + 1;
 
@@ -638,13 +661,12 @@ class OfflineRecognizer {
   }
 
   getResult(stream) {
-    const r = this.Module._GetOfflineStreamResult(stream.handle);
+    const r = this.Module._GetOfflineStreamResultAsJson(stream.handle);
+    const jsonStr = this.Module.UTF8ToString(r);
+    const ans = JSON.parse(jsonStr);
+    this.Module._DestroyOfflineStreamResultJson(r);
 
-    const textPtr = this.Module.getValue(r, 'i8*');
-    const text = this.Module.UTF8ToString(textPtr);
-
-    this.Module._DestroyOfflineRecognizerResult(r);
-    return text;
+    return ans;
   }
 };
 
@@ -727,11 +749,13 @@ class OnlineRecognizer {
   }
 
   getResult(stream) {
-    const r = this.Module._GetOnlineStreamResult(this.handle, stream.handle);
-    const textPtr = this.Module.getValue(r, 'i8*');
-    const text = this.Module.UTF8ToString(textPtr);
-    this.Module._DestroyOnlineRecognizerResult(r);
-    return text;
+    const r =
+        this.Module._GetOnlineStreamResultAsJson(this.handle, stream.handle);
+    const jsonStr = this.Module.UTF8ToString(r);
+    const ans = JSON.parse(jsonStr);
+    this.Module._DestroyOnlineStreamResultJson(r);
+
+    return ans;
   }
 }
 
