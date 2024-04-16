@@ -1,5 +1,9 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { Worker } = require('worker_threads')
+// const sherpa_onnx = require('./index')
+// console.log(sherpa_onnx.createOfflinePunctuation())
+
+// return
 function asr(filepath) {
   const config = {
     featConfig: {
@@ -13,7 +17,7 @@ function asr(filepath) {
         joiner: ''
       },
       paraformer: {
-        model: '../sherpa/sherpa-onnx-punct-ct-transformer-zh-en-2024-04-12/model.onnx'
+        model: '../sherpa/sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx'
       },
       nemoCtc: {
         model: ''
@@ -27,7 +31,7 @@ function asr(filepath) {
       tdnn: {
         model: ''
       },
-      tokens: '../sherpa/sherpa-onnx-punct-ct-transformer-zh-en-2024-04-12/tokens.json',
+      tokens: '../sherpa/sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt',
       numThreads: 1,
       debug: 0,
       provider: 'cpu',
@@ -59,4 +63,4 @@ function asr(filepath) {
   })
 }
 
-asr('C:/Users/26184/Desktop/tapenote/server/public/SPolZ2wc/audio/6616c0b4388743de9fd50b5e.wav')
+asr('C:/Users/admin/Desktop/tapenote/server/public/MThgz1p5/audio/6613cab46e276704ca126600.wav')

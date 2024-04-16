@@ -18,10 +18,15 @@ function createOfflineTts(config) {
   return sherpa_onnx_tts.createOfflineTts(wasmModule, config);
 }
 
+function createOfflinePunctuation() {
+  console.log(wasmModule)
+}
+
 // Note: online means streaming and offline means non-streaming here.
 // Both of them don't require internet connection.
 module.exports = {
   createOnlineRecognizer,
   createOfflineRecognizer,
   createOfflineTts,
+  createOfflinePunctuation
 };

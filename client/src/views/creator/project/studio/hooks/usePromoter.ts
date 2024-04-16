@@ -43,6 +43,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
       fromEvent(document, 'click', true).pipe(auditTime(5)).subscribe(event => {
         // 点击动画标记以外的任意位置取消预设动画进程
         // 设置一定时间延迟，确保点击动画标记时不会触发该订阅
+        // (实际上添加了 auditTime 后，事务会变成宏任务，animeClick 作为微任务会先于该宏任务执行)
         // 点击动画标记后结束进程时会销毁所有订阅，所以该订阅也不会触发
         makePresetEnd()
       })

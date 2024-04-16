@@ -86,8 +86,10 @@ fs.createReadStream(waveFilename, { highWaterMark: 4096 })
     const jsonPtr = recognizer.Module.getValue(r + 12, 'i8*')
     const json = recognizer.Module.UTF8ToString(jsonPtr)
     console.log(json)
+    const result = JSON.parse(json)
+    // usePunctuation(result.text)
     // 将结果发送回主线程
-    parentPort.postMessage(JSON.parse(json))
+    parentPort.postMessage(result)
     // 释放内存
     stream.free()
     recognizer.free()
@@ -108,3 +110,20 @@ readable.on('readable', function () {
 })
 
 // 注意: 如果在 worker 内捕获了错误，就无法自动触发主线程的 worker.on('error') 了
+
+function usePunctuation(text) {
+  const model = '../sherpa/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/model.onnx'
+  if (!fs.existsSync(model)) {
+    throw new Error(`${model} does not exist`)
+  }
+  // const config = sherpa_onnx.OfflinePunctuationConfig({
+  //   model: sherpa_onnx.OfflinePunctuationModelConfig({
+  //     ct_transformer: model
+  //   })
+  // })
+
+  // const punct = sherpa_onnx.OfflinePunctuation(config)
+  // const result = punct.usePunctuation(text)
+  // console.log(result)
+  // return result
+}

@@ -215,7 +215,7 @@ onUnmounted(() => {
 
 <template>
   <div ref="rootRef" :class="['editor-wrapper', lib === LibraryEnum.COURSE && 'player-wrapper']">
-    <div class="main" :style="{ flexDirection: lib === LibraryEnum.COURSE ? 'row' : 'column' }">
+    <div class="main" :style="{ height: '100%', flexDirection: lib === LibraryEnum.COURSE ? 'row' : 'column' }">
       <!-- 工具条 -->
       <div v-if="lib !== LibraryEnum.COURSE" ref="toolbarWrapperRef">
         <div
@@ -231,7 +231,8 @@ onUnmounted(() => {
         />
       </div>
       <!-- 滚动区 -->
-      <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100vh - ${state.toolbarHeight}px)` }">
+      <!-- TODO height 从 100vh 改成 100% (同步地 main 也要设置 height: 100%)，观察会不会产生其它 Bug 2024/4/16 -->
+      <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
         <TitleInput @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
         <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
       </div>
