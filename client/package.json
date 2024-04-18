@@ -8,6 +8,7 @@
     "dev": "vite",
     "dev:prod": "vite --mode production",
     "build": "vue-tsc && vite build",
+    "build:container": "vite build --config vite.config.ts --mode buildContainer",
     "preview": "vite preview",
     "test": "vitest"
   },
@@ -64,6 +65,7 @@
     "typescript": "5.0",
     "unplugin-vue-components": "^0.25.0",
     "vite": "^4.3.9",
+    "vite-plugin-dts": "^3.8.3",
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-mock": "^3.0.0",
     "vitest": "^0.31.4",

@@ -251,7 +251,7 @@ export class FolderService {
     return result.acknowledged
   }
 
-  // TODO 这里只递归移除了文件夹，并没有处理其中文件的逻辑，待完善
+  // TODO 这里只递归移除了文件夹，并没有处理其中文件的逻辑，考虑是否处理其中文件
   /** 递归更新移除状态 */
   async updateRemovedRecursive(folderId: ObjectId, removeMode: RemovedEnum, userId: ObjectId, removedIds?: ObjectId[]) {
     // console.log('children')

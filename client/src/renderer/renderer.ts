@@ -1,8 +1,7 @@
-// import { FractalContainerConfig } from '@dbptzn/fractal-container'
 import { ContainerTypeEnum, FractalContainerConfig } from './fractal-container'
-import { StateTree, defineStore } from 'pinia'
+import { defineStore } from 'pinia'
 import { ShellModule } from './shell'
-// import CircularJSON from 'circular-json'
+
 interface State {
   data: FractalContainerConfig
   /** 实现层节点：包裹分形容器的具体实现的元素，在 Index.vue 文件下 */
@@ -101,3 +100,12 @@ export const useRendererStore = defineStore('rendererStore', {
   //   }
   // }
 })
+
+
+// class RendererStore {
+//   state: {
+
+//   }
+// }
+
+// export const rendererStore = reactive(new RendererStore())

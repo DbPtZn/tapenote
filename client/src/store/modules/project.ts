@@ -188,7 +188,6 @@ export const useProjectStore = defineStore('projectStore', {
         const index = this.data.findIndex(i => i.id === params.id)
         const account = this.data[index].account
         const hostname = this.data[index].hostname
-        console.log([params.id, account, hostname])
         if (utils.isDiff(this.data[index].title, params.title)) {
           savingcb && savingcb()
           this.creatorApi(account, hostname).project
@@ -214,7 +213,6 @@ export const useProjectStore = defineStore('projectStore', {
         const index = this.data.findIndex(i => i.id === params.id)
         const account = this.data[index].account
         const hostname = this.data[index].hostname
-        console.log([params.id, account, hostname])
         if (utils.isDiff(this.data[index].content, params.content)) {
           savingcb && savingcb()
           this.creatorApi(account, hostname).project
@@ -486,7 +484,7 @@ export const useProjectStore = defineStore('projectStore', {
           role: params.role,
           removed: 'never'
         }
-        console.log(key)
+        // console.log(key)
         get()?.push(fragment) // 不完全片段
         sequence?.push(key) // 用 key 占位
         return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment>(params).then(res => {

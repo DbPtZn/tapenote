@@ -40,6 +40,16 @@ export class Project {
   library: LibraryEnum
 
   @Column({
+    default: 1
+  })
+  version: number // 版本号
+
+  @Column({
+    default: false
+  })
+  isOldVersion: boolean // 是否是旧版本
+
+  @Column({
     length: 120,
     default: '未命名文档'
   })

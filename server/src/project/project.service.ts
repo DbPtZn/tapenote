@@ -362,7 +362,7 @@ export class ProjectService {
     const project = await this.findOneById(new ObjectId(id), userId)
     project.title = title
     const newproject = await this.projectsRepository.save(project)
-    if (newproject) return { updateAt: newproject.updateAt, msg: '笔记标题更新成功！' }
+    if (newproject) return { updateAt: newproject.updateAt, msg: '标题更新成功！' }
     else throw new Error(`标题更新失败,项目于id:${id},当前标题:${title}`)
   }
 
