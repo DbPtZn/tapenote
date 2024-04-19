@@ -1,9 +1,12 @@
 <script lang="ts" setup>
-import { VNode, onMounted, provide, ref } from 'vue'
-import { RecursiveContainer, IframeContainer, ContainerTypeEnum, WrapperInjectKey, ResizeInjectKey } from '.'
-import { ContainerTree } from './_kit/_api'
-import { FractalContainerConfig, InsertType } from './_type'
-import { useRenderer } from '../useRenderer'
+import { VNode, onErrorCaptured, onMounted, provide, ref } from 'vue'
+import { RecursiveContainer, ContainerTypeEnum, WrapperInjectKey, ResizeInjectKey } from '.'
+import { ContainerTree } from '.'
+import { FractalContainerConfig, InsertType } from '.'
+import { useRenderer } from '.'
+defineOptions({
+  name: 'FractalContainer'
+})
 const props = defineProps<{
   data: FractalContainerConfig
   currentId?: string
@@ -35,9 +38,6 @@ const emits = defineEmits<{
   (e: 'onContainerClick', event: MouseEvent, node: FractalContainerConfig): void
   (e: 'onContainerRemove', node: FractalContainerConfig, parent: FractalContainerConfig): void
   (e: 'onContainerContextmenu', event: MouseEvent, node: FractalContainerConfig): void
-  /** iframe 容器事件 */
-  (e: 'onIframeFocus', containerId: string): void
-  (e: 'onInnerMenuExpand', x: number, y: number, containerId: string): void
   /** control */
   (e: 'onControlMouseEnter', event: MouseEvent, node: FractalContainerConfig): void
   (e: 'onControlMouseLeave', event: MouseEvent, node: FractalContainerConfig): void
@@ -47,7 +47,7 @@ defineExpose({
   /** 通过 id 查询容器节点 */
   findNodeById: (id: string) => containerTree.findNodeById(id),
   /** 通过 url 查询容器节点 */
-  findNodeByUrl: (url: string) => containerTree.findNodeByUrl(url),
+  // findNodeByUrl: (url: string) => containerTree.findNodeByUrl(url),
   /** 通过 id 查询相应节点的父容器 */
   findParentNodeById: (id: string) => containerTree.findParentNodeById(id),
   /** 通过 name 找到第一个 name 匹配的容器 */
@@ -68,6 +68,10 @@ provide(WrapperInjectKey, wrapperRef)
 provide(ResizeInjectKey, () => props.resizing)
 onMounted(() => {
   wrapperRef.value && renderer.setWrapperRef(wrapperRef.value) 
+})
+onErrorCaptured(error => {
+  console.log('fractal-container error')
+  console.log(error)
 })
 /** --------------------------------Container---------------------------------- */
 const innerControlVisible = ref('') // 拖拽控件
@@ -195,15 +199,6 @@ const handleControlMouseLeave = (ev: MouseEvent, node: FractalContainerConfig) =
 const handleControlContextmenu = (ev: MouseEvent, node: FractalContainerConfig) => {
   emits('onControlContextmenu', ev, node)
 }
-/** --------------------------------Iframe---------------------------------- */
-/** iframe 容器聚焦 */
-const handleIframeFocus = (containerId: string) => {
-  emits('onIframeFocus', containerId)
-}
-/** iframe 内部菜单展开事件（Alt + mousedown） */
-const handleInnerMenuExpand = (x: number, y: number, containerId: string) => {
-  emits('onInnerMenuExpand', x, y, containerId)
-}
 const handleContainerDrop = (node: FractalContainerConfig, parent: FractalContainerConfig) => {
   innerMaskController.value = false
   sourceNode = null
@@ -235,8 +230,6 @@ const handleContainerDrop = (node: FractalContainerConfig, parent: FractalContai
       @on-container-mouse-leave="handleContainerMouseleave"
       @on-container-contextmenu="handleContainerContextmenu"
       @on-shredder-drop="handleContainerDrop"
-      @on-iframe-focus="handleIframeFocus"
-      @on-inner-menu-expand="handleInnerMenuExpand"
       @on-drag-enter="handleDragEnter"
       @on-drag-over="handleDragOver"
       @on-drag-leave="handleDragLeave"
@@ -246,15 +239,7 @@ const handleContainerDrop = (node: FractalContainerConfig, parent: FractalContai
       @on-control-contextmenu="handleControlContextmenu"
     >
       <template #default="{ node }">
-        <component v-if="node.children.length === 0 && node.cmpt && !node.url" :is="node.cmpt" />
-        <IframeContainer
-          v-if="node.children.length === 0 && node.url && !node.cmpt"
-          :current-id="currentId"
-          :url="node.url"
-          :container-id="node.id"
-          @on-iframe-focus="handleIframeFocus"
-          @on-inline-menu-expand="handleInnerMenuExpand"
-        />
+        <component v-if="node.children.length === 0 && node.cmpt" :is="node.cmpt" />
       </template>
     </RecursiveContainer>
   </div>
@@ -267,4 +252,3 @@ const handleContainerDrop = (node: FractalContainerConfig, parent: FractalContai
   但这样做的后果是我们不得不再写一遍 emits 将事件抛出。
   待优化。
 -->
-

@@ -1,9 +1,9 @@
-import { FractalContainerConfig } from "./fractal-container"
+import { FractalContainerConfig } from ".."
 
 /**
  * 壳接口
  */
-export declare class ShellModule {
+declare class ShellModule {
   /** 壳高度 */
   readonly height: number | string
   /** 壳宽度 */
@@ -12,3 +12,5 @@ export declare class ShellModule {
   readonly useAuxLines?: string
   setup(): FractalContainerConfig
 }
+
+export { ShellModule }

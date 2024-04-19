@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ContainerTypeEnum, FractalContainerConfig, InsertType, useRendererStore, useShell, FractalContainer } from '@/renderer'
+import { ContainerTypeEnum, FractalContainerConfig, InsertType, useRenderer, useShell, FractalContainer } from '@/renderer'
 import { h, onMounted, onUnmounted, ref } from 'vue'
 import useStore from '@/store'
 import { CreatorShell, creatorShell } from './shell'
@@ -8,12 +8,12 @@ import { LibraryEnum } from '@/enums'
 import { MenuFilled } from '@vicons/material'
 const { dragStore, userStore } = useStore()
 const themeVars = useThemeVars()
-const rendererStore = useRendererStore()
-rendererStore.set(creatorShell)
+const renderer = useRenderer()
+renderer.set(creatorShell)
 const shell = useShell<CreatorShell>()
 const implementRef = ref<HTMLElement>()
 onMounted(() => {
-  implementRef.value && rendererStore.setImplementRef(implementRef.value) // 注入实现层
+  implementRef.value && renderer.setImplementRef(implementRef.value) // 注入实现层
   console.log('!--- ---启动分形容器渲染--- ---!')
 })
 onUnmounted(() => {
@@ -34,9 +34,9 @@ function handleDrop(ev: DragEvent, targetNode: FractalContainerConfig, targetNod
   shell.workbench.insertNode(vnode, targetNode, targetNodeParent, index, insertType)
   shell.workbench.setFocus({ node: vnode })
 }
-function handleIframeFocus(containerId: string) {
-  shell.workbench.setFocus({ containerId: containerId })
-}
+// function handleIframeFocus(containerId: string) {
+//   shell.workbench.setFocus({ containerId: containerId })
+// }
 function handleContainerFocus(event, node: FractalContainerConfig) {
   if (node.type === ContainerTypeEnum.CMPT) {
     shell.workbench.setFocus({ node })
@@ -76,16 +76,15 @@ function renderControl({ options }: { options: FractalContainerConfig }) {
 <template>
   <div ref="implementRef" class="render-page">
     <FractalContainer
-      :data="rendererStore.data" 
+      :data="renderer.data" 
       :allow-container-auto-drop="!dragStore.dragging" 
-      :use-aux-lines="rendererStore.useAuxLines"
+      :use-aux-lines="renderer.useAuxLines"
       :mask-visible="dragStore.dragging && dragStore.isFile"
       :current-id="shell.workbench.focusId"
       :render-control="renderControl"
       :width="'100%'"
       :allow-contextmenu="true"
       @on-container-click="handleContainerFocus"
-      @on-iframe-focus="handleIframeFocus"
       @on-drop="handleDrop"
       @on-container-remove="handleContainerRemove"
       @on-container-contextmenu="handleContextmenu"
@@ -98,8 +97,8 @@ function renderControl({ options }: { options: FractalContainerConfig }) {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: v-bind('rendererStore.getHeight');
-  width: v-bind('rendererStore.getWidth');
+  height: v-bind('renderer.getHeight');
+  width: v-bind('renderer.getWidth');
   margin: 0;
   padding: 0;
   overflow: hidden;

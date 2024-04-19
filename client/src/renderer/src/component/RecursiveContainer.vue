@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { Ref, VNode, inject, onMounted, onUnmounted, ref, watch } from 'vue'
+import { Ref, VNode, inject, onErrorCaptured, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ContainerTypeEnum, ResizeInjectKey, WrapperInjectKey, getBeAffectedObjIndex, getBeAffectedObjValue, useAllocateSize, useResizeTranslator } from '..'
-import { FractalContainerConfig, HorizSplitter, VertSplitter, RecursiveContainer, IframeContainer, Provide } from '..'
+import { FractalContainerConfig, HorizSplitter, VertSplitter, RecursiveContainer, Provide } from '..'
 const props = defineProps<{
   data: FractalContainerConfig
   currentId?: string
@@ -54,9 +54,6 @@ const emits = defineEmits<{
   onContainerMouseEnter: [  MouseEvent, FractalContainerConfig ]
   onContainerMouseLeave: [  MouseEvent, FractalContainerConfig ]
   onContainerContextmenu: [  MouseEvent, FractalContainerConfig ]
-  /** iframe */
-  onIframeFocus: [ string ]
-  onInnerMenuExpand: [  number,  number, string ]
   /** control */
   onControlMouseEnter: [  MouseEvent,  FractalContainerConfig ]
   onControlMouseLeave: [  MouseEvent,  FractalContainerConfig ]
@@ -86,6 +83,10 @@ window.addEventListener('resize', allocateSize)
 onUnmounted(() => {
   window.removeEventListener('resize', allocateSize)
 })
+onErrorCaptured(error => {
+  console.log('recusive error')
+  console.log(error)
+})
 if (resizeRef) {
   watch(
     () => resizeRef(),
@@ -107,12 +108,12 @@ watch(
 onMounted(() => {
   // console.log(props.data)
   /** 数据安全检测 */
-  props.data.children.forEach(child => {
-    if (child.cmpt && child.url) {
-      warn.value = '警告: 渲染组件 cmpt 和 url 不能同时存在!'
-      console.warn('警告: 渲染组件 cmpt 和 url 不能同时存在！！！')
-    }
-  })
+  // props.data.children.forEach(child => {
+  //   if (child.cmpt && child.url) {
+  //     warn.value = '警告: 渲染组件 cmpt 和 url 不能同时存在!'
+  //     console.warn('警告: 渲染组件 cmpt 和 url 不能同时存在！！！')
+  //   }
+  // })
   /** 分配容器尺寸 */
   allocateSize()
 })
@@ -164,15 +165,6 @@ const handleDragLeave = (ev: DragEvent) => {
 /** 拖拽放下 */
 const handleDrop = (args: { event: DragEvent; targetNode: FractalContainerConfig; targetNodeParent: FractalContainerConfig; index: number }) => {
   emits('onDrop', args)
-}
-// ----------------------------------- Inner Iframe ---------------------------------------//
-/** iframe 容器聚焦 */
-const handleIframeFocus = (containerId: string) => {
-  emits('onIframeFocus', containerId)
-}
-/** iframe 内部菜单展开事件（Alt + mousedown） */
-const handleInnerMenuExpand = (x: number, y: number, containerId: string) => {
-  emits('onInnerMenuExpand', x, y, containerId)
 }
 // ----------------------------------- Inner Drag ---------------------------------------//
 /** 容器被拖拽开始 */
@@ -334,7 +326,7 @@ const handleControlContextmenu = (ev: MouseEvent, node: FractalContainerConfig) 
     <Provide :node="item" :parent="data" />
     <!-- 插槽 -->
     <slot :node="item" :parent="data" v-if="item.children?.length === 0">
-      <div v-if="item.cmpt || item.url" class="warn" title="点击移除该容器">
+      <div v-if="item.cmpt" class="warn" title="点击移除该容器">
         <span @click="handleContainerRemove(item, data)">{{ warn }}</span>
       </div>
     </slot>
@@ -357,8 +349,6 @@ const handleControlContextmenu = (ev: MouseEvent, node: FractalContainerConfig) 
       @on-container-mouse-leave="handleContainerMouseleave"
       @on-container-contextmenu="handleContainerContextmenu"
       @on-shredder-drop="handleShredderDrop"
-      @on-iframe-focus="handleIframeFocus"
-      @on-inner-menu-expand="handleInnerMenuExpand"
       @on-drag-enter="handleDragEnter"
       @on-drag-over="handleDragOver"
       @on-drag-leave="handleDragLeave"
@@ -370,16 +360,7 @@ const handleControlContextmenu = (ev: MouseEvent, node: FractalContainerConfig) 
       <!-- 递归插槽 -->
       <template #default="{ node }">
         <!-- 渲染组件插件 -->
-        <component v-if="node.children.length === 0 && node.cmpt && !node.url" :is="node.cmpt" />
-        <!-- iframe 插件 -->
-        <IframeContainer
-          v-if="node.children.length === 0 && node.url && !node.cmpt"
-          :current-id="currentId"
-          :url="node.url"
-          :container-id="node.id"
-          @on-iframe-focus="handleIframeFocus"
-          @on-inline-menu-expand="handleInnerMenuExpand"
-        />
+        <component v-if="node.children.length === 0 && node.cmpt" :is="node.cmpt" />
       </template>
     </RecursiveContainer>
   </div>

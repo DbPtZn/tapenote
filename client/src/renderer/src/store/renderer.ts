@@ -1,8 +1,9 @@
-import { ContainerTypeEnum, FractalContainerConfig } from './fractal-container'
-import { defineStore } from 'pinia'
+import { ContainerTypeEnum, FractalContainerConfig } from '..'
+import { StateTree, StoreDefinition, _ActionsTree, _GettersTree, defineStore } from 'pinia'
+// import type { StoreDefinition } from 'pinia'
 import { ShellModule } from './shell'
 
-interface State {
+export interface State extends StateTree {
   data: FractalContainerConfig
   /** 实现层节点：包裹分形容器的具体实现的元素，在 Index.vue 文件下 */
   implementRef: HTMLElement | undefined
@@ -13,14 +14,32 @@ interface State {
   width: number | string
   useAuxLines: string
 }
-
-export const useRendererStore = defineStore('rendererStore', {
+export interface Actions extends _ActionsTree {
+  // 定义 store 中的状态和操作
+  set<T>(shell: ShellModule): Promise<T>
+  setImplementRef(implementRef: HTMLElement): void
+  setWrapperRef(wrapperRef: HTMLElement): void
+  // setShell(shell: ShellModule): void
+  // setHeight(height: number | string): void
+  // setWidth(width: number | string): void
+  // setUseAuxLines(useAuxLines: string): void
+  // getData(): FractalContainerConfig
+  // getImplementRef(): HTMLElement | undefined
+  // getWrapperRef(): HTMLElement | undefined
+  getShell<T>(): T
+}
+export interface Getters extends _GettersTree<State> {
+  getHeight(state: State): number | string
+  getWidth(state: State): number | string
+}
+export type RendererStore =  StoreDefinition<'rendererStore', State, Getters, Actions>
+export const useRendererStore: RendererStore = defineStore('rendererStore', {
   state(): State {
     return {
       data: {
         id: 'root-conatiner',
         type: ContainerTypeEnum.ROOT,
-        url: '',
+        // url: '',
         cmpt: null,
         isRow: true,
         isSplitterRender: false,
@@ -101,6 +120,7 @@ export const useRendererStore = defineStore('rendererStore', {
   // }
 })
 
+// export type RendererStore = ReturnType<typeof useRendererStore>
 
 // class RendererStore {
 //   state: {

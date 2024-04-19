@@ -10,14 +10,11 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       vue(),
-      // dts()
       dts({
-        entryRoot: resolve(__dirname, 'src', 'renderer'),
-        include: ["src/renderer/**/*.ts", "src/renderer/**/*.d.ts", "src/renderer/**/*.vue"],
-        // outDir: 'fractal-container',
-        // insertTypesEntry: true,
-        // copyDtsFiles: true,
-        // logLevel: 'info'
+        entryRoot: resolve(__dirname, 'src', 'renderer', 'main.ts'),
+        insertTypesEntry: true,
+        copyDtsFiles: false,
+        logLevel: 'info'
       })
     ],
     resolve: {
@@ -26,15 +23,13 @@ export default defineConfig(({ command, mode }) => {
       }
     },
     build: {
-      // sourcemap: true,
+      sourcemap: true,
       // target: 'esnext',
-      minify: false,
       outDir: 'fractal-container', //输出文件名称
       lib: {
-        entry: resolve(__dirname, 'src', 'renderer', 'index.ts'), //指定组件编译入口文件
-        name: 'fractal-container',
-        fileName: 'index',
-        formats: ['es']
+        entry: resolve(__dirname, 'src', 'renderer', 'main.ts'), //指定组件编译入口文件
+        name: '@dbptzn/fractal-container',
+        fileName: 'index'
       }, //库编译模式配置
       copyPublicDir: false, // 禁止将 publicDir 目录中的所有文件复制到 outDir 目录中
       rollupOptions: {
@@ -68,7 +63,7 @@ export default defineConfig(({ command, mode }) => {
           "tslib",
           "uuid",
           "vfonts",
-          // "vue",
+          "vue",
           "vue-router",
           "vuedraggable"
         ],
@@ -77,8 +72,7 @@ export default defineConfig(({ command, mode }) => {
           globals: {
             vue: 'Vue',
             pinia: 'Pinia'
-          },
-          format: 'es'
+          }
         }
       } // rollup打包配置
     }

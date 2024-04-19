@@ -1,4 +1,4 @@
-import { FractalContainerConfig } from '@/renderer'
+import { FractalContainerConfig } from '..'
 import { defineEmits } from 'vue'
 export function useDrag() {
   const emits = defineEmits<{

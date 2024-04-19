@@ -5,7 +5,7 @@ interface ContainerTreeModule {
   /** 通过 id 查询节点 */
   findNodeById(id: string): FractalContainerConfig | null
   /** 通过 url 查询节点 */
-  findNodeByUrl(url: string): FractalContainerConfig | null
+  // findNodeByUrl(url: string): FractalContainerConfig | null
   /** 通过 name 找到首个 name 匹配的节点 */
   findFirstNodeByType(type: string): FractalContainerConfig | null
   /** 通过 name 找到所有 name 匹配的节点 */
@@ -64,22 +64,22 @@ export class ContainerTree implements ContainerTreeModule {
     return _findNodeByName(name, this.data)
   }
 
-  findNodeByUrl(url: string): FractalContainerConfig | null {
-    function _findNodeByUrl(url: string, data: FractalContainerConfig) {
-      let node: FractalContainerConfig | null = null
-      if (data.url === url) {
-        node = data
-        return node
-      }
-      if (data.children.length !== 0) {
-        data.children.forEach((child) => {
-          node = _findNodeByUrl(url, child) || node
-        })
-      }
-      return node
-    }
-    return _findNodeByUrl(url, this.data)
-  }
+  // findNodeByUrl(url: string): FractalContainerConfig | null {
+  //   function _findNodeByUrl(url: string, data: FractalContainerConfig) {
+  //     let node: FractalContainerConfig | null = null
+  //     if (data.url === url) {
+  //       node = data
+  //       return node
+  //     }
+  //     if (data.children.length !== 0) {
+  //       data.children.forEach((child) => {
+  //         node = _findNodeByUrl(url, child) || node
+  //       })
+  //     }
+  //     return node
+  //   }
+  //   return _findNodeByUrl(url, this.data)
+  // }
   
   findFirstNodeByType(type: ContainerTypeEnum): FractalContainerConfig | null {
     function _findFirstNodeByType(type: string, data: FractalContainerConfig) {
@@ -215,24 +215,24 @@ export class ContainerTree implements ContainerTreeModule {
     if (sourceNode) {
       const sourceId = sourceNode.id
       const targetId = targetNode.id
-      let sourceUrl = ''
-      let targetUrl = ''
+      // let sourceUrl = ''
+      // let targetUrl = ''
       let sourceCmpt: Component | null = null
       let targetCmpt: Component | null = null
       let sourceName = ''
       let targetName = ''
       sourceNode.cmpt && (sourceCmpt = markRaw(sourceNode.cmpt))
       targetNode.cmpt && (targetCmpt = markRaw(targetNode.cmpt))
-      sourceNode.url && (sourceUrl = sourceNode.url)
-      targetNode.url && (targetUrl = targetNode.url)
+      // sourceNode.url && (sourceUrl = sourceNode.url)
+      // targetNode.url && (targetUrl = targetNode.url)
       sourceNode.name && (sourceName = sourceNode.name)
       targetNode.name && (targetName = targetNode.name)
       let emptyId = ''
       switch (insertType) {
         case InsertType.MIDDLE:
           // 注意： 现在这里只替换了渲染内容，容器并没有发生替换
-          targetNode.url = sourceUrl
-          sourceNode.url = targetUrl
+          // targetNode.url = sourceUrl
+          // sourceNode.url = targetUrl
           sourceNode.cmpt = targetCmpt
           targetNode.cmpt = sourceCmpt
           sourceNode.name = targetName
@@ -261,7 +261,7 @@ export class ContainerTree implements ContainerTreeModule {
               targetNode.allowDrag = false
               targetNode.allowDrop = false
               targetNode.useControl = false
-              targetNode.url = ''
+              // targetNode.url = ''
               targetNode.cmpt = null
               targetNode.children = [newNode, oldNode]
             }
@@ -287,7 +287,7 @@ export class ContainerTree implements ContainerTreeModule {
               targetNode.allowDrag = false
               targetNode.allowDrop = false
               targetNode.useControl = false
-              targetNode.url = ''
+              // targetNode.url = ''
               targetNode.cmpt = null
               targetNode.children = [oldNode, newNode]
             }
@@ -312,7 +312,7 @@ export class ContainerTree implements ContainerTreeModule {
               targetNode.allowDrag = false
               targetNode.allowDrop = false
               targetNode.useControl = false
-              targetNode.url = ''
+              // targetNode.url = ''
               targetNode.cmpt = null
               // node.isChangeAllow = false
               targetNode.children = [newNode, oldNode]
@@ -339,7 +339,7 @@ export class ContainerTree implements ContainerTreeModule {
               targetNode.allowDrag = false
               targetNode.allowDrop = false
               targetNode.useControl = false
-              targetNode.url = ''
+              // targetNode.url = ''
               targetNode.cmpt = null
               targetNode.children = [oldNode, newNode]
             }
@@ -362,7 +362,7 @@ export class ContainerTree implements ContainerTreeModule {
       id: generateLongUUID(),
       name: '',
       type: ContainerTypeEnum.EMPTY,
-      url: '',
+      // url: '',
       cmpt: null,
       ratio: 0,
       min: 0,
@@ -438,7 +438,7 @@ export class ContainerTree implements ContainerTreeModule {
             node.allowDrag = false
             node.allowDrop = false
             node.useControl = false
-            node.url = undefined
+            // node.url = undefined
             node.cmpt = null
             node.children = [newNode, oldNode]
           }
@@ -460,7 +460,7 @@ export class ContainerTree implements ContainerTreeModule {
             node.allowDrag = false
             node.allowDrop = false
             node.useControl = false
-            node.url = undefined
+            // node.url = undefined
             node.cmpt = null
             node.children = [oldNode, newNode]
           }
@@ -479,7 +479,7 @@ export class ContainerTree implements ContainerTreeModule {
             node.allowDrag = false
             node.allowDrop = false
             node.useControl = false
-            node.url = undefined
+            // node.url = undefined
             node.cmpt = null
             node.children = [newNode, oldNode]
           }
@@ -500,7 +500,7 @@ export class ContainerTree implements ContainerTreeModule {
             node.allowDrag = false
             node.allowDrop = false
             node.useControl = false
-            node.url = undefined
+            // node.url = undefined
             node.cmpt = null
             node.children = [oldNode, newNode]
           }

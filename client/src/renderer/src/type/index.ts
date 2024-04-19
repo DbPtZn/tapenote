@@ -3,7 +3,6 @@ export interface FractalContainerConfig {
   id: string // 最好使用UUID生成，id 属性会设置成容器对应的元素的 data-id
   type?: ContainerType
   name?: string // 为容器添加一个名称
-  url?: string //渲染 iframe
   cmpt?: Component | VNode | null // 渲染组件
   // vnode?: VNode, // 未实现
   isRow: boolean // 是否水平分布

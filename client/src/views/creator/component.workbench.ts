@@ -20,7 +20,6 @@ export class ComponentWorkbench extends ContainerTree {
       id: UUID.v4(),
       type: 'wrapper',
       name: 'workbench',
-      url: '',
       cmpt: null,
       isRow: true,
       children: []

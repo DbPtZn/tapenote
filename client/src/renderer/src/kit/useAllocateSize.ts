@@ -1,5 +1,5 @@
 import { Ref } from 'vue'
-import { FractalContainerConfig } from '../_type'
+import { FractalContainerConfig } from '../type'
 // import CircularJSON from 'circular-json'
 import * as flatted from 'flatted'
 /** 分配容器尺寸 */
