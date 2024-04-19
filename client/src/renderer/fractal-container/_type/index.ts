@@ -1,7 +1,4 @@
-import { Component, ComputedRef, VNode, VNodeChild } from 'vue'
-import { ContainerTypeEnum } from '../_emun'
-import { type } from 'os'
-
+import { Component, VNode } from 'vue'
 export interface FractalContainerConfig {
   id: string // 最好使用UUID生成，id 属性会设置成容器对应的元素的 data-id
   type?: ContainerType

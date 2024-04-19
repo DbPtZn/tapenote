@@ -1,6 +1,5 @@
-import { Component, h, markRaw } from 'vue'
+import { Component, markRaw } from 'vue'
 import { FractalContainerConfig, InsertType, ContainerTypeEnum } from '..'
-// import { stringify } from 'circular-json'
 import * as Flatted from 'flatted'
 interface ContainerTreeModule {
   /** 通过 id 查询节点 */

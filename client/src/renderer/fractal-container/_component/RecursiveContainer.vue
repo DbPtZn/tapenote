@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { Ref, VNode, inject, onMounted, onUnmounted, provide, ref, watch } from 'vue'
-import { ContainerTypeEnum, FractalContainerInjectKey, ResizeInjectKey, WrapperInjectKey, getBeAffectedObjIndex, getBeAffectedObjValue, useAllocateSize, useResizeTranslator } from '..'
+import { Ref, VNode, inject, onMounted, onUnmounted, ref, watch } from 'vue'
+import { ContainerTypeEnum, ResizeInjectKey, WrapperInjectKey, getBeAffectedObjIndex, getBeAffectedObjValue, useAllocateSize, useResizeTranslator } from '..'
 import { FractalContainerConfig, HorizSplitter, VertSplitter, RecursiveContainer, IframeContainer, Provide } from '..'
 const props = defineProps<{
   data: FractalContainerConfig

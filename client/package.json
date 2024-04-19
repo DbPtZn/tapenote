@@ -8,7 +8,7 @@
     "dev": "vite",
     "dev:prod": "vite --mode production",
     "build": "vue-tsc && vite build",
-    "build:container": "vite build --config vite.config.ts --mode buildContainer",
+    "build:renderer": "vite build --config build-renderer.config.ts",
     "preview": "vite preview",
     "test": "vitest"
   },

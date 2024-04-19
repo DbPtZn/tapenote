@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { VNode, computed, onMounted, provide, ref } from 'vue'
+import { VNode, onMounted, provide, ref } from 'vue'
 import { RecursiveContainer, IframeContainer, ContainerTypeEnum, WrapperInjectKey, ResizeInjectKey } from '.'
 import { ContainerTree } from './_kit/_api'
 import { FractalContainerConfig, InsertType } from './_type'
-import { useRenderer } from '..';
+import { useRenderer } from '../useRenderer'
 const props = defineProps<{
   data: FractalContainerConfig
   currentId?: string
