@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 fractal-container
+editor-dist
 *.local
 components.d.ts
 

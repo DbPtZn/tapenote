@@ -61,7 +61,7 @@ export default defineConfig(({ command, mode }) => {
           "lodash",
           "material-icons",
           "naive-ui",
-          "pinia",
+          // "pinia",
           "pinia-plugin-persistedstate",
           "prismjs",
           "reflect-metadata",

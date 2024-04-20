@@ -1,15 +1,22 @@
+import { App, Component, Plugin } from 'vue'
 import { FractalContainer } from './src'
-// import { ShellModule } from './shell'
-// import { useShell } from './useShell'
-// import { useRendererStore } from './renderer'
-// import { useRenderer } from './useRenderer'
 import { withInstall } from './utils/withInstall'
-// export * from './index'
-// import 'vite/modulepreload-polyfill'
-// const coms = [FractalContainer] // 将来如果有其它组件,都可以写到这个数组里
 
+const comps = [FractalContainer] // 将来如果有其它组件,都可以写到这个数组里
 // 批量组件注册
-const install = withInstall(FractalContainer)
-// export type { FractalContainerConfig, InsertType, ContainerType, ShellModule }
-// export { install, useRenderer, useShell }
+// const install = withInstall(FractalContainer)
+// type SFCWithInstall<T> = T & Plugin
+const install = (Vue: App) =>{
+  comps.map((component: Component)=>{
+    Vue.component(component.name as string, component)
+  })
+}
+
+const windowObj = window as any
+/* 支持使用标签的方式引入 */
+if (typeof windowObj !== 'undefined' && windowObj.Vue) {
+    const vm = windowObj.Vue.createApp({})
+    install(vm)
+}
+
 export default install
