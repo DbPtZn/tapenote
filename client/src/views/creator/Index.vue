@@ -6,6 +6,7 @@ import { CreatorShell, creatorShell } from './shell'
 import { NButton, NIcon, useThemeVars } from 'naive-ui'
 import { LibraryEnum } from '@/enums'
 import { MenuFilled } from '@vicons/material'
+import { CacheListView } from './cache'
 const { dragStore, userStore } = useStore()
 const themeVars = useThemeVars()
 const renderer = useRenderer()
@@ -63,6 +64,11 @@ function renderControl({ options }: { options: FractalContainerConfig }) {
         top: '8px',
         left: '8px',
         color: options.id === shell.workbench.focusId ? themeVars.value.textColor1 : themeVars.value.textColor3
+      },
+      onContextmenu: (ev) => {
+        ev.preventDefault()
+        ev.stopPropagation()
+        console.log(ev)
       }
     }, 
     {
@@ -89,6 +95,7 @@ function renderControl({ options }: { options: FractalContainerConfig }) {
       @on-container-remove="handleContainerRemove"
       @on-container-contextmenu="handleContextmenu"
     />
+    <CacheListView />
   </div>
 </template>
 

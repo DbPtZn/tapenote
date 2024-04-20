@@ -223,6 +223,10 @@ function handleError(ev: Event) {
   target.src = './default.png'
 }
 
+function handleCache() {
+  
+}
+
 
 </script>
 
@@ -250,7 +254,7 @@ function handleError(ev: Event) {
           <DpzIcon :icon="item.icon" :size="24" />
         </div> -->
         <!-- 可以查看缓存中的项目（待开发） -->
-        <div class="btn option disabled">
+        <div class="btn option" @click="handleCache">
           <n-icon :component="History" :size="24" />
         </div>
         <n-dropdown v-if="state.blogOption" trigger="click" :placement="'right'" :to="footerRef" :show="showBloggerDropdownRef" :options="getBloggerOptions()" @update:show="handleShowBloggerDropdown">
