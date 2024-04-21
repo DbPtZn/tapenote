@@ -15,7 +15,6 @@ import { ArrowDropDownRound, ChevronLeftFilled, MoreHorizFilled } from '@vicons/
 const { folderStore, folderTreeStore, dragStore, userStore } = useStore()
 const shell = useShell<CreatorShell>()
 const themeVars = useThemeVars()
-// const dropdown = new ItemListDropDown()
 const { dropdownState, options, handleContextmenu, handleMoreAction, handleSelect, handleClickoutside } = useItemListDropDown()
 const value = ref()
 const scrollerRef = ref<HTMLElement>()

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { NButton, useThemeVars } from 'naive-ui'
-import { MoreVertRound } from '@vicons/material'
+import { MoreVertRound, CloseRound } from '@vicons/material'
 const themeVars = useThemeVars()
 const props = defineProps<{
   id: string
@@ -14,11 +14,11 @@ const props = defineProps<{
   active?: boolean
 }>()
 const emits = defineEmits<{
-  onMoreAction: [ ev: MouseEvent ]
-  toFolder: [ folderId: string ]
+  onRemove: [ ev: MouseEvent ]
+  // toFolder: [ folderId: string ]
 }>()
-function handleMoreAction(ev) {
-  emits('onMoreAction', ev)
+function handleRemoveCache(ev) {
+  emits('onRemove', ev)
 }
 </script>
 
@@ -29,8 +29,8 @@ function handleMoreAction(ev) {
       <n-text class="header-title" :depth="2"> {{ title }} </n-text>
     </template>
     <template #header-extra>
-      <n-button text class="header-icon" @click.prevent.stop="handleMoreAction">
-        <NIcon :component="MoreVertRound" size="22" />
+      <n-button text class="header-icon" @click.prevent.stop="handleRemoveCache">
+        <NIcon :component="CloseRound" size="18" />
       </n-button>
     </template>
     <template #default>
@@ -40,7 +40,6 @@ function handleMoreAction(ev) {
       <n-text 
         :class="['footer', showFolderName || (active && folderName) ? 'folder' : '']" 
         :depth="3"
-        @click="emits('toFolder', folderId || '')"
       >
         {{ showFolderName || (active && folderName) ? folderName : date }}
       </n-text>

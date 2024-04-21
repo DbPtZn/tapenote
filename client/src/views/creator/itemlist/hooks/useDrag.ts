@@ -28,6 +28,11 @@ export function useDrag() {
     //
   }
   function handleDrop(ev: DragEvent, folder: Subfolder) {
+    if (dragStore.isCache) {
+      message.error('不能操作缓存项目！')
+      // handleDragLeave()
+      return
+    }
     if (dragStore.isFile) {
       const fileId = ev.dataTransfer?.getData('id')
       const lib = ev.dataTransfer?.getData('lib') as LibraryEnum

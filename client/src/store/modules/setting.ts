@@ -6,6 +6,7 @@ interface State {
   theme: typeof darkTheme | null
   isSidebarCollapse: boolean
   isItemListCollapse: boolean
+  isCacheListShow: boolean
 }
 
 export const useSettingStore = defineStore('settingStore', {
@@ -13,7 +14,8 @@ export const useSettingStore = defineStore('settingStore', {
     return {
       theme: darkTheme,
       isSidebarCollapse: false,
-      isItemListCollapse: false
+      isItemListCollapse: false,
+      isCacheListShow: false,
     }
   },
   actions: {
@@ -37,6 +39,9 @@ export const useSettingStore = defineStore('settingStore', {
     },
     getCurrentTheme(): ThemeEnum {
       return this.theme ? ThemeEnum.DARK : ThemeEnum.LIGHT
+    },
+    handleCacheVisible() {
+      this.isCacheListShow = !this.isCacheListShow
     }
   },
   getters: {

@@ -8,6 +8,7 @@ export interface DragState {
   lib: LibraryEnum | null
   dragging: boolean
   isFile: boolean
+  isCache: boolean
 }
 
 export const useDragStore = defineStore('dragStore', {
@@ -15,7 +16,8 @@ export const useDragStore = defineStore('dragStore', {
     return {
       lib: null,
       dragging: false,
-      isFile: false
+      isFile: false,
+      isCache: false
     }
   },
   actions: {

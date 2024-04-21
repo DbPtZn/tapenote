@@ -51,6 +51,11 @@ export function useDrag(sidebarRef: Ref<HTMLElement | undefined>) {
     dragState.heightRef = 0
   }
   function handleDrop(event: DragEvent) {
+    if (dragStore.isCache) {
+      message.error('不能操作缓存项目！')
+      handleDragLeave()
+      return
+    }
     if (dragStore.isFile) {
       const fileId = event.dataTransfer?.getData('id')
       const lib = event.dataTransfer?.getData('lib') as LibraryEnum
