@@ -5,7 +5,7 @@ import fs from 'fs'
 import { Readable } from 'stream'
 
 const { filepath, config } = workerData
-// console.log(workerData)
+console.log(config)
 const recognizer = sherpa_onnx.createOfflineRecognizer(config)
 // console.log('recognizer')
 // console.log(recognizer)

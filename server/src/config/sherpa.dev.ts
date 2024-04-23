@@ -17,7 +17,12 @@ export default registerAs('sherpa', () => ({
         debug: 1,
         provider: 'cpu'
       },
-      ruleFsts: 'sherpa/vits-zh-hf-fanchen-C/rule.fst',
+      ruleFsts: [
+        'sherpa/vits-zh-hf-fanchen-C/phone.fst',
+        'sherpa/vits-zh-hf-fanchen-C/number.fst',
+        'sherpa/vits-zh-hf-fanchen-C/new_heteronym.fst'
+      ].join(','),
+      ruleFars: '',
       maxNumSentences: 1
     },
     asrConfig: {

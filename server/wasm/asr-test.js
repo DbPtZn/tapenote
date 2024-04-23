@@ -65,7 +65,7 @@ function asr(filepath) {
 }
 
 // asr('C:/Users/26184/Desktop/tapenote/server/sherpa/sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/1.wav')
-
+asr('C:/Users/admin/Desktop/tapenote/server/public/uWgrfCru/audio/6614e12fba64241ae4c33b96.wav')
 const data = {
   text: '重点呢想谈三个问题首先呢就是这一轮全球金融动荡的表现',
   punText:'重点呢,想谈三个问题,首先呢,就是这一轮全球金融动荡的表现。',
@@ -95,7 +95,7 @@ function checkPunText (text, punText, tokens, timestamps) {
   if (text === textWithoutPunctuation && text === tokensText && tokens.length === timestamps.length) return true
   else return false
 }
-console.log(checkPunText(data.text, data.punText, data.tokens, data.timestamps))
+// console.log(checkPunText(data.text, data.punText, data.tokens, data.timestamps))
 // function findPunctuation(text) {
 
 //   const punctuationList = text.match(regex);
@@ -127,5 +127,5 @@ if (checkPunText(data.text, data.punText, data.tokens, data.timestamps)) {
     }
   }
 }
-console.log(data.tokens)
-console.log(data.timestamps)
+// console.log(data.tokens)
+// console.log(data.timestamps)

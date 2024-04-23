@@ -81,8 +81,8 @@ dependencies:
     specifier: ^7.8.1
     version: 7.8.1
   sherpa-onnx:
-    specifier: ^1.9.16
-    version: 1.9.16
+    specifier: ^1.9.21
+    version: 1.9.21
   svg-captcha:
     specifier: ^1.4.0
     version: 1.4.0
@@ -5337,8 +5337,8 @@ packages:
       rechoir: 0.6.2
     dev: true
 
-  /sherpa-onnx@1.9.16:
-    resolution: {integrity: sha512-dxx/Cg5uslFEKTedbB7KH92Xk4klnvlCy+zMy4QsMun+w6mC0fyKnzRVt8bGido/HJssCdds/VHkxUg/Xxy1kA==}
+  /sherpa-onnx@1.9.21:
+    resolution: {integrity: sha512-X6IJ9DOMuFT2Dbto15X3/KyBYPPdAv2bV2UYFZ0vEDI5Xp3hKphamagTHeQU94FbCdg1gYkb8OM1YOsFHw69mQ==}
     dev: false
 
   /side-channel@1.0.6:

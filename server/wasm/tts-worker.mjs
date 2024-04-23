@@ -1,5 +1,6 @@
 import { parentPort, workerData } from 'worker_threads'
 import sherpa_onnx from './index.js'
+// import sherpa_onnx from 'sherpa-onnx'
 
 const { txt, filepath, speakerId, speed, config } = workerData
 // console.log(workerData)
