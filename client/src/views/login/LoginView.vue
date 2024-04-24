@@ -19,6 +19,7 @@ const props = defineProps<{
     password: string
   }
 }>()
+const tip = import.meta.env.VITE_TIP || ''
 const formRef = ref<FormInst | null>(null)
 const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true' // 是否开放注册入口
 const model = ref<ModelType>({
@@ -90,9 +91,12 @@ function handleToRegister() {
 
 <template>
   <div class="login-container">
+    <div class="tip">
+      {{tip}}
+    </div>
     <n-card class="login">
       <n-space vertical>
-        <div class="tip">登录</div>
+        <div class="title">登录</div>
         <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
           <n-form-item path="hostname" label="服务器地址">
             <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" />
@@ -121,6 +125,13 @@ function handleToRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.tip {
+  position: fixed;
+  top: 24px;
+  margin-top: 24px;
+  font-size: 24px;
+  font-weight: bold;
 }
 .bg {
   position: absolute;
@@ -151,7 +162,7 @@ function handleToRegister() {
   border-radius: 15px;
   margin: auto;
   z-index: 1;
-  .tip {
+  .title {
     width: 100%;
     display: flex;
     align-items: center;
