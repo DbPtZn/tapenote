@@ -83,10 +83,10 @@ window.addEventListener('resize', allocateSize)
 onUnmounted(() => {
   window.removeEventListener('resize', allocateSize)
 })
-onErrorCaptured(error => {
-  console.log('recusive error')
-  console.log(error)
-})
+// onErrorCaptured(error => {
+//   console.log('recusive error')
+//   console.log(error)
+// })
 if (resizeRef) {
   watch(
     () => resizeRef(),

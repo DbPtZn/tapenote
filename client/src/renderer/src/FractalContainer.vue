@@ -69,10 +69,10 @@ provide(ResizeInjectKey, () => props.resizing)
 onMounted(() => {
   wrapperRef.value && renderer.setWrapperRef(wrapperRef.value) 
 })
-onErrorCaptured(error => {
-  console.log('fractal-container error')
-  console.log(error)
-})
+// onErrorCaptured(error => {
+//   console.log('fractal-container error')
+//   console.log(error)
+// })
 /** --------------------------------Container---------------------------------- */
 const innerControlVisible = ref('') // 拖拽控件
 const innerShredderVisible = ref('') // 销毁控件

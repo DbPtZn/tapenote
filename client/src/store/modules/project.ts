@@ -150,7 +150,7 @@ export const useProjectStore = defineStore('projectStore', {
         title: data.title || '',
         content: data.content || '',
         abbrev: data.abbrev || '',
-        fragments: data.fragments.map(fragment => {
+        fragments: data.fragments?.map(fragment => {
           fragment.audio = hostname + fragment.audio
           return fragment
         }) || [],

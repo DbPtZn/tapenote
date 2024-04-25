@@ -570,6 +570,13 @@ export class ProjectService {
     }
   }
 
+  /** -------------------------------- 版本控制 ------------------------------------ */
+  /** 版本快照 */
+  // snapshot(_id: ObjectId, userId: ObjectId) {
+  //   const project = this.projectsRepository.findOneBy({ _id, userId })
+  //   project
+  // }
+
   /** -------------------------------- 片段 ------------------------------------ */
   async addFragment(procedureId: ObjectId, userId: ObjectId, fragment: Fragment) {
     const procedure = await this.projectsRepository.findOneBy({ _id: procedureId, userId })

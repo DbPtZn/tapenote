@@ -185,6 +185,7 @@ const debounceB = _.debounce(func => func(), 2000)
 onBeforeUnmount(() => {
   if(props.lib !== LibraryEnum.COURSE) {
     // 离开页面前立即保存, 设置一定延迟，否则卡片会立即更新，影响体验
+    if (!editor) return
     const content = editor.getHTML()
     const id = props.id
     const account = props.account

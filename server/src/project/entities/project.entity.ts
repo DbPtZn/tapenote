@@ -40,14 +40,23 @@ export class Project {
   library: LibraryEnum
 
   @Column({
-    default: 1
+    default: 0
   })
-  version: number // 版本号
+  eidtorVersion: string
 
-  @Column({
-    default: false
-  })
-  isOldVersion: boolean // 是否是旧版本
+  // @Column({
+  //   default: 1
+  // })
+  // snapshot: {
+  //   version: number // 版本号
+  //   date: Date // 版本时间
+  //   remarks: string // 备注
+  // }
+
+  // @Column({
+  //   default: true
+  // })
+  // currentVersion: boolean // 是否当前版本
 
   @Column({
     length: 120,
