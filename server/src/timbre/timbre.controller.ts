@@ -34,12 +34,12 @@ export class TimbreController {
     const timbre = await this.timbreService.findAll(req.user._id, req.user.dirname)
     timbre.roleList.forEach((role, key) => {
       if (role.value.avatar) {
-        role.value.avatar = 'http://' + req.headers.host + '/public' + role.value.avatar.split('public')[1]
+        role.value.avatar = '/public' + role.value.avatar.split('public')[1]
       }
     })
     timbre.robotList.forEach((role, key) => {
       if (role.value.avatar) {
-        role.value.avatar = 'http://' + req.headers.host + '/public' + role.value.avatar.split('public')[1]
+        role.value.avatar = '/public' + role.value.avatar.split('public')[1]
       }
     })
     delete timbre.userId
@@ -60,7 +60,7 @@ export class TimbreController {
   @Get(`${REST.R}/robot/test/:role`)
   async testRobot(@Param('role') role: number, @Req() req, @Res() res) {
     const filepath = await this.timbreService.testRobot(Number(role))
-    const url = 'http://' + req.headers.host + '/public' + filepath.split('public')[1]
+    const url = '/public' + filepath.split('public')[1]
     res.status(200).send(url)
   }
 

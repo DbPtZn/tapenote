@@ -46,7 +46,7 @@ export class UserController {
   async getUserInfo(@Req() req, @Res() res) {
     // console.log('请求用户数据：' + req.user._id)
     const info = await this.userService.getInfoById(req.user._id, req.user.dirname)
-    info.avatar = 'http://' + req.headers.host + '/public' + info.avatar.split('public')[1]
+    info.avatar = '/public' + info.avatar.split('public')[1]
     if (!info) {
       return res.status(400).send('权限不足，获取用户信息失败！')
     }

@@ -19,7 +19,7 @@ const props = defineProps<{
     password: string
   }
 }>()
-const tip = import.meta.env.VITE_TIP || ''
+const tip = import.meta.env.VITE_LOGIN_TIP || ''
 const formRef = ref<FormInst | null>(null)
 const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true' // 是否开放注册入口
 const model = ref<ModelType>({

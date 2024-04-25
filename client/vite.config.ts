@@ -8,9 +8,10 @@ import Components from 'unplugin-vue-components/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  // const env = loadEnv(mode, process.cwd(), '')
-  // console.log(env.NODE_ENV)
+  const env = loadEnv(mode, process.cwd(), '')
+  // console.log(env.VITE_ASSETS_BASE)
   return {
+    base: env.VITE_ASSETS_BASE,
     plugins: [
       vue(),
       eslintPlugin({

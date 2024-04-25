@@ -131,7 +131,7 @@ function handleTest(role: number) {
   }
   isLoading.value = true
   timbreStore.testRobot(role, props.account, props.hostname).then(res => {
-    const url = res.data as string
+    const url = props.hostname + res.data as string
     const audio = new Audio(url)
     isLoading.value = false
     audio.oncanplay =() => {

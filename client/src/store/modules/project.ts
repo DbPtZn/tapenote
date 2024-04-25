@@ -83,6 +83,10 @@ export const useProjectStore = defineStore('projectStore', {
         // 这里不能设置state，否则在创建后自动切换页面时不会更新state，因为它已经存在
         res.data.account = account
         res.data.hostname = hostname
+        res.data.audio = res.data.audio ? hostname + res.data.audio : ''
+        res.data.fragments?.forEach(fragment => {
+          fragment.audio = hostname + fragment.audio
+        })
         return res.data
       })
     },
@@ -96,6 +100,10 @@ export const useProjectStore = defineStore('projectStore', {
           return this.creatorApi(account, hostname).project.create<Project>({ folderId, noteId, library: LibraryEnum.PROCEDURE, ...author }).then(res => {
             res.data.account = account
             res.data.hostname = hostname
+            res.data.audio = res.data.audio ? hostname + res.data.audio : ''
+            res.data.fragments?.forEach(fragment => {
+              fragment.audio = hostname + fragment.audio
+            })
             resolve(res.data)
           }).catch(err => reject(err))
         }
@@ -104,6 +112,10 @@ export const useProjectStore = defineStore('projectStore', {
           return this.creatorApi(account, hostname).project.create<Project>({ folderId, procedureId, library: LibraryEnum.COURSE, ...author }).then(res => {
             res.data.account = account
             res.data.hostname = hostname
+            res.data.audio = res.data.audio ? hostname + res.data.audio : ''
+            res.data.fragments?.forEach(fragment => {
+              fragment.audio = hostname + fragment.audio
+            })
             resolve(res.data)
           }).catch(err => reject(err))
         }
@@ -138,10 +150,13 @@ export const useProjectStore = defineStore('projectStore', {
         title: data.title || '',
         content: data.content || '',
         abbrev: data.abbrev || '',
-        fragments: data.fragments || [],
+        fragments: data.fragments.map(fragment => {
+          fragment.audio = hostname + fragment.audio
+          return fragment
+        }) || [],
         sequence: data.sequence || [],
         removedSequence: data.removedSequence || [],
-        audio: data.audio || '',
+        audio: data.audio ? hostname + data.audio : '',
         duration: data.duration || 0,
         promoterSequence: data.promoterSequence || [],
         keyframeSequence: data.keyframeSequence || [],
@@ -307,6 +322,7 @@ export const useProjectStore = defineStore('projectStore', {
     pasteFragment(params: Parameters<typeof CreatorApi.prototype.fragment.copyFragment>[0], account: string, hostname: string) {
       return this.creatorApi(account, hostname).fragment.copyFragment<{ fragment: Fragment, updateAt: string }>(params).then(res => {
         const { fragment, updateAt } = res.data
+        fragment.audio = hostname + fragment.audio
         const { sourceFragmentId, targetFragmentId, sourceProejctId, targetProejctId, type, position } = params
         const source = this.get(sourceProejctId)!
         const target = this.get(targetProejctId)!
@@ -424,6 +440,7 @@ export const useProjectStore = defineStore('projectStore', {
         sequence?.push(key) // 用 key 占位
         return this.creatorApi(account!, hostname!).fragment.createByText<Fragment>(params).then(res => {
           const data = res.data
+          data.audio = hostname + data.audio
           if(data.key) {
             // 用片段 id 替换排序信息中的占位 key
             sequence?.some((item, index, arr) => {
@@ -489,6 +506,7 @@ export const useProjectStore = defineStore('projectStore', {
         sequence?.push(key) // 用 key 占位
         return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment>(params).then(res => {
           const data = res.data
+          data.audio = hostname + data.audio
           if(data.key) {
             // 用片段 id 替换排序信息中的占位 key
             sequence?.some((item, index, arr) => {
@@ -529,8 +547,10 @@ export const useProjectStore = defineStore('projectStore', {
       const createBlank = (params: Parameters<typeof CreatorApi.prototype.fragment.createBlank>[0]) => {
         params.procedureId = procedureId
         return this.creatorApi(account!, hostname!).fragment.createBlank<Fragment>(params).then(res => {
-          get()?.push(res.data)
-          sequence?.push(res.data.id)
+          const data = res.data
+          data.audio = hostname + data.audio
+          get()?.push(data)
+          sequence?.push(data.id)
         })
       }
       /** 更新转写文字 */

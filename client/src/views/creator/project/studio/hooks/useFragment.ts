@@ -216,10 +216,10 @@ export function useFragment(id: string, bridge: Bridge) {
   const studioOptions: DropdownMixedOption[] = [
     {
       key: 'preview',
-      label: '微课播放预览',
+      label: '播放预览',
       props: {
         onClick: () => {
-          message.warning('注意：预览模式与微课作品的播放效果不完全一致')
+          message.warning('注意：预览模式与作品成品的播放效果不完全一致')
           player = bridge.editor.get(Player)
           const fragments = projectStore.fragment(id).getBySort()
           applyPlay(fragments, true)

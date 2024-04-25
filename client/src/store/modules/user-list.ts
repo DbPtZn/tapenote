@@ -193,7 +193,7 @@ export const useUserListStore = defineStore('userListStore', {
         hostname: data.hostname,
         account: data.account,
         nickname: data.nickname,
-        avatar: data.avatar || '',
+        avatar: data.avatar ? data.hostname + data.avatar : '',
         desc: data.desc || '',
         email: data.email || '',
         homepage: data.homepage || '',

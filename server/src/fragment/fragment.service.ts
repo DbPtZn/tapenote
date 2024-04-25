@@ -101,10 +101,12 @@ export class FragmentService {
 
         const temppath2 = this.storageService.createTempFilePath('.wav')
         /** 清理静音 */
+        // FIXME: 静音清理存在问题，可能会把过短的音频处理掉，比如 “呱” 合成的语音还有 “哈撒给”的“哈”会被裁剪掉
         await this.ffmpegService.clearSilence(temppath1, temppath2)
 
         /** 格式化音频文件 */
         await this.ffmpegService.audioformat(temppath2, filepath)
+        // console.log(filepath)
 
         /** 计算合成音频的时长 */
         fragment.duration = await this.ffmpegService.calculateDuration(filepath)
@@ -122,6 +124,7 @@ export class FragmentService {
         }
       })
       .catch(async err => {
+        console.log(err)
         await this.projectService.removeErrorFragment(_procedureId, fragmentId, userId)
       })
 

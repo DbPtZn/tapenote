@@ -46,7 +46,6 @@ const data = reactive<FractalContainerConfig>({
   id: containerId.wrapper,
   type: 'wrapper',
   name: `project-${containerId.wrapper}`,
-  url: '',
   cmpt: null,
   isRow: false,
   children: [

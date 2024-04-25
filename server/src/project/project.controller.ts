@@ -47,13 +47,13 @@ export class ProjectController {
           // 替换片段音频路径
           project.fragments = project.fragments.map(fragment => {
             fragment['id'] = fragment._id // 用于前端的 id
-            fragment.audio = 'http://' + req.headers.host + '/public' + fragment.audio.split('public')[1]
+            fragment.audio = '/public' + fragment.audio.split('public')[1]
             return fragment
           }) as any
           break
         case LibraryEnum.COURSE:
           // 替换音频路径
-          project.audio = 'http://' + req.headers.host + '/public' + project.audio.split('public')[1] || ''
+          project.audio = '/public' + project.audio.split('public')[1] || ''
           break
       }
       res.status(200).send(project)

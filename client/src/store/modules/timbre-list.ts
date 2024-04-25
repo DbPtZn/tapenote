@@ -72,9 +72,13 @@ export const useTimbreStore = defineStore('timbreStore', {
       timbre.roleList.set(9999, { name: '本尊', avatar: user.avatar, changer: 0 })
       timbre.robotList.set(0, { name: '默认', avatar: './robot.png' })
       data.roleList.forEach(item => {
+        item.value.avatar = `${hostname}${item.value.avatar}`
+        // console.log(item.value)
         timbre.roleList.set(item.key, item.value)
       })
       data.robotList.forEach(item => {
+        item.value.avatar = `${hostname}${item.value.avatar}`
+        // console.log(item.value)
         timbre.robotList.set(item.key, item.value)
       })
       this.data.push(timbre)

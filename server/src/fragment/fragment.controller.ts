@@ -47,7 +47,7 @@ export class FragmentController {
       const data = {
         key: createTTSFragmentDto.key, // 返回的信息中添加 key 值标识
         id: fragment._id,
-        audio: 'http://' + req.headers.host + '/public' + fragment.audio.split('public')[1],
+        audio: '/public' + fragment.audio.split('public')[1],
         duration: fragment.duration,
         txt: fragment.txt,
         transcript: fragment.transcript,
@@ -82,7 +82,7 @@ export class FragmentController {
       const data = {
         key: formData.key, // 返回的信息中添加 key 值标识
         id: fragment._id,
-        audio: 'http://' + req.headers.host + '/public' + fragment.audio.split('public')[1],
+        audio: '/public' + fragment.audio.split('public')[1],
         duration: fragment.duration,
         txt: fragment.txt,
         transcript: fragment.transcript,
@@ -105,7 +105,7 @@ export class FragmentController {
       const fragment = await this.fragmentService.createBlank(dto, req.user._id, req.user.dirname)
       const data = {
         id: fragment._id,
-        audio: 'http://' + req.headers.host + '/public' + fragment.audio.split('public')[1],
+        audio: '/public' + fragment.audio.split('public')[1],
         duration: fragment.duration,
         txt: fragment.txt,
         transcript: fragment.transcript,
@@ -247,7 +247,7 @@ export class FragmentController {
   async copy(@Body() dto: CopyFragmentDto, @Req() req, @Res() res) {
     try {
       const result = await this.fragmentService.copy(dto, req.user._id, req.user.dirname)
-      result.fragment.audio = 'http://' + req.headers.host + '/public' + result.fragment.audio.split('public')[1]
+      result.fragment.audio = '/public' + result.fragment.audio.split('public')[1]
       result.fragment['id'] = result.fragment._id
       delete result.fragment._id
       res.status(200).send(result)

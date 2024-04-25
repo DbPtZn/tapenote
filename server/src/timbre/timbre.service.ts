@@ -121,7 +121,8 @@ export class TimbreService {
       extname: '.wav',
       category: 'audio'
     })
-    return this.sherpaService.tts(txt, filepath, speakerId, speed)
+    await this.sherpaService.tts(txt, filepath, speakerId, speed)
+    return filepath
   }
 
   async clearTemp(url: string) {
