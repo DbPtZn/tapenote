@@ -38,6 +38,7 @@ export interface Project {
 
   id: string
   library: LibraryEnum
+  dirname: string
   folderId: string
   title: string
   content: string
@@ -146,6 +147,7 @@ export const useProjectStore = defineStore('projectStore', {
         hostname: hostname || '',
         id: data._id || '',
         library: data.library || '',
+        dirname: data.dirname || '',
         folderId: data.folderId || '',
         title: data.title || '',
         content: data.content || '',

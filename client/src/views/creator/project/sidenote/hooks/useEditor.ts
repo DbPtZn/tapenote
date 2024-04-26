@@ -44,7 +44,8 @@ export function useSidenoteEditor(args: {
             scrollerRef: scrollerRef.value,
             toolbarRef: toolbarRef.value,
             controllerRef: controllerRef?.value,
-            content: data.sidenote
+            content: data.sidenote,
+            dirname: data.dirname
           }))
           editor.mount(editorRef.value).then(() => {
             const themeProvider = editor?.get(ThemeProvider)

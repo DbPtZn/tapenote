@@ -38,7 +38,8 @@ export function createTextEditor(args: {
             editorRef: editorRef.value,
             scrollerRef: scrollerRef.value, 
             toolbarRef: toolbarRef.value, 
-            content: project.content
+            content: project.content,
+            dirname: project.dirname
           }))
           editor.mount(editorRef.value).then(() => {
             const themeProvider = editor?.get(ThemeProvider)

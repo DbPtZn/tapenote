@@ -36,14 +36,14 @@ interface InheritDto {
   sidenote?: string
   annotations?: Annotation[]
 }
-interface CopyDto extends InheritDto {
-  audio?: string
-  duration?: number
-  promoterSequence?: Array<string>
-  keyframeSequence?: Array<number>
-  subtitleSequence?: Array<string>
-  subtitleKeyframeSequence?: Array<number>
-}
+// interface CopyDto extends InheritDto {
+//   audio?: string
+//   duration?: number
+//   promoterSequence?: Array<string>
+//   keyframeSequence?: Array<number>
+//   subtitleSequence?: Array<string>
+//   subtitleKeyframeSequence?: Array<number>
+// }
 
 const __rootdirname = process.cwd()
 @Injectable()
@@ -140,8 +140,15 @@ export class ProjectService {
         procedureId && (project.fromProcedureId = new ObjectId(procedureId))
         project.sidenote = data.sidenote || ''
         project.annotations = data.annotations || []
-        // eslint-disable-next-line prettier/prettier
-        const { audio, audiopath, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } = await this.generateCourse(project._id, project.fromProcedureId, dirname)
+        const {
+          audio,
+          audiopath,
+          duration,
+          promoterSequence,
+          keyframeSequence,
+          subtitleSequence,
+          subtitleKeyframeSequence
+        } = await this.generateCourse(project._id, project.fromProcedureId, dirname, project.dirname)
         _audiopath = audiopath
         project.audio = audio || ''
         project.duration = duration || 0
@@ -158,7 +165,7 @@ export class ProjectService {
   }
 
   /** 生成微课数据 */
-  async generateCourse(courseId: ObjectId, procedureId: ObjectId, dirname: string) {
+  async generateCourse(courseId: ObjectId, procedureId: ObjectId, userDirname: string, projectDirname: string) {
     const procedure = await this.projectsRepository.findOneBy({ _id: procedureId })
     // 片段排序
     // console.log('procedure.sequence', procedure.sequence)
@@ -172,7 +179,7 @@ export class ProjectService {
       })
       .map(fragment => {
         fragment.audio = this.storageService.getFilePath({
-          dirname: [dirname, procedure.dirname],
+          dirname: [userDirname, procedure.dirname],
           filename: fragment.audio,
           category: 'audio'
         })
@@ -217,7 +224,7 @@ export class ProjectService {
 
     // 拼接音频片段
     const { filepath, filename } = this.storageService.createFilePath({
-      dirname,
+      dirname: [userDirname, projectDirname],
       category: 'audio',
       originalname: courseId.toHexString(),
       extname: '.wav'
@@ -261,7 +268,7 @@ export class ProjectService {
         if (!dirname) throw new Error('未指定 dirname！')
         project.fragments = project.fragments.map(fragment => {
           const filePath = this.storageService.getFilePath({
-            dirname,
+            dirname: [dirname, project.dirname],
             filename: fragment.audio,
             category: 'audio'
           })
@@ -273,7 +280,7 @@ export class ProjectService {
         // 补全音频路径
         if (!dirname) throw new Error('未指定 dirname！')
         project.audio = this.storageService.getFilePath({
-          dirname,
+          dirname: [dirname, project.dirname],
           filename: project.audio,
           category: 'audio'
         })
@@ -309,7 +316,7 @@ export class ProjectService {
     if (!course) throw new NotFoundException(`课程项目于不存在！项目id: ${_id.toHexString()}`)
     if (!dirname) throw new Error('未指定 dirname！')
     course.audio = this.storageService.getFilePath({
-      dirname,
+      dirname: [dirname, course.dirname],
       filename: course.audio,
       category: 'audio'
     })
@@ -435,12 +442,14 @@ export class ProjectService {
     target._id = new ObjectId()
     // 设置目标文件夹
     target.folderId = folderId
+    // 设置目标项目目录
+    target.dirname = await this.generateDirname(dirname)
 
     // 如果是课程，则应该复制 audio
     if (target.library === LibraryEnum.COURSE) {
       // 1. 创建新的音频文件
       const { filename, filepath } = this.storageService.createFilePath({
-        dirname,
+        dirname: [dirname, target.dirname],
         category: 'audio',
         originalname: target._id.toHexString(),
         extname: '.wav'
@@ -456,8 +465,6 @@ export class ProjectService {
     // 如果是工程，则应该复制 fragments 中的音频，并且每一个 fragment 都要重新生成
     // 相应的 sequence 和 removeSequence 都要重写
     if (target.library === LibraryEnum.PROCEDURE) {
-      // target.sequence = source.sequence
-      // target.removedSequence = source.removedSequence
       target.fragments = source.fragments.map(fragment => {
         const newFragment: Fragment = {
           _id: new ObjectId(),
@@ -472,7 +479,7 @@ export class ProjectService {
           removed: fragment.removed
         }
         const { filename, filepath } = this.storageService.createFilePath({
-          dirname,
+          dirname: [dirname, target.dirname],
           category: 'audio',
           originalname: newFragment._id.toHexString(),
           extname: '.wav'
@@ -545,7 +552,7 @@ export class ProjectService {
       if (project.library === LibraryEnum.COURSE) {
         const filepath = this.storageService.getFilePath({
           filename: result.audio,
-          dirname,
+          dirname: [dirname, project.dirname],
           category: 'audio'
         })
         try {
@@ -559,7 +566,7 @@ export class ProjectService {
         project.fragments.forEach(fragment => {
           const filepath = this.storageService.getFilePath({
             filename: fragment.audio,
-            dirname,
+            dirname: [dirname, project.dirname],
             category: 'audio'
           })
           try {
@@ -742,7 +749,7 @@ export class ProjectService {
     // 删除片段对应的音频文件
     const filepath = this.storageService.getFilePath({
       filename,
-      dirname,
+      dirname: [dirname, procedure.dirname],
       category: 'audio'
     })
     // console.log(filepath)
@@ -846,13 +853,13 @@ export class ProjectService {
     // 1. 获取源文件地址
     const sourceFilepath = this.storageService.getFilePath({
       filename: fragment.audio,
-      dirname,
+      dirname: [dirname, source.dirname],
       category: 'audio'
     })
     const newFragmentId = new ObjectId()
     // 2. 创建复制文件地址
     const { filename, filepath: targetFilepath } = this.storageService.createFilePath({
-      dirname,
+      dirname: [dirname, target.dirname],
       originalname: newFragmentId.toHexString(),
       category: 'audio',
       extname: '.wav'

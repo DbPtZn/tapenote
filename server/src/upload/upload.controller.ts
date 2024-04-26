@@ -27,3 +27,18 @@ export class UploadController {
     }
   }
 }
+
+// @UseInterceptors(
+//   FileFieldsInterceptor([
+//     { name: 'jsonDocs', maxCount: 1 },
+//     { name: 'audios', maxCount: 1 }
+//   ])
+// )
+// @UploadedFiles(
+//   new ParseFilePipe({
+//     exceptionFactory(error) {
+//       console.log(error)
+//     }
+//   })
+// )
+// files: { jsonDocs: Express.Multer.File[]; audios: Express.Multer.File[] },

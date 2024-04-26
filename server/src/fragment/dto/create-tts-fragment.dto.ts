@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 
 export class CreateTTSFragmentDto {
   @IsString() key: string
-  @IsMongoId() procedureId: ObjectId
+  @IsMongoId() procedureId: string
   @IsString() txt: string
   @IsNumber() role?: number
   @IsNumber() speed: number

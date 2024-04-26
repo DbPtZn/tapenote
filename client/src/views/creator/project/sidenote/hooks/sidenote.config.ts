@@ -17,9 +17,10 @@ export function getSidenoteConfig(args: {
   scrollerRef: HTMLElement, 
   toolbarRef: HTMLElement,
   controllerRef?: HTMLElement,
-  content?: string
+  content?: string,
+  dirname: string
 }) {
-  const { account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
   const config: EditorOptions = {
     theme: 'darkline',
     autoFocus: true,
@@ -110,7 +111,8 @@ export function getSidenoteConfig(args: {
       imgToUrlService.setup({
         hostname: hostname,
         accessToken: accessToken || '',
-        uploadImgUrl: '/upload/img'
+        uploadImgUrl: '/upload/img',
+        dirname: dirname
       })
     }
   }

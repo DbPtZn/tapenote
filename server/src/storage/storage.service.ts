@@ -3,7 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import randomstring from 'randomstring'
 import { tmpdir } from 'os'
-type Category = 'note' | 'course' | 'procedure' | 'audio' | 'image' | 'bgm'
+type Category = 'audio' | 'image' | 'bgm'
 const __rootdirname = process.cwd()
 @Injectable()
 export class StorageService {

@@ -12,6 +12,7 @@ import { CaretLimit, Input } from '@textbus/platform-browser'
 export function getNoteConfig(args: {
   account: string,
   hostname: string,
+  dirname: string,
   rootRef: HTMLElement,
   editorRef: HTMLElement,
   scrollerRef: HTMLElement,
@@ -19,7 +20,7 @@ export function getNoteConfig(args: {
   controllerRef?: HTMLElement,
   content?: string
 }) {
-  const { account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
   const config: EditorOptions = {
     theme: 'darkline',
     autoFocus: true,
@@ -115,7 +116,8 @@ export function getNoteConfig(args: {
       imgToUrlService.setup({
         hostname: hostname,
         accessToken: accessToken || '',
-        uploadImgUrl: '/upload/img'
+        uploadImgUrl: '/upload/img',
+        dirname: dirname
       })
     }
   }

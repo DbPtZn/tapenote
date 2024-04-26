@@ -59,15 +59,13 @@ export class FragmentService {
       console.log('输入错误')
       throw { msg: '缺少必要参数！' }
     }
-    // const procudure = await this.projectService.findOneById(new ObjectId(procedureId), userId)
-    // if (!procudure) {
-    //   throw { msg: '找不到项目工程文件！' }
-    // }
+    const procudure = await this.projectService.findOneById(_procedureId, userId)
+    if (!procudure) throw { msg: '找不到项目工程文件！' }
     const text = txt.replace(/\s*/g, '')
     const fragmentId = new ObjectId()
     /** 创建音频存储地址 */
     const { filepath, filename } = this.storageService.createFilePath({
-      dirname,
+      dirname: [dirname, procudure.dirname],
       category: 'audio',
       originalname: fragmentId.toHexString(),
       extname: '.wav'
@@ -173,7 +171,7 @@ export class FragmentService {
     // console.log([d1, d2])
     /** 创建音频地址 */
     const { filename, filepath } = this.storageService.createFilePath({
-      dirname,
+      dirname: [dirname, procudure.dirname],
       category: 'audio',
       originalname: fragment._id.toHexString(),
       extname: '.wav'
@@ -226,6 +224,10 @@ export class FragmentService {
 
   async createBlank(dto: CreateBlankFragmentDto, userId: ObjectId, dirname: string) {
     const { procedureId, txtLength, duration } = dto
+    const procudure = await this.projectService.findOneById(procedureId, userId)
+    if (!procudure) {
+      throw { msg: '找不到项目工程文件！' }
+    }
     const text: string[] = []
     for (let i = 0; i < txtLength; i++) {
       text.push('#')
@@ -251,7 +253,7 @@ export class FragmentService {
     return new Promise<Fragment>((resolve, reject) => {
       // 指定生成文件的位置
       const { filename, filepath } = this.storageService.createFilePath({
-        dirname,
+        dirname: [dirname, procudure.dirname],
         category: 'audio',
         originalname: fragment._id.toHexString(),
         extname: '.wav'

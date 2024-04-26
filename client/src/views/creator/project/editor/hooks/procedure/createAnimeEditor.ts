@@ -44,7 +44,8 @@ export function createAnimeEditor(args: {
               scrollerRef: scrollerRef.value,
               toolbarRef: toolbarRef.value,
               controllerRef: controllerRef.value,
-              content: project.content
+              content: project.content,
+              dirname: project.dirname
             }))
             editor.mount(editorRef.value).then(() => {
               const themeProvider = editor?.get(ThemeProvider)

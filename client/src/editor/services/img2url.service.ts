@@ -5,6 +5,7 @@ import utils from '@/utils'
 export class ImgToUrlService {
   private axios: AxiosInstance | null
   private uploadImgUrl: string
+  private dirname: string
 
   private finishEvent: Subject<any> = new Subject()
   onFinish: Observable<any> = this.finishEvent.asObservable()
@@ -18,14 +19,16 @@ export class ImgToUrlService {
     this.uploadImgUrl = ''
     this.tasks = 0
     this.promiseSequence = []
+    this.dirname = ''
   }
 
   setup(args: {
     hostname: string,
     accessToken: string,
-    uploadImgUrl: string
+    uploadImgUrl: string,
+    dirname: string
   }) {
-    const { hostname, accessToken, uploadImgUrl } = args
+    const { hostname, accessToken, uploadImgUrl, dirname } = args
     this.axios = axios.create({
       method: 'post',
       baseURL: hostname,
@@ -34,6 +37,7 @@ export class ImgToUrlService {
       }
     })
     this.uploadImgUrl = uploadImgUrl
+    this.dirname = dirname
   }
 
   /** 添加任务 */
@@ -68,6 +72,7 @@ export class ImgToUrlService {
       const formdata = new FormData()
       const file = this.base64ImgtoFile(img)
       formdata.append('file', file) //图片文件
+      formdata.append('dirname', this.dirname)
       // console.log(this.axios)
       if(this.axios) {
         this.axios.post(this.uploadImgUrl, formdata).then(res => {
