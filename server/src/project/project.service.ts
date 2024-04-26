@@ -12,6 +12,8 @@ import { UpdateTitleDto } from './dto/update-title.dto'
 import { UpdateContentDto } from './dto/update-content.dto'
 import { UpdateSidenoteContentDto } from './dto/update-sidenote-content.dto'
 import { FfmpegService } from 'src/ffmpeg/ffmpeg.service'
+import path from 'path'
+import fs from 'fs'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -42,6 +44,8 @@ interface CopyDto extends InheritDto {
   subtitleSequence?: Array<string>
   subtitleKeyframeSequence?: Array<number>
 }
+
+const __rootdirname = process.cwd()
 @Injectable()
 export class ProjectService {
   constructor(
@@ -104,6 +108,7 @@ export class ProjectService {
     const project = new Project()
     project._id = new ObjectId()
     project.library = library
+    project.dirname = await this.generateDirname(dirname)
     project.folderId = new ObjectId(folderId)
     project.userId = userId
     project.title = data.title || ''
@@ -167,7 +172,7 @@ export class ProjectService {
       })
       .map(fragment => {
         fragment.audio = this.storageService.getFilePath({
-          dirname,
+          dirname: [dirname, procedure.dirname],
           filename: fragment.audio,
           category: 'audio'
         })
@@ -981,6 +986,36 @@ export class ProjectService {
     await this.projectsRepository.save(project)
   }
   /** -------------------------------- 片段 ------------------------------------ */
+
+  /** 生成项目专用目录的地址 */
+  async generateDirname(userDirname: string) {
+    let dirname = generateRandomStr()
+    let projects = await this.projectsRepository.find({ where: { dirname } })
+    // 校验该地址是否已经存在
+    let fullPath1 = path.join(__rootdirname, 'public', userDirname, dirname)
+    let fullPath2 = path.join(__rootdirname, 'private', userDirname, dirname)
+    while (projects.length > 0 || fs.existsSync(fullPath1) || fs.existsSync(fullPath2)) {
+      // console.log('该用户文件夹已存在，重新生成')
+      dirname = generateRandomStr()
+      projects = await this.projectsRepository.find({ where: { dirname } })
+      fullPath1 = path.join(__rootdirname, 'public', userDirname, dirname)
+      fullPath2 = path.join(__rootdirname, 'private', userDirname, dirname)
+    }
+    return dirname
+  }
+}
+
+/** 生成随机字符串 */
+function generateRandomStr(num = 8) {
+  const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  let result = ''
+
+  for (let i = 0; i < num; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length)
+    result += characters.charAt(randomIndex)
+  }
+
+  return result
 }
 
 /** 生成片段的关键帧序列 */

@@ -127,7 +127,7 @@ export class TimbreService {
 
   async clearTemp(url: string) {
     const originalname = path.basename(url)
-    console.log(originalname)
+    // console.log(originalname)
     const filepath = this.storageService.getFilePath({
       dirname: 'temp',
       filename: originalname,

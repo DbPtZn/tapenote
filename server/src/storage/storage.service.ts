@@ -33,9 +33,10 @@ export class StorageService {
     return dirPath
   }
 
-  getFilePath(args: { filename: string; dirname: string; category: Category; prv?: boolean }) {
+  getFilePath(args: { filename: string; dirname: string | string[]; category: Category; prv?: boolean }) {
     const { dirname, category, filename, prv } = args
-    const dirPath = this.getDocDir(dirname, category, prv)
+    const dir = typeof dirname === 'string' ? dirname : dirname.join('/')
+    const dirPath = this.getDocDir(dir, category, prv)
     return `${dirPath}/${filename}`
   }
 
@@ -48,14 +49,15 @@ export class StorageService {
    * @returns filename: 文件名  filepath: 文件地址
    */
   createFilePath(args: {
-    dirname: string
+    dirname: string | string[]
     category: Category
     originalname?: string
     extname: string | '.wav' | '.txt' | '.json'
     prv?: boolean
   }) {
     const { dirname, category, originalname, extname, prv } = args
-    const dirPath = this.getDocDir(dirname, category, prv)
+    const dir = typeof dirname === 'string' ? dirname : dirname.join('/')
+    const dirPath = this.getDocDir(dir, category, prv)
     const filename = `${originalname ? originalname : createDtId()}` + `${extname}`
     const filepath = dirPath + '/' + filename
     return {

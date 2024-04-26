@@ -44,19 +44,8 @@ export class Project {
   })
   eidtorVersion: string
 
-  // @Column({
-  //   default: 1
-  // })
-  // snapshot: {
-  //   version: number // 版本号
-  //   date: Date // 版本时间
-  //   remarks: string // 备注
-  // }
-
-  // @Column({
-  //   default: true
-  // })
-  // currentVersion: boolean // 是否当前版本
+  @Column()
+  dirname: string // 文件夹路径
 
   @Column({
     length: 120,
@@ -159,6 +148,29 @@ export class Project {
 
   @UpdateDateColumn()
   updateAt: Date
+
+  @Column({
+    default: {
+      version: 0,
+      date: new Date(),
+      remarks: ''
+    }
+  })
+  snapshot: {
+    version: number // 版本号
+    date: Date // 版本时间
+    remarks: string // 备注
+  }
+
+  @Column({
+    default: false
+  })
+  isSnapshot: boolean // 是否属于快照（快照不可编辑，且不会显示在项目列表中）
+
+  @Column({
+    default: false
+  })
+  isReplica: boolean // 是否属于快照的副本（快照副本可编辑，但不会显示在项目列表中）
 
   /** 详情 */
   @Column({
