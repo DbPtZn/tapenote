@@ -17,6 +17,7 @@ import { UploadModule } from './upload/upload.module'
 import { UserModule } from './user/user.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { APP_INTERCEPTOR } from '@nestjs/core'
 
 @Module({
   imports: [

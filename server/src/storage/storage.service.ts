@@ -67,9 +67,9 @@ export class StorageService {
   }
 
   saveImage(args: { sourcePath: string; extname: string; dirname: string }) {
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<{ filepath: string; filename: string }>((resolve, reject) => {
       const { sourcePath, extname, dirname } = args
-      const { filepath } = this.createFilePath({
+      const { filepath, filename } = this.createFilePath({
         dirname,
         originalname: `${randomstring.generate(3)}${new Date().getTime()}`,
         category: 'image',
@@ -80,7 +80,7 @@ export class StorageService {
         if (err) {
           reject(err)
         } else {
-          resolve(filepath)
+          resolve({ filepath, filename })
         }
       })
     })

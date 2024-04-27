@@ -37,6 +37,9 @@ async function bootstrap() {
   /** 数据验证错误的响应 */
   app.useGlobalPipes(new ValidationPipe())
 
+  // 注册 Express 中间件
+  // app.use(interceptStaticAssets)
+
   // 开放静态资源
   const __rootdirname = process.cwd()
   // console.log(__rootdirname)
@@ -57,3 +60,20 @@ async function bootstrap() {
   await app.listen(port)
 }
 bootstrap()
+
+// 创建 Express 拦截静态资源请求的中间件函数
+// function interceptStaticAssets(req, res, next) {
+//   // 获取请求路径
+//   const url = req.originalUrl
+//   console.log(req.headers)
+//   // 在这里编写拦截逻辑，示例：拦截以 '/public' 开头的静态资源请求
+//   if (url.startsWith('/public')) {
+//     console.log('拦截到静态资源请求:', url)
+//     // 这里可以执行拦截后的处理逻辑，例如返回自定义的响应或者重定向到其他页面
+//     // res.status(403).send('拦截到静态资源请求，禁止访问')
+//     return next()
+//   }
+
+//   // 如果不需要拦截，则调用 next() 继续处理后续中间件或路由
+//   next()
+// }

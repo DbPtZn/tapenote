@@ -5,9 +5,12 @@ import { MulterModule } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
 import { join } from 'path'
 import { StorageModule } from 'src/storage/storage.module'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { UploadFile } from './entities/file.entity'
 const __rootdirname = process.cwd()
 @Module({
   imports: [
+    TypeOrmModule.forFeature([UploadFile]),
     MulterModule.register({
       storage: diskStorage({
         destination: join(__rootdirname, 'public', 'images'),
