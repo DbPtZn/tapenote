@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { databaseConfig, jwtConfig, sherpaDevConfig, sherpaProdConfig } from './config'
@@ -17,7 +17,10 @@ import { UploadModule } from './upload/upload.module'
 import { UserModule } from './user/user.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { APP_INTERCEPTOR } from '@nestjs/core'
+import { UserLoggerModule } from './user-logger/userLogger.module'
+import { LoggerModule } from './logger/logger.module'
+import saslprep from 'saslprep'
+import { HttpLoggerMiddleware } from './logger/logger.middleware'
 
 @Module({
   imports: [
@@ -35,7 +38,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core'
         return {
           type: 'mongodb', // 数据库类型
           username: configService.get('database.username'), // 账号
-          password: configService.get('database.password'), // 密码
+          password: saslprep(configService.get('database.password')), // 密码
           host: configService.get('database.host'), // host
           port: configService.get('database.port'), //
           database: configService.get('database.database'), // 库名
@@ -58,9 +61,15 @@ import { APP_INTERCEPTOR } from '@nestjs/core'
     ProjectModule,
     FfmpegModule,
     TimbreModule,
-    BgmModule
+    BgmModule,
+    UserLoggerModule,
+    LoggerModule
   ],
   controllers: [AppController],
   providers: [AppService]
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(HttpLoggerMiddleware).forRoutes('*') // 为所有路由应用中间件
+  }
+}

@@ -5,6 +5,8 @@ import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import path from 'path'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { UserLoggerService } from './user-logger/userLogger.service'
+import { LoggerService } from './logger/logger.service'
 async function bootstrap() {
   dotenv.config({
     path:
@@ -12,7 +14,12 @@ async function bootstrap() {
         ? ['.env.development.local', '.env.development']
         : ['.env.production.local', '.env.production']
   })
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true })
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true
+  })
+  // 开发环境下开启系统日志功能
+  process.env.LOG_OPEN === 'true' && app.useLogger(app.get(LoggerService))
+
   app.enableCors({
     origin: true,
     methods: 'GET,PUT,POST,PATCH,DELETE',

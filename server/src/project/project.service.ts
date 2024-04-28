@@ -14,6 +14,8 @@ import { UpdateSidenoteContentDto } from './dto/update-sidenote-content.dto'
 import { FfmpegService } from 'src/ffmpeg/ffmpeg.service'
 import path from 'path'
 import fs from 'fs'
+import { UserLoggerService } from 'src/user-logger/userLogger.service'
+import { LoggerService } from 'src/logger/logger.service'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -52,7 +54,9 @@ export class ProjectService {
     @InjectRepository(Project)
     private projectsRepository: MongoRepository<Project>,
     private readonly storageService: StorageService,
-    private readonly ffmpegService: FfmpegService
+    private readonly ffmpegService: FfmpegService,
+    private readonly userlogger: UserLoggerService,
+    private readonly logger: LoggerService
   ) {
     // 测试校验功能
     // this.checkAndCorrectFragmentSquence(new ObjectId('65f9c02f6c5a54c1b4b249a0'))
@@ -160,7 +164,11 @@ export class ProjectService {
     }
     const result = await this.projectsRepository.save(project)
     _audiopath && (result.audio = _audiopath)
-    if (!result) throw new Error(`创建项目失败！`)
+    if (!result) {
+      throw new Error(`创建项目失败！`)
+    }
+    this.userlogger.log(`创建 [${library}] 新项目成功，项目id：${result._id.toHexString()}`)
+    // this.logger.log(`创建 [${library}] 新项目成功，项目id：${result._id.toHexString()}`)
     return result
   }
 
