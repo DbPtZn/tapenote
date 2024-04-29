@@ -2,6 +2,7 @@ import { LoggerService, Injectable, Inject } from '@nestjs/common'
 import { StorageService } from 'src/storage/storage.service'
 import { REQUEST } from '@nestjs/core'
 import fs from 'fs'
+import { AUTH_CONTEXT, AuthContext } from 'src/auth/request.context'
 
 interface Log {
   level: 'info' | 'error' | 'warn' | 'debug' | 'verbose'
@@ -12,8 +13,8 @@ interface Log {
 @Injectable()
 export class UserLoggerService implements LoggerService {
   constructor(
-    @Inject(REQUEST) private request: any,
-    private readonly storageService: StorageService
+    private readonly storageService: StorageService,
+    @Inject(AUTH_CONTEXT) private readonly context: AuthContext
   ) {}
   /**
    * Write a 'log' level log.
@@ -88,8 +89,9 @@ export class UserLoggerService implements LoggerService {
     if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       throw new Error('Date 格式错误，格式须满足 YYYY-MM-DD')
     }
+    console.log(this.context)
     return this.storageService.getFilePath({
-      dirname: this.request.user.dirname || 'error',
+      dirname: 'userlogs' || 'error',
       filename: `log-${date ? date : new Date().toISOString().slice(0, 10)}.txt`,
       category: 'logs',
       prv: true

@@ -10,6 +10,7 @@ import { LocalStrategy } from './local.strategy'
 import { FolderModule } from 'src/folder/folder.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
+import { AUTH_CONTEXT, AuthContext } from './request.context'
 @Module({
   imports: [
     UserModule,
@@ -35,14 +36,10 @@ import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
     JwtStrategy,
     LocalAuthGuard,
     JwtAuthGuard,
-    // {
-    //   provide: 'APP_GUARD',
-    //   useClass: JwtAuthGuard
-    // },
-    // {
-    //   provide: 'APP_GUARD',
-    //   useClass: LocalAuthGuard
-    // }
+    {
+      provide: AUTH_CONTEXT,
+      useClass: AuthContext
+    }
   ]
 })
 export class AuthModule {}
