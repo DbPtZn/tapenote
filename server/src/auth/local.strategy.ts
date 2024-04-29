@@ -7,6 +7,7 @@ import { AuthService } from './auth.service'
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly authService: AuthService) {
+    console.log('LocalStrategy')
     super({
       usernameField: 'account',
       passwordField: 'password'
@@ -14,6 +15,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(account: string, password: string): Promise<any> {
+    console.log(account, password)
     const user = await this.authService.validateUser(account, password)
     if (!user) {
       throw new UnauthorizedException('用户名或密码不正确！')

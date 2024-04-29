@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { databaseConfig, jwtConfig, sherpaDevConfig, sherpaProdConfig } from './config'
+import { databaseConfig, jwtConfig, commonConfig, sherpaDevConfig, sherpaProdConfig } from './config'
 import { AuthModule } from './auth/auth.module'
 import { BcryptModule } from './bcrypt/bcrypt.module'
 import { BgmModule } from './bgm/bgm.module'
@@ -26,7 +26,12 @@ import { HttpLoggerMiddleware } from './logger/logger.middleware'
   imports: [
     UserModule,
     ConfigModule.forRoot({
-      load: [databaseConfig, jwtConfig, process.env.NODE_ENV === 'development' ? sherpaDevConfig : sherpaProdConfig],
+      load: [
+        databaseConfig,
+        jwtConfig,
+        // commonConfig,
+        process.env.NODE_ENV === 'development' ? sherpaDevConfig : sherpaProdConfig
+      ],
       cache: true,
       isGlobal: true
     }),
@@ -68,8 +73,8 @@ import { HttpLoggerMiddleware } from './logger/logger.middleware'
   controllers: [AppController],
   providers: [AppService]
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(HttpLoggerMiddleware).forRoutes('*') // 为所有路由应用中间件
-  }
+export class AppModule {
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer.apply(HttpLoggerMiddleware).forRoutes('*') // 为所有路由应用中间件
+  // }
 }

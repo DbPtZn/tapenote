@@ -1,9 +1,11 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import useStore from '@/store'
-import { FormInst, useMessage, FormRules, FormItemRule } from 'naive-ui'
+import { FormInst, useMessage, FormRules, FormItemRule, useDialog, NButton } from 'naive-ui'
 import { RoutePathEnum } from '@/enums'
+import { h } from 'vue'
+import ValidateCode from './ValidateCode.vue'
 interface ModelType {
   hostname: string
   account: string
@@ -12,6 +14,7 @@ interface ModelType {
 const router = useRouter()
 const { userListStore } = useStore()
 const message = useMessage()
+const dialog = useDialog()
 const props = defineProps<{
   default?: {
     hostname: string
@@ -57,7 +60,7 @@ function handleLogin() {
 }
 
 const submit = () => {
-  formRef.value?.validate(errors => {
+  formRef.value?.validate(async errors => {
     if (!errors) {
       // 先判断是否已经登录
       // const result = userStore.queryCache(model.value.account, model.value.hostname)
@@ -68,6 +71,8 @@ const submit = () => {
         // router.push(RoutePathEnum.HOME)
         return
       }
+      // const isAllow = await validateCode()
+      // if (!isAllow) return
       userListStore.login({
         account: model.value.account,
         password: model.value.password,
@@ -81,6 +86,25 @@ const submit = () => {
       message.error('表单校验失败！')
       console.log(errors)
     }
+  })
+}
+
+
+function validateCode() {
+  return new Promise<boolean>((resolve, reject) => {
+    const dia = dialog.create({
+      title: '验证码',
+      content: () => h(ValidateCode, {
+        onConfirm: (result) => {
+          dia.destroy()
+          resolve(result)
+        }
+      }),
+      onMaskClick: () => {
+        dia.destroy()
+        resolve(false)
+      }
+    })
   })
 }
 

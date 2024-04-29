@@ -1,12 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res, Session, UseGuards } from '@nestjs/common'
+import { Controller, Get, Body, Patch, Param, Req, Res, UseGuards } from '@nestjs/common'
 import { UserService } from './user.service'
-import {
-  UpdateUserDto,
-  CreateUserDto,
-  UpdateUserSubmissionConfigDto,
-  UpdateUserSubscriptionConfigDto
-} from './dto/_api'
-import { Response } from 'express'
+import { UpdateUserDto, UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
 import { AuthGuard } from '@nestjs/passport'
 import { REST } from 'src/enum'
 import { ApiTags } from '@nestjs/swagger'
@@ -17,26 +11,23 @@ import { UpdateUserPwdDto } from './dto/update-pwd.dto'
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post(`${REST.W}/create`)
-  create(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
-    try {
-      // console.log('111')
-      this.userService.create(createUserDto).then(user => {
-        console.log('笔记业务系统用户注册成功！')
-        res.status(201).send('笔记业务系统用户注册成功')
-      })
-    } catch (error) {
-      res.status(400).send(error)
-    }
-  }
+  // @Post(`${REST.W}/create`)
+  // create(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
+  //   try {
+  //     this.userService.create(createUserDto).then(user => {
+  //       res.status(201).send('笔记业务系统用户注册成功')
+  //     })
+  //   } catch (error) {
+  //     res.status(400).send(error)
+  //   }
+  // }
 
   @UseGuards(AuthGuard('jwt'))
   @Get(`${REST.R}/dir`)
   async getUserDir(@Req() req, @Res() res) {
-    // console.log(req.user._id)
     const dir = await this.userService.getDirById(req.user._id)
     if (!dir) {
-      return res.status(401).send('权限不足，获取用户信息失败！')
+      return res.status(401).send('权限不足，获取用户目录信息失败！')
     }
     return res.status(200).send(dir)
   }
@@ -44,14 +35,16 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @Get(`${REST.R}/info`)
   async getUserInfo(@Req() req, @Res() res) {
-    // console.log('请求用户数据：' + req.user._id)
-    const info = await this.userService.getInfoById(req.user._id, req.user.dirname)
-    info.avatar = '/public' + info.avatar.split('public')[1]
-    if (!info) {
-      return res.status(400).send('权限不足，获取用户信息失败！')
+    try {
+      const info = await this.userService.getInfoById(req.user._id, req.user.dirname)
+      info.avatar = '/public' + info.avatar.split('public')[1]
+      if (!info) {
+        return res.status(400).send('权限不足，获取用户信息失败！')
+      }
+      return res.status(200).send(info)
+    } catch (error) {
+      return res.status(400).send('获取用户信息失败！' + error.message)
     }
-    // console.log(info)
-    return res.status(200).send(info)
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -63,7 +56,7 @@ export class UserController {
       const updateAt = await this.userService.updateInfo(updateUserDto, req.user._id)
       res.status(200).send(updateAt)
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -75,7 +68,7 @@ export class UserController {
       const updateAt = await this.userService.updatePwd(updateUserPwdDto, req.user._id)
       res.status(200).send(updateAt)
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -86,7 +79,7 @@ export class UserController {
       const result = await this.userService.addSubmissionConfig(req.user._id)
       res.status(200).send(result)
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -97,7 +90,7 @@ export class UserController {
       const result = await this.userService.removeSubmissionConfig(id, req.user._id)
       res.status(200).send(result)
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -108,7 +101,7 @@ export class UserController {
       const result = await this.userService.updateSubmissionConfig(dto, req.user._id)
       res.status(200).send(result)
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -119,7 +112,7 @@ export class UserController {
       const result = await this.userService.addSubscriptionConfig(req.user._id)
       res.status(200).send(result)
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -130,7 +123,7 @@ export class UserController {
       const result = await this.userService.removeSubscriptionConfig(id, req.user._id)
       res.status(200).send(result)
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -141,7 +134,7 @@ export class UserController {
       const result = await this.userService.updateSubscriptionConfig(dto, req.user._id)
       res.status(200).send(result)
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 }

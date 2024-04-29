@@ -18,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // 2. 系统自动验证token合法性，并将由token编译出的json作为参数传入validate方法中。
   async validate(payload: any) {
-    // console.log('payload', payload)
+    console.log('payload', payload)
     return { _id: new ObjectId(payload.userId), account: payload.account, dirname: payload.dirname }
   }
 }

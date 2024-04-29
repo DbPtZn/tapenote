@@ -1,6 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common'
 import { LoggerService } from './logger.service'
 
+/** 中间件：可以在这里可以记录请求日志  */
 @Injectable()
 export class HttpLoggerMiddleware implements NestMiddleware {
   constructor(private readonly logger: LoggerService) {}

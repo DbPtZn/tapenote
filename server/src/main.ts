@@ -15,9 +15,9 @@ async function bootstrap() {
         : ['.env.production.local', '.env.production']
   })
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    bufferLogs: true
+    bufferLogs: false
   })
-  // 开发环境下开启系统日志功能
+  // 生产环境下开启自动记录系统日志功能
   process.env.LOG_OPEN === 'true' && app.useLogger(app.get(LoggerService))
 
   app.enableCors({

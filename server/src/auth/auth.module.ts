@@ -9,12 +9,14 @@ import { JwtStrategy } from './jwt.stratagy'
 import { LocalStrategy } from './local.strategy'
 import { FolderModule } from 'src/folder/folder.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
 @Module({
   imports: [
     UserModule,
     BcryptModule,
     FolderModule,
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule.register({ defaultStrategy: ['jwt'] }),
+    // PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -27,6 +29,20 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
     })
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy]
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    LocalAuthGuard,
+    JwtAuthGuard,
+    // {
+    //   provide: 'APP_GUARD',
+    //   useClass: JwtAuthGuard
+    // },
+    // {
+    //   provide: 'APP_GUARD',
+    //   useClass: LocalAuthGuard
+    // }
+  ]
 })
 export class AuthModule {}
