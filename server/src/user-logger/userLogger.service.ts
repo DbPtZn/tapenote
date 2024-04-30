@@ -1,8 +1,8 @@
-import { LoggerService, Injectable, Inject } from '@nestjs/common'
+import { LoggerService, Injectable, Scope, Inject } from '@nestjs/common'
 import { StorageService } from 'src/storage/storage.service'
-import { REQUEST } from '@nestjs/core'
 import fs from 'fs'
-import { AUTH_CONTEXT, AuthContext } from 'src/auth/request.context'
+import { RequestScopedService } from 'src/request-scoped/request-scoped.service'
+import { REQUEST } from '@nestjs/core'
 
 interface Log {
   level: 'info' | 'error' | 'warn' | 'debug' | 'verbose'
@@ -14,7 +14,8 @@ interface Log {
 export class UserLoggerService implements LoggerService {
   constructor(
     private readonly storageService: StorageService,
-    @Inject(AUTH_CONTEXT) private readonly context: AuthContext
+    private readonly requestScopedService: RequestScopedService,
+    // @Inject(REQUEST) private readonly request: any // 该方法会导致本地鉴权错误 ERROR [ExceptionsHandler] Unknown authentication strategy "local"
   ) {}
   /**
    * Write a 'log' level log.
@@ -25,7 +26,7 @@ export class UserLoggerService implements LoggerService {
       message: message,
       timestamp: new Date().toTimeString().slice(0, 8)
     }
-    console.log(this.getLoggerFilePath())
+    // console.log(this.getLoggerFilePath())
     fs.appendFile(this.getLoggerFilePath(), `${JSON.stringify(log)}\n`, err => {
       if (err) {
         console.error('写入日志出错:', err)
@@ -86,12 +87,15 @@ export class UserLoggerService implements LoggerService {
   // verbose?(message: any, ...optionalParams: any[]) {}
 
   getLoggerFilePath(date?: string) {
+    // console.log(globalThis.authInfo.dirname)
+    // console.log(context)
     if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       throw new Error('Date 格式错误，格式须满足 YYYY-MM-DD')
     }
-    console.log(this.context)
+    const dirname = this.requestScopedService.getData()?.dirname || 'errorlogs'
+    // console.log(dirname)
     return this.storageService.getFilePath({
-      dirname: 'userlogs' || 'error',
+      dirname: dirname,
       filename: `log-${date ? date : new Date().toISOString().slice(0, 10)}.txt`,
       category: 'logs',
       prv: true

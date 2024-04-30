@@ -36,11 +36,10 @@ export class AuthController {
 
   /** 登录请求 */
   // @UseGuards(AuthGuard('local'))
-  // @UseGuards(LocalAuthGuard, JwtAuthGuard)
   @UseGuards(LocalAuthGuard)
   @Post(`${REST.R}/login`)
   async login(@Body() loginDto: LoginDto, @Req() req, @Res() res: Response) {
-    console.log(loginDto)
+    // console.log(loginDto)
     // console.log('验证码：' + this.authService.validateCode(loginDto.code, loginDto.hashCode))
     // if (!this.authService.validateCode(loginDto.code, loginDto.hashCode)) return res.status(400).send('验证码错误！')
     const token = await this.authService.login(req.user)

@@ -7,6 +7,8 @@ import path from 'path'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { UserLoggerService } from './user-logger/userLogger.service'
 import { LoggerService } from './logger/logger.service'
+import passport from 'passport'
+import { LocalStrategy } from './auth/local.strategy'
 async function bootstrap() {
   dotenv.config({
     path:

@@ -167,7 +167,7 @@ export class ProjectService {
     if (!result) {
       throw new Error(`创建项目失败！`)
     }
-    this.userlogger.log(`创建 [${library}] 新项目成功，项目id：${result._id.toHexString()}`)
+    // this.userlogger.log(`创建 [${library}] 新项目成功，项目id：${result._id.toHexString()}`)
     // this.logger.log(`创建 [${library}] 新项目成功，项目id：${result._id.toHexString()}`)
     return result
   }

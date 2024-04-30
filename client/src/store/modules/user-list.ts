@@ -85,7 +85,6 @@ export const useUserListStore = defineStore('userListStore', {
             creator.createCreatorApi(params.account, hostname)
             this.fetch(params.account, hostname).then(state => {
               if(state) {
-                // console.log(state)
                 this.set(state)
                 this.addSequence(params.account, hostname)
                 userStore.$patch(state)
@@ -174,6 +173,10 @@ export const useUserListStore = defineStore('userListStore', {
       return this.creatorApi(account, hostname).user
         .get<User>()
         .then(res => {
+          // 补全头像地址
+          if (res.data.avatar) {
+            res.data.avatar = hostname + res.data.avatar
+          }
           return {
             hostname: hostname,
             ...res.data
@@ -193,7 +196,7 @@ export const useUserListStore = defineStore('userListStore', {
         hostname: data.hostname,
         account: data.account,
         nickname: data.nickname,
-        avatar: data.avatar ? data.hostname + data.avatar : '',
+        avatar: data.avatar,
         desc: data.desc || '',
         email: data.email || '',
         homepage: data.homepage || '',

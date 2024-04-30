@@ -21,6 +21,8 @@ import { UserLoggerModule } from './user-logger/userLogger.module'
 import { LoggerModule } from './logger/logger.module'
 import saslprep from 'saslprep'
 import { HttpLoggerMiddleware } from './logger/logger.middleware'
+import { RequestScopedService } from './request-scoped/request-scoped.service'
+import { RequestScopedModule } from './request-scoped/request-scoped.module'
 
 @Module({
   imports: [
@@ -68,10 +70,11 @@ import { HttpLoggerMiddleware } from './logger/logger.middleware'
     TimbreModule,
     BgmModule,
     UserLoggerModule,
-    LoggerModule
+    LoggerModule,
+    RequestScopedModule
   ],
   controllers: [AppController],
-  providers: [AppService]
+  providers: [AppService, RequestScopedService]
 })
 export class AppModule {
   // configure(consumer: MiddlewareConsumer) {

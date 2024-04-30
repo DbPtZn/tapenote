@@ -100,13 +100,13 @@ export class UserService {
     try {
       const user = await this.usersRepository.findOneBy({ _id })
       if (user) {
-        this.userLogger.log(`查询到用户 ${user.account} 的目录信息`)
+        // this.userLogger.log(`查询到用户 ${user.account} 的目录信息`)
         return {
           dir: user.dir
         }
       } else throw new Error('查询用户目录信息失败！')
     } catch (error) {
-      this.userLogger.warn(`查询不到用户目录信息！原因：${error.message}`)
+      // this.userLogger.warn(`查询不到用户目录信息！原因：${error.message}`)
       throw error
     }
   }

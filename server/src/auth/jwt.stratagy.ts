@@ -3,13 +3,13 @@ import { PassportStrategy } from '@nestjs/passport'
 import { Inject, Injectable } from '@nestjs/common'
 import { ObjectId } from 'mongodb'
 import { ConfigService } from '@nestjs/config'
-import { AUTH_CONTEXT, AuthContext } from './request.context'
+import { RequestScopedService } from 'src/request-scoped/request-scoped.service'
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private readonly configService: ConfigService,
-    @Inject(AUTH_CONTEXT) private readonly context: AuthContext
+    private readonly requestScopedService: RequestScopedService
   ) {
     const secret = configService.get('jwt.secret')
     // console.log('secret', secret)
@@ -24,7 +24,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     // console.log('payload', payload)
     const authInfo = { _id: new ObjectId(payload.userId), account: payload.account, dirname: payload.dirname }
-    this.context.set('authInfo', authInfo)
+    // this.context.set('authInfo', authInfo)
+    // globalThis.authInfo = authInfo
+    this.requestScopedService.setData(authInfo)
     return authInfo
   }
 }
