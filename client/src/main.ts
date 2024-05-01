@@ -5,7 +5,7 @@ import './style.scss'
 import App from './App.vue'
 import { createPinia } from 'pinia'
 import router from './router'
-import persist from 'pinia-plugin-persistedstate'
+// import persist from 'pinia-plugin-persistedstate'
 // 通用字体
 // import 'vfonts/Lato.css'
 // 等宽字体
@@ -16,10 +16,16 @@ const pinia = createPinia()
 pinia.use(({ store }) => {
   store.$router = router
 })
-pinia.use(persist)
+// pinia.use(persist)
 
 const app = createApp(App)
 
 app.use(router)
 app.use(pinia)
-app.mount('#app')
+app.mount('#app').$nextTick(() => {
+  // Use contextBridge
+  window.ipcRenderer.on('main-process-message', (_event, message) => {
+    console.log(message)
+  })
+})
+

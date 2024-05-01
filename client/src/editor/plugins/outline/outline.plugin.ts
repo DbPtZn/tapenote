@@ -5,7 +5,7 @@ import { OutlineService } from './outline.service'
 import { App, createApp, h, Ref, ref } from 'vue'
 import OutlineView, { OutlineItem } from './OutlineView.vue'
 import { UIConfig } from '../../common'
-import { ConfigProvider, Structurer } from '@/editor'
+import { Structurer } from '../..'
 
 export class OutlinePlugin implements Plugin {
   private app!: App | null

@@ -10,10 +10,9 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-fractal-container
-editor-dist
+dist-electron
+release
 *.local
-components.d.ts
 
 # Editor directories and files
 .vscode/*

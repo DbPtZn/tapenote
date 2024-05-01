@@ -16,7 +16,7 @@ import utils from '@/utils'
 import axios from 'axios'
 import jszip from 'jszip'
 import dayjs from 'dayjs'
-import ejs from 'ejs'
+// import ejs from 'ejs'
 import { Resources } from '@textbus/platform-browser'
 interface ProductInfo {
   // -- 作品信息
@@ -177,92 +177,92 @@ export class Pack {
   }
 
   async download(data: PackData) {
-    try {
-      const zip = new jszip()
-      const {
-        title, content,
-        audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence,
-        type, penname, email, blog, msg
-      } = data
-      // 1.导出内容数据
-      const { content: contentbase64, resources } = await this.getContent(content)
-      // console.log(resources)
-      // 2.获取 html 模板并插入数据，导出 html 文件
-      await fetch('./template/template.ejs')
-      .then(response => response.text())
-      .then(template => {
-          const productData = { type, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence }
-          // 渲染模板
-          const renderedHtml = ejs.render(template, {
-            type: type === 'note' ? '文章' : '微课',
-            title: title || '',
-            content: contentbase64,
-            penname: penname || '',
-            email: email || '',
-            blog: blog || '',
-            version: '1.0.0',
-            wordage: content.replace(/<[^>]+>/g, '').length,
-            duration: duration || 0,
-            msg: msg || '',
-            productData: JSON.stringify(productData),
-          })
-          // 打包 html文件
-          // console.log('renderedHtml', renderedHtml)
-          zip.file('index.html', renderedHtml)
-      })
-      // 3.获取 js 模板
-      const jsFiles = ['anime.min.js', 'component.js', 'main.js', 'player.js', 'presets.js', 'stream.js'].map(filename => {
-        return fetch(`./template/scripts/${filename}`).then(response => response.blob()).then(blob => { zip.folder('scripts')?.file(`${filename}`, blob) })
-      })
-      await Promise.all(jsFiles)
-      // 4.获取 css 模板
-      const cssFiles = ['base.css', 'dark.css', 'edit-dark.css', 'index.css', 'light.css', 'textbus.cmpt.css'].map(filename => {
-        return fetch(`./template/styles/${filename}`).then(response => response.blob()).then(blob => { zip.folder('styles')?.file(`${filename}`, blob) })
-      })
-      await Promise.all(cssFiles)
-      zip.folder('styles')?.file('styleSheet.css', resources.styleSheet)
-      // 5.获取音频文件
-      if (audio) {
-        await fetch(audio).then(response => response.blob()).then(blob => {
-          zip.file('audio.wav', blob)
-        })
-      }
-      // 6.打包课程所需的元数据
-      // const dto = { type, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence }
-      // const jsonString = JSON.stringify(dto)
-      // zip.file('metadata.json', jsonString)
+    // try {
+    //   const zip = new jszip()
+    //   const {
+    //     title, content,
+    //     audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence,
+    //     type, penname, email, blog, msg
+    //   } = data
+    //   // 1.导出内容数据
+    //   const { content: contentbase64, resources } = await this.getContent(content)
+    //   // console.log(resources)
+    //   // 2.获取 html 模板并插入数据，导出 html 文件
+    //   await fetch('./template/template.ejs')
+    //   .then(response => response.text())
+    //   .then(template => {
+    //       const productData = { type, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence }
+    //       // 渲染模板
+    //       const renderedHtml = ejs.render(template, {
+    //         type: type === 'note' ? '文章' : '微课',
+    //         title: title || '',
+    //         content: contentbase64,
+    //         penname: penname || '',
+    //         email: email || '',
+    //         blog: blog || '',
+    //         version: '1.0.0',
+    //         wordage: content.replace(/<[^>]+>/g, '').length,
+    //         duration: duration || 0,
+    //         msg: msg || '',
+    //         productData: JSON.stringify(productData),
+    //       })
+    //       // 打包 html文件
+    //       // console.log('renderedHtml', renderedHtml)
+    //       zip.file('index.html', renderedHtml)
+    //   })
+    //   // 3.获取 js 模板
+    //   const jsFiles = ['anime.min.js', 'component.js', 'main.js', 'player.js', 'presets.js', 'stream.js'].map(filename => {
+    //     return fetch(`./template/scripts/${filename}`).then(response => response.blob()).then(blob => { zip.folder('scripts')?.file(`${filename}`, blob) })
+    //   })
+    //   await Promise.all(jsFiles)
+    //   // 4.获取 css 模板
+    //   const cssFiles = ['base.css', 'dark.css', 'edit-dark.css', 'index.css', 'light.css', 'textbus.cmpt.css'].map(filename => {
+    //     return fetch(`./template/styles/${filename}`).then(response => response.blob()).then(blob => { zip.folder('styles')?.file(`${filename}`, blob) })
+    //   })
+    //   await Promise.all(cssFiles)
+    //   zip.folder('styles')?.file('styleSheet.css', resources.styleSheet)
+    //   // 5.获取音频文件
+    //   if (audio) {
+    //     await fetch(audio).then(response => response.blob()).then(blob => {
+    //       zip.file('audio.wav', blob)
+    //     })
+    //   }
+    //   // 6.打包课程所需的元数据
+    //   // const dto = { type, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence }
+    //   // const jsonString = JSON.stringify(dto)
+    //   // zip.file('metadata.json', jsonString)
 
-      // 7.打包 favicon 图标
-      await fetch(`./template/favicon.ico`).then(response => response.blob()).then(blob => { zip.file(`favicon.ico`, blob) })
+    //   // 7.打包 favicon 图标
+    //   await fetch(`./template/favicon.ico`).then(response => response.blob()).then(blob => { zip.file(`favicon.ico`, blob) })
 
-      // 8.导出默认配置
-      // const defaultConfig = { type, penname, email, blog, msg }
+    //   // 8.导出默认配置
+    //   // const defaultConfig = { type, penname, email, blog, msg }
 
-      // 生成 ZIP 文件
-      return zip
-        .generateAsync({ type: 'blob' })
-        .then(blob => {
-          // 创建 URL 对象
-          const url = URL.createObjectURL(blob)
+    //   // 生成 ZIP 文件
+    //   return zip
+    //     .generateAsync({ type: 'blob' })
+    //     .then(blob => {
+    //       // 创建 URL 对象
+    //       const url = URL.createObjectURL(blob)
 
-          // 创建 <a> 标签并设置其属性
-          const link = document.createElement('a')
-          link.href = url
-          link.download = `${title.slice(0, 24)}-${dayjs(Date.now()).format("YYMMDDHHmmss")}.zip` // 设置下载的文件名
+    //       // 创建 <a> 标签并设置其属性
+    //       const link = document.createElement('a')
+    //       link.href = url
+    //       link.download = `${title.slice(0, 24)}-${dayjs(Date.now()).format("YYMMDDHHmmss")}.zip` // 设置下载的文件名
 
-          // 模拟点击 <a> 标签以触发下载
-          link.click()
+    //       // 模拟点击 <a> 标签以触发下载
+    //       link.click()
 
-          // 清理 URL 对象
-          URL.revokeObjectURL(url)
-        })
-        .catch(error => {
-          console.error('Error generating ZIP:', error)
-        })
-    } catch (error) {
-      console.error('Error downloading files:', error)
-      throw error
-    }
+    //       // 清理 URL 对象
+    //       URL.revokeObjectURL(url)
+    //     })
+    //     .catch(error => {
+    //       console.error('Error generating ZIP:', error)
+    //     })
+    // } catch (error) {
+    //   console.error('Error downloading files:', error)
+    //   throw error
+    // }
   }
 
   submit(data: PackData) {
