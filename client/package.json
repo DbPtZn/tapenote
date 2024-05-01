@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
+    "build:web": "vue-tsc && vite build",
+    "build:editor": "vite build --config build-editor.config.ts",
+    "build:container": "vite build --config build-container.config.ts",
     "preview": "vite preview"
   },
   "dependencies": {
