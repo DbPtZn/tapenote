@@ -5,6 +5,7 @@ import * as flatted from 'flatted'
 /** 分配容器尺寸 */
 export function useAllocateSize(propsData: FractalContainerConfig, wrapper: Ref<HTMLElement> | undefined) {
   // 重新赋值，这样不会修改原数据
+  // console.log(propsData)
   const data = flatted.parse(flatted.stringify(propsData)) as FractalContainerConfig
   
   const isRow = data.isRow
@@ -14,6 +15,12 @@ export function useAllocateSize(propsData: FractalContainerConfig, wrapper: Ref<
   // 将固定值px转化成百分比
   data.children.forEach((childNode, index, arr) => {
     if (typeof childNode.ratio === 'string') {
+      // console.log(wrapper?.value)
+      // console.log(wrapper?.value.clientWidth)
+      // console.log(wrapper?.value.parentElement)
+      // console.log(wrapper?.value.parentElement?.offsetWidth)
+      // console.log(wrapper?.value.parentElement?.parentElement)
+      // console.log(wrapper?.value.parentElement?.parentElement?.offsetWidth)
       if (childNode.ratio.slice(-2) === 'px') {
         const val = parseInt(childNode.ratio) / (isRow ? globalWidth : globalHeight) * 100
         arr[index].ratio = val

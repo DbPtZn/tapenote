@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { RoutePathEnum } from '@/enums'
 import { useDialog, useMessage, useThemeVars } from 'naive-ui'
-import { h, nextTick, onMounted, onUnmounted,  reactive,  ref, watch } from 'vue'
+import { h, nextTick, onErrorCaptured, onMounted, onUnmounted,  reactive,  ref, watch } from 'vue'
 import useStore from '@/store'
 import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import { useShell } from '@/renderer'
@@ -226,18 +226,19 @@ function handleError(ev: Event) {
 function handleCacheVisible() {
   settingStore.handleCacheVisible()
 }
-
+onErrorCaptured(err => {
+  console.log(err)
+})
 
 </script>
 
 <template>
   <Container @collapse="ev => emits('collapse', ev)">
     <div class="sidenav">
-      <header>
-        <Draggable v-if="state.userOption" class="draggable" v-model="userOptions" :itemKey="'_id'" @change="userListStore.moveSequence">
+      <div class="header">
+        <Draggable v-if="state.userOption" class="draggable" v-model="userOptions" :itemKey="'key'" @change="userListStore.moveSequence">
           <template #item="{ element }">
-            <div class="btn user-option" :key="element.key" :title="element.nickname" @click="element.onClick(element)"
-              @contextmenu="handleContextMenu($event, element)">
+            <div class="btn user-option" :key="element.key" :title="element.nickname" @click="element.onClick(element)" @contextmenu="handleContextMenu($event, element)">
               <img class="avatar" v-if="element.avatar" :src="element.avatar" alt="" @error="handleError" />
               <n-icon v-if="!element.avatar" :component="element.defaultIcon" :size="24" />
             </div>
@@ -248,8 +249,8 @@ function handleCacheVisible() {
           <!-- <DpzIcon :icon="`${MaterialTypeEnum.FILLED}add`" :size="24" /> -->
           <n-icon  :component="AddFilled" :size="24" />
         </div>
-      </header>
-      <footer ref="footerRef">
+      </div>
+      <div class="footer" ref="footerRef">
         <!-- <div class="btn option" v-for="item in options" :key="item.id" :title="item.label" @click="item.onClick">
           <DpzIcon :icon="item.icon" :size="24" />
         </div> -->
@@ -270,7 +271,7 @@ function handleCacheVisible() {
             <n-icon :component="SettingsRound" :size="24" />
           </div>
         </n-dropdown>
-      </footer>
+      </div>
       <n-dropdown 
         placement="bottom-start" 
         trigger="manual" 
@@ -308,6 +309,14 @@ function handleCacheVisible() {
   .layout {
     width: 100%;
   }
+}
+.header {
+  display: flex;
+  flex-direction: column;
+}
+.footer {
+  display: flex;
+  flex-direction: column;
 }
 
 .btn {

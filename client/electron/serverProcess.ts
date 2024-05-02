@@ -1,5 +1,5 @@
 import { type UtilityProcess, utilityProcess } from 'electron'
-import path from 'path'
+import path from 'node:path'
 
 let serverProcess: null | UtilityProcess = null
 const __rootdirname = process.cwd()
@@ -7,8 +7,8 @@ export function initServerProcess() {
   const serverPath = path.join(__rootdirname, '..', 'electron-server', 'dist', 'main.js')
   console.log(serverPath)
   serverProcess = utilityProcess.fork(serverPath, [], {
-      stdio: 'pipe'
-    })
+    stdio: 'pipe'
+  })
 
   serverProcess.on?.('spawn', () => {
     serverProcess?.stdout?.on('data', data => {

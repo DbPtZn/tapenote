@@ -45,7 +45,7 @@ export class CreatorShell implements ShellModule {
         cmpt: markRaw(SidebarView),
         isRow: false,
         ratio: '240px',
-        // min: '240px',
+        min: '240px',
         children: []
       },
       itemlist: {

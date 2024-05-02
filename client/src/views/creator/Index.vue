@@ -7,12 +7,15 @@ import { NButton, NIcon, useThemeVars } from 'naive-ui'
 import { LibraryEnum } from '@/enums'
 import { MenuFilled } from '@vicons/material'
 import { CacheListView } from './cache'
+import { onBeforeMount } from 'vue'
 const { dragStore, userStore } = useStore()
 const themeVars = useThemeVars()
 const renderer = useRenderer()
 renderer.set(creatorShell)
 const shell = useShell<CreatorShell>()
 const implementRef = ref<HTMLElement>()
+onBeforeMount(() => {
+})
 onMounted(() => {
   implementRef.value && renderer.setImplementRef(implementRef.value) // 注入实现层
   console.log('!--- ---启动分形容器渲染--- ---!')
@@ -80,7 +83,7 @@ function renderControl({ options }: { options: FractalContainerConfig }) {
 }
 </script>
 <template>
-  <div ref="implementRef" class="render-page">
+  <div ref="implementRef" class="render-page" :style="{ width: renderer.getWidth, height: renderer.getHeight }">
     <FractalContainer
       :data="renderer.data" 
       :allow-container-auto-drop="!dragStore.dragging" 
@@ -103,9 +106,12 @@ function renderControl({ options }: { options: FractalContainerConfig }) {
 .render-page {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: v-bind('renderer.getHeight');
-  width: v-bind('renderer.getWidth');
+  // height: v-bind('renderer.getHeight');
+  // width: 100%;
+  // 再加入 electron 之后出现的问题，该 css 中载入 renderer.getWidth 似乎存在生命周期的问题
+  // 该问题导致在容器开始渲染时计算函数无法正确获得 100% 的容器宽度
+  // 将代码移至 style 中即可解决该问题，但问题具体成因暂不明确
+  // width: v-bind('renderer.getWidth');
   margin: 0;
   padding: 0;
   overflow: hidden;

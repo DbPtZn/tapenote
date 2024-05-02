@@ -43,6 +43,6 @@
       "@/*": ["src/*"]
     },
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "electron"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "electron", "build-editor.config.ts", "build-container.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
