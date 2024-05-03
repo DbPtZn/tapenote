@@ -1,17 +1,22 @@
 import { Module, forwardRef } from '@nestjs/common'
 import { UserService } from './user.service'
 import { UserController } from './user.controller'
-import { TypeOrmModule } from '@nestjs/typeorm'
 import { User } from './entities/user.entity'
 import { BcryptModule } from 'src/bcrypt/bcrypt.module'
 import { StorageModule } from 'src/storage/storage.module'
-import { TimbreModule } from 'src/timbre/timbre.module'
-import { BgmModule } from 'src/bgm/bgm.module'
+// import { TimbreModule } from 'src/timbre/timbre.module'
+// import { BgmModule } from 'src/bgm/bgm.module'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { UserLoggerModule } from 'src/user-logger/userLogger.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), BcryptModule, StorageModule, TimbreModule, BgmModule, UserLoggerModule],
+  imports: [
+    BcryptModule,
+    StorageModule,
+    // TimbreModule,
+    // BgmModule,
+    UserLoggerModule
+  ],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService]

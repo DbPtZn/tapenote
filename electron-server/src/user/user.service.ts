@@ -1,10 +1,7 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, LoggerService } from '@nestjs/common'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { InjectRepository } from '@nestjs/typeorm'
 import { Dir, SubmissionConfig, SubscriptionConfig, User } from './entities/user.entity'
-import { MongoRepository } from 'typeorm'
-import { ObjectId } from 'mongodb'
 import { BcryptService } from 'src/bcrypt/bcrypt.service'
 import { UpdateUserPwdDto } from './dto/update-pwd.dto'
 import fs from 'fs'
@@ -12,30 +9,34 @@ import path from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
 import * as UUID from 'uuid'
-import { TimbreService } from 'src/timbre/timbre.service'
-import { BgmService } from 'src/bgm/bgm.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
-import { LoggerService } from 'src/logger/logger.service'
+import { PouchDBService } from 'src/pouch-db/pouch-db.service'
+// import { TimbreService } from 'src/timbre/timbre.service'
+// import { BgmService } from 'src/bgm/bgm.service'
+// import { UserLoggerService } from 'src/user-logger/userLogger.service'
+// import { LoggerService } from 'src/logger/logger.service'
 
 const __rootdirname = process.cwd()
 @Injectable()
 export class UserService {
+  private usersRepository: PouchDB.Database<User>
   constructor(
-    @InjectRepository(User)
-    private usersRepository: MongoRepository<User>,
+    private readonly pouchDBService: PouchDBService,
     private readonly storageService: StorageService,
     private readonly bcrtptService: BcryptService,
-    private readonly timbreService: TimbreService,
-    private readonly bgmService: BgmService,
+    // private readonly timbreService: TimbreService,
+    // private readonly bgmService: BgmService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
-  ) {}
+  ) {
+    this.usersRepository = this.pouchDBService.createDatabase<User>('user')
+  }
   /** 创建新用户 */
   async create(createUserDto: CreateUserDto) {
     try {
       // 获取注册信息
       const { account, password, nickname } = createUserDto
-      this.logger.log(`正在为 ${account} 创建新用户...`)
+      // this.logger.log(`正在为 ${account} 创建新用户...`)
       const isValid = /^[a-zA-Z0-9@.]+$/.test(account)
       if (!isValid) throw new Error('账号名称包含非法字符！')
       if (password.includes(' ')) throw new Error('密码中不能包含空格！')
@@ -48,55 +49,64 @@ export class UserService {
       // 密码哈希加盐
       const encryptedPassword = this.bcrtptService.hashSync(password)
       const user = new User()
-      user._id = new ObjectId()
+      user._id = UUID.v4()
       user.account = account
       user.nickname = nickname
       user.encryptedPassword = encryptedPassword
       user.dirname = dirname
-      const newUser = await this.usersRepository.save(user)
+      await this.usersRepository.put(user)
+      const newUser = await this.usersRepository.get(user._id)
       // console.log(newUser)
       if (!newUser) throw new Error('创建新用户失败！')
-      this.timbreService.init(newUser._id) // 创建用户的音色列表
-      this.bgmService.init(newUser._id)
-      this.logger.log(`创建新用户 ${newUser.account} 成功！`)
+      // this.timbreService.init(newUser._id) // 创建用户的音色列表
+      // this.bgmService.init(newUser._id)
+      // this.logger.log(`创建新用户 ${newUser.account} 成功！`)
       return newUser
     } catch (error) {
-      this.logger.error(`创建新用户失败，失败原因：${error.message} `)
+      // this.logger.error(`创建新用户失败，失败原因：${error.message} `)
       throw error
     }
   }
 
-  async createUserRoot(dir: { note: ObjectId; course: ObjectId; procedure: ObjectId }, userId: ObjectId) {
-    const user = await this.findOneById(userId)
-    const { note, course, procedure } = dir
-    if (!user.dir) user.dir = new Dir()
-    if (!user.dir.note && note) user.dir.note = note
-    if (!user.dir.course && course) user.dir.course = course
-    if (!user.dir.procedure && procedure) user.dir.procedure = procedure
-    const newUser = await this.usersRepository.save(user)
-    if (newUser) {
-      this.logger.log(`为 ${newUser.account} 用户创建根目录成功！`)
-      return 'successful!'
-    } else {
-      this.logger.error(`为 ${newUser.account} 用户创建根目录失败！`)
+  async createUserRoot(dir: { note: string; course: string; procedure: string }, userId: string) {
+    try {
+      const user = await this.findOneById(userId)
+      const { note, course, procedure } = dir
+      if (!user.dir) user.dir = new Dir()
+      if (!user.dir.note && note) user.dir.note = note
+      if (!user.dir.course && course) user.dir.course = course
+      if (!user.dir.procedure && procedure) user.dir.procedure = procedure
+      await this.usersRepository.put(user)
+      this.logger.log(`为 ${user.account} 用户创建根目录成功！`)
+    } catch (error) {
+      this.logger.error(`用户创建根目录失败！`)
       throw new Error('创建用户目录失败！')
     }
   }
 
   /** 通过账号查询用户 */
   async findOneByAccount(account: string) {
-    const user = await this.usersRepository.findOne({ where: { account: account } })
+    await this.usersRepository.createIndex({
+      index: {
+        fields: ['account']
+      }
+    })
+    const user = this.usersRepository.find({
+      selector: {
+        account
+      }
+    })
     return user || null
   }
 
   /** 通过 id 查询用户 */
-  async findOneById(_id: ObjectId) {
+  async findOneById(_id: string) {
     const user = await this.usersRepository.findOneBy(_id)
     return user || null
   }
 
   /** 通过 id 查询用户目录信息 */
-  async getDirById(_id: ObjectId) {
+  async getDirById(_id: string) {
     try {
       const user = await this.usersRepository.findOneBy({ _id })
       if (user) {
