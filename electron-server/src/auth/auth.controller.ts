@@ -6,13 +6,11 @@ import { Response, Request } from 'express'
 import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
 import { AuthGuard } from '@nestjs/passport'
 import { REST } from 'src/enum'
-import { ApiTags } from '@nestjs/swagger'
+// import { ApiTags } from '@nestjs/swagger'
 import { CreateUserDto } from 'src/user/dto/_api'
-import { ObjectId } from 'mongodb'
 
 // @UseGuards(JwtAuthGuard)
 @Controller('auth')
-@ApiTags('权限')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -52,18 +50,18 @@ export class AuthController {
 
   @Post(`${REST.W}/dir/:id`)
   async createUserRoot(@Param('id') id: string, @Req() req, @Res() res) {
-    try {
-      this.authService
-        .createUserRoot(new ObjectId(id))
-        .then(msg => {
-          res.status(200).send(msg)
-        })
-        .catch(err => {
-          res.status(400).send(err)
-        })
-    } catch (error) {
-      throw error
-    }
+    // try {
+    //   this.authService
+    //     .createUserRoot(id)
+    //     .then(msg => {
+    //       res.status(200).send(msg)
+    //     })
+    //     .catch(err => {
+    //       res.status(400).send(err)
+    //     })
+    // } catch (error) {
+    //   throw error
+    // }
   }
 
   /** 获取验证码请求 */

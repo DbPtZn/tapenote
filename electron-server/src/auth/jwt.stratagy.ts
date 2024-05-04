@@ -1,7 +1,6 @@
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { PassportStrategy } from '@nestjs/passport'
 import { Inject, Injectable } from '@nestjs/common'
-import { ObjectId } from 'mongodb'
 import { ConfigService } from '@nestjs/config'
 import { RequestScopedService } from 'src/request-scoped/request-scoped.service'
 
@@ -23,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   // 2. 系统自动验证token合法性，并将由token编译出的json作为参数传入validate方法中。
   async validate(payload: any) {
     // console.log('payload', payload)
-    const authInfo = { _id: new ObjectId(payload.userId), account: payload.account, dirname: payload.dirname }
+    const authInfo = { _id: payload.userId, account: payload.account, dirname: payload.dirname }
     // this.context.set('authInfo', authInfo)
     // globalThis.authInfo = authInfo
     this.requestScopedService.setData(authInfo)

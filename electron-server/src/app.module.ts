@@ -8,8 +8,10 @@ import { UserLoggerModule } from './user-logger/userLogger.module'
 import { LoggerModule } from './logger/logger.module'
 import { RequestScopedModule } from './request-scoped/request-scoped.module'
 import { AuthModule } from './auth/auth.module'
-import { PouchDbService } from './pouch-db/pouch-db.service';
-import { PouchDbModule } from './pouch-db/pouch-db.module';
+import { PouchDBService } from './pouchdb/pouchdb.service'
+import { PouchDbModule } from './pouchdb/pouchdb.module'
+import { BcryptModule } from './bcrypt/bcrypt.module'
+import { StorageModule } from './storage/storage.module'
 
 @Module({
   imports: [
@@ -25,12 +27,14 @@ import { PouchDbModule } from './pouch-db/pouch-db.module';
     }),
     UserModule,
     AuthModule,
+    BcryptModule,
+    StorageModule,
     UserLoggerModule,
     LoggerModule,
     RequestScopedModule,
     PouchDbModule
   ],
   controllers: [AppController],
-  providers: [AppService, PouchDbService]
+  providers: [AppService, PouchDBService]
 })
 export class AppModule {}

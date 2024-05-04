@@ -7,7 +7,7 @@ import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
 import { JwtStrategy } from './jwt.stratagy'
 import { LocalStrategy } from './local.strategy'
-import { FolderModule } from 'src/folder/folder.module'
+// import { FolderModule } from 'src/folder/folder.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
 import { RequestScopedModule } from 'src/request-scoped/request-scoped.module'
@@ -15,7 +15,7 @@ import { RequestScopedModule } from 'src/request-scoped/request-scoped.module'
   imports: [
     UserModule,
     BcryptModule,
-    FolderModule,
+    // FolderModule,
     RequestScopedModule,
     PassportModule.register({ defaultStrategy: ['jwt', 'local'] }),
     // PassportModule,

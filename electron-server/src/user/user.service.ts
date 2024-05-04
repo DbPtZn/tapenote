@@ -10,7 +10,8 @@ import { StorageService } from 'src/storage/storage.service'
 import { UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
 import * as UUID from 'uuid'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
-import { PouchDBService } from 'src/pouch-db/pouch-db.service'
+import { PouchDBService } from 'src/pouchdb/pouchdb.service'
+// import PouchDB from 'pouchdb'
 // import { TimbreService } from 'src/timbre/timbre.service'
 // import { BgmService } from 'src/bgm/bgm.service'
 // import { UserLoggerService } from 'src/user-logger/userLogger.service'
@@ -20,6 +21,7 @@ const __rootdirname = process.cwd()
 @Injectable()
 export class UserService {
   private usersRepository: PouchDB.Database<User>
+  // private usersRepository = new PouchDB<User>('user', { auto_compaction: true })
   constructor(
     private readonly pouchDBService: PouchDBService,
     private readonly storageService: StorageService,
@@ -27,9 +29,9 @@ export class UserService {
     // private readonly timbreService: TimbreService,
     // private readonly bgmService: BgmService,
     private readonly userLogger: UserLoggerService,
-    private readonly logger: LoggerService
+    // private readonly logger: LoggerService
   ) {
-    this.usersRepository = this.pouchDBService.createDatabase<User>('user')
+    this.usersRepository = this.pouchDBService.createDatabase<User>('user', { auto_compaction: true })
   }
   /** 创建新用户 */
   async create(createUserDto: CreateUserDto) {
@@ -77,55 +79,60 @@ export class UserService {
       if (!user.dir.course && course) user.dir.course = course
       if (!user.dir.procedure && procedure) user.dir.procedure = procedure
       await this.usersRepository.put(user)
-      this.logger.log(`为 ${user.account} 用户创建根目录成功！`)
+      // this.logger.log(`为 ${user.account} 用户创建根目录成功！`)
     } catch (error) {
-      this.logger.error(`用户创建根目录失败！`)
+      // this.logger.error(`用户创建根目录失败！`)
       throw new Error('创建用户目录失败！')
     }
   }
 
   /** 通过账号查询用户 */
   async findOneByAccount(account: string) {
+    // 创建索引
     await this.usersRepository.createIndex({
       index: {
         fields: ['account']
       }
     })
-    const user = this.usersRepository.find({
+    const user = await this.usersRepository.find({
       selector: {
         account
       }
     })
-    return user || null
+    if (user.docs.length) {
+      return user.docs[0]
+    } else {
+      return null
+    }
   }
 
   /** 通过 id 查询用户 */
   async findOneById(_id: string) {
-    const user = await this.usersRepository.findOneBy(_id)
+    const user = await this.usersRepository.get(_id)
     return user || null
   }
 
   /** 通过 id 查询用户目录信息 */
   async getDirById(_id: string) {
     try {
-      const user = await this.usersRepository.findOneBy({ _id })
+      const user = await this.findOneById(_id)
       if (user) {
-        // this.userLogger.log(`查询到用户 ${user.account} 的目录信息`)
+        this.userLogger.log(`查询到用户 ${user.account} 的目录信息`)
         return {
           dir: user.dir
         }
       } else throw new Error('查询用户目录信息失败！')
     } catch (error) {
-      // this.userLogger.warn(`查询不到用户目录信息！原因：${error.message}`)
+      this.userLogger.warn(`查询不到用户目录信息！原因：${error.message}`)
       throw error
     }
   }
 
   /** 通过 id 查询用户基本信息 */
-  async getInfoById(_id: ObjectId, dirname: string) {
+  async getInfoById(_id: string, dirname: string) {
     try {
       this.userLogger.log(`正在查询用户信息...`)
-      const user = await this.usersRepository.findOneBy({ _id })
+      const user = await this.findOneById(_id)
       if (user) {
         this.userLogger.log(`查询用户信息成功!`)
         return {
@@ -155,12 +162,12 @@ export class UserService {
   }
 
   /** 获取账号 */
-  async getAccount(_id: ObjectId) {
+  async getAccount(_id: string) {
     const user = await this.findOneById(_id)
     return user.account
   }
 
-  async updateInfo(updateUserDto: UpdateUserDto, _id: ObjectId) {
+  async updateInfo(updateUserDto: UpdateUserDto, _id: string) {
     this.userLogger.log(`正在更新用户信息...`)
     const { avatar, nickname, desc, email, phone, homepage } = updateUserDto
     const user = await this.findOneById(_id)
@@ -172,16 +179,17 @@ export class UserService {
       user.email = email
       user.phone = phone
       user.homepage = homepage
-      const newUser = await this.usersRepository.save(user)
+      user.updateAt = new Date()
+      await this.usersRepository.put(user)
       this.userLogger.log(`更新用户信息成功！`)
-      return { updateAt: newUser.updateAt }
+      return { updateAt: user.updateAt }
     } else {
       this.userLogger.log(`更新用户信息失败！`)
       throw new Error('用户不存在！')
     }
   }
 
-  async updatePwd(updatePwdDto: UpdateUserPwdDto, _id: ObjectId) {
+  async updatePwd(updatePwdDto: UpdateUserPwdDto, _id: string) {
     try {
       this.userLogger.log(`正在更新用户密码...`)
       const { newPwd, oldPwd } = updatePwdDto
@@ -193,9 +201,10 @@ export class UserService {
       const encryptedPassword = this.bcrtptService.hashSync(newPwd)
       if (user) {
         user.encryptedPassword = encryptedPassword
-        const newUser = await this.usersRepository.save(user)
+        user.updateAt = new Date()
+        await this.usersRepository.put(user)
         this.userLogger.log(`更新用户密码成功！`)
-        return { updateAt: newUser.updateAt }
+        return { updateAt: user.updateAt }
       } else {
         throw new Error('用户不存在！')
       }
@@ -206,7 +215,7 @@ export class UserService {
   }
 
   /** 添加投稿配置 */
-  async addSubmissionConfig(_id: ObjectId) {
+  async addSubmissionConfig(_id: string) {
     try {
       this.userLogger.log(`正在添加投稿配置...`)
       const user = await this.findOneById(_id)
@@ -217,18 +226,17 @@ export class UserService {
       config.code = ''
       config.desc = ''
       user.submissionConfig ? user.submissionConfig.push(config) : (user.submissionConfig = [config])
-      const newUser = await this.usersRepository.save(user)
-      if (newUser) {
-        this.userLogger.log(`成功添加投稿配置：${JSON.stringify(config)}`)
-        return { config: config, updateAt: newUser.updateAt }
-      } else throw new Error('添加投稿配置失败！')
+      user.updateAt = new Date()
+      await this.usersRepository.put(user)
+      this.userLogger.log(`成功添加投稿配置：${JSON.stringify(config)}`)
+      return { config: config, updateAt: user.updateAt }
     } catch (error) {
       this.userLogger.error(`添加投稿配置失败！原因：${error.message} `)
       throw error
     }
   }
   /** 移除投稿配置 */
-  async removeSubmissionConfig(configId: string, _id: ObjectId) {
+  async removeSubmissionConfig(configId: string, _id: string) {
     try {
       this.userLogger.log(`正在移除${configId}投稿配置...`)
       const user = await this.findOneById(_id)
@@ -237,18 +245,17 @@ export class UserService {
           arr.splice(index, 1)
         }
       })
-      const newUser = await this.usersRepository.save(user)
-      if (newUser) {
-        this.userLogger.log(`成功移除${configId}投稿配置！`)
-        return { updateAt: newUser.updateAt }
-      } else throw new Error('移除投稿配置失败！')
+      user.updateAt = new Date()
+      await this.usersRepository.put(user)
+      this.userLogger.log(`成功移除${configId}投稿配置！`)
+      return { updateAt: user.updateAt }
     } catch (error) {
       this.userLogger.error(`移除${configId}投稿配置失败！原因：${error.message} `)
       throw error
     }
   }
 
-  async updateSubmissionConfig(dto: UpdateUserSubmissionConfigDto, _id: ObjectId) {
+  async updateSubmissionConfig(dto: UpdateUserSubmissionConfigDto, _id: string) {
     try {
       this.userLogger.log(`正在更新${dto.id}投稿配置...`)
       const { id, name, site, code, desc } = dto
@@ -261,11 +268,10 @@ export class UserService {
           arr[index].desc = desc
         }
       })
-      const newUser = await this.usersRepository.save(user)
-      if (newUser) {
-        this.userLogger.log(`成功更新${id}投稿配置！`)
-        return { updateAt: newUser.updateAt }
-      } else throw new Error('更新投稿配置失败！')
+      user.updateAt = new Date()
+      await this.usersRepository.put(user)
+      this.userLogger.log(`成功更新${id}投稿配置！`)
+      return { updateAt: user.updateAt }
     } catch (error) {
       this.userLogger.error(`更新${dto.id}投稿配置失败！原因：${error.message} `)
       throw error
@@ -273,7 +279,7 @@ export class UserService {
   }
 
   /** 添加订阅配置 */
-  async addSubscriptionConfig(_id: ObjectId) {
+  async addSubscriptionConfig(_id: string) {
     try {
       this.userLogger.log(`正在添加订阅配置...`)
       const user = await this.findOneById(_id)
@@ -284,18 +290,17 @@ export class UserService {
       config.code = ''
       config.desc = ''
       user.subscriptionConfig ? user.subscriptionConfig.push(config) : (user.subscriptionConfig = [config])
-      const newUser = await this.usersRepository.save(user)
-      if (newUser) {
-        this.userLogger.log(`成功添加订阅配置：${JSON.stringify(config)}`)
-        return { config: config, updateAt: newUser.updateAt }
-      } else throw new Error('添加订阅配置失败！')
+      user.updateAt = new Date()
+      await this.usersRepository.put(user)
+      this.userLogger.log(`成功添加订阅配置：${JSON.stringify(config)}`)
+      return { config: config, updateAt: user.updateAt }
     } catch (error) {
       this.userLogger.error(`添加订阅配置失败！原因：${error.message} `)
       throw error
     }
   }
   /** 移除订阅配置 */
-  async removeSubscriptionConfig(configId: string, _id: ObjectId) {
+  async removeSubscriptionConfig(configId: string, _id: string) {
     try {
       this.userLogger.log(`正在移除${configId}订阅配置...`)
       const user = await this.findOneById(_id)
@@ -304,18 +309,17 @@ export class UserService {
           arr.splice(index, 1)
         }
       })
-      const newUser = await this.usersRepository.save(user)
-      if (newUser) {
-        this.userLogger.log(`成功移除${configId}订阅配置！`)
-        return { updateAt: newUser.updateAt }
-      } else throw new Error('移除订阅配置失败！')
+      user.updateAt = new Date()
+      await this.usersRepository.put(user)
+      this.userLogger.log(`成功移除${configId}订阅配置！`)
+      return { updateAt: user.updateAt }
     } catch (error) {
       this.userLogger.error(`移除${configId}订阅配置失败！原因：${error.message} `)
       throw error
     }
   }
 
-  async updateSubscriptionConfig(dto: UpdateUserSubscriptionConfigDto, _id: ObjectId) {
+  async updateSubscriptionConfig(dto: UpdateUserSubscriptionConfigDto, _id: string) {
     try {
       this.userLogger.log(`正在更新${dto.id}订阅配置...`)
       const { id, name, site, code, desc } = dto
@@ -328,11 +332,10 @@ export class UserService {
           arr[index].desc = desc
         }
       })
-      const newUser = await this.usersRepository.save(user)
-      if (newUser) {
-        this.userLogger.log(`成功更新${id}订阅配置`)
-        return { updateAt: newUser.updateAt }
-      } else throw new Error('更新订阅配置失败！')
+      user.updateAt = new Date()
+      await this.usersRepository.put(user)
+      this.userLogger.log(`成功更新${id}订阅配置`)
+      return { updateAt: user.updateAt }
     } catch (error) {
       this.userLogger.error(`更新${dto.id}订阅配置失败！原因：${error.message} `)
       throw error
@@ -342,14 +345,19 @@ export class UserService {
   /** 生成用户私有目录的地址 */
   async generateDirname() {
     let dirname = generateRandomStr()
-    let users = await this.usersRepository.find({ where: { dirname } })
+    await this.usersRepository.createIndex({ index: { fields: ['dirname'] } })
+    let users = await this.usersRepository.find({
+      selector: { dirname }
+    })
     // 校验该地址是否已经存在
     let fullPath1 = path.join(__rootdirname, 'public', dirname)
     let fullPath2 = path.join(__rootdirname, 'private', dirname)
-    while (users.length > 0 || fs.existsSync(fullPath1) || fs.existsSync(fullPath2)) {
+    while (users.docs.length > 0 || fs.existsSync(fullPath1) || fs.existsSync(fullPath2)) {
       // console.log('该用户文件夹已存在，重新生成')
       dirname = generateRandomStr()
-      users = await this.usersRepository.find({ where: { dirname } })
+      users = await this.usersRepository.find({
+        selector: { dirname }
+      })
       fullPath1 = path.join(__rootdirname, 'public', dirname)
       fullPath2 = path.join(__rootdirname, 'private', dirname)
     }
