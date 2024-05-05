@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:web": "vite --config vite-web.config.ts",
     "build": "vue-tsc && vite build && electron-builder",
     "build:web": "vue-tsc && vite build",
     "build:editor": "vite build --config build-editor.config.ts",

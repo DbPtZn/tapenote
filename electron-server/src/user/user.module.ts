@@ -11,26 +11,13 @@ import { UserLoggerModule } from 'src/user-logger/userLogger.module'
 import { PouchDBService } from 'src/pouchdb/pouchdb.service'
 import { PouchDbModule } from 'src/pouchdb/pouchdb.module'
 import { LoggerModule } from 'src/logger/logger.module'
+import { TimbreModule } from 'src/timbre/timbre.module'
+import { BgmModule } from 'src/bgm/bgm.module'
 
 @Module({
-  imports: [
-    PouchDbModule,
-    StorageModule,
-    BcryptModule,
-    // TimbreModule,
-    // BgmModule,
-    // UserLoggerModule,
-    // LoggerModule
-  ],
+  imports: [PouchDbModule, StorageModule, BcryptModule, TimbreModule, BgmModule],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService]
 })
-export class UserModule {
-  constructor(private readonly userService: UserService) {}
-
-  /** 测试代码 */
-  onModuleInit() {
-    // this.userService.create({ nickname: 'test', account: '2618asfasdfs@rrr.com', password: 'password' })
-  }
-}
+export class UserModule {}

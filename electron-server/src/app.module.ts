@@ -12,6 +12,9 @@ import { PouchDBService } from './pouchdb/pouchdb.service'
 import { PouchDbModule } from './pouchdb/pouchdb.module'
 import { BcryptModule } from './bcrypt/bcrypt.module'
 import { StorageModule } from './storage/storage.module'
+import { TimbreModule } from './timbre/timbre.module'
+import { BgmModule } from './bgm/bgm.module'
+import { SherpaModule } from './sherpa/sherpa.module'
 
 @Module({
   imports: [
@@ -32,7 +35,16 @@ import { StorageModule } from './storage/storage.module'
     UserLoggerModule,
     LoggerModule,
     RequestScopedModule,
-    PouchDbModule
+    PouchDbModule,
+    // FragmentModule,
+    // UploadModule,
+    // TrashModule,
+    SherpaModule,
+    // FolderModule,
+    // ProjectModule,
+    // FfmpegModule,
+    TimbreModule,
+    BgmModule,
   ],
   controllers: [AppController],
   providers: [AppService, PouchDBService]

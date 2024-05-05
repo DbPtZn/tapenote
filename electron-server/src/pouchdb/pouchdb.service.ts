@@ -8,8 +8,8 @@ export class PouchDBService {
     PouchDB.plugin(PouchFindPlugin)
   }
 
-  createDatabase<T>(name: string, options?: PouchDB.Configuration.DatabaseConfiguration) {
-    const db = new PouchDB<T>(name, options)
+  createDatabase<T>(pathname: string, options?: PouchDB.Configuration.DatabaseConfiguration) {
+    const db = new PouchDB<T>(pathname, options)
     return db
   }
 }

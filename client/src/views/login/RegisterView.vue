@@ -97,7 +97,9 @@ function handleRegister(e: MouseEvent) {
           router.push(RoutePathEnum.LOGIN)
         })
         .catch(err => {
-          console.log(err)
+          const msg = err?.response?.data || '注册失败！'
+          message.error(msg)
+          // console.log(err)
         })
     } else {
       message.error('表单校验失败！')

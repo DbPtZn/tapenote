@@ -25,7 +25,7 @@ export class AuthController {
         })
         .catch(error => {
           console.log(error)
-          res.status(400).send({ msg: '用户注册失败', error: error })
+          res.status(400).send(error.message)
         })
     } catch (error) {
       res.status(400).send({ msg: '用户注册失败', error: error })

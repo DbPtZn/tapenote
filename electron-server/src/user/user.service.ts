@@ -1,4 +1,4 @@
-import { Injectable, LoggerService } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { Dir, SubmissionConfig, SubscriptionConfig, User } from './entities/user.entity'
@@ -8,14 +8,12 @@ import fs from 'fs'
 import path from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
-import * as UUID from 'uuid'
+import UUID from 'uuid'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { PouchDBService } from 'src/pouchdb/pouchdb.service'
-// import PouchDB from 'pouchdb'
-// import { TimbreService } from 'src/timbre/timbre.service'
-// import { BgmService } from 'src/bgm/bgm.service'
-// import { UserLoggerService } from 'src/user-logger/userLogger.service'
-// import { LoggerService } from 'src/logger/logger.service'
+import { TimbreService } from 'src/timbre/timbre.service'
+import { BgmService } from 'src/bgm/bgm.service'
+import { LoggerService } from 'src/logger/logger.service'
 
 const __rootdirname = process.cwd()
 @Injectable()
@@ -26,19 +24,19 @@ export class UserService {
     private readonly pouchDBService: PouchDBService,
     private readonly storageService: StorageService,
     private readonly bcrtptService: BcryptService,
-    // private readonly timbreService: TimbreService,
-    // private readonly bgmService: BgmService,
+    private readonly timbreService: TimbreService,
+    private readonly bgmService: BgmService,
     private readonly userLogger: UserLoggerService,
-    // private readonly logger: LoggerService
+    private readonly logger: LoggerService
   ) {
-    this.usersRepository = this.pouchDBService.createDatabase<User>('user', { auto_compaction: true })
+    this.usersRepository = this.pouchDBService.createDatabase<User>('database/users', { auto_compaction: true })
   }
   /** 创建新用户 */
   async create(createUserDto: CreateUserDto) {
     try {
       // 获取注册信息
       const { account, password, nickname } = createUserDto
-      // this.logger.log(`正在为 ${account} 创建新用户...`)
+      this.logger.log(`正在为 ${account} 创建新用户...`)
       const isValid = /^[a-zA-Z0-9@.]+$/.test(account)
       if (!isValid) throw new Error('账号名称包含非法字符！')
       if (password.includes(' ')) throw new Error('密码中不能包含空格！')
@@ -60,12 +58,12 @@ export class UserService {
       const newUser = await this.usersRepository.get(user._id)
       // console.log(newUser)
       if (!newUser) throw new Error('创建新用户失败！')
-      // this.timbreService.init(newUser._id) // 创建用户的音色列表
-      // this.bgmService.init(newUser._id)
-      // this.logger.log(`创建新用户 ${newUser.account} 成功！`)
+      this.timbreService.init(newUser._id) // 创建用户的音色列表
+      this.bgmService.init(newUser._id)
+      this.logger.log(`创建新用户 ${newUser.account} 成功！`)
       return newUser
     } catch (error) {
-      // this.logger.error(`创建新用户失败，失败原因：${error.message} `)
+      this.logger.error(`创建新用户失败，失败原因：${error.message} `)
       throw error
     }
   }
@@ -79,11 +77,32 @@ export class UserService {
       if (!user.dir.course && course) user.dir.course = course
       if (!user.dir.procedure && procedure) user.dir.procedure = procedure
       await this.usersRepository.put(user)
-      // this.logger.log(`为 ${user.account} 用户创建根目录成功！`)
+      this.logger.log(`为 ${user.account} 用户创建根目录成功！`)
     } catch (error) {
-      // this.logger.error(`用户创建根目录失败！`)
+      this.logger.error(`用户创建根目录失败！`)
       throw new Error('创建用户目录失败！')
     }
+  }
+
+  async findOneBy(obj: { [key: string]: any }) {
+    const keys = Object.keys(obj)
+    if (keys.length === 0) throw new Error('参数不能为空')
+    await this.usersRepository.createIndex({
+      index: {
+        fields: keys
+      }
+    })
+    const result = await this.usersRepository.find({
+      selector: {
+        $and: keys.map(key => {
+          return {
+            [key]: obj[key]
+          }
+        })
+      },
+      limit: 1
+    })
+    return result.docs.length > 0 ? result.docs[0] : undefined
   }
 
   /** 通过账号查询用户 */

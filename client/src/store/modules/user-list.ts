@@ -68,7 +68,7 @@ export const useUserListStore = defineStore('userListStore', {
     register(params: Parameters<typeof auth.register>[0], hostname: string) {
       return auth.register(params, hostname).then(res => {
         const id = res.data.id
-        return auth.createRootDir(id, hostname)
+        auth.createRootDir(id, hostname)
       })
     },
     /** 登录业务系统 */
@@ -202,9 +202,9 @@ export const useUserListStore = defineStore('userListStore', {
         homepage: data.homepage || '',
         phone: data.phone || '',
         dir: {
-          note: data.dir.note || '',
-          course: data.dir.course || '',
-          procedure: data.dir.procedure || ''
+          note: data?.dir?.note || '',
+          course: data?.dir?.course || '',
+          procedure: data?.dir?.procedure || ''
         },
         submissionConfig: data.submissionConfig || [],
         subscriptionConfig: data.subscriptionConfig || []
