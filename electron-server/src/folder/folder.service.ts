@@ -7,6 +7,7 @@ import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { GetRecentlyDto } from './dto/get-recently.dto'
 import { ProjectService } from 'src/project/project.service'
 import { PouchDBService } from 'src/pouchdb/pouchdb.service'
+import UUID from 'uuid'
 
 @Injectable()
 export class FolderService {
@@ -314,23 +315,25 @@ export class FolderService {
     // console.log('children')
     removedIds && removedIds.push(folderId)
     const children = await this.foldersRepository.find({
-      parentId: folderId,
-      removed: removeMode === RemovedEnum.NEVER ? RemovedEnum.PASSIVE : RemovedEnum.NEVER,
-      userId
+      selector: {
+        $and: [
+          { parentId: folderId },
+          { removed: removeMode === RemovedEnum.NEVER ? RemovedEnum.PASSIVE : RemovedEnum.NEVER },
+          { userId }
+        ]
+      }
     })
-    if (children.length > 0) {
-      for (let i = 0; i < children.length; i++) {
-        const folder = await this.foldersRepository.findOneAndUpdate(
-          { _id: children[i]._id },
-          {
-            $set: {
-              removed: removeMode,
-              updateAt: new Date()
-            }
-          }
-        )
-        folder.value &&
-          (await this.updateRemovedRecursive(folder.value._id, removeMode, userId, removedIds && removedIds))
+    if (children.docs.length > 0) {
+      for (let i = 0; i < children.docs.length; i++) {
+        const result = await this.foldersRepository.find({
+          selector: { _id: children[i]._id },
+          limit: 1
+        })
+        const folder = result.docs.length > 0 ? result.docs[0] : null
+        folder.removed = removeMode
+        folder.updateAt = new Date()
+        await this.foldersRepository.put(folder)
+        folder && (await this.updateRemovedRecursive(folder._id, removeMode, userId, removedIds && removedIds))
       }
     }
   }
@@ -338,8 +341,8 @@ export class FolderService {
   /** 彻底删除文件夹（仅删除该文件夹与其中的文件，暂不考虑递归删除子文件夹） */
   async delete(_id: string, userId: string, dirname: string) {
     try {
-      const folder = await this.foldersRepository.findOneBy({ _id, userId })
-      const result = await this.foldersRepository.remove(folder)
+      const folder = await this.findOneBy({ _id, userId })
+      await this.foldersRepository.remove(folder)
       // 注意，删除成功后， folder._id 和 result._id 都会是 undefined
       // 删除文件夹下的所有文件(不包括其子文件夹,也不包括其中已被移除的文件)
       const projects = await this.projectService.findAllByFolderId(_id, userId)
@@ -357,15 +360,20 @@ export class FolderService {
    * @returns 根目录 id
    */
   async createRoot(lib: LibraryEnum, userId: string) {
-    const folder = new Folder()
-    folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
-    folder.desc = 'Root Folder'
-    folder.lib = lib
-    folder.isCloud = false
-    folder.userId = userId
-    folder.parentId = null
-    const res = await this.foldersRepository.save(folder)
-    return res._id
+    try {
+      const folder = new Folder()
+      folder._id = UUID.v4()
+      folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
+      folder.desc = 'Root Folder'
+      folder.lib = lib
+      folder.isCloud = false
+      folder.userId = userId
+      folder.parentId = null
+      await this.foldersRepository.put(folder)
+      return folder._id
+    } catch (error) {
+      throw error
+    }
   }
   /** 查询根目录 */
   async findRootDir(userId: string, lib: LibraryEnum) {

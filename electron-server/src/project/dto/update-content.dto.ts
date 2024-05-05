@@ -1,9 +1,8 @@
-import { IsMongoId, IsString } from 'class-validator'
-import { ObjectId } from 'mongodb'
+import { IsString } from 'class-validator'
 
 export class UpdateContentDto {
-  @IsMongoId()
-  id: ObjectId
+  @IsString()
+  id: string
 
   @IsString()
   content: string

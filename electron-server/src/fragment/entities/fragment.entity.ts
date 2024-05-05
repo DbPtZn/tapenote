@@ -1,7 +1,6 @@
-import { ObjectId } from 'mongodb'
 import { RemovedEnum } from 'src/enum'
 export interface Fragment {
-  _id: ObjectId
+  _id: string
   audio: string
   duration: number
   txt: string
