@@ -3,6 +3,8 @@ import { AppModule } from './app.module'
 import dotenv from 'dotenv'
 import { LoggerService } from './logger/logger.service'
 import { ValidationPipe } from '@nestjs/common'
+import path from 'path'
+import { NestExpressApplication } from '@nestjs/platform-express'
 async function bootstrap() {
   dotenv.config({
     path:
@@ -10,7 +12,7 @@ async function bootstrap() {
         ? ['.env.development.local', '.env.development']
         : ['.env.production.local', '.env.production']
   })
-  const app = await NestFactory.create(AppModule, { bufferLogs: false })
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: false })
 
   // 生产环境下开启自动记录系统日志功能
   process.env.LOG_OPEN === 'true' && app.useLogger(app.get(LoggerService))
@@ -27,8 +29,14 @@ async function bootstrap() {
     // maxAge: 3600 * 24
   })
 
+  // 开放静态资源
+  const __rootdirname = process.cwd()
+  // console.log(__rootdirname)
+  app.useStaticAssets(path.join(__rootdirname, 'public'), { prefix: '/public' })
+
   /** 开放端口（请在环境变量中设置） */
   const port = parseInt(process.env.SERVER_PORT, 10)
+  console.log(`正在监听 ${port} 端口`)
   await app.listen(port)
 }
 bootstrap()

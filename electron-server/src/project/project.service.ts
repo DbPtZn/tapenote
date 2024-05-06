@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { CreateProjectDto } from './dto/create-project.dto'
-import { UpdateProjectDto } from './dto/update-project.dto'
 import { Annotation, BGM, Project } from './entities/project.entity'
 import { StorageService } from 'src/storage/storage.service'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
@@ -14,7 +13,7 @@ import fs from 'fs'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { PouchDBService } from 'src/pouchdb/pouchdb.service'
-import UUID from 'uuid'
+import * as UUID from 'uuid'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -64,6 +63,7 @@ export class ProjectService {
   async findBy(where: { [key: string]: any }) {
     const keys = Object.keys(where)
     if (keys.length === 0) throw new Error('参数不能为空')
+    if (keys.includes('_id') && !where._id) return []
     await this.projectsRepository.createIndex({
       index: {
         fields: keys
@@ -82,25 +82,29 @@ export class ProjectService {
   }
 
   async findOneBy(where: { [key: string]: any }) {
-    const keys = Object.keys(where)
-    if (keys.length === 0) throw new Error('参数不能为空')
-    await this.projectsRepository.createIndex({
-      index: {
-        fields: keys
-      }
-    })
-    const result = await this.projectsRepository.find({
-      selector: {
-        $and: keys.map(key => {
-          return {
-            [key]: where[key]
-          }
-        })
-      },
-      limit: 1
-    })
-    if (result.docs.length > 0) return result.docs[0]
-    else throw new NotFoundException('未找到该项目')
+    try {
+      const keys = Object.keys(where)
+      if (keys.length === 0) throw new Error('参数不能为空')
+      if (keys.includes('_id') && !where._id) return null
+      await this.projectsRepository.createIndex({
+        index: {
+          fields: keys
+        }
+      })
+      const result = await this.projectsRepository.find({
+        selector: {
+          $and: keys.map(key => {
+            return {
+              [key]: where[key]
+            }
+          })
+        },
+        limit: 1
+      })
+      return result.docs.length > 0 ? result.docs[0] : null
+    } catch (error) {
+      throw error
+    }
   }
 
   async create(createDto: CreateProjectDto, userId: string, dirname: string) {
@@ -161,6 +165,8 @@ export class ProjectService {
       project.content = data.content || '<br>'
       project.abbrev = data.abbrev || ''
       project.removed = RemovedEnum.NEVER
+      project.createAt = new Date()
+      project.updateAt = new Date()
 
       project.detail = {
         penname: penname || '佚名',
@@ -313,6 +319,7 @@ export class ProjectService {
   /** -------------------------------- 查询 ------------------------------------ */
   async findOne(_id: string, userId: string, dirname: string) {
     const project = await this.findOneBy({ _id, userId })
+    if (!project) throw new Error('未找到该项目')
     switch (project.library) {
       case LibraryEnum.NOTE:
         //
@@ -351,6 +358,7 @@ export class ProjectService {
 
   async findProcudureById(_id: string, userId: string, dirname: string) {
     const procedure = await this.findOneBy({ _id, userId })
+    if (!procedure) throw new Error('未找到该工程项目')
     // 补全音频路径
     if (!dirname) throw new Error('未指定 dirname！')
     procedure.fragments = procedure.fragments.map(fragment => {
@@ -416,8 +424,13 @@ export class ProjectService {
   }
 
   async findByUpdateAt(skip: number, take: number, library: LibraryEnum, userId: string) {
+    await this.projectsRepository.createIndex({
+      index: { fields: ['updateAt'] }
+    })
     const projects = await this.projectsRepository.find({
-      selector: { $and: [{ userId: userId }, { library }, { removed: RemovedEnum.NEVER }] },
+      selector: {
+        $and: [{ userId: userId }, { library }, { removed: RemovedEnum.NEVER }, { updateAt: { $exists: true } }]
+      },
       fields: ['_id', 'title', 'abbrev', 'folderId', 'updateAt', 'createAt'],
       sort: [{ updateAt: 'desc' }],
       skip: skip,
@@ -453,7 +466,6 @@ export class ProjectService {
       project.detail.wordage = txt.length
       project.updateAt = new Date()
       await this.projectsRepository.put(project)
-      // eslint-disable-next-line prettier/prettier
       return {
         updateAt: project.updateAt,
         abbrev: project.abbrev,
@@ -470,6 +482,7 @@ export class ProjectService {
     const { id, content } = updateSidenoteContentDto
     try {
       const course = await this.findOneBy({ _id: id, userId })
+      if (!course) throw new Error('未找到该课程项目')
       course.sidenote = content
       course.updateAt = new Date()
       await this.projectsRepository.put(course)
@@ -487,6 +500,7 @@ export class ProjectService {
   async remove(_id: string, userId: string) {
     try {
       const project = await this.findOneBy({ _id, userId })
+      if (!project) throw new Error(`移除项目失败！找不到该目标,项目id: ${_id}`)
       project.removed = RemovedEnum.ACTIVE
       project.updateAt = new Date()
       await this.projectsRepository.put(project)
@@ -517,6 +531,7 @@ export class ProjectService {
   async move(_id: string, folderId: string, userId: string) {
     try {
       const project = await this.findOneBy({ _id, userId })
+      if (!project) throw new Error(`移动项目失败！找不到该目标,项目id: ${_id}`)
       project.folderId = folderId
       project.updateAt = new Date()
       await this.projectsRepository.put(project)
@@ -642,6 +657,7 @@ export class ProjectService {
   async delete(_id: string, userId: string, dirname: string) {
     try {
       const project = await this.findOneBy({ _id, userId })
+      if (!project) throw '找不到目标文件！'
       await this.projectsRepository.remove(project)
       // console.log(result)
       // 如果是课程，则删除对应的音频文件
@@ -689,6 +705,7 @@ export class ProjectService {
   async addFragment(procedureId: string, userId: string, fragment: Fragment) {
     try {
       const procedure = await this.findOneBy({ _id: procedureId, userId })
+      if (!procedure) throw new Error('找不到目标工程！')
       procedure.fragments ? procedure.fragments.push(fragment) : (procedure.fragments = [fragment])
       procedure.sequence ? procedure.sequence.push(fragment._id) : (procedure.sequence = [fragment._id])
       procedure.updateAt = new Date()
@@ -703,6 +720,7 @@ export class ProjectService {
   async updateFragment(procedureId: string, data: Fragment, userId: string) {
     try {
       const procedure = await this.findOneBy({ _id: procedureId, userId })
+      if (!procedure) throw new Error('找不到目标工程！')
       procedure.fragments.some((fragment, index, arr) => {
         if (fragment._id === data._id) {
           arr[index] = data
@@ -718,6 +736,7 @@ export class ProjectService {
   /** 移除错误片段 */
   async removeErrorFragment(procedureId: string, fragmentId: string, userId: string) {
     const procedure = await this.findOneBy({ _id: procedureId, userId })
+    if (!procedure) throw new Error('找不到目标工程！')
     procedure.fragments.some((fragment, index, arr) => {
       if (fragment._id === fragmentId) {
         arr.splice(index, 1)
@@ -737,6 +756,7 @@ export class ProjectService {
   async updateFragmentTranscript(procedureId: string, fragmentId: string, newTranscript: string[], userId: string) {
     try {
       const procedure = await this.findOneBy({ _id: procedureId, userId })
+      if (!procedure) throw new Error('找不到目标工程！')
       procedure.fragments.some((fragment, index, arr) => {
         if (fragment._id === fragmentId) {
           if (fragment.transcript.length !== newTranscript.length) {
@@ -772,6 +792,7 @@ export class ProjectService {
         return fragment
       })
       const procedure = await this.findOneBy({ _id: procedureId, userId })
+      if (!procedure) throw new Error('找不到目标工程！')
       procedure.fragments.forEach((fragment, index, arr) => {
         if (fragment.removed === RemovedEnum.NEVER) {
           // 特别注意：数据库中的片段是包含移除状态的，并且无排序，一般从前端传回的数据是排序的，所以不能依据顺序来更新！！！
@@ -793,6 +814,7 @@ export class ProjectService {
   async removeFragment(procedureId: string, fragmentId: string, userId: string) {
     try {
       const procedure = await this.findOneBy({ _id: procedureId, userId })
+      if (!procedure) throw new Error('找不到目标工程！')
       const result = procedure.fragments.some((fragment, index, arr) => {
         if (fragment._id === fragmentId) {
           arr[index].removed = RemovedEnum.ACTIVE
@@ -806,7 +828,7 @@ export class ProjectService {
         throw new Error(
           `片段移除失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`
         )
-      const index = procedure.sequence.findIndex(i => fragmentId)
+      const index = procedure.sequence.findIndex(i => i === fragmentId)
       // console.log(index)
       procedure.sequence.splice(index, 1) // 不能使用 indexOf 找 string
       procedure.updateAt = new Date()
@@ -822,6 +844,7 @@ export class ProjectService {
   async restoreFragment(procedureId: string, fragmentId: string, userId: string) {
     try {
       const procedure = await this.findOneBy({ _id: procedureId, userId })
+      if (!procedure) throw new Error('找不到目标工程！')
       const result = procedure.fragments.some((fragment, index, arr) => {
         if (fragment._id === fragmentId) {
           arr[index].removed = RemovedEnum.NEVER
@@ -833,7 +856,7 @@ export class ProjectService {
         throw new Error(
           `片段恢复失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`
         )
-      const index = procedure.removedSequence.findIndex(i => fragmentId)
+      const index = procedure.removedSequence.findIndex(i => i === fragmentId)
       procedure.removedSequence.splice(index, 1)
       procedure.sequence.push(fragmentId)
       procedure.updateAt = new Date()
@@ -862,7 +885,7 @@ export class ProjectService {
           `片段彻底删除失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`
         )
       // 删除移除序列中的片段
-      const index = procedure.removedSequence.findIndex(i => fragmentId)
+      const index = procedure.removedSequence.findIndex(i => i === fragmentId)
       procedure.removedSequence.splice(index, 1)
       // 删除片段对应的音频文件
       const filepath = this.storageService.getFilePath({
@@ -943,7 +966,7 @@ export class ProjectService {
       procedure.sequence.splice(oldIndex, 1)
       procedure.sequence.splice(newIndex, 0, fragmentId)
       procedure.updateAt = new Date()
-      const newProcedure = await this.projectsRepository.put(procedure)
+      await this.projectsRepository.put(procedure)
       this.checkAndCorrectFragmentSquence(_id) // 校验片段序列
       return { updateAt: procedure.updateAt, msg: '移动片段成功！' }
     } catch (error) {
@@ -1012,7 +1035,7 @@ export class ProjectService {
     // 查找目标片段位置
     // console.log(target)
     // console.log(targetFragmentId)
-    const index = target.sequence.findIndex(i => targetFragmentId)
+    const index = target.sequence.findIndex(i => i === targetFragmentId)
     // console.log(index)
     if (index === -1) throw new Error('目标片段不存在')
     if (position === 'before') {
@@ -1033,7 +1056,7 @@ export class ProjectService {
           1
         )
         target.sequence.splice(
-          target.sequence.findIndex(i => fragment._id),
+          target.sequence.findIndex(i => i === fragment._id),
           1
         )
       }
@@ -1044,7 +1067,7 @@ export class ProjectService {
           1
         )
         source.sequence.splice(
-          source.sequence.findIndex(i => fragment._id),
+          source.sequence.findIndex(i => i === fragment._id),
           1
         )
       }

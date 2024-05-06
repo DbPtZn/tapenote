@@ -3,7 +3,7 @@ import { StorageService } from 'src/storage/storage.service'
 import { UploadFile } from './entities/file.entity'
 import { Worker } from 'worker_threads'
 import { PouchDBService } from 'src/pouchdb/pouchdb.service'
-import UUID from 'uuid'
+import * as UUID from 'uuid'
 @Injectable()
 export class UploadService {
   private uploadFilesRepository: PouchDB.Database<UploadFile>

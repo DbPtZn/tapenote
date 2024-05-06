@@ -5,11 +5,9 @@ export enum DropPosition {
   AFTER = 'after'
 }
 export class MoveFolderDto {
-  // @IsMongoId()
   @IsString()
   sourceId: string
 
-  // @IsMongoId()
   @IsString()
   targetId: string
 

@@ -98,10 +98,12 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     projectStore.fragment(procedureId).getBySort().forEach((fragment, index, arr) => {
       fragment.promoters.forEach((promoter, subscript) => {
         if(promoter) {
+          console.log(promoter)
           const elem = container.querySelector(`[data-id="${promoter}"]`) as HTMLElement
           if (elem) {
             // 启动子存在但动画格式未被激活的情况，处理：重新激活动画块
             if ([ANIME, ANIME_COMPONENT].includes(elem.tagName.toLowerCase()) && elem.dataset.state === 'inactive') {
+              console.log(elem)
               setAnimeToActive(promoter)
             }
             const serial = arr[index].tags[subscript]

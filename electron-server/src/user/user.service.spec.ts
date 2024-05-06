@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { UserService } from './user.service'
-import { TypeOrmModule } from '@nestjs/typeorm'
 import { User } from './entities/user.entity'
 import { BcryptModule } from 'src/bcrypt/bcrypt.module'
 import { forwardRef } from '@nestjs/common'
@@ -13,7 +12,7 @@ describe('UserService', () => {
   beforeEach(async () => {
     jest.resetModules()
     const module: TestingModule = await Test.createTestingModule({
-      imports: [TypeOrmModule.forFeature([User]), BcryptModule, forwardRef(() => FolderModule), StorageModule],
+      imports: [BcryptModule, StorageModule],
       providers: [UserService]
     }).compile()
 

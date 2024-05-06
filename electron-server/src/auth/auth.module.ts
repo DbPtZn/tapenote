@@ -11,14 +11,14 @@ import { LocalStrategy } from './local.strategy'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
 import { RequestScopedModule } from 'src/request-scoped/request-scoped.module'
+import { FolderModule } from 'src/folder/folder.module'
 @Module({
   imports: [
     UserModule,
     BcryptModule,
-    // FolderModule,
+    FolderModule,
     RequestScopedModule,
     PassportModule.register({ defaultStrategy: ['jwt', 'local'] }),
-    // PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

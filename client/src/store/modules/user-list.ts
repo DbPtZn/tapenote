@@ -221,7 +221,6 @@ export const useUserListStore = defineStore('userListStore', {
         this.setCache(state)
         return 
       }
-
       this.data.push(state)
       this.setCache(state)
     },

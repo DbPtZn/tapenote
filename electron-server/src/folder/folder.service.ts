@@ -7,7 +7,9 @@ import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { GetRecentlyDto } from './dto/get-recently.dto'
 import { ProjectService } from 'src/project/project.service'
 import { PouchDBService } from 'src/pouchdb/pouchdb.service'
-import UUID from 'uuid'
+import * as UUID from 'uuid'
+import { UserLoggerService } from 'src/user-logger/userLogger.service'
+import { LoggerService } from 'src/logger/logger.service'
 
 @Injectable()
 export class FolderService {
@@ -15,7 +17,9 @@ export class FolderService {
   constructor(
     private readonly pouchDBService: PouchDBService,
     private readonly userService: UserService,
-    private readonly projectService: ProjectService
+    private readonly projectService: ProjectService,
+    private readonly userlogger: UserLoggerService,
+    private readonly logger: LoggerService
   ) {
     this.foldersRepository = this.pouchDBService.createDatabase('database/folders', { auto_compaction: true })
   }
@@ -45,14 +49,25 @@ export class FolderService {
   /** 新建文件夹 */
   async create(createFolderDto: CreateFolderDto, userId: string) {
     const { name, desc, lib, parentId } = createFolderDto
-    const folder = new Folder()
-    folder.name = name
-    folder.desc = desc
-    folder.lib = lib
-    folder.userId = userId
-    folder.parentId = parentId
-    await this.foldersRepository.put(folder)
-    return this.foldersRepository.get(folder._id)
+    try {
+      this.userlogger.log(`正在新建文件夹，类型：${lib}, 文件夹名称：${name}, 父文件夹ID：${parentId}`)
+      const folder = new Folder()
+      folder._id = UUID.v4()
+      folder.name = name
+      folder.desc = desc
+      folder.lib = lib
+      folder.userId = userId
+      folder.parentId = parentId
+      folder.removed = RemovedEnum.NEVER
+      folder.createAt = new Date()
+      folder.updateAt = new Date()
+      await this.foldersRepository.put(folder)
+      this.userlogger.log(`新建文件夹成功!`)
+      return this.foldersRepository.get(folder._id)
+    } catch (error) {
+      this.userlogger.error(`新建文件夹失败!`)
+      throw error
+    }
   }
 
   /** 查询指定文件夹的子节点 */
@@ -65,7 +80,6 @@ export class FolderService {
         removed: RemovedEnum.NEVER
       })
       folders[i]['isLeaf'] = !(result.length > 0)
-      // folders[i]['children'] = count > 0 ? undefined : []
     }
     // console.log(folders)
     return folders
@@ -74,6 +88,7 @@ export class FolderService {
   async findBy(where: { [key: string]: any }) {
     const keys = Object.keys(where)
     if (keys.length === 0) throw new Error('参数不能为空')
+    if (keys.includes('_id') && !where._id) return []
     await this.foldersRepository.createIndex({
       index: {
         fields: keys
@@ -92,8 +107,10 @@ export class FolderService {
   }
 
   async findOneBy(where: { [key: string]: any }) {
+    // console.log(where)
     const keys = Object.keys(where)
     if (keys.length === 0) throw new Error('参数不能为空')
+    if (keys.includes('_id') && !where._id) return null // 因为 _id 为空会直接报错，所以包含_id 且 _id 为空的情况直接返回 null
     await this.foldersRepository.createIndex({
       index: {
         fields: keys
@@ -177,12 +194,13 @@ export class FolderService {
 
   /** 通过 id 获取文件夹名称 */
   async getFolderName(_id: string, userId: string) {
-    const folder = await this.findOneBy({
-      _id,
-      userId,
-      removed: RemovedEnum.NEVER
-    })
-    return folder && folder.name ? folder.name : null
+    try {
+      const folder = await this.findOneBy({ _id, userId, removed: RemovedEnum.NEVER })
+      return folder && folder.name ? folder.name : null
+    } catch (error) {
+      this.userlogger.error(`通过 id 获取文件夹名称失败!`)
+      throw error
+    }
   }
 
   /** 通过 id 获取祖先文件夹节点组 */
@@ -207,10 +225,14 @@ export class FolderService {
   }
 
   async findBin(userId: string) {
+    await this.foldersRepository.createIndex({
+      index: {
+        fields: ['userId', 'removed'] // 同时对 userId 和 removed 字段创建索引
+      }
+    })
     const folders = await this.foldersRepository.find({
       selector: {
-        userId,
-        $not: { removed: RemovedEnum.NEVER }
+        $and: [{ userId }, { removed: { $ne: RemovedEnum.NEVER } }]
       },
       fields: ['_id', 'name', 'parentId', 'removed', 'lib', 'isCloud', 'updateAt', 'createAt']
     })
@@ -218,7 +240,7 @@ export class FolderService {
     //   where: { userId, removed: { $ne: RemovedEnum.NEVER } },
     //   select: ['_id', 'name', 'parentId', 'removed', 'lib', 'isCloud', 'updateAt', 'createAt']
     // })
-    return folders
+    return folders.docs
   }
 
   async move(moveFolderDto: MoveFolderDto, userId: string) {
@@ -267,6 +289,7 @@ export class FolderService {
     const folder = await this.findOneBy({ _id, userId })
     folder.removed = RemovedEnum.ACTIVE
     folder.updateAt = new Date()
+    this.foldersRepository.put(folder)
     if (folder._id) {
       const removedIds: string[] = []
       await this.updateRemovedRecursive(folder._id, RemovedEnum.PASSIVE, userId, removedIds)
@@ -314,7 +337,7 @@ export class FolderService {
   async updateRemovedRecursive(folderId: string, removeMode: RemovedEnum, userId: string, removedIds?: string[]) {
     // console.log('children')
     removedIds && removedIds.push(folderId)
-    const children = await this.foldersRepository.find({
+    const childrenResult = await this.foldersRepository.find({
       selector: {
         $and: [
           { parentId: folderId },
@@ -323,8 +346,9 @@ export class FolderService {
         ]
       }
     })
-    if (children.docs.length > 0) {
-      for (let i = 0; i < children.docs.length; i++) {
+    const children = childrenResult.docs
+    if (children.length > 0) {
+      for (let i = 0; i < children.length; i++) {
         const result = await this.foldersRepository.find({
           selector: { _id: children[i]._id },
           limit: 1
@@ -343,7 +367,6 @@ export class FolderService {
     try {
       const folder = await this.findOneBy({ _id, userId })
       await this.foldersRepository.remove(folder)
-      // 注意，删除成功后， folder._id 和 result._id 都会是 undefined
       // 删除文件夹下的所有文件(不包括其子文件夹,也不包括其中已被移除的文件)
       const projects = await this.projectService.findAllByFolderId(_id, userId)
       projects.forEach(async project => {
@@ -369,6 +392,8 @@ export class FolderService {
       folder.isCloud = false
       folder.userId = userId
       folder.parentId = null
+      folder.createAt = new Date()
+      folder.updateAt = new Date()
       await this.foldersRepository.put(folder)
       return folder._id
     } catch (error) {

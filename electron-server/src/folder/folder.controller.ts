@@ -13,18 +13,18 @@ export class FolderController {
   constructor(private readonly folderService: FolderService) {}
 
   @Post(`${REST.W}/create`)
-  async create(@Body() createFolderDto: CreateFolderDto, @Req() req) {
+  async create(@Body() createFolderDto: CreateFolderDto, @Req() req, @Res() res) {
     try {
       const folder = await this.folderService.create(createFolderDto, req.user._id)
-      return {
+      res.status(200).send({
         id: folder._id,
         name: folder.name,
         desc: folder.desc,
         lib: folder.lib,
         parentId: folder.parentId
-      }
+      })
     } catch (error) {
-      throw error
+      res.status(400).send(error.message)
     }
   }
 
@@ -58,7 +58,7 @@ export class FolderController {
   @Patch(`/${REST.U}/restore/:id`)
   async restore(@Param('id') id: string, @Req() req, @Res() res) {
     try {
-      console.log(id)
+      // console.log(id)
       const [folderId, parentId] = id.split('&')
       const result = await this.folderService.restore(folderId, parentId, req.user._id)
       res.send(result)
@@ -114,7 +114,7 @@ export class FolderController {
       const data = await this.folderService.getRecently(getRecentlyDto, req.user._id)
       res.status(200).send(data)
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 

@@ -68,6 +68,6 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(() => {
-  // initServerProcess()
+  initServerProcess()
   createWindow()
 })

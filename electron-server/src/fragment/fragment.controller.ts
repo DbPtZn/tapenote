@@ -15,11 +15,9 @@ import {
 import { FragmentService } from './fragment.service'
 import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { AuthGuard } from '@nestjs/passport'
-import { ApiTags } from '@nestjs/swagger'
 import { CreateASRFragmentDto } from './dto/create-asr-fragment.dto'
 import { REST } from 'src/enum'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { ObjectId } from 'mongodb'
 import {
   RemoveFragmentDto,
   RestoreFragmentDto,
@@ -35,7 +33,6 @@ import { CopyFragmentDto } from './dto/copy-fragment'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('fragment')
-@ApiTags('音频片段')
 export class FragmentController {
   constructor(private readonly fragmentService: FragmentService) {}
 
@@ -70,7 +67,7 @@ export class FragmentController {
     try {
       const fragment = await this.fragmentService.createByAudio(
         {
-          procedureId: new ObjectId(formData.procedureId),
+          procedureId: formData.procedureId,
           audio: audio.path,
           duration: formData.duration,
           role: formData.role

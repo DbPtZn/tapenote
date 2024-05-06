@@ -2,7 +2,7 @@
 const path = require('path')
 const webpack = require('webpack')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
-// const CopyPlugin = require('copy-webpack-plugin')
+const CopyPlugin = require('copy-webpack-plugin')
 
 module.exports = {
   entry: './src/main',
@@ -28,7 +28,10 @@ module.exports = {
     path: path.resolve(__dirname, 'dist')
   },
   resolve: {
-    extensions: ['.js', '.ts', '.json']
+    extensions: ['.js', '.ts', '.json'],
+    alias: {
+      'src': path.resolve(__dirname, 'src')
+    }
   },
   plugins: [
     // 需要进行忽略的插件
@@ -41,7 +44,7 @@ module.exports = {
           '@nestjs/websockets/socket-module',
           'cache-manager',
           'class-validator',
-          'class-transformer'
+          'class-transformer',
         ]
         if (!lazyImports.includes(resource)) {
           return false
@@ -56,13 +59,14 @@ module.exports = {
         return false
       }
     }),
-    new ForkTsCheckerWebpackPlugin()
-    // new CopyPlugin({
-    //   patterns: [
-    //     {
-    //       from: './node_modules/sql.js/dist/sql-wasm.wasm'
-    //     }
-    //   ]
-    // })
+    new ForkTsCheckerWebpackPlugin(),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: './wasm',
+          to: './wasm'
+        }
+      ]
+    })
   ]
 }

@@ -1,8 +1,7 @@
-import { IsMongoId, IsString, IsNumber } from 'class-validator'
-import { ObjectId } from 'mongodb'
+import { IsString, IsNumber } from 'class-validator'
 
 export class CreateBlankFragmentDto {
-  @IsMongoId() procedureId: ObjectId
+  @IsString() procedureId: string
   @IsNumber() txtLength: number
   @IsNumber() duration: number
 }

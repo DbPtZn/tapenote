@@ -14,7 +14,7 @@ export class CreateFolderDto {
   name: string
 
   // 父文件夹 ID
-  @IsMongoId()
+  @IsString()
   parentId: string
 
   // 文件夹隶属的库

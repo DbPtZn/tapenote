@@ -1,9 +1,8 @@
-import { IsMongoId, IsString } from 'class-validator'
-import { ObjectId } from 'mongodb'
+import { IsString } from 'class-validator'
 
 export class CreateASRFragmentDto {
   @IsString() key: string
-  @IsMongoId() procedureId: ObjectId
+  @IsString() procedureId: string
   audio: Blob
   duration: number
   role: number

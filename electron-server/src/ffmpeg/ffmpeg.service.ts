@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import ffmpeg from 'fluent-ffmpeg'
-import { tmpdir } from 'os'
-import path from 'path'
 import fs from 'fs'
 import { exec } from 'child_process'
 import { StorageService } from 'src/storage/storage.service'

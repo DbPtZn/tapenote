@@ -15,6 +15,12 @@ import { StorageModule } from './storage/storage.module'
 import { TimbreModule } from './timbre/timbre.module'
 import { BgmModule } from './bgm/bgm.module'
 import { SherpaModule } from './sherpa/sherpa.module'
+import { FragmentModule } from './fragment/fragment.module'
+import { UploadModule } from './upload/upload.module'
+import { FolderModule } from './folder/folder.module'
+import { ProjectModule } from './project/project.module'
+import { FfmpegModule } from './ffmpeg/ffmpeg.module'
+import { TrashModule } from './trash/trash.module'
 
 @Module({
   imports: [
@@ -36,15 +42,15 @@ import { SherpaModule } from './sherpa/sherpa.module'
     LoggerModule,
     RequestScopedModule,
     PouchDbModule,
-    // FragmentModule,
-    // UploadModule,
-    // TrashModule,
+    FragmentModule,
+    UploadModule,
+    TrashModule,
     SherpaModule,
-    // FolderModule,
-    // ProjectModule,
-    // FfmpegModule,
+    FolderModule,
+    ProjectModule,
+    FfmpegModule,
     TimbreModule,
-    BgmModule,
+    BgmModule
   ],
   controllers: [AppController],
   providers: [AppService, PouchDBService]

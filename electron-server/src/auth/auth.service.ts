@@ -10,6 +10,7 @@ import { CreateUserDto } from 'src/user/dto/_api'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { ConfigService } from '@nestjs/config'
+import { FolderService } from 'src/folder/folder.service'
 
 @Injectable()
 export class AuthService {
@@ -18,7 +19,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly bcrtptService: BcryptService,
-    // private readonly folderService: FolderService,
+    private readonly folderService: FolderService,
     private readonly logger: LoggerService
   ) {}
   /** 注册 */
@@ -27,7 +28,7 @@ export class AuthService {
   }
 
   createUserRoot(_id: string) {
-    // return this.folderService.createUserRoot(_id)
+    return this.folderService.createUserRoot(_id)
   }
 
   /** 登录：生成 token */
@@ -38,10 +39,10 @@ export class AuthService {
         throw new UnauthorizedException('用户邮箱或密码错误！')
       }
       this.logger.log(`${user.account} 用户正在登录...`)
-      // if (!user.dir) {
-      //   this.logger.warn('该用户未创建根目录，正在为该用户创建根目录！')
-      //   await this.folderService.createUserRoot(user._id)
-      // }
+      if (!user.dir) {
+        this.logger.warn('该用户未创建根目录，正在为该用户创建根目录！')
+        await this.folderService.createUserRoot(user._id)
+      }
       const token = this.jwtService.sign({ userId: user._id, account: user.account, dirname: user.dirname })
       this.logger.log(`${user.account} 用户登录成功！`)
       return token
