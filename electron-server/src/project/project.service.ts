@@ -50,7 +50,7 @@ const __rootdirname = process.cwd()
 export class ProjectService {
   private projectsRepository: PouchDB.Database<Project>
   constructor(
-    private readonly pouchDBService: PouchDBService,
+    // private readonly pouchDBService: PouchDBService,
     private readonly storageService: StorageService,
     private readonly ffmpegService: FfmpegService,
     private readonly userlogger: UserLoggerService,
@@ -58,7 +58,10 @@ export class ProjectService {
   ) {
     // 测试校验功能
     // this.checkAndCorrectFragmentSquence(new string('65f9c02f6c5a54c1b4b249a0'))
-    this.projectsRepository = this.pouchDBService.createDatabase('database/projects', { auto_compaction: true })
+    // this.projectsRepository = this.pouchDBService.createDatabase('database/projects', { auto_compaction: true })
+  }
+  initDatabase(pouchdb: PouchDB.Static) {
+    this.projectsRepository = new pouchdb<Project>('database/projects', { auto_compaction: true })
   }
   async findBy(where: { [key: string]: any }) {
     const keys = Object.keys(where)

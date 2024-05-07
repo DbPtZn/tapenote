@@ -5,6 +5,7 @@ import { LoggerService } from './logger/logger.service'
 import { ValidationPipe } from '@nestjs/common'
 import path from 'path'
 import { NestExpressApplication } from '@nestjs/platform-express'
+import { PouchDBService } from './pouchdb/pouchdb.service'
 async function bootstrap() {
   dotenv.config({
     path:
@@ -34,6 +35,8 @@ async function bootstrap() {
   // console.log(__rootdirname)
   app.useStaticAssets(path.join(__rootdirname, 'public'), { prefix: '/public' })
 
+  const pouchdb = app.get(PouchDBService)
+  pouchdb.init(process.env.NODE_ENV === 'development' ? 'dev' : 'prod')
   /** 开放端口（请在环境变量中设置） */
   const port = parseInt(process.env.SERVER_PORT, 10)
   console.log(`正在监听 ${port} 端口`)

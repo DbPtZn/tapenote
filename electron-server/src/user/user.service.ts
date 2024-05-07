@@ -21,15 +21,16 @@ export class UserService {
   private usersRepository: PouchDB.Database<User>
   // private usersRepository = new PouchDB<User>('user', { auto_compaction: true })
   constructor(
-    private readonly pouchDBService: PouchDBService,
+    // private readonly pouchDBService: PouchDBService,
     private readonly storageService: StorageService,
     private readonly bcrtptService: BcryptService,
     private readonly timbreService: TimbreService,
     private readonly bgmService: BgmService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
-  ) {
-    this.usersRepository = this.pouchDBService.createDatabase<User>('database/users', { auto_compaction: true })
+  ) {}
+  initDatabase(pouchdb: PouchDB.Static) {
+    this.usersRepository = new pouchdb<User>('database/users', { auto_compaction: true })
   }
   /** 创建新用户 */
   async create(createUserDto: CreateUserDto) {

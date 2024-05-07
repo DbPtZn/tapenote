@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path')
-const webpack = require('webpack')
+const { IgnorePlugin } = require('webpack')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
@@ -8,9 +8,11 @@ module.exports = {
   entry: './src/main',
   target: 'node',
   // 置为空即可忽略webpack-node-externals插件
-  externals: {},
+  externals: {
+    // 'PouchDB': 'pouchdb-node'
+  },
   module: {
-    noParse: /sql.js/,
+    // noParse: /pouchdb-node/,
     rules: [
       {
         test: /\.ts?$/,
@@ -19,7 +21,15 @@ module.exports = {
           options: { transpileOnly: true }
         },
         exclude: /node_modules/
-      }
+      },
+      // {
+      //   test: /node-gyp-build\.js$/,
+      //   loader: 'string-replace-loader',
+      //   options: {
+      //     search: /path\.join\(dir, 'prebuilds'/g,
+      //     replace: "path.join(__dirname, 'prebuilds'"
+      //   }
+      // }
     ]
   },
   // 打包后的文件名称以及位置
@@ -35,7 +45,7 @@ module.exports = {
   },
   plugins: [
     // 需要进行忽略的插件
-    new webpack.IgnorePlugin({
+    new IgnorePlugin({
       checkResource(resource) {
         const lazyImports = [
           '@fastify/static',
@@ -45,6 +55,7 @@ module.exports = {
           'cache-manager',
           'class-validator',
           'class-transformer',
+          // 'pouchdb-node'
         ]
         if (!lazyImports.includes(resource)) {
           return false
@@ -65,7 +76,11 @@ module.exports = {
         {
           from: './wasm',
           to: './wasm'
-        }
+        },
+        // {
+        //   from: './node_modules/pouchdb-node',
+        //   to: './pouchdb-node'
+        // }
       ]
     })
   ]

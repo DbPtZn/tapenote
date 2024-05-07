@@ -12,12 +12,15 @@ import { LoggerService } from 'src/logger/logger.service'
 export class BgmService {
   private bgmsRepository: PouchDB.Database<Bgm>
   constructor(
-    private readonly pouchDBService: PouchDBService,
+    // private readonly pouchDBService: PouchDBService,
     private readonly storageService: StorageService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
   ) {
-    this.bgmsRepository = this.pouchDBService.createDatabase<Bgm>('database/bgms')
+    // this.bgmsRepository = this.pouchDBService.createDatabase<Bgm>('database/bgms')
+  }
+  initDatabase(pouchdb: PouchDB.Static) {
+    this.bgmsRepository = new pouchdb<Bgm>('database/bgms', { auto_compaction: true })
   }
   /** 初始化 */
   async init(userId: string) {

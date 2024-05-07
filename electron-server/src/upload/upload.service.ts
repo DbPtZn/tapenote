@@ -2,16 +2,18 @@ import { Injectable } from '@nestjs/common'
 import { StorageService } from 'src/storage/storage.service'
 import { UploadFile } from './entities/file.entity'
 import { Worker } from 'worker_threads'
-import { PouchDBService } from 'src/pouchdb/pouchdb.service'
 import * as UUID from 'uuid'
 @Injectable()
 export class UploadService {
   private uploadFilesRepository: PouchDB.Database<UploadFile>
   constructor(
-    private readonly pouchDBService: PouchDBService,
+    // private readonly pouchDBService: PouchDBService,
     private readonly storageService: StorageService
   ) {
-    this.uploadFilesRepository = this.pouchDBService.createDatabase('database/uploadFiles', { auto_compaction: true })
+    // this.uploadFilesRepository = this.pouchDBService.createDatabase('database/uploadFiles', { auto_compaction: true })
+  }
+  initDatabase(pouchdb: PouchDB.Static) {
+    this.uploadFilesRepository = new pouchdb<UploadFile>('database/uploadFiles', { auto_compaction: true })
   }
   async findOneBy(obj: { [key: string]: any }) {
     const keys = Object.keys(obj)

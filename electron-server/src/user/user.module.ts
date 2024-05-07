@@ -15,7 +15,7 @@ import { TimbreModule } from 'src/timbre/timbre.module'
 import { BgmModule } from 'src/bgm/bgm.module'
 
 @Module({
-  imports: [PouchDbModule, StorageModule, BcryptModule, TimbreModule, BgmModule],
+  imports: [StorageModule, BcryptModule, TimbreModule, BgmModule],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService]

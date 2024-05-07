@@ -22,13 +22,15 @@ export class TimbreService {
   constructor(
     private readonly storageService: StorageService,
     private readonly sherpaService: SherpaService,
-    private readonly pouchDBService: PouchDBService,
+    // private readonly pouchDBService: PouchDBService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
   ) {
-    this.timbresRepository = this.pouchDBService.createDatabase<Timbre>('database/timbres', { auto_compaction: true })
+    // this.timbresRepository = this.pouchDBService.createDatabase<Timbre>('database/timbres', { auto_compaction: true })
   }
-
+  initDatabase(pouchdb: PouchDB.Static) {
+    this.timbresRepository = new pouchdb<Timbre>('database/timbres', { auto_compaction: true })
+  }
   /** 初始化 */
   async init(userId: string) {
     const timbre = new Timbre()

@@ -15,13 +15,16 @@ import { LoggerService } from 'src/logger/logger.service'
 export class FolderService {
   private foldersRepository: PouchDB.Database<Folder>
   constructor(
-    private readonly pouchDBService: PouchDBService,
+    // private readonly pouchDBService: PouchDBService,
     private readonly userService: UserService,
     private readonly projectService: ProjectService,
     private readonly userlogger: UserLoggerService,
     private readonly logger: LoggerService
   ) {
-    this.foldersRepository = this.pouchDBService.createDatabase('database/folders', { auto_compaction: true })
+    // this.foldersRepository = this.pouchDBService.createDatabase('database/folders', { auto_compaction: true })
+  }
+  initDatabase(pouchdb: PouchDB.Static) {
+    this.foldersRepository = new pouchdb<Folder>('database/folders', { auto_compaction: true })
   }
 
   /** 新建根目录 */

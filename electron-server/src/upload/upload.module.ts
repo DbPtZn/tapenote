@@ -21,6 +21,7 @@ const __rootdirname = process.cwd()
     StorageModule
   ],
   controllers: [UploadController],
-  providers: [UploadService]
+  providers: [UploadService],
+  exports: [UploadService]
 })
 export class UploadModule {}
