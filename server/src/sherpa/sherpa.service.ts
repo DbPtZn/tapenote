@@ -48,11 +48,13 @@ export class SherpaService {
       })
       worker.on('message', message => {
         console.log('接收到子线程返回的结果：-----------------------------------------')
+        worker.terminate()
         resolve(message)
       })
       worker.on('error', error => {
         console.log('接收到子线程返回的错误：-----------------------------------------')
         console.log(error)
+        worker.terminate()
         reject(error)
       })
     })
@@ -72,11 +74,13 @@ export class SherpaService {
       })
       worker.on('message', message => {
         console.log('接收到子线程返回的结果：-----------------------------------------')
+        worker.terminate()
         resolve(message)
       })
       worker.on('error', error => {
         console.log('接收到子线程返回的错误：-----------------------------------------')
         console.log(error)
+        worker.terminate()
         reject(error)
       })
     })

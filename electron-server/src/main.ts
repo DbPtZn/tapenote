@@ -6,12 +6,14 @@ import { ValidationPipe } from '@nestjs/common'
 import path from 'path'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { PouchDBService } from './pouchdb/pouchdb.service'
+import { ConfigService } from '@nestjs/config'
 async function bootstrap() {
+  // 在 electron 环境下加载的是 electron 项目目录下的环境变量
   dotenv.config({
     path:
       process.env.NODE_ENV === 'development'
-        ? ['.env.development.local', '.env.development']
-        : ['.env.production.local', '.env.production']
+        ? ['.env.development.server', '.env.development.local', '.env.development']
+        : ['.env.production.server', '.env.production.local', '.env.production']
   })
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: false })
 
@@ -31,13 +33,18 @@ async function bootstrap() {
   })
 
   // 开放静态资源
+  const configService = app.get(ConfigService)
   const __rootdirname = process.cwd()
-  // console.log(__rootdirname)
-  app.useStaticAssets(path.join(__rootdirname, 'public'), { prefix: '/public' })
+  const userDir = configService.get('common.userDir')
+  const publicDir = configService.get('common.publicDir')
+  console.log(path.join(__rootdirname, userDir, publicDir))
+  app.useStaticAssets(path.join(__rootdirname, userDir, publicDir), { prefix: '/public' })
 
+  // 初始化数据库
   const pouchdb = app.get(PouchDBService)
-  pouchdb.init(process.env.NODE_ENV === 'development' ? 'dev' : 'prod')
-  /** 开放端口（请在环境变量中设置） */
+  pouchdb.init()
+
+  /** 开放端口（在环境变量中设置） */
   const port = parseInt(process.env.SERVER_PORT, 10)
   console.log(`正在监听 ${port} 端口`)
   await app.listen(port)

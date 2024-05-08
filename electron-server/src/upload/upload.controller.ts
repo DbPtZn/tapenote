@@ -3,10 +3,14 @@ import { UploadService } from './upload.service'
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express'
 import { extname } from 'path'
 import { AuthGuard } from '@nestjs/passport'
+import { ConfigService } from '@nestjs/config'
 
 @Controller('upload')
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(
+    private readonly uploadService: UploadService,
+    private readonly configService: ConfigService
+  ) {}
 
   @UseGuards(AuthGuard('jwt'))
   @Post(`/img`)

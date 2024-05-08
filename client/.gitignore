@@ -15,6 +15,13 @@ release
 *.local
 database
 
+# server
+database
+assets
+logs
+
+
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

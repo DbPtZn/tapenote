@@ -11,7 +11,7 @@ import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { ConfigService } from '@nestjs/config'
 import { FolderService } from 'src/folder/folder.service'
-
+import os from 'os'
 @Injectable()
 export class AuthService {
   constructor(
@@ -33,6 +33,13 @@ export class AuthService {
 
   /** 登录：生成 token */
   async login(user: User) {
+    console.log('process.env:' + JSON.stringify(process.env.port))
+    console.log('process.cwd():' + process.cwd())
+    console.log('os.homedir():' + os.homedir())
+    console.log('__dirname:' + __dirname)
+    console.log('APP_ROOT:' + process.env.APP_ROOT)
+    console.log('INIT_CWD:' + process.env.INIT_CWD)
+    console.log('npm_config_local_prefix:' + process.env.npm_config_local_prefix)
     try {
       if (!user) {
         this.logger.error('用户登录失败！邮箱或密码错误！')

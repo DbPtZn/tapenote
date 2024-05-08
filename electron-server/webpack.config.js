@@ -2,17 +2,14 @@
 const path = require('path')
 const { IgnorePlugin } = require('webpack')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
-const CopyPlugin = require('copy-webpack-plugin')
-
+// const CopyPlugin = require('copy-webpack-plugin')
+const nodeExternals = require('webpack-node-externals')
 module.exports = {
   entry: './src/main',
   target: 'node',
-  // 置为空即可忽略webpack-node-externals插件
-  externals: {
-    // 'PouchDB': 'pouchdb-node'
-  },
+  mode: 'production',
+  externals: [nodeExternals()],
   module: {
-    // noParse: /pouchdb-node/,
     rules: [
       {
         test: /\.ts?$/,
@@ -21,26 +18,18 @@ module.exports = {
           options: { transpileOnly: true }
         },
         exclude: /node_modules/
-      },
-      // {
-      //   test: /node-gyp-build\.js$/,
-      //   loader: 'string-replace-loader',
-      //   options: {
-      //     search: /path\.join\(dir, 'prebuilds'/g,
-      //     replace: "path.join(__dirname, 'prebuilds'"
-      //   }
-      // }
+      }
     ]
   },
   // 打包后的文件名称以及位置
   output: {
-    filename: 'main.js',
-    path: path.resolve(__dirname, 'dist')
+    filename: 'index.js',
+    path: path.resolve(__dirname, 'process')
   },
   resolve: {
     extensions: ['.js', '.ts', '.json'],
     alias: {
-      'src': path.resolve(__dirname, 'src')
+      src: path.resolve(__dirname, 'src')
     }
   },
   plugins: [
@@ -54,8 +43,7 @@ module.exports = {
           '@nestjs/websockets/socket-module',
           'cache-manager',
           'class-validator',
-          'class-transformer',
-          // 'pouchdb-node'
+          'class-transformer'
         ]
         if (!lazyImports.includes(resource)) {
           return false
@@ -71,17 +59,17 @@ module.exports = {
       }
     }),
     new ForkTsCheckerWebpackPlugin(),
-    new CopyPlugin({
-      patterns: [
-        {
-          from: './wasm',
-          to: './wasm'
-        },
-        // {
-        //   from: './node_modules/pouchdb-node',
-        //   to: './pouchdb-node'
-        // }
-      ]
-    })
+    // new CopyPlugin({
+    //   patterns: [
+    //     {
+    //       from: './wasm',
+    //       to: './wasm'
+    //     },
+    //     // {
+    //     //   from: './node_modules/pouchdb-node',
+    //     //   to: './pouchdb-node'
+    //     // }
+    //   ]
+    // })
   ]
 }

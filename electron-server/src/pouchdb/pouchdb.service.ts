@@ -26,28 +26,7 @@ export class PouchDBService {
     // console.log(pouchdb)
   }
 
-  init(env: 'dev' | 'prod') {
-    // const modulePath =
-    //   env === 'dev'
-    //     ? path.resolve(__rootdirname, 'node_modules', 'pouchdb-node', 'lib', 'index.js')
-    //     : path.resolve(__dirname, 'pouchdb-node')
-    // console.log('path' + modulePath)
-    // try {
-    //   const fileStats = fs.statSync(modulePath)
-    //   console.log('文件存在:', fileStats.isFile() ? '是' : '否')
-    // } catch (err) {
-    //   console.error('文件不存在:', modulePath)
-    // }
-    // import(modulePath).then(PouchDB => {
-    //   console.log(PouchDB.default)
-    //   PouchDB.plugin(PouchFindPlugin)
-    //   this.userService.initDatabase(PouchDB.default)
-    //   this.timerServcie.initDatabase(PouchDB.default)
-    //   this.bgmService.initDatabase(PouchDB.default)
-    //   this.folderService.initDatabase(PouchDB.default)
-    //   this.projectService.initDatabase(PouchDB.default)
-    //   this.uploadService.initDatabase(PouchDB.default)
-    // })
+  init(env?: 'dev' | 'prod') {
     PouchDB.plugin(PouchFindPlugin)
     this.userService.initDatabase(PouchDB)
     this.timerServcie.initDatabase(PouchDB)
@@ -57,8 +36,8 @@ export class PouchDBService {
     this.uploadService.initDatabase(PouchDB)
   }
 
-  createDatabase<T>(pathname: string, options?: PouchDB.Configuration.DatabaseConfiguration) {
-    const db = new PouchDB<T>(pathname, options)
-    return db
-  }
+  // createDatabase<T>(pathname: string, options?: PouchDB.Configuration.DatabaseConfiguration) {
+  //   const db = new PouchDB<T>(pathname, options)
+  //   return db
+  // }
 }

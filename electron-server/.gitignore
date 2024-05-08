@@ -16,6 +16,7 @@ lerna-debug.log*
 /sherpa
 /public
 /private
+/process
 
 /database
 

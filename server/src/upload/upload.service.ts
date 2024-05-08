@@ -58,6 +58,12 @@ export class UploadService {
         workerData: { filePath }
       })
 
+      // 设置超时 (10s)
+      const timer = setTimeout(() => {
+        worker.terminate()
+        clearTimeout(timer)
+      }, 10000)
+
       worker.on('message', data => {
         if (data.error) {
           console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)
@@ -65,10 +71,14 @@ export class UploadService {
         } else {
           resolve(data)
         }
+        clearTimeout(timer)
+        worker.terminate()
       })
 
       worker.on('error', error => {
         console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)
+        worker.terminate()
+        clearTimeout(timer)
         reject(error)
       })
     })

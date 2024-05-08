@@ -3,6 +3,7 @@ import { StorageService } from 'src/storage/storage.service'
 import { UploadFile } from './entities/file.entity'
 import { Worker } from 'worker_threads'
 import * as UUID from 'uuid'
+import child_process from 'child_process'
 @Injectable()
 export class UploadService {
   private uploadFilesRepository: PouchDB.Database<UploadFile>
@@ -77,21 +78,38 @@ export class UploadService {
 
   async calculateFileStats(filePath: string): Promise<{ md5: string; size: number }> {
     return new Promise<{ md5: string; size: number }>((resolve, reject) => {
-      const worker = new Worker('./src/upload/workers/md5-worker.mjs', {
-        workerData: { filePath }
-      })
+      // 创建子线程
+      const child = child_process.fork('workers/md5-worker.mjs')
 
-      worker.on('message', data => {
-        if (data.error) {
+      // 向子线程发送消息
+      child.send(filePath)
+
+      // 设置超时 (10s)
+      const timer = setTimeout(() => {
+        child.kill()
+        clearTimeout(timer)
+      }, 10000)
+
+      // 监听子线程发回的消息
+      child.on('message', (msg: any) => {
+        // console.log('child msg' + msg)
+        if (msg.error) {
+          // console.log(data.error)
           console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)
-          reject(new Error(data.error))
+          reject(msg.error)
         } else {
-          resolve(data)
+          resolve(msg)
         }
+        clearTimeout(timer)
+        child.kill()
       })
 
-      worker.on('error', error => {
+      // 监听子线程的错误
+      child.on('error', error => {
+        console.log(error)
         console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)
+        clearTimeout(timer)
+        child.kill()
         reject(error)
       })
     })

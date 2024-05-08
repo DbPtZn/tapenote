@@ -3,7 +3,7 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { UserModule } from './user/user.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { databaseConfig, jwtConfig, sherpaDevConfig, sherpaProdConfig } from './config'
+import { commonConfig, databaseConfig, jwtConfig, sherpaDevConfig, sherpaProdConfig } from './config'
 import { UserLoggerModule } from './user-logger/userLogger.module'
 import { LoggerModule } from './logger/logger.module'
 import { RequestScopedModule } from './request-scoped/request-scoped.module'
@@ -28,7 +28,7 @@ import { TrashModule } from './trash/trash.module'
       load: [
         // databaseConfig,
         jwtConfig,
-        // commonConfig,
+        commonConfig,
         process.env.NODE_ENV === 'development' ? sherpaDevConfig : sherpaProdConfig
       ],
       cache: true,
