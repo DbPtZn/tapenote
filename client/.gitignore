@@ -16,10 +16,14 @@ release
 database
 
 # server
+sherpa
 database
 assets
 logs
 
+#env
+.env.electron.local
+.env.webprod.local
 
 
 # Editor directories and files

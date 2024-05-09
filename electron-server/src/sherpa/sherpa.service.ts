@@ -7,7 +7,8 @@ import { Inject, Injectable } from '@nestjs/common'
 // import { Readable } from 'stream'
 import { ConfigService, ConfigType } from '@nestjs/config'
 import { sherpaDevConfig } from '../config'
-import { Worker } from 'worker_threads'
+// import { Worker } from 'worker_threads'
+import child_process from 'child_process'
 // import myPlugin from 'build/Release/my_plugin.node'
 // // 读取 wasm 模块文件
 // import sherpa_onnx from 'wasm'
@@ -40,19 +41,25 @@ export class SherpaService {
   asr(filepath: string) {
     return new Promise<RecognizerResult>((resolve, reject) => {
       const config = this.sherpaConfig.offline.asrConfig
-      const worker = new Worker('./wasm/asr-worker.mjs', {
-        workerData: {
-          filepath,
-          config
-        }
+      const child = child_process.fork('workers/sherpa/asr-worker.mjs')
+      child.send({
+        filepath,
+        config
       })
-      worker.on('message', message => {
+      // 设置超时 (10s)
+      // const timer = setTimeout(() => {
+      //   child.kill()
+      //   clearTimeout(timer)
+      // }, 100000)
+      child.on('message', (message: any) => {
         console.log('接收到子线程返回的结果：-----------------------------------------')
+        child.kill()
         resolve(message)
       })
-      worker.on('error', error => {
+      child.on('error', error => {
         console.log('接收到子线程返回的错误：-----------------------------------------')
         console.log(error)
+        child.kill()
         reject(error)
       })
     })
@@ -61,20 +68,19 @@ export class SherpaService {
   tts(txt: string, filepath: string, speakerId?: number, speed?: number) {
     return new Promise<string>((resolve, reject) => {
       const config = this.sherpaConfig.offline.ttsConfig
-      const worker = new Worker('./wasm/tts-worker.mjs', {
-        workerData: {
-          txt,
-          filepath,
-          speakerId,
-          speed,
-          config
-        }
+      const child = child_process.fork('workers/sherpa/tts-worker.mjs')
+      child.send({
+        txt,
+        filepath,
+        speakerId,
+        speed,
+        config
       })
-      worker.on('message', message => {
+      child.on('message', (message: any) => {
         console.log('接收到子线程返回的结果：-----------------------------------------')
         resolve(message)
       })
-      worker.on('error', error => {
+      child.on('error', error => {
         console.log('接收到子线程返回的错误：-----------------------------------------')
         console.log(error)
         reject(error)

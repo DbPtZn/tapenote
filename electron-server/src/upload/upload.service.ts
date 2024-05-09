@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { StorageService } from 'src/storage/storage.service'
 import { UploadFile } from './entities/file.entity'
-import { Worker } from 'worker_threads'
+// import { Worker } from 'worker_threads'
 import * as UUID from 'uuid'
 import child_process from 'child_process'
 @Injectable()

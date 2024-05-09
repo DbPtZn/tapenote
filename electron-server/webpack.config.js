@@ -7,8 +7,37 @@ const nodeExternals = require('webpack-node-externals')
 module.exports = {
   entry: './src/main',
   target: 'node',
-  mode: 'production',
-  externals: [nodeExternals()],
+  // mode: 'production',
+  externals: [
+    'pouchdb-node'
+    // nodeExternals({
+    //   allowlist: [
+    //     '@nestjs/core',
+    //     '@nestjs/common',
+    //     '@nestjs/config',
+    //     '@nestjs/jwt',
+    //     '@nestjs/passport',
+    //     '@nestjs/platform-express',
+    //     'bcryptjs',
+    //     'class-transformer',
+    //     'class-validator',
+    //     'dotenv',
+    //     'fluent-ffmpeg',
+    //     'multer',
+    //     'passport-jwt',
+    //     'passport-local',
+    //     'portfinder',
+    //     'pouchdb-find',
+    //     'pouchdb-node',
+    //     'randomstring',
+    //     'reflect-metadata',
+    //     'rxjs',
+    //     'uuid',
+    //     'wav',
+    //     'winston'
+    //   ]
+    // })
+  ],
   module: {
     rules: [
       {
@@ -23,7 +52,7 @@ module.exports = {
   },
   // 打包后的文件名称以及位置
   output: {
-    filename: 'index.js',
+    filename: 'server.js',
     path: path.resolve(__dirname, 'process')
   },
   resolve: {
@@ -58,7 +87,7 @@ module.exports = {
         return false
       }
     }),
-    new ForkTsCheckerWebpackPlugin(),
+    new ForkTsCheckerWebpackPlugin()
     // new CopyPlugin({
     //   patterns: [
     //     {

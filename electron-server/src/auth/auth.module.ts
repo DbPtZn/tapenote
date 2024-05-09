@@ -24,8 +24,8 @@ import { FolderModule } from 'src/folder/folder.module'
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
-          secret: configService.get('jwt.secret'), // 加密密钥
-          signOptions: { expiresIn: configService.get('jwt.expiresIn') } // 配置： 保存时间
+          secret: configService.get('jwt.secret') // 加密密钥
+          // signOptions: { expiresIn: configService.get('jwt.expiresIn') } // 配置： 保存时间 ( 嵌入式本地服务不设置过期时间 )
         }
       }
     })

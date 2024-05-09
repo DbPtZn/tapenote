@@ -7,22 +7,31 @@ import path from 'path'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { PouchDBService } from './pouchdb/pouchdb.service'
 import { ConfigService } from '@nestjs/config'
+import portfinder from 'portfinder'
+
+// process.on('message', (msg) => {
+//   console.log('server服务器：')
+//   console.log(msg)
+//   bootstrap(msg)
+// })
+
 async function bootstrap() {
-  // 在 electron 环境下加载的是 electron 项目目录下的环境变量
+  // 注意：两种情况，nest 启动时指向 nest 目录下的环境变量， electron 启动时指向 electron 目录下的环境变量
   dotenv.config({
     path:
       process.env.NODE_ENV === 'development'
-        ? ['.env.development.server', '.env.development.local', '.env.development']
-        : ['.env.production.server', '.env.production.local', '.env.production']
+        ? ['.env.electron.local', '.env.electron']
+        : ['.env.electron.local', '.env.electron']
   })
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: false })
 
   // 生产环境下开启自动记录系统日志功能
   process.env.LOG_OPEN === 'true' && app.useLogger(app.get(LoggerService))
 
-  /** 数据验证错误的响应 */
+  // 数据验证错误的响应
   app.useGlobalPipes(new ValidationPipe())
 
+  // 允许跨域
   app.enableCors({
     origin: true,
     methods: 'GET,PUT,POST,PATCH,DELETE',
@@ -44,9 +53,35 @@ async function bootstrap() {
   const pouchdb = app.get(PouchDBService)
   pouchdb.init()
 
-  /** 开放端口（在环境变量中设置） */
+  // 开放端口（在环境变量中设置）
   const port = parseInt(process.env.SERVER_PORT, 10)
-  console.log(`正在监听 ${port} 端口`)
-  await app.listen(port)
+  portfinder.basePort = port
+  portfinder.getPort(async (err, availablePort) => {
+    if (err) {
+      console.error(err)
+    } else {
+      console.log(`正在监听 ${availablePort} 端口`)
+      await app.listen(availablePort)
+    }
+  })
 }
 bootstrap()
+
+// function isPortAvailable(port, callback) {
+//   const server = http.createServer().listen(port, () => {
+//     server.close()
+//     callback(true)
+//   })
+//   server.on('error', () => {
+//     callback(false)
+//   })
+// }
+// function findAvailablePort(startPort: number, callback: (availablePort: number) => void) {
+//   isPortAvailable(startPort, available => {
+//     if (available) {
+//       callback(startPort)
+//     } else {
+//       findAvailablePort(startPort + 1, callback)
+//     }
+//   })
+// }

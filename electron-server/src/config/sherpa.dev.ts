@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config'
-
+// 运行在 electron 应用中时，指向 electron 目录下的 sherpa 目录
 export default registerAs('sherpa', () => ({
   offline: {
     ttsConfig: {
