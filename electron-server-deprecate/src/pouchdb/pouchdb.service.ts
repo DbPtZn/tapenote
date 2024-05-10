@@ -9,7 +9,7 @@ import { ProjectService } from 'src/project/project.service'
 import { UploadService } from 'src/upload/upload.service'
 import path from 'path'
 // import fs from 'fs'
-// import PouchDB from 'pouchdb-node'
+import PouchDB from 'pouchdb-node'
 
 const __rootdirname = process.cwd()
 @Injectable()

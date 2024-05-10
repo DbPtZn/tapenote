@@ -6,8 +6,8 @@ let serverProcess: null | UtilityProcess = null
 const __rootdirname = process.cwd()
 export function initServerProcess() {
   // process.env.NODE_ENV = 'development'
-  const serverPath = path.join(__rootdirname, '..', 'electron-server', 'process', 'server.js')
-  // const serverPath = './electron/server.js'
+  // const serverPath = path.join(__rootdirname, '..', 'electron-server', 'process', 'server.js')
+  const serverPath = path.join(__rootdirname, 'workers', 'server', 'server.cjs')
   // console.log(serverPath)
   serverProcess = utilityProcess.fork(serverPath, [], {
     stdio: 'pipe'

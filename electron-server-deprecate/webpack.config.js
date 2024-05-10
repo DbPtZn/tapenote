@@ -6,10 +6,10 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const nodeExternals = require('webpack-node-externals')
 module.exports = {
   entry: './src/main',
-  target: 'node',
+  target: 'electron-main',
   // mode: 'production',
   externals: [
-    'pouchdb-node'
+    // 'pouchdb-node'
     // nodeExternals({
     //   allowlist: [
     //     '@nestjs/core',
@@ -46,14 +46,15 @@ module.exports = {
           loader: 'ts-loader',
           options: { transpileOnly: true }
         },
-        exclude: /node_modules/
+        // exclude: /node_modules/
       }
     ]
   },
   // 打包后的文件名称以及位置
   output: {
-    filename: 'server.js',
-    path: path.resolve(__dirname, 'process')
+    filename: 'server.cjs',
+    path: path.resolve(__dirname, 'process'),
+    libraryTarget: 'umd'
   },
   resolve: {
     extensions: ['.js', '.ts', '.json'],
