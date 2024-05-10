@@ -1,15 +1,40 @@
-import { ObjectId } from 'mongodb'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
-import { AfterUpdate, BeforeInsert, Column, CreateDateColumn, Entity, ObjectIdColumn, UpdateDateColumn } from 'typeorm'
+import { Project } from 'src/project/entities/project.entity'
+import { User } from 'src/user/entities/user.entity'
+import {
+  AfterUpdate,
+  BeforeInsert,
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
+} from 'typeorm'
 
 @Entity()
 // @Tree('adjacency-list')
 export class Folder {
-  @ObjectIdColumn() _id: ObjectId
+  @PrimaryGeneratedColumn('uuid') id: string
 
-  @Column() parentId: ObjectId
+  @Column('uuid') parentId: string
 
-  @Column() userId: ObjectId
+  // 邻接列表
+  @OneToMany(type => Folder, folder => folder.children)
+  parent: Folder
+
+  // 邻接列表
+  @ManyToOne(type => Folder, folder => folder.parent)
+  children: Folder
+
+  @Column('uuid') userId: string
+
+  @ManyToOne(() => User, user => user.folders)
+  user: User
+
+  @ManyToOne(() => Project, project => project.folder)
+  projects: Project
 
   @Column({
     length: 18,

@@ -1,16 +1,78 @@
-import { ObjectId } from 'mongodb'
 import { RemovedEnum } from 'src/enum'
-export interface Fragment {
-  _id: ObjectId
+import { Project } from 'src/project/entities/project.entity'
+import { Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
+// export interface Fragment {
+//   _id: ObjectId
+//   audio: string
+//   duration: number
+//   txt: string
+//   transcript: string[]
+//   tags: string[]
+//   promoters: string[]
+//   timestamps: number[]
+//   role: number
+//   removed: RemovedEnum
+// }
+export class Fragment {
+  @PrimaryGeneratedColumn('uuid')
+  id: string
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    default: ''
+  })
   audio: string
+
+  @Column({
+    type: 'float',
+    default: 0
+  })
   duration: number
+
+  @Column({
+    type: 'text',
+    default: ''
+  })
   txt: string
+
+  // 可能包含逗号，不能使用 simple-array
+  @Column({
+    type: 'text',
+    default: JSON.stringify([]),
+    transformer: { to: value => JSON.stringify(value), from: value => JSON.parse(value) }
+  })
   transcript: string[]
+
+  @Column({
+    type: 'simple-array'
+  })
   tags: string[]
+
+  @Column({
+    type: 'simple-array'
+  })
   promoters: string[]
+
+  @Column({
+    type: 'simple-array'
+  })
   timestamps: number[]
+
+  @Column({
+    type: 'int'
+  })
   role: number
+
+  @Column({
+    type: 'enum',
+    enum: RemovedEnum,
+    default: RemovedEnum.NEVER
+  })
   removed: RemovedEnum
+
+  @ManyToOne(() => Project, project => project.fragments)
+  project: Project
 }
 // export class Fragment {
 //   @ObjectIdColumn() _id: ObjectId

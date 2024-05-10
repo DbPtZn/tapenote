@@ -1,4 +1,6 @@
 import { MaxLength, MinLength } from 'class-validator'
+import { Folder } from 'src/folder/entities/folder.entity'
+import { Project } from 'src/project/entities/project.entity'
 import {
   AfterUpdate,
   BeforeInsert,
@@ -6,71 +8,84 @@ import {
   CreateDateColumn,
   Entity,
   Generated,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
-export enum Sex {
-  WOMAN = 0, // 女性
-  MAN = 1, // 男性
-  LGBT = 2, // 跨性别
-  PRIVATE = 3 // 不公开
-}
+export type Sex = 'male' | 'female' | 'other' | 'secrecy'
 
 export class Dir {
-  @Column()
+  @Column({
+    type: 'uuid'
+  })
   note: string
 
-  @Column()
+  @Column({
+    type: 'uuid'
+  })
   course: string
 
-  @Column()
+  @Column({
+    type: 'uuid'
+  })
   procedure: string
 }
 
 export class SubscriptionConfig {
-  @Column()
+  @Column({
+    type: 'uuid'
+  })
   id: string
 
-  @Column()
-  @MaxLength(36)
+  @Column('varchar', { length: 50 })
   name: string
 
   @Column({
+    type: 'varchar',
     default: ''
   })
   site: string
 
   @Column({
+    type: 'varchar',
     default: ''
   })
   code: string
 
   @Column({
+    type: 'varchar',
     default: ''
   })
   desc: string
 }
 
 export class SubmissionConfig {
-  @Column()
+  @Column({
+    type: 'uuid'
+  })
   id: string
 
-  @Column()
-  @MaxLength(36)
+  @Column({
+    type: 'varchar',
+    length: 50
+  })
   name: string
 
   @Column({
+    type: 'varchar',
     default: ''
   })
   site: string
 
   @Column({
+    type: 'varchar',
     default: ''
   })
   code: string
 
   @Column({
+    type: 'varchar',
     default: ''
   })
   desc: string
@@ -86,69 +101,100 @@ export class User {
   })
   account: string // 账号
 
-  @Column()
-  @MaxLength(120)
+  @Column({
+    type: 'varchar',
+    length: 64
+  })
   encryptedPassword: string // 密码
 
   @Column({
-    length: 18,
+    type: 'varchar',
+    length: 32,
     default: '未命名用户'
   })
   nickname: string // 昵称
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    length: 255,
+    default: ''
+  })
   avatar: string //头像
 
   @Column({
+    type: 'varchar',
+    length: 255,
     default: ''
   })
   email: string // 邮箱
 
   @Column({
+    type: 'varchar',
+    length: 32,
     default: ''
   })
   phone: string // 手机
 
   @Column({
+    type: 'varchar',
+    length: 255,
     default: ''
   })
   homepage: string // 个人主页
 
   @Column({
+    type: 'int',
     default: 0
   })
   age: number // 年龄
 
   @Column({
     type: 'enum',
-    enum: Sex,
-    default: Sex.PRIVATE
+    enum: ['male', 'female', 'other', 'secrecy'],
+    default: 'secrecy'
   })
   sex: Sex // 性别
 
   @Column({
+    type: 'varchar',
+    length: 255,
     default: ''
   })
-  @MaxLength(64)
   desc: string // 描述
 
-  @Column(type => Dir)
+  @Column({
+    type: 'simple-json',
+    default: JSON.stringify({
+      note: '',
+      course: '',
+      procedure: ''
+    })
+  })
   dir: Dir
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    length: 18
+  })
   dirname: string
 
   @Column({
-    type: 'string',
-    default: JSON.stringify([]),
-    transformer: { to: value => JSON.stringify(value), from: value => JSON.parse(value) }
+    type: 'simple-json',
+    default: JSON.stringify([])
   })
   submissionConfig: SubmissionConfig[]
 
   @Column({
-    default: []
+    type: 'simple-json',
+    default: JSON.stringify([])
   })
   subscriptionConfig: SubscriptionConfig[]
+
+  @ManyToOne(() => Project, project => project.user)
+  projects: Project
+
+  @ManyToOne(() => Folder, folder => folder.user)
+  folders: Folder
 
   @CreateDateColumn()
   createAt: Date // 创建时间

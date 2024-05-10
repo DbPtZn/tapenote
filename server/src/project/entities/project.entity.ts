@@ -1,6 +1,7 @@
-import { ObjectId } from 'mongodb'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
+import { Folder } from 'src/folder/entities/folder.entity'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
+import { User } from 'src/user/entities/user.entity'
 import {
   AfterUpdate,
   BeforeInsert,
@@ -8,7 +9,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ObjectIdColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
 
@@ -27,11 +30,20 @@ export interface BGM {
 
 @Entity()
 export class Project {
-  @ObjectIdColumn() _id: ObjectId
+  @PrimaryGeneratedColumn('uuid')
+  id: string
 
-  @Column() folderId: ObjectId // 文件夹 id
+  @Column()
+  folderId: string // 文件夹 id
 
-  @Column() userId: ObjectId // 用户 id
+  @ManyToOne(() => Folder, folder => folder.projects)
+  folder: Folder
+
+  @Column()
+  userId: string // 用户 id
+
+  @ManyToOne(() => User, user => user.projects)
+  user: User
 
   @Column({
     type: 'enum',
@@ -40,26 +52,33 @@ export class Project {
   library: LibraryEnum
 
   @Column({
+    type: 'int',
     default: 0
   })
   eidtorVersion: string
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    length: 18
+  })
   dirname: string // 文件夹路径
 
   @Column({
-    length: 120,
+    type: 'text',
+    length: 255,
     default: '未命名文档'
   })
   title: string // 标题
 
   @Column({
+    type: 'text',
     default: ''
   })
   content: string // 内容
 
   @Column({
-    length: 30
+    type: 'text',
+    length: 32
   })
   abbrev: string // 内容缩略
 
@@ -72,27 +91,25 @@ export class Project {
 
   /** ------------------------------------------ Procedure -------------------------------------------- */
   /** 文档中的所有片段 */
-  @Column({
-    default: []
-  })
+  @OneToMany(() => Fragment, fragment => fragment.project)
   fragments: Fragment[]
 
   /** 文档中的正常片段的顺序 */
   @Column({
     default: []
   })
-  sequence: ObjectId[]
+  sequence: string[]
 
   /** 文档中的被移除片段的顺序 */
   @Column({
     default: []
   })
-  removedSequence: ObjectId[]
+  removedSequence: string[]
 
   /** ------------------------------------------ Procedure -------------------------------------------- */
 
   @Column()
-  fromNoteId: ObjectId
+  fromNoteId: string
 
   @Column({
     default: {
@@ -105,7 +122,7 @@ export class Project {
 
   /** ------------------------------------------  course  -------------------------------------------- */
   @Column()
-  fromProcedureId: ObjectId
+  fromProcedureId: string
 
   @Column()
   sidenote: string
