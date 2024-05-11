@@ -1,6 +1,15 @@
 import { RemovedEnum } from 'src/enum'
 import { Project } from 'src/project/entities/project.entity'
-import { Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  AfterUpdate,
+  BeforeInsert,
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
+} from 'typeorm'
 // export interface Fragment {
 //   _id: ObjectId
 //   audio: string
@@ -13,6 +22,7 @@ import { Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 //   role: number
 //   removed: RemovedEnum
 // }
+@Entity()
 export class Fragment {
   @PrimaryGeneratedColumn('uuid')
   id: string
@@ -65,14 +75,38 @@ export class Fragment {
   role: number
 
   @Column({
-    type: 'enum',
-    enum: RemovedEnum,
-    default: RemovedEnum.NEVER
+    type: 'varchar'
+    // type: 'enum',
+    // enum: RemovedEnum,
+    // default: RemovedEnum.NEVER
   })
   removed: RemovedEnum
 
   @ManyToOne(() => Project, project => project.fragments)
   project: Project
+
+  /** 创建时间 */
+  @CreateDateColumn() createAt: Date
+  /** 更新时间 */
+  @UpdateDateColumn() updateAt: Date
+
+  /** 插入实体时设置创建时间 */
+  @BeforeInsert()
+  createDate() {
+    this.createAt = new Date()
+    this.removed = RemovedEnum.NEVER
+  }
+
+  /** 实体更新时自动更新时间 */
+  @AfterUpdate()
+  updateDate() {
+    this.updateAt = new Date()
+  }
+
+  // @BeforeRemove()
+  // removeAudio() {
+  //   this.audio
+  // }
 }
 // export class Fragment {
 //   @ObjectIdColumn() _id: ObjectId

@@ -1,5 +1,4 @@
-import { ObjectId } from 'mongodb'
-import { BeforeInsert, Column, Entity, ObjectIdColumn } from 'typeorm'
+import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 interface RoleList {
   key: number
   value: { name: string; avatar: string; changer: number }
@@ -10,15 +9,31 @@ interface RobotList {
 }
 @Entity()
 export class Timbre {
-  @ObjectIdColumn() _id: ObjectId
+  @PrimaryGeneratedColumn('uuid')
+  id: string
 
-  @Column() userId: ObjectId // 用户 id
+  @Column('uuid')
+  userId: string // 用户 id
 
-  @Column() role: number // 常用角色
+  @Column({
+    type: 'int'
+  })
+  role: number // 常用角色
 
-  @Column() robot: number // 常用语音角色
+  @Column({
+    type: 'int'
+  })
+  robot: number // 常用语音角色
 
-  @Column() roleList: RoleList[] // 扮演角色列表
+  @Column({
+    type: 'simple-json',
+    default: JSON.stringify([])
+  })
+  roleList: RoleList[] // 扮演角色列表
 
-  @Column() robotList: RobotList[] // 合成语音列表
+  @Column({
+    type: 'simple-json',
+    default: JSON.stringify([])
+  })
+  robotList: RobotList[] // 合成语音列表
 }

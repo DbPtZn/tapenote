@@ -10,6 +10,9 @@
 # sherpa model
 /sherpa
 
+# build-electron-server
+/process
+
 # Logs
 logs
 *.log

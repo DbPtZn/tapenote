@@ -4,17 +4,24 @@ import * as dotenv from 'dotenv'
 import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import path from 'path'
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { UserLoggerService } from './user-logger/userLogger.service'
 import { LoggerService } from './logger/logger.service'
-import passport from 'passport'
 import { LocalStrategy } from './auth/local.strategy'
 async function bootstrap() {
+  let dotenvPath = []
+  switch (process.env.NODE_ENV) {
+    case 'development':
+      dotenvPath = ['.env.development.local', '.env.development']
+      break
+    case 'production':
+      dotenvPath = ['.env.production.local', '.env.production']
+      break
+    case 'electron':
+      dotenvPath = ['.env.electron.local', '.env.electron']
+      break
+  }
   dotenv.config({
-    path:
-      process.env.NODE_ENV === 'development'
-        ? ['.env.development.local', '.env.development']
-        : ['.env.production.local', '.env.production']
+    path: dotenvPath
   })
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: false
@@ -55,17 +62,17 @@ async function bootstrap() {
   app.useStaticAssets(path.join(__rootdirname, 'public'), { prefix: '/public' })
 
   /** 接口文档(待完善) */
-  const options = new DocumentBuilder()
-    .addBearerAuth()
-    .setTitle('接口文档')
-    .setDescription('描述')
-    .setVersion('1')
-    .build()
-  const document = SwaggerModule.createDocument(app, options)
-  SwaggerModule.setup('/api-docs', app, document)
+  // const options = new DocumentBuilder()
+  //   .addBearerAuth()
+  //   .setTitle('接口文档')
+  //   .setDescription('描述')
+  //   .setVersion('1')
+  //   .build()
+  // const document = SwaggerModule.createDocument(app, options)
+  // SwaggerModule.setup('/api-docs', app, document)
 
   /** 开放端口（请在环境变量中设置） */
-  const port = parseInt(process.env.SERVER_PORT, 10)
+  const port = parseInt(process.env.SERVER_PORT, 10) || 3080
   await app.listen(port)
 }
 bootstrap()

@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common'
 import { FolderService } from 'src/folder/folder.service'
 import { StorageService } from 'src/storage/storage.service'
-import { ObjectId } from 'typeorm'
 import { TrashName } from './dto/trash-name'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { ProjectService } from 'src/project/project.service'
 
 type TrashDataFormat = {
-  folderId?: ObjectId
+  folderId?: string
   folderName?: string
-  id: ObjectId
+  id: string
   name: string
   abbrev?: string
   lib?: LibraryEnum
@@ -26,7 +25,7 @@ export class TrashService {
     private readonly storageService: StorageService
   ) {}
 
-  async findAll(trashName: TrashName, userId: ObjectId) {
+  async findAll(trashName: TrashName, userId: string) {
     let data: TrashDataFormat[] = []
     if (trashName === 'folder') {
       data = await this.getFolders(userId)
@@ -36,13 +35,13 @@ export class TrashService {
     return data
   }
 
-  async getFolders(userId: ObjectId) {
+  async getFolders(userId: string) {
     const folders = await this.folderService.findBin(userId)
     const data: TrashDataFormat[] = []
     folders.forEach((item, index) => {
       data[index] = {
         folderId: item.parentId,
-        id: item._id,
+        id: item.id,
         name: item.name,
         lib: item.lib,
         removed: item.removed,
@@ -61,12 +60,12 @@ export class TrashService {
     return data
   }
 
-  async getProjects(userId: ObjectId, lib: LibraryEnum) {
+  async getProjects(userId: string, lib: LibraryEnum) {
     const notes = await this.projectService.findAllFromTrash(userId, lib)
     const data: TrashDataFormat[] = []
     notes.forEach((item, index) => {
       data[index] = {
-        id: item._id,
+        id: item.id,
         folderId: item.folderId,
         name: item.title,
         abbrev: item.abbrev,

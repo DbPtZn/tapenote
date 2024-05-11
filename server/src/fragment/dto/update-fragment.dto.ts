@@ -1,5 +1,4 @@
-import { IsMongoId, IsNotEmpty, IsOptional, IsString, IsArray, IsNumber } from 'class-validator'
-import { ObjectId } from 'mongodb'
+import { IsNotEmpty, IsOptional, IsString, IsArray, IsNumber } from 'class-validator'
 export class UpdateTranscriptDto {
   @IsNotEmpty() @IsString() procedureId: string
   @IsNotEmpty() @IsString() fragmentId: string

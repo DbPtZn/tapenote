@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { StorageService } from 'src/storage/storage.service'
 import { MongoRepository } from 'typeorm'
 import { UploadFile } from './entities/file.entity'
-import { ObjectId } from 'mongodb'
 import { Worker } from 'worker_threads'
+import * as UUID from 'uuid'
 
 @Injectable()
 export class UploadService {
@@ -13,7 +13,7 @@ export class UploadService {
     private uploadFilesRepository: MongoRepository<UploadFile>,
     private readonly storageService: StorageService
   ) {}
-  async uploadImage(args: { sourcePath: string; extname: string; dirname: string; userId: ObjectId }) {
+  async uploadImage(args: { sourcePath: string; extname: string; dirname: string; userId: string }) {
     const { sourcePath, extname, dirname, userId } = args
     return new Promise((resolve, reject) => {
       this.calculateFileStats(sourcePath)
@@ -29,7 +29,7 @@ export class UploadService {
             .saveImage({ sourcePath, extname, dirname })
             .then(({ filename, filepath }) => {
               const image = new UploadFile()
-              image._id = new ObjectId()
+              // image.id = UUID.v4()
               image.name = filename
               image.path = filepath
               image.userId = userId

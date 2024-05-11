@@ -3,10 +3,10 @@ import { AddRobotDto, AddRoleDto } from './dto/create-timbre.dto'
 import { Timbre } from './entities/timbre.entity'
 import { InjectRepository } from '@nestjs/typeorm'
 import { MongoRepository } from 'typeorm'
-import { ObjectId } from 'mongodb'
 import { StorageService } from 'src/storage/storage.service'
 import path from 'path'
 import { SherpaService } from 'src/sherpa/sherpa.service'
+import * as UUID from 'uuid'
 /**
  * 关于 role 值
  * 0 为机器人默认保留的 role(speakerId) 值
@@ -25,9 +25,9 @@ export class TimbreService {
   ) {}
 
   /** 初始化 */
-  init(userId: ObjectId) {
+  init(userId: string) {
     const timbre = new Timbre()
-    timbre._id = new ObjectId()
+    // timbre.id = UUID.v4()
     timbre.userId = userId
     timbre.role = 9999
     timbre.robot = 0
@@ -36,7 +36,7 @@ export class TimbreService {
     return this.timbresRepository.save(timbre)
   }
 
-  async addRole(addRoleDto: AddRoleDto, userId: ObjectId) {
+  async addRole(addRoleDto: AddRoleDto, userId: string) {
     const timbre = await this.timbresRepository.findOneBy({ userId })
     if (addRoleDto.role < 9999) throw new Error('角色的 role 值应大于 9999')
     if (timbre.roleList.some(role => role.key === addRoleDto.role)) throw new Error('角色已存在')
@@ -52,7 +52,7 @@ export class TimbreService {
     return this.timbresRepository.save(timbre)
   }
 
-  async addRobot(addRobotDto: AddRobotDto, userId: ObjectId) {
+  async addRobot(addRobotDto: AddRobotDto, userId: string) {
     const timbre = await this.timbresRepository.findOneBy({ userId })
     if (addRobotDto.role > 9999 && addRobotDto.role !== 0) throw new Error('机器人的 role 值应小于 9999 且不等于 0')
     if (timbre.robotList.some(role => role.key === addRobotDto.role)) throw new Error('角色已存在')
@@ -67,7 +67,7 @@ export class TimbreService {
     return this.timbresRepository.save(timbre)
   }
 
-  async findAll(userId: ObjectId, dirname: string) {
+  async findAll(userId: string, dirname: string) {
     let timbre = await this.timbresRepository.findOneBy({ userId })
     if (!timbre) {
       timbre = await this.init(userId)
@@ -95,7 +95,7 @@ export class TimbreService {
     return timbre
   }
 
-  async remove(type: 'role' | 'robot', key: number, userId: ObjectId, dirname: string) {
+  async remove(type: 'role' | 'robot', key: number, userId: string, dirname: string) {
     const timbre = await this.timbresRepository.findOneBy({ userId })
     if (type === 'role') {
       const index = timbre.roleList.findIndex(role => role.key === key)

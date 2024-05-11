@@ -1,5 +1,4 @@
-import { ObjectId } from 'mongodb'
-import { Column, CreateDateColumn, Entity, ObjectIdColumn, UpdateDateColumn } from 'typeorm'
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 
 export interface BgmItem {
   id: string
@@ -9,12 +8,13 @@ export interface BgmItem {
 
 @Entity()
 export class Bgm {
-  @ObjectIdColumn() _id: ObjectId
+  @PrimaryGeneratedColumn('uuid') id: string
 
-  @Column() userId: ObjectId // 用户 id
+  @Column() userId: string // 用户 id
 
   @Column({
-    default: []
+    type: 'simple-json',
+    default: JSON.stringify([])
   })
   list: BgmItem[]
 

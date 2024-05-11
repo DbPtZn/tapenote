@@ -33,21 +33,22 @@ export class Project {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column()
+  @Column('uuid')
   folderId: string // 文件夹 id
 
   @ManyToOne(() => Folder, folder => folder.projects)
   folder: Folder
 
-  @Column()
+  @Column('uuid')
   userId: string // 用户 id
 
   @ManyToOne(() => User, user => user.projects)
   user: User
 
   @Column({
-    type: 'enum',
-    enum: LibraryEnum
+    type: 'varchar'
+    // type: 'enum',
+    // enum: LibraryEnum
   })
   library: LibraryEnum
 
@@ -83,26 +84,29 @@ export class Project {
   abbrev: string // 内容缩略
 
   @Column({
-    type: 'enum',
-    enum: RemovedEnum,
-    default: RemovedEnum.NEVER
+    type: 'varchar'
+    // type: 'enum',
+    // enum: RemovedEnum,
+    // default: RemovedEnum.NEVER
   })
   removed: RemovedEnum
 
   /** ------------------------------------------ Procedure -------------------------------------------- */
-  /** 文档中的所有片段 */
+  /** 文档中的所有片段 主实体删除时，{ onDelete: 'CASCADE', onUpdate: 'CASCADE' } 关联子实体也要删除 (子实体关联的文件可能需要通过 dirname 去找到并删除) */
   @OneToMany(() => Fragment, fragment => fragment.project)
   fragments: Fragment[]
 
   /** 文档中的正常片段的顺序 */
   @Column({
-    default: []
+    type: 'simple-array',
+    default: JSON.stringify([])
   })
   sequence: string[]
 
   /** 文档中的被移除片段的顺序 */
   @Column({
-    default: []
+    type: 'simple-array',
+    default: JSON.stringify([])
   })
   removedSequence: string[]
 
@@ -112,49 +116,66 @@ export class Project {
   fromNoteId: string
 
   @Column({
-    default: {
+    type: 'simple-json',
+    default: JSON.stringify({
       name: '',
       audio: '',
       volumn: 1
-    }
+    })
   })
   bgm: BGM // 背景音乐
 
   /** ------------------------------------------  course  -------------------------------------------- */
-  @Column()
+  @Column({
+    type: 'uuid'
+  })
   fromProcedureId: string
 
-  @Column()
+  @Column({
+    type: 'text',
+    default: ''
+  })
   sidenote: string
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    default: ''
+  })
   audio: string // 音频地址
 
-  @Column()
+  @Column({
+    type: 'int',
+    default: 0
+  })
   duration: number // 音频时长
 
   @Column({
-    default: []
+    type: 'simple-array',
+    default: JSON.stringify([])
   })
   promoterSequence: Array<string> // 启动子序列
 
   @Column({
-    default: []
+    type: 'simple-array',
+    default: JSON.stringify([])
   })
   keyframeSequence: Array<number> // 关键帧序列
 
   @Column({
-    default: []
+    type: 'simple-array',
+    default: JSON.stringify([])
   })
   subtitleSequence: Array<string> // 字幕序列
 
   @Column({
-    default: []
+    type: 'simple-array',
+    default: JSON.stringify([])
   })
   subtitleKeyframeSequence: Array<number> // 字幕关键帧序列
 
   @Column({
-    default: []
+    type: 'simple-json',
+    default: JSON.stringify([])
   })
   annotations: Annotation[]
 
@@ -167,11 +188,12 @@ export class Project {
   updateAt: Date
 
   @Column({
-    default: {
+    type: 'simple-json',
+    default: JSON.stringify({
       version: 0,
       date: new Date(),
       remarks: ''
-    }
+    })
   })
   snapshot: {
     version: number // 版本号
@@ -180,24 +202,27 @@ export class Project {
   }
 
   @Column({
+    type: 'boolean',
     default: false
   })
   isSnapshot: boolean // 是否属于快照（快照不可编辑，且不会显示在项目列表中）
 
   @Column({
+    type: 'boolean',
     default: false
   })
   isReplica: boolean // 是否属于快照的副本（快照副本可编辑，但不会显示在项目列表中）
 
   /** 详情 */
   @Column({
-    default: {
+    type: 'simple-json',
+    default: JSON.stringify({
       penname: '',
       homepage: '',
       email: '',
       wordage: 0,
       filesize: 0
-    }
+    })
   })
   detail: {
     penname: string

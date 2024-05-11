@@ -11,7 +11,7 @@ export class TimbreController {
 
   @Post(`${REST.U}/role`)
   async addRole(@Body() addRoleDto: AddRoleDto, @Req() req, @Res() res) {
-    const timbre = await this.timbreService.addRole(addRoleDto, req.user._id)
+    const timbre = await this.timbreService.addRole(addRoleDto, req.user.id)
     if (timbre) {
       return res.status(200).send({ message: 'success' })
     } else {
@@ -21,7 +21,7 @@ export class TimbreController {
 
   @Post(`${REST.U}/robot`)
   async addRobot(@Body() addRobotDto: AddRobotDto, @Req() req, @Res() res) {
-    const timbre = await this.timbreService.addRobot(addRobotDto, req.user._id)
+    const timbre = await this.timbreService.addRobot(addRobotDto, req.user.id)
     if (timbre) {
       return res.status(200).send({ message: 'success' })
     } else {
@@ -31,7 +31,7 @@ export class TimbreController {
 
   @Get(`${REST.R}`)
   async findAll(@Req() req, @Res() res) {
-    const timbre = await this.timbreService.findAll(req.user._id, req.user.dirname)
+    const timbre = await this.timbreService.findAll(req.user.id, req.user.dirname)
     timbre.roleList.forEach((role, key) => {
       if (role.value.avatar) {
         role.value.avatar = '/public' + role.value.avatar.split('public')[1]
@@ -43,7 +43,7 @@ export class TimbreController {
       }
     })
     delete timbre.userId
-    delete timbre._id
+    delete timbre.id
     // console.log(timbre)
     return res.status(200).send(timbre)
   }
@@ -52,7 +52,7 @@ export class TimbreController {
   async remove(@Param('value') value: string, @Req() req, @Res() res) {
     const [type, key] = value.split('&')
     if (type !== 'role' && type !== 'robot') return res.status(400).send({ message: 'type error' })
-    const result = await this.timbreService.remove(type, Number(key), req.user._id, req.user.dirname)
+    const result = await this.timbreService.remove(type, Number(key), req.user.id, req.user.dirname)
     if (result) return res.status(200).send({ message: 'success' })
     else return res.status(400).send({ message: '移除失败，未找到目标！' })
   }

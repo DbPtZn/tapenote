@@ -3,7 +3,6 @@ import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { Fragment } from './entities/fragment.entity'
 import { StorageService } from 'src/storage/storage.service'
 import { CreateASRFragmentDto } from './dto/create-asr-fragment.dto'
-import { ObjectId } from 'mongodb'
 import { RemovedEnum } from 'src/enum'
 import {
   AddPromoterDto,
@@ -17,10 +16,11 @@ import {
 } from './dto'
 import { SherpaService } from 'src/sherpa/sherpa.service'
 import { exec } from 'child_process'
-import { CreateBlankFragmentDto } from './dto/create-blank-fragment.dto copy'
+import { CreateBlankFragmentDto } from './dto/create-blank-fragment.dto'
 import { ProjectService } from 'src/project/project.service'
 import { FfmpegService } from 'src/ffmpeg/ffmpeg.service'
 import { CopyFragmentDto } from './dto/copy-fragment'
+import * as UUID from 'uuid'
 
 @Injectable()
 export class FragmentService {
@@ -33,27 +33,18 @@ export class FragmentService {
     // 测试语音转文字片段功能
     // this.createByAudio(
     //   {
-    //     procedureId: new ObjectId('65f9bf826c5a54c1b4b2499d'),
+    //     procedureId: new string('65f9bf826c5a54c1b4b2499d'),
     //     audio: `C:\\Users\\26184\\Desktop\\project\\server\\public\\2iFRNkuh\\audio\\660854d1affc7c8d07fb499b.wav`,
     //     duration: 2
     //   },
-    //   new ObjectId('65ad4e2ebf53393263cf36e9'),
+    //   new string('65ad4e2ebf53393263cf36e9'),
     //   '2iFRNkuh'
-    // )
-    // this.createByAudio(
-    //   {
-    //     procedureId: new ObjectId('66066294551c37186f92b5f1'),
-    //     audio: `C:\\Users\\admin\\Desktop\\new-project\\server\\public\\uWgrfCru\\audio\\660695dba770b3e173884a7d.wav`,
-    //     duration: 3
-    //   },
-    //   new ObjectId('65bb26fa28e749dd281c3c20'),
-    //   'uWgrfCru'
     // )
   }
 
-  async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: ObjectId, dirname: string) {
+  async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: string, dirname: string) {
     const { procedureId, txt, role, speed } = createTTSFragmentDto
-    const _procedureId = new ObjectId(procedureId)
+    const _procedureId = procedureId
     if (speed > 2 || speed <= 0) throw '语速不能大于2或小于等于0'
     if (!txt || !procedureId || !dirname) {
       console.log('输入错误')
@@ -62,26 +53,25 @@ export class FragmentService {
     const procudure = await this.projectService.findOneById(_procedureId, userId)
     if (!procudure) throw { msg: '找不到项目工程文件！' }
     const text = txt.replace(/\s*/g, '')
-    const fragmentId = new ObjectId()
+    const fragmentId = UUID.v4()
     /** 创建音频存储地址 */
     const { filepath, filename } = this.storageService.createFilePath({
       dirname: [dirname, procudure.dirname],
       category: 'audio',
-      originalname: fragmentId.toHexString(),
+      originalname: fragmentId,
       extname: '.wav'
     })
-    const fragment: Fragment = {
-      _id: new ObjectId(),
-      audio: filename,
-      duration: 0,
-      txt: text,
-      transcript: ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'], // Array.from(text)
-      tags: new Array(text.length),
-      promoters: new Array(text.length),
-      timestamps: [],
-      role: Number(role) || 0,
-      removed: RemovedEnum.NEVER
-    }
+    const fragment = new Fragment()
+    fragment.id = UUID.v4()
+    fragment.audio = filename
+    fragment.duration = 0
+    fragment.txt = text
+    fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
+    fragment.tags = new Array(text.length)
+    fragment.promoters = new Array(text.length)
+    fragment.timestamps = []
+    fragment.role = Number(role) || 0
+    fragment.removed = RemovedEnum.NEVER
 
     /** 先添加到项目工程文件中（占位） */
     await this.projectService.addFragment(_procedureId, userId, fragment)
@@ -132,8 +122,8 @@ export class FragmentService {
   }
 
   async createByAudio(
-    createASRFragmentDto: { procedureId: ObjectId; audio: string; duration: number; role: number },
-    userId: ObjectId,
+    createASRFragmentDto: { procedureId: string; audio: string; duration: number; role: number },
+    userId: string,
     dirname: string
   ) {
     const { procedureId, audio, duration, role } = createASRFragmentDto
@@ -148,18 +138,18 @@ export class FragmentService {
     if (!procudure) {
       throw { msg: '找不到项目工程文件！' }
     }
-    const fragment: Fragment = {
-      _id: new ObjectId(),
-      audio: '',
-      duration: Number(duration),
-      txt: '',
-      transcript: ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'],
-      tags: [],
-      promoters: [],
-      timestamps: [],
-      role: Number(role) || 9999,
-      removed: RemovedEnum.NEVER
-    }
+    const fragment = new Fragment()
+    fragment.id = UUID.v4()
+    fragment.audio = ''
+    fragment.duration = Number(duration)
+    fragment.txt = ''
+    fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
+    fragment.tags = []
+    fragment.promoters = []
+    fragment.timestamps = []
+    fragment.role = Number(role) || 9999
+    fragment.removed = RemovedEnum.NEVER
+
     /** 先添加到项目工程文件中（占位） */
     await this.projectService.addFragment(procedureId, userId, fragment)
 
@@ -173,7 +163,7 @@ export class FragmentService {
     const { filename, filepath } = this.storageService.createFilePath({
       dirname: [dirname, procudure.dirname],
       category: 'audio',
-      originalname: fragment._id.toHexString(),
+      originalname: fragment.id,
       extname: '.wav'
     })
     fragment.audio = filename
@@ -215,14 +205,14 @@ export class FragmentService {
       .catch(async err => {
         console.log(err)
         this.storageService.deleteSync(filepath)
-        await this.projectService.removeErrorFragment(procedureId, fragment._id, userId)
+        await this.projectService.removeErrorFragment(procedureId, fragment.id, userId)
       })
 
     fragment.audio = filepath
     return fragment
   }
 
-  async createBlank(dto: CreateBlankFragmentDto, userId: ObjectId, dirname: string) {
+  async createBlank(dto: CreateBlankFragmentDto, userId: string, dirname: string) {
     const { procedureId, txtLength, duration } = dto
     const procudure = await this.projectService.findOneById(procedureId, userId)
     if (!procudure) {
@@ -237,25 +227,24 @@ export class FragmentService {
     const timestamps = text.map((char, index) => {
       return Number((section * index).toFixed(3))
     })
-    // console.log(timestamps)
-    const fragment: Fragment = {
-      _id: new ObjectId(),
-      audio: '',
-      duration: duration,
-      txt: text.join(''),
-      transcript: Array.from(text),
-      tags: new Array(text.length),
-      promoters: new Array(text.length),
-      timestamps: timestamps,
-      role: 0,
-      removed: RemovedEnum.NEVER
-    }
+    const fragment = new Fragment()
+    fragment.id = UUID.v4()
+    fragment.audio = ''
+    fragment.duration = Number(duration)
+    fragment.txt = text.join('')
+    fragment.transcript = Array.from(text)
+    fragment.tags = new Array(text.length)
+    fragment.promoters = new Array(text.length)
+    fragment.timestamps = timestamps
+    fragment.role = 0
+    fragment.removed = RemovedEnum.NEVER
+
     return new Promise<Fragment>((resolve, reject) => {
       // 指定生成文件的位置
       const { filename, filepath } = this.storageService.createFilePath({
         dirname: [dirname, procudure.dirname],
         category: 'audio',
-        originalname: fragment._id.toHexString(),
+        originalname: fragment.id,
         extname: '.wav'
       })
       // 定义FFmpeg命令
@@ -272,7 +261,7 @@ export class FragmentService {
         fragment.audio = filename
         if (filepath && fragment.transcript.length !== 0 && fragment.duration !== 0) {
           this.projectService
-            .addFragment(new ObjectId(procedureId), userId, fragment)
+            .addFragment(procedureId, userId, fragment)
             .then(() => {
               fragment.audio = filepath
               resolve(fragment)
@@ -295,60 +284,46 @@ export class FragmentService {
     return this.sherpaService.tts(txt, filepath, speakerId, speed)
   }
 
-  async updateTranscript(updateTranscriptDto: UpdateTranscriptDto, userId: ObjectId) {
+  async updateTranscript(updateTranscriptDto: UpdateTranscriptDto, userId: string) {
     const { procedureId, fragmentId, newTranscript } = updateTranscriptDto
-    const result = await this.projectService.updateFragmentTranscript(
-      new ObjectId(procedureId),
-      new ObjectId(fragmentId),
-      newTranscript,
-      userId
-    )
+    const result = await this.projectService.updateFragmentTranscript(procedureId, fragmentId, newTranscript, userId)
     return result
   }
 
-  async updateFragmentsTags(updateFragmentsTagsDto: UpdateFragmentsTagsDto, userId: ObjectId) {
+  async updateFragmentsTags(updateFragmentsTagsDto: UpdateFragmentsTagsDto, userId: string) {
     try {
       const { procedureId, newData } = updateFragmentsTagsDto
-      const result = await this.projectService.updateFragmentsTags(new ObjectId(procedureId), newData, userId)
+      const result = await this.projectService.updateFragmentsTags(procedureId, newData, userId)
       return result
     } catch (error) {
       throw error
     }
   }
 
-  async remove(removeFragmentDto: RemoveFragmentDto, userId: ObjectId) {
+  async remove(removeFragmentDto: RemoveFragmentDto, userId: string) {
     const { procedureId, fragmentId } = removeFragmentDto
-    const result = await this.projectService.removeFragment(new ObjectId(procedureId), new ObjectId(fragmentId), userId)
+    const result = await this.projectService.removeFragment(procedureId, fragmentId, userId)
     return result
   }
 
-  async restore(restoreFragmentDto: RestoreFragmentDto, userId: ObjectId) {
+  async restore(restoreFragmentDto: RestoreFragmentDto, userId: string) {
     const { procedureId, fragmentId } = restoreFragmentDto
-    const result = await this.projectService.restoreFragment(
-      new ObjectId(procedureId),
-      new ObjectId(fragmentId),
-      userId
-    )
+    const result = await this.projectService.restoreFragment(procedureId, fragmentId, userId)
     return result
   }
 
-  async delete(deleteFragmentDto: DeleteFragmentDto, userId: ObjectId, dirname: string) {
+  async delete(deleteFragmentDto: DeleteFragmentDto, userId: string, dirname: string) {
     const { procedureId, fragmentId } = deleteFragmentDto
     console.log(deleteFragmentDto)
-    const result = await this.projectService.deleteFragment(
-      new ObjectId(procedureId),
-      new ObjectId(fragmentId),
-      userId,
-      dirname
-    )
+    const result = await this.projectService.deleteFragment(procedureId, fragmentId, userId, dirname)
     return result
   }
 
-  async addPromoter(addPromoterDto: AddPromoterDto, userId: ObjectId) {
+  async addPromoter(addPromoterDto: AddPromoterDto, userId: string) {
     const { procedureId, fragmentId, promoterIndex, promoterSerial, promoterId } = addPromoterDto
     const result = await this.projectService.addFragmentPromoter(
-      new ObjectId(procedureId),
-      new ObjectId(fragmentId),
+      procedureId,
+      fragmentId,
       userId,
       promoterIndex,
       promoterSerial,
@@ -357,30 +332,19 @@ export class FragmentService {
     return result
   }
 
-  async removePromoter(removePromoterDto: RemovePromoterDto, userId: ObjectId) {
+  async removePromoter(removePromoterDto: RemovePromoterDto, userId: string) {
     const { procedureId, fragmentId, promoterIndex } = removePromoterDto
-    const result = await this.projectService.removeFragmentPromoter(
-      new ObjectId(procedureId),
-      new ObjectId(fragmentId),
-      userId,
-      promoterIndex
-    )
+    const result = await this.projectService.removeFragmentPromoter(procedureId, fragmentId, userId, promoterIndex)
     return result
   }
 
-  async updateSequence(updateSequenceDto: UpdateSequenceDto, userId: ObjectId) {
+  async updateSequence(updateSequenceDto: UpdateSequenceDto, userId: string) {
     const { procedureId, fragmentId, oldIndex, newIndex } = updateSequenceDto
-    const result = await this.projectService.updateSequence(
-      new ObjectId(procedureId),
-      new ObjectId(fragmentId),
-      userId,
-      oldIndex,
-      newIndex
-    )
+    const result = await this.projectService.updateSequence(procedureId, fragmentId, userId, oldIndex, newIndex)
     return result
   }
 
-  async copy(dto: CopyFragmentDto, userId: ObjectId, dirname: string) {
+  async copy(dto: CopyFragmentDto, userId: string, dirname: string) {
     return this.projectService.copyFragment({
       ...dto,
       userId,

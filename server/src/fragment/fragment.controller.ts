@@ -15,11 +15,9 @@ import {
 import { FragmentService } from './fragment.service'
 import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { AuthGuard } from '@nestjs/passport'
-import { ApiTags } from '@nestjs/swagger'
 import { CreateASRFragmentDto } from './dto/create-asr-fragment.dto'
 import { REST } from 'src/enum'
 import { FileInterceptor } from '@nestjs/platform-express'
-import { ObjectId } from 'mongodb'
 import {
   RemoveFragmentDto,
   RestoreFragmentDto,
@@ -30,23 +28,22 @@ import {
   UpdateSequenceDto,
   UpdateFragmentsTagsDto
 } from './dto/update-fragment.dto'
-import { CreateBlankFragmentDto } from './dto/create-blank-fragment.dto copy'
+import { CreateBlankFragmentDto } from './dto/create-blank-fragment.dto'
 import { CopyFragmentDto } from './dto/copy-fragment'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('fragment')
-@ApiTags('音频片段')
 export class FragmentController {
   constructor(private readonly fragmentService: FragmentService) {}
 
   @Post(`${REST.W}/create/tts`)
   async createByText(@Body() createTTSFragmentDto: CreateTTSFragmentDto, @Req() req, @Res() res) {
     try {
-      const fragment = await this.fragmentService.createByText(createTTSFragmentDto, req.user._id, req.user.dirname)
+      const fragment = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname)
       // console.log(fragment.audio)
       const data = {
         key: createTTSFragmentDto.key, // 返回的信息中添加 key 值标识
-        id: fragment._id,
+        id: fragment.id,
         audio: '/public' + fragment.audio.split('public')[1],
         duration: fragment.duration,
         txt: fragment.txt,
@@ -70,18 +67,18 @@ export class FragmentController {
     try {
       const fragment = await this.fragmentService.createByAudio(
         {
-          procedureId: new ObjectId(formData.procedureId),
+          procedureId: formData.procedureId,
           audio: audio.path,
           duration: formData.duration,
           role: formData.role
         },
-        req.user._id,
+        req.user.id,
         req.user.dirname
       )
       // console.log(formData)
       const data = {
         key: formData.key, // 返回的信息中添加 key 值标识
-        id: fragment._id,
+        id: fragment.id,
         audio: '/public' + fragment.audio.split('public')[1],
         duration: fragment.duration,
         txt: fragment.txt,
@@ -102,9 +99,9 @@ export class FragmentController {
   @Post(`${REST.W}/create/blank`)
   async createBlank(@Body() dto: CreateBlankFragmentDto, @Req() req, @Res() res) {
     try {
-      const fragment = await this.fragmentService.createBlank(dto, req.user._id, req.user.dirname)
+      const fragment = await this.fragmentService.createBlank(dto, req.user.id, req.user.dirname)
       const data = {
-        id: fragment._id,
+        id: fragment.id,
         audio: '/public' + fragment.audio.split('public')[1],
         duration: fragment.duration,
         txt: fragment.txt,
@@ -125,12 +122,12 @@ export class FragmentController {
   // @Get(`${REST.R}/:id`)
   // async findFragments(@Param('id') id: string, @Req() req, @Res() res: Response) {
   //   this.fragmentService
-  //     .findAll(new ObjectId(id), req.user._id, req.user.dirname)
+  //     .findAll(new ObjectId(id), req.user.id, req.user.dirname)
   //     .then(data => {
   //       // console.log(data)
   //       const fragments = data.map(fragment => {
   //         return {
-  //           id: fragment._id,
+  //           id: fragment.id,
   //           audio: 'http://' + req.headers.host + '/public' + fragment.audio.split('public')[1],
   //           duration: fragment.duration,
   //           transcript: fragment.transcript,
@@ -150,7 +147,7 @@ export class FragmentController {
   @Patch(`${REST.U}/transcript`)
   async updateTranscript(@Body() updateTranscriptDto: UpdateTranscriptDto, @Req() req, @Res() res) {
     try {
-      await this.fragmentService.updateTranscript(updateTranscriptDto, req.user._id).then(updateAt => {
+      await this.fragmentService.updateTranscript(updateTranscriptDto, req.user.id).then(updateAt => {
         res.status(200).send(updateAt)
       })
     } catch (error) {
@@ -162,7 +159,7 @@ export class FragmentController {
   async updateFragmentsTags(@Body() updateFragmentsTagsDto: UpdateFragmentsTagsDto, @Req() req, @Res() res) {
     try {
       // console.log(updateFragmentsTagsDto)
-      await this.fragmentService.updateFragmentsTags(updateFragmentsTagsDto, req.user._id).then(updateAt => {
+      await this.fragmentService.updateFragmentsTags(updateFragmentsTagsDto, req.user.id).then(updateAt => {
         res.status(200).send(updateAt)
       })
     } catch (error) {
@@ -174,7 +171,7 @@ export class FragmentController {
   async remove(@Body() removeFragmentDto: RemoveFragmentDto, @Req() req, @Res() res) {
     try {
       await this.fragmentService
-        .remove(removeFragmentDto, req.user._id)
+        .remove(removeFragmentDto, req.user.id)
         .then(updateAt => {
           // 注意：返回值不能是纯数字 ！！！
           res.status(200).send(updateAt)
@@ -191,7 +188,7 @@ export class FragmentController {
   @Patch(`${REST.U}/restore`)
   async restore(@Body() restoreFragmentDto: RestoreFragmentDto, @Req() req, @Res() res) {
     try {
-      await this.fragmentService.restore(restoreFragmentDto, req.user._id).then(updateAt => {
+      await this.fragmentService.restore(restoreFragmentDto, req.user.id).then(updateAt => {
         res.status(200).send(updateAt)
       })
     } catch (error) {
@@ -202,7 +199,7 @@ export class FragmentController {
   @Patch(`${REST.U}/delete`)
   async delete(@Body() deleteFragmentDto: DeleteFragmentDto, @Req() req, @Res() res) {
     try {
-      await this.fragmentService.delete(deleteFragmentDto, req.user._id, req.user.dirname).then(updateAt => {
+      await this.fragmentService.delete(deleteFragmentDto, req.user.id, req.user.dirname).then(updateAt => {
         res.status(200).send(updateAt)
       })
     } catch (error) {
@@ -213,7 +210,7 @@ export class FragmentController {
   @Patch(`${REST.U}/promoter/add`)
   async addPromoter(@Body() addPromoterDto: AddPromoterDto, @Req() req, @Res() res) {
     try {
-      await this.fragmentService.addPromoter(addPromoterDto, req.user._id).then(updateAt => {
+      await this.fragmentService.addPromoter(addPromoterDto, req.user.id).then(updateAt => {
         res.status(200).send(updateAt)
       })
     } catch (error) {
@@ -224,7 +221,7 @@ export class FragmentController {
   @Patch(`${REST.U}/promoter/remove`)
   async removePromoter(@Body() removePromoterDto: RemovePromoterDto, @Req() req, @Res() res) {
     try {
-      await this.fragmentService.removePromoter(removePromoterDto, req.user._id).then(updateAt => {
+      await this.fragmentService.removePromoter(removePromoterDto, req.user.id).then(updateAt => {
         res.status(200).send(updateAt)
       })
     } catch (error) {
@@ -235,7 +232,7 @@ export class FragmentController {
   @Patch(`${REST.U}/sequence`)
   async updateSequence(@Body() updateSequenceDto: UpdateSequenceDto, @Req() req, @Res() res) {
     try {
-      await this.fragmentService.updateSequence(updateSequenceDto, req.user._id).then(updateAt => {
+      await this.fragmentService.updateSequence(updateSequenceDto, req.user.id).then(updateAt => {
         res.status(200).send(updateAt)
       })
     } catch (error) {
@@ -246,10 +243,10 @@ export class FragmentController {
   @Patch(`${REST.U}/copy`)
   async copy(@Body() dto: CopyFragmentDto, @Req() req, @Res() res) {
     try {
-      const result = await this.fragmentService.copy(dto, req.user._id, req.user.dirname)
+      const result = await this.fragmentService.copy(dto, req.user.id, req.user.dirname)
       result.fragment.audio = '/public' + result.fragment.audio.split('public')[1]
-      result.fragment['id'] = result.fragment._id
-      delete result.fragment._id
+      result.fragment['id'] = result.fragment.id
+      delete result.fragment.id
       res.status(200).send(result)
     } catch (error) {
       console.log(error)

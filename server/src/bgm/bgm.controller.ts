@@ -9,16 +9,16 @@ export class BgmController {
 
   @Post(`${REST.U}`)
   create(@Body() addBgmDto: AddBgmDto, @Req() req, @Res() res) {
-    return this.bgmService.add(addBgmDto, req.user._id, req.user.dirname)
+    return this.bgmService.add(addBgmDto, req.user.id, req.user.dirname)
   }
 
   @Get(`${REST.R}`)
   findAll(@Req() req, @Res() res) {
-    return this.bgmService.findAll(req.user._id, req.user.dirname)
+    return this.bgmService.findAll(req.user.id, req.user.dirname)
   }
 
   @Delete(`${REST.D}/:id`)
   remove(@Param('id') id: string, @Req() req, @Res() res) {
-    return this.bgmService.remove(id, req.user._id, req.user.dirname)
+    return this.bgmService.remove(id, req.user.id, req.user.dirname)
   }
 }

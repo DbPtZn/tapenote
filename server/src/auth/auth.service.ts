@@ -4,7 +4,6 @@ import { UserService } from 'src/user/user.service'
 import * as svgCaptcha from 'svg-captcha'
 import { JwtService } from '@nestjs/jwt'
 import { User } from 'src/user/entities/user.entity'
-import { ObjectId } from 'mongodb'
 import { CreateUserDto } from 'src/user/dto/_api'
 import { FolderService } from 'src/folder/folder.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
@@ -26,8 +25,8 @@ export class AuthService {
     return this.userService.create(createUserDto)
   }
 
-  createUserRoot(_id: ObjectId) {
-    return this.folderService.createUserRoot(_id)
+  createUserRoot(id: string) {
+    return this.folderService.createUserRoot(id)
   }
 
   /** 登录：生成 token */
@@ -40,9 +39,9 @@ export class AuthService {
       this.logger.log(`${user.account} 用户正在登录...`)
       if (!user.dir) {
         this.logger.warn('该用户未创建根目录，正在为该用户创建根目录！')
-        await this.folderService.createUserRoot(user._id)
+        await this.folderService.createUserRoot(user.id)
       }
-      const token = this.jwtService.sign({ userId: user._id, account: user.account, dirname: user.dirname })
+      const token = this.jwtService.sign({ userId: user.id, account: user.account, dirname: user.dirname })
       this.logger.log(`${user.account} 用户登录成功！`)
       return token
     } catch (error) {

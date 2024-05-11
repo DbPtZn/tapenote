@@ -8,8 +8,11 @@ import { join, extname } from 'path'
 import { SherpaModule } from 'src/sherpa/sherpa.module'
 import { ProjectModule } from 'src/project/project.module'
 import { FfmpegModule } from 'src/ffmpeg/ffmpeg.module'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { Fragment } from './entities/fragment.entity'
 @Module({
   imports: [
+    TypeOrmModule.forFeature([Fragment]),
     MulterModule.register({
       storage: diskStorage({
         destination: join(__dirname, '/temp'),

@@ -149,9 +149,10 @@ export class User {
   age: number // 年龄
 
   @Column({
-    type: 'enum',
-    enum: ['male', 'female', 'other', 'secrecy'],
-    default: 'secrecy'
+    type: 'varchar'
+    // type: 'enum',
+    // enum: ['male', 'female', 'other', 'secrecy'],
+    // default: 'secrecy'
   })
   sex: Sex // 性别
 

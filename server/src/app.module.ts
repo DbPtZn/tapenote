@@ -16,10 +16,10 @@ import { TrashModule } from './trash/trash.module'
 import { UploadModule } from './upload/upload.module'
 import { UserModule } from './user/user.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { TypeOrmModule } from '@nestjs/typeorm'
+import { TypeOrmModule, TypeOrmModuleAsyncOptions, TypeOrmModuleOptions } from '@nestjs/typeorm'
 import { UserLoggerModule } from './user-logger/userLogger.module'
 import { LoggerModule } from './logger/logger.module'
-import saslprep from 'saslprep'
+// import saslprep from 'saslprep'
 import { HttpLoggerMiddleware } from './logger/logger.middleware'
 import { RequestScopedService } from './request-scoped/request-scoped.service'
 import { RequestScopedModule } from './request-scoped/request-scoped.module'
@@ -32,7 +32,7 @@ import { RequestScopedModule } from './request-scoped/request-scoped.module'
         databaseConfig,
         jwtConfig,
         // commonConfig,
-        process.env.NODE_ENV === 'development' ? sherpaDevConfig : sherpaProdConfig
+        process.env.NODE_ENV === 'production' ? sherpaProdConfig : sherpaDevConfig
       ],
       cache: true,
       isGlobal: true
@@ -42,19 +42,29 @@ import { RequestScopedModule } from './request-scoped/request-scoped.module'
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         // FIXME 警告：设置 synchronize: true 不能被用于生产环境，否则您可能会丢失生产环境数据
+        const config = configService.get<ReturnType<typeof databaseConfig>>('database')
+        console.log(process.env.NODE_ENV)
+        console.log(config)
         return {
           type: 'better-sqlite3', // 数据库类型
-          username: configService.get('database.username'), // 账号
-          password: saslprep(configService.get('database.password')), // 密码
-          host: configService.get('database.host'), // host
-          port: configService.get('database.port'), //
-          database: configService.get('database.database'), // 库名
+          database: 'database.sqlite', // 库名
           // entities: [__dirname + '/**/*.entity{.ts,.js}'], //实体文件
-          synchronize: configService.get('database.synchronize'), // synchronize字段代表是否自动将实体类同步到数据库
-          retryDelay: configService.get('database.retryDelay'), // 重试连接数据库间隔
-          retryAttempts: configService.get('database.retryAttempts'), // 重试连接数据库的次数
-          autoLoadEntities: configService.get('database.autoLoadEntities') // 如果为true,将自动加载实体 forFeature() 方法注册的每个实体都将自动添加到配置对象的实体数组中
+          synchronize: true, // synchronize字段代表是否自动将实体类同步到数据库
+          autoLoadEntities: true // 如果为true,将自动加载实体 forFeature() 方法注册的每个实体都将自动添加到配置对象的实体数组中
         }
+        // return {
+        //   type: 'better-sqlite3', // 数据库类型
+        //   // username: configService.get('database.username'), // 账号
+        //   // password: configService.get('database.password'), // 密码
+        //   // host: configService.get('database.host'), // host
+        //   // port: configService.get('database.port'), //
+        //   database: configService.get('database.database'), // 库名
+        //   // entities: [__dirname + '/**/*.entity{.ts,.js}'], //实体文件
+        //   synchronize: configService.get('database.synchronize'), // synchronize字段代表是否自动将实体类同步到数据库
+        //   // retryDelay: configService.get('database.retryDelay'), // 重试连接数据库间隔
+        //   // retryAttempts: configService.get('database.retryAttempts'), // 重试连接数据库的次数
+        //   autoLoadEntities: configService.get('database.autoLoadEntities') // 如果为true,将自动加载实体 forFeature() 方法注册的每个实体都将自动添加到配置对象的实体数组中
+        // }
       }
     }),
     AuthModule,

@@ -1,29 +1,51 @@
-import { ObjectId } from 'mongodb'
-import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, ObjectIdColumn, UpdateDateColumn } from 'typeorm'
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  CreateDateColumn,
+  Entity,
+  Column,
+  UpdateDateColumn,
+  PrimaryGeneratedColumn
+} from 'typeorm'
 
 @Entity()
 export class UploadFile {
-  @ObjectIdColumn() _id: ObjectId
+  @PrimaryGeneratedColumn('uuid') id: string
 
-  @Column()
-  userId: ObjectId // 用户ID
+  @Column('uuid')
+  userId: string // 用户ID
 
-  @Column()
+  @Column({
+    type: 'varchar'
+  })
   md5: string // 文件MD5
 
-  @Column()
+  @Column({
+    type: 'simple-array'
+  })
   quote: string[] // 引用的项目 id
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    length: 24
+  })
   type: string // 文件类型
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    length: 255
+  })
   name: string // 文件名
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    length: 255
+  })
   path: string // 文件路径
 
-  @Column()
+  @Column({
+    type: 'int'
+  })
   size: number // 文件大小
 
   @CreateDateColumn()

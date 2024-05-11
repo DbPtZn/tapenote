@@ -3,11 +3,9 @@ import { UserService } from './user.service'
 import { UpdateUserDto, UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
 import { AuthGuard } from '@nestjs/passport'
 import { REST } from 'src/enum'
-import { ApiTags } from '@nestjs/swagger'
 import { UpdateUserPwdDto } from './dto/update-pwd.dto'
 
 @Controller('user')
-@ApiTags('用户')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

@@ -43,24 +43,30 @@ export class Folder {
   name: string // 文件夹名称
 
   @Column({
+    type: 'varchar',
     length: 60,
     default: ''
   })
   desc: string // 描述
 
   @Column({
-    type: 'enum',
-    enum: LibraryEnum
+    type: 'varchar'
+    // type: 'enum',
+    // enum: LibraryEnum
   })
   lib: LibraryEnum // 库
 
-  @Column()
+  @Column({
+    type: 'boolean',
+    default: false
+  })
   isCloud: boolean // 云同步
 
   @Column({
-    type: 'enum',
-    enum: RemovedEnum,
-    default: RemovedEnum.NEVER
+    type: 'varchar'
+    // type: 'enum',
+    // enum: RemovedEnum,
+    // default: RemovedEnum.NEVER
   })
   removed: RemovedEnum // 移除状态
 

@@ -6,13 +6,10 @@ import { Response, Request } from 'express'
 import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
 import { AuthGuard } from '@nestjs/passport'
 import { REST } from 'src/enum'
-import { ApiTags } from '@nestjs/swagger'
 import { CreateUserDto } from 'src/user/dto/_api'
-import { ObjectId } from 'mongodb'
 
 // @UseGuards(JwtAuthGuard)
 @Controller('auth')
-@ApiTags('权限')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -23,7 +20,7 @@ export class AuthController {
       this.authService
         .register(createUserDto)
         .then(user => {
-          res.status(201).send({ id: user._id })
+          res.status(201).send({ id: user.id })
         })
         .catch(error => {
           console.log(error)
@@ -54,7 +51,7 @@ export class AuthController {
   async createUserRoot(@Param('id') id: string, @Req() req, @Res() res) {
     try {
       this.authService
-        .createUserRoot(new ObjectId(id))
+        .createUserRoot(id)
         .then(msg => {
           res.status(200).send(msg)
         })

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { AddBgmDto } from './dto/create-bgm.dto'
 import { Bgm, BgmItem } from './entities/bgm.entity'
-import { ObjectId } from 'mongodb'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { StorageService } from 'src/storage/storage.service'
@@ -16,15 +15,15 @@ export class BgmService {
     private readonly storageService: StorageService
   ) {}
   /** 初始化 */
-  init(userId: ObjectId) {
+  init(userId: string) {
     const bgm = new Bgm()
-    bgm._id = new ObjectId()
+    // bgm.id = UUID.v4()
     bgm.userId = userId
     bgm.list = []
     return this.bgmsRepository.save(bgm)
   }
 
-  async add(dto: AddBgmDto, userId: ObjectId, dirname: string) {
+  async add(dto: AddBgmDto, userId: string, dirname: string) {
     const { audio, name } = dto
     const bgm = await this.bgmsRepository.findOneBy({ userId })
     const item: BgmItem = {
@@ -37,7 +36,7 @@ export class BgmService {
     return item
   }
 
-  async remove(id: string, userId: ObjectId, dirname: string) {
+  async remove(id: string, userId: string, dirname: string) {
     const bgm = await this.bgmsRepository.findOneBy({ userId })
     const index = bgm.list.findIndex(item => item.id === id)
     if (index === -1) return false
@@ -53,7 +52,7 @@ export class BgmService {
     return true
   }
 
-  async findAll(userId: ObjectId, dirname: string) {
+  async findAll(userId: string, dirname: string) {
     let bgm = await this.bgmsRepository.findOneBy({ userId })
     if (!bgm) {
       bgm = await this.init(userId)
