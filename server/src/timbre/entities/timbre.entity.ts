@@ -1,4 +1,5 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { User } from 'src/user/entities/user.entity';
+import { BeforeInsert, Column, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm'
 interface RoleList {
   key: number
   value: { name: string; avatar: string; changer: number }
@@ -14,6 +15,9 @@ export class Timbre {
 
   @Column('uuid')
   userId: string // 用户 id
+
+  @OneToOne(() => User, user => user.timbre)
+  user: User
 
   @Column({
     type: 'int'

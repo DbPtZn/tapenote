@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
+import { User } from 'src/user/entities/user.entity'
+import { Column, CreateDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 
 export interface BgmItem {
   id: string
@@ -11,6 +12,9 @@ export class Bgm {
   @PrimaryGeneratedColumn('uuid') id: string
 
   @Column() userId: string // 用户 id
+
+  @OneToOne(() => User, user => user.bgm)
+  user: User
 
   @Column({
     type: 'simple-json',

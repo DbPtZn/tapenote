@@ -1,6 +1,8 @@
 import { MaxLength, MinLength } from 'class-validator'
+import { Bgm } from 'src/bgm/entities/bgm.entity'
 import { Folder } from 'src/folder/entities/folder.entity'
 import { Project } from 'src/project/entities/project.entity'
+import { Timbre } from 'src/timbre/entities/timbre.entity'
 import {
   AfterUpdate,
   BeforeInsert,
@@ -10,6 +12,7 @@ import {
   Generated,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
@@ -96,7 +99,20 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
+  @OneToMany(() => Project, project => project.user)
+  projects: Project
+
+  @OneToMany(() => Folder, folder => folder.user)
+  folders: Folder
+
+  @OneToOne(() => Timbre, timbre => timbre.user)
+  timbre: Timbre
+
+  @OneToOne(() => Bgm, bgm => bgm.user)
+  bgm: Bgm
+
   @Column({
+    type: 'varchar',
     unique: true
   })
   account: string // 账号
@@ -149,10 +165,8 @@ export class User {
   age: number // 年龄
 
   @Column({
-    type: 'varchar'
-    // type: 'enum',
-    // enum: ['male', 'female', 'other', 'secrecy'],
-    // default: 'secrecy'
+    type: 'varchar',
+    default: 'secrecy'
   })
   sex: Sex // 性别
 
@@ -175,7 +189,8 @@ export class User {
 
   @Column({
     type: 'varchar',
-    length: 18
+    length: 18,
+    nullable: false
   })
   dirname: string
 
@@ -190,12 +205,6 @@ export class User {
     default: JSON.stringify([])
   })
   subscriptionConfig: SubscriptionConfig[]
-
-  @ManyToOne(() => Project, project => project.user)
-  projects: Project
-
-  @ManyToOne(() => Folder, folder => folder.user)
-  folders: Folder
 
   @CreateDateColumn()
   createAt: Date // 创建时间

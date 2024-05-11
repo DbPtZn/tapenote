@@ -47,16 +47,15 @@ export class UserService {
       // 密码哈希加盐
       const encryptedPassword = this.bcrtptService.hashSync(password)
       const user = new User()
-      user.id = UUID.v4()
+      // user.id = UUID.v4()
       user.account = account
       user.nickname = nickname
       user.encryptedPassword = encryptedPassword
       user.dirname = dirname
       const newUser = await this.usersRepository.save(user)
       // console.log(newUser)
-      if (!newUser) throw new Error('创建新用户失败！')
       this.timbreService.init(newUser.id) // 创建用户的音色列表
-      this.bgmService.init(newUser.id)
+      this.bgmService.init(newUser.id) // 创建 BGM 列表
       this.logger.log(`创建新用户 ${newUser.account} 成功！`)
       return newUser
     } catch (error) {
