@@ -16,7 +16,7 @@ export class AuthController {
   @Post(`${REST.W}/register`)
   register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
     try {
-      console.log(createUserDto)
+      // console.log(createUserDto)
       this.authService
         .register(createUserDto)
         .then(user => {
@@ -24,10 +24,10 @@ export class AuthController {
         })
         .catch(error => {
           console.log(error)
-          res.status(400).send({ msg: '用户注册失败', error: error })
+          res.status(400).send(error.message)
         })
     } catch (error) {
-      res.status(400).send({ msg: '用户注册失败', error: error })
+      res.status(400).send(error.message)
     }
   }
 

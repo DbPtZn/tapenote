@@ -10,15 +10,20 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  Tree,
   UpdateDateColumn
 } from 'typeorm'
 
 @Entity()
-// @Tree('adjacency-list')
+@Tree('adjacency-list')
 export class Folder {
   @PrimaryGeneratedColumn('uuid') id: string
 
-  @Column('uuid') parentId: string
+  @Column({
+    type: 'uuid',
+    nullable: true
+  })
+  parentId: string
 
   // 邻接列表
   @OneToMany(type => Folder, folder => folder.children)

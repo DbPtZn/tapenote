@@ -15,6 +15,7 @@ import { useRouter } from 'vue-router'
 import Container from './private/Container.vue'
 import BloggerOption from './private/BloggerOption.vue'
 import AddBlogger from './private/AddBlogger.vue'
+import { markRaw } from 'vue'
 const emits = defineEmits<{
   collapse: [number]
 }>()
@@ -77,7 +78,7 @@ function getUserOptions() {
   return userListStore.getData.map(option => {
     return {
       ...option,
-      defaultIcon: FaceFilled,
+      defaultIcon: markRaw(FaceFilled),
       onClick(opt) {
         router.push(RoutePathEnum.HOME).then(() => {
           const shell = useShell<CreatorShell>()

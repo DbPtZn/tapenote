@@ -19,78 +19,78 @@ import {
 export type Sex = 'male' | 'female' | 'other' | 'secrecy'
 
 export class Dir {
-  @Column({
-    type: 'uuid'
-  })
+  // @Column({
+  //   type: 'uuid'
+  // })
   note: string
 
-  @Column({
-    type: 'uuid'
-  })
+  // @Column({
+  //   type: 'uuid'
+  // })
   course: string
 
-  @Column({
-    type: 'uuid'
-  })
+  // @Column({
+  //   type: 'uuid'
+  // })
   procedure: string
 }
 
 export class SubscriptionConfig {
-  @Column({
-    type: 'uuid'
-  })
+  // @Column({
+  //   type: 'uuid'
+  // })
   id: string
 
-  @Column('varchar', { length: 50 })
+  // @Column('varchar', { length: 50 })
   name: string
 
-  @Column({
-    type: 'varchar',
-    default: ''
-  })
+  // @Column({
+  //   type: 'varchar',
+  //   default: ''
+  // })
   site: string
 
-  @Column({
-    type: 'varchar',
-    default: ''
-  })
+  // @Column({
+  //   type: 'varchar',
+  //   default: ''
+  // })
   code: string
 
-  @Column({
-    type: 'varchar',
-    default: ''
-  })
+  // @Column({
+  //   type: 'varchar',
+  //   default: ''
+  // })
   desc: string
 }
 
 export class SubmissionConfig {
-  @Column({
-    type: 'uuid'
-  })
+  // @Column({
+  //   type: 'uuid'
+  // })
   id: string
 
-  @Column({
-    type: 'varchar',
-    length: 50
-  })
+  // @Column({
+  //   type: 'varchar',
+  //   length: 50
+  // })
   name: string
 
-  @Column({
-    type: 'varchar',
-    default: ''
-  })
+  // @Column({
+  //   type: 'varchar',
+  //   default: ''
+  // })
   site: string
 
-  @Column({
-    type: 'varchar',
-    default: ''
-  })
+  // @Column({
+  //   type: 'varchar',
+  //   default: ''
+  // })
   code: string
 
-  @Column({
-    type: 'varchar',
-    default: ''
-  })
+  // @Column({
+  //   type: 'varchar',
+  //   default: ''
+  // })
   desc: string
 }
 
@@ -119,7 +119,8 @@ export class User {
 
   @Column({
     type: 'varchar',
-    length: 64
+    length: 64,
+    select: false
   })
   encryptedPassword: string // 密码
 

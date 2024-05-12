@@ -13,11 +13,11 @@ export default defineConfig(({ command, mode }) => {
     base: env.VITE_ASSETS_BASE,
     plugins: [
       vue(),
-      eslintPlugin({
-        include: ['src/**/*.js', 'src/**/*.vue', 'src/**/*.ts'],
-        exclude: ['./node_modules/**'],
-        cache: false
-      }),
+      // eslintPlugin({
+      //   include: ['src/**/*.js', 'src/**/*.vue', 'src/**/*.ts'],
+      //   exclude: ['./node_modules/**'],
+      //   cache: false
+      // }),
       Components({
         extensions: ['vue'],
         resolvers: [NaiveUiResolver()],

@@ -18,11 +18,16 @@ import { RequestScopedModule } from 'src/request-scoped/request-scoped.module'
     FolderModule,
     RequestScopedModule,
     PassportModule.register({ defaultStrategy: ['jwt', 'local'] }),
-    // PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
+        // console.log(process.env.NODE_ENV)
+        if (process.env.NODE_ENV === 'electron') {
+          return {
+            secret: configService.get('jwt.secret') // 加密密钥
+          }
+        }
         return {
           secret: configService.get('jwt.secret'), // 加密密钥
           signOptions: { expiresIn: configService.get('jwt.expiresIn') } // 配置： 保存时间

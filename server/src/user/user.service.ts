@@ -39,7 +39,8 @@ export class UserService {
       if (!isValid) throw new Error('账号名称包含非法字符！')
       if (password.includes(' ')) throw new Error('密码中不能包含空格！')
       // 判断该用户是否存在
-      const isUserExist = await this.findOneByAccount(account)
+      // const isUserExist = await this.findOneByAccount(account)
+      const isUserExist = await this.usersRepository.existsBy({ account })
       if (isUserExist) {
         throw new Error('该账号已注册！')
       }
@@ -64,33 +65,40 @@ export class UserService {
     }
   }
 
+  /** 创建用户根目录 */
   async createUserRoot(dir: { note: string; course: string; procedure: string }, userId: string) {
-    const user = await this.findOneById(userId)
-    const { note, course, procedure } = dir
-    if (!user.dir) user.dir = new Dir()
-    if (!user.dir.note && note) user.dir.note = note
-    if (!user.dir.course && course) user.dir.course = course
-    if (!user.dir.procedure && procedure) user.dir.procedure = procedure
-    const newUser = await this.usersRepository.save(user)
-    if (newUser) {
-      this.logger.log(`为 ${newUser.account} 用户创建根目录成功！`)
+    try {
+      const user = await this.usersRepository.findOneBy({ id: userId })
+      const { note, course, procedure } = dir
+      if (!user.dir || Object.keys(user.dir).length === 0 || user.dir?.note) user.dir = new Dir()
+      if (!user.dir.note && note) user.dir.note = note
+      if (!user.dir.course && course) user.dir.course = course
+      if (!user.dir.procedure && procedure) user.dir.procedure = procedure
+      // console.log(user)
+      await this.usersRepository.save(user)
       return 'successful!'
-    } else {
-      this.logger.error(`为 ${newUser.account} 用户创建根目录失败！`)
-      throw new Error('创建用户目录失败！')
+    } catch (error) {
+      throw error
     }
   }
 
   /** 通过账号查询用户 */
   async findOneByAccount(account: string) {
-    const user = await this.usersRepository.findOne({ where: { account: account } })
+    const user = await this.usersRepository.findOne({
+      where: { account: account },
+      select: ['id', 'account', 'dirname', 'encryptedPassword', 'dir']
+    })
     return user || null
   }
 
   /** 通过 id 查询用户 */
   async findOneById(id: string) {
-    const user = await this.usersRepository.findOneBy({ id })
-    return user || null
+    try {
+      const user = await this.usersRepository.findOneBy({ id })
+      return user
+    } catch (error) {
+      throw error
+    }
   }
 
   /** 通过 id 查询用户目录信息 */
@@ -114,28 +122,27 @@ export class UserService {
     try {
       this.userLogger.log(`正在查询用户信息...`)
       const user = await this.usersRepository.findOneBy({ id })
-      if (user) {
-        this.userLogger.log(`查询用户信息成功!`)
-        return {
-          account: user.account,
-          nickname: user.nickname,
-          email: user.email,
-          avatar: user.avatar
-            ? this.storageService.getFilePath({
-                filename: user.avatar,
-                dirname,
-                category: 'image',
-                prv: false
-              })
-            : '',
-          phone: user.phone,
-          homepage: user.homepage,
-          desc: user.desc,
-          dir: user.dir,
-          submissionConfig: user.submissionConfig,
-          subscriptionConfig: user.subscriptionConfig
-        }
-      } else throw new Error('查询用户信息失败！')
+      this.userLogger.log(`查询用户信息成功!`)
+      // console.log(user)
+      return {
+        account: user.account,
+        nickname: user.nickname,
+        email: user.email,
+        avatar: user.avatar
+          ? this.storageService.getFilePath({
+              filename: user.avatar,
+              dirname,
+              category: 'image',
+              prv: false
+            })
+          : '',
+        phone: user.phone,
+        homepage: user.homepage,
+        desc: user.desc,
+        dir: user.dir,
+        submissionConfig: user.submissionConfig,
+        subscriptionConfig: user.subscriptionConfig
+      }
     } catch (error) {
       this.userLogger.warn(`查询用户信息失败！`)
       throw error

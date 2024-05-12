@@ -3,10 +3,13 @@ import path from 'path'
 import fs from 'fs'
 import randomstring from 'randomstring'
 import { tmpdir } from 'os'
+import { ConfigService } from '@nestjs/config'
+import { commonConfig } from 'src/config'
 type Category = 'audio' | 'image' | 'bgm' | 'logs'
 const __rootdirname = process.cwd()
 @Injectable()
 export class StorageService {
+  constructor(private readonly configService: ConfigService) {}
   /**
    * 获取用户目录（不存在时自动创建）
    * @param dirname 用户目录名称
@@ -14,7 +17,8 @@ export class StorageService {
    * @returns 文件存储目录
    */
   getUserDir(dirname: string, prv = false) {
-    const dirPath = path.join(__rootdirname, prv ? 'private' : 'public', dirname)
+    const common = this.configService.get<ReturnType<typeof commonConfig>>('common')
+    const dirPath = path.join(__rootdirname, prv ? common.privateDir : common.publicDir, dirname)
     // console.log(dirPath)
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true })

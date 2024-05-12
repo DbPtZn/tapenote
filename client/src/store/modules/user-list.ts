@@ -4,7 +4,7 @@ import { Subject } from '@tanbo/stream'
 import _ from 'lodash'
 import { defineStore } from 'pinia'
 import useStore from '..'
-import { nextTick } from 'vue'
+import { markRaw, nextTick } from 'vue'
 export interface SubmissionConfig {
   id: string
   name: string
@@ -196,7 +196,7 @@ export const useUserListStore = defineStore('userListStore', {
         hostname: data.hostname,
         account: data.account,
         nickname: data.nickname,
-        avatar: data.avatar,
+        avatar: data.avatar || '',
         desc: data.desc || '',
         email: data.email || '',
         homepage: data.homepage || '',

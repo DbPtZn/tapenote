@@ -112,7 +112,10 @@ export class Project {
 
   /** ------------------------------------------ Procedure -------------------------------------------- */
 
-  @Column()
+  @Column({
+    type: 'uuid',
+    nullable: true
+  })
   fromNoteId: string
 
   @Column({
@@ -127,7 +130,8 @@ export class Project {
 
   /** ------------------------------------------  course  -------------------------------------------- */
   @Column({
-    type: 'uuid'
+    type: 'uuid',
+    nullable: true
   })
   fromProcedureId: string
 

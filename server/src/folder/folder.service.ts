@@ -8,6 +8,8 @@ import { UserService } from 'src/user/user.service'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { GetRecentlyDto } from './dto/get-recently.dto'
 import { ProjectService } from 'src/project/project.service'
+import { UserLoggerService } from 'src/user-logger/userLogger.service'
+import { LoggerService } from 'src/logger/logger.service'
 
 @Injectable()
 export class FolderService {
@@ -15,12 +17,15 @@ export class FolderService {
     @InjectRepository(Folder)
     private foldersRepository: MongoRepository<Folder>,
     private readonly userService: UserService,
-    private readonly projectService: ProjectService
+    private readonly projectService: ProjectService,
+    private readonly userLogger: UserLoggerService,
+    private readonly logger: LoggerService
   ) {}
 
   /** 新建根目录 */
   async createUserRoot(userId: string) {
     // console.log('folder')
+    this.userLogger.log(`正在创建用户根目录...`)
     try {
       const user = await this.userService.findOneById(userId)
       // console.log(user)
@@ -33,11 +38,27 @@ export class FolderService {
       if (!user.dir || !user.dir.note) dir.note = await this.createRoot(LibraryEnum.NOTE, userId)
       if (!user.dir || !user.dir.course) dir.course = await this.createRoot(LibraryEnum.COURSE, userId)
       if (!user.dir || !user.dir.procedure) dir.procedure = await this.createRoot(LibraryEnum.PROCEDURE, userId)
-      return await this.userService.createUserRoot(dir, userId)
+      // console.log(dir)
+      this.userLogger.log(`创建根目录成功, 正在存入用户数据对象...`)
+      await this.userService.createUserRoot(dir, userId)
+      this.userLogger.log(`创建用户根目录成功！`)
     } catch (error) {
-      // console.log(error)
+      this.userLogger.error(`创建用户根目录失败！原因：${error.message}`)
       throw error
     }
+  }
+
+  /** 创建根目录 */
+  async createRoot(lib: LibraryEnum, userId: string) {
+    const folder = new Folder()
+    folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
+    folder.desc = 'Root Folder'
+    folder.lib = lib
+    folder.isCloud = false
+    folder.userId = userId
+    folder.parentId = null
+    const res = await this.foldersRepository.save(folder)
+    return res.id
   }
 
   /** 新建文件夹 */
@@ -71,11 +92,17 @@ export class FolderService {
     return folders
   }
 
+  /** 通过 id 查询 */
   async findOneById(id: string, userId: string) {
-    const folder = await this.foldersRepository.findOneBy({ id: id, userId })
-    if (folder) return folder
-    else throw new Error(`查询失败,找不到目标文件夹,项目id:${id}`)
+    try {
+      const folder = await this.foldersRepository.findOneBy({ id: id, userId })
+      return folder
+    } catch (error) {
+      console.log(error)
+      throw new Error(`查询失败,找不到目标文件夹,项目id:${id}`)
+    }
   }
+
   /** 查询文件夹是否存在或者处于被移除状态 */
   async queryOneById(id: string, userId: string) {
     return this.foldersRepository
@@ -92,7 +119,9 @@ export class FolderService {
       })
   }
 
+  /** 获取文件夹数据 */
   async getFolderData(id: string, userId: string) {
+    // console.log(id, userId)
     const folder = await this.findOneById(id, userId)
     const subfolders = await this.findChildrenById(id, userId)
     const subfiles = await this.projectService.findAllByFolderId(folder.id, userId, folder.lib)
@@ -292,23 +321,7 @@ export class FolderService {
       throw error
     }
   }
-  /**
-   * 创建根目录
-   * @param lib 库名
-   * @param userId 用户 id
-   * @returns 根目录 id
-   */
-  async createRoot(lib: LibraryEnum, userId: string) {
-    const folder = new Folder()
-    folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
-    folder.desc = 'Root Folder'
-    folder.lib = lib
-    folder.isCloud = false
-    folder.userId = userId
-    folder.parentId = null
-    const res = await this.foldersRepository.save(folder)
-    return res.id
-  }
+
   /** 查询根目录 */
   async findRootDir(userId: string, lib: LibraryEnum) {
     const user = await this.userService.findOneById(userId)

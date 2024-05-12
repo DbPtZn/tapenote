@@ -4,9 +4,9 @@ import * as dotenv from 'dotenv'
 import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import path from 'path'
-import { UserLoggerService } from './user-logger/userLogger.service'
 import { LoggerService } from './logger/logger.service'
-import { LocalStrategy } from './auth/local.strategy'
+import portfinder from 'portfinder'
+import { ConfigService } from '@nestjs/config'
 async function bootstrap() {
   let dotenvPath = []
   switch (process.env.NODE_ENV) {
@@ -57,9 +57,14 @@ async function bootstrap() {
   // app.use(interceptStaticAssets)
 
   // 开放静态资源
+  // console.log(process.env.NODE_ENV)
+  const configService = app.get(ConfigService)
   const __rootdirname = process.cwd()
-  // console.log(__rootdirname)
-  app.useStaticAssets(path.join(__rootdirname, 'public'), { prefix: '/public' })
+  const userDir = configService.get('common.userDir')
+  const publicDir = configService.get('common.publicDir')
+  const staticPrefix = configService.get('common.staticPrefix')
+  // console.log([__rootdirname, userDir, publicDir, staticPrefix])
+  app.useStaticAssets(path.join(__rootdirname, userDir, publicDir), { prefix: staticPrefix })
 
   /** 接口文档(待完善) */
   // const options = new DocumentBuilder()
@@ -72,8 +77,17 @@ async function bootstrap() {
   // SwaggerModule.setup('/api-docs', app, document)
 
   /** 开放端口（请在环境变量中设置） */
-  const port = parseInt(process.env.SERVER_PORT, 10) || 3080
-  await app.listen(port)
+  // 开放端口（在环境变量中设置）
+  const port = parseInt(process.env.SERVER_PORT, 10)
+  portfinder.basePort = port
+  portfinder.getPort(async (err, availablePort) => {
+    if (err) {
+      console.error(err)
+    } else {
+      console.log(`正在监听 ${availablePort} 端口`)
+      await app.listen(availablePort)
+    }
+  })
 }
 bootstrap()
 

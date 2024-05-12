@@ -11,7 +11,7 @@ import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { UserLoggerModule } from 'src/user-logger/userLogger.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), BcryptModule, StorageModule, TimbreModule, BgmModule, UserLoggerModule],
+  imports: [TypeOrmModule.forFeature([User]), BcryptModule, StorageModule, TimbreModule, BgmModule],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService]

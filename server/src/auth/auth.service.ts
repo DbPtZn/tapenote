@@ -37,7 +37,7 @@ export class AuthService {
         throw new UnauthorizedException('用户邮箱或密码错误！')
       }
       this.logger.log(`${user.account} 用户正在登录...`)
-      if (!user.dir) {
+      if (!user.dir || Object.keys(user.dir).length === 0 || user.dir?.note === '') {
         this.logger.warn('该用户未创建根目录，正在为该用户创建根目录！')
         await this.folderService.createUserRoot(user.id)
       }
@@ -61,6 +61,7 @@ export class AuthService {
   async validateUser(account: string, password: string) {
     // 用户是否存在
     const user = await this.userService.findOneByAccount(account)
+    // console.log(user)
     if (!user) return null
     // 用户密码是否正确
     const valid = this.bcrtptService.compareSync(password, user.encryptedPassword)
