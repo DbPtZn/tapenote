@@ -31,15 +31,16 @@ export class Folder {
 
   // 邻接列表
   @ManyToOne(type => Folder, folder => folder.parent)
-  children: Folder
+  children: Folder[]
 
-  @Column('uuid') userId: string
+  @Column('uuid')
+  userId: string
 
   @ManyToOne(() => User, user => user.folders)
   user: User
 
-  @ManyToOne(() => Project, project => project.folder)
-  projects: Project
+  @OneToMany(() => Project, project => project.folder)
+  projects: Project[]
 
   @Column({
     length: 18,

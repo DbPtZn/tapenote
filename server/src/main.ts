@@ -63,7 +63,7 @@ async function bootstrap() {
   const userDir = configService.get('common.userDir')
   const publicDir = configService.get('common.publicDir')
   const staticPrefix = configService.get('common.staticPrefix')
-  // console.log([__rootdirname, userDir, publicDir, staticPrefix])
+  console.log(path.join(__rootdirname, userDir, publicDir), staticPrefix)
   app.useStaticAssets(path.join(__rootdirname, userDir, publicDir), { prefix: staticPrefix })
 
   /** 接口文档(待完善) */

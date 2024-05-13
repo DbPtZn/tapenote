@@ -6,6 +6,7 @@
 # user files
 /public
 /private
+/assets
 
 # sherpa model
 /sherpa

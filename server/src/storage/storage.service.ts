@@ -18,7 +18,7 @@ export class StorageService {
    */
   getUserDir(dirname: string, prv = false) {
     const common = this.configService.get<ReturnType<typeof commonConfig>>('common')
-    const dirPath = path.join(__rootdirname, prv ? common.privateDir : common.publicDir, dirname)
+    const dirPath = path.join(__rootdirname, common.userDir, prv ? common.privateDir : common.publicDir, dirname)
     // console.log(dirPath)
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true })

@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { Annotation, BGM, Project } from './entities/project.entity'
 import { InjectRepository } from '@nestjs/typeorm'
-import { MongoRepository, QueryFailedError } from 'typeorm'
+import { MongoRepository, Not, QueryFailedError, Repository } from 'typeorm'
 import { StorageService } from 'src/storage/storage.service'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
@@ -15,6 +15,7 @@ import fs from 'fs'
 import * as UUID from 'uuid'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
+import { FolderService } from 'src/folder/folder.service'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -51,7 +52,9 @@ const __rootdirname = process.cwd()
 export class ProjectService {
   constructor(
     @InjectRepository(Project)
-    private projectsRepository: MongoRepository<Project>,
+    private projectsRepository: Repository<Project>,
+    @Inject(forwardRef(() => FolderService))
+    private readonly folderService: FolderService,
     private readonly storageService: StorageService,
     private readonly ffmpegService: FfmpegService,
     private readonly userlogger: UserLoggerService,
@@ -108,11 +111,13 @@ export class ProjectService {
         }
       }
 
+      const folder = await this.folderService.findOneById(folderId, userId)
       const project = new Project()
       project.id = UUID.v4()
       project.library = library
       project.dirname = await this.generateDirname(dirname)
       project.folderId = folderId
+      project.folder = folder
       project.userId = userId
       project.title = data.title || ''
       project.content = data.content || '<br>'
@@ -358,17 +363,17 @@ export class ProjectService {
 
   async findAll(userId: string, library?: LibraryEnum) {
     if (library) {
-      const projects = await this.projectsRepository.find({ userId, library, removed: RemovedEnum.NEVER })
+      const projects = await this.projectsRepository.findBy({ userId, library, removed: RemovedEnum.NEVER })
       return projects
     }
-    const projects = await this.projectsRepository.find({ userId, removed: RemovedEnum.NEVER })
+    const projects = await this.projectsRepository.findBy({ userId, removed: RemovedEnum.NEVER })
     return projects
   }
 
   async findAllFromTrash(userId: string, lib: LibraryEnum) {
     try {
       const projects = await this.projectsRepository.find({
-        where: { userId, library: lib, removed: { $ne: RemovedEnum.NEVER } },
+        where: { userId, library: lib, removed: Not(RemovedEnum.NEVER) },
         select: ['id', 'title', 'abbrev', 'folderId', 'updateAt', 'createAt']
       })
       return projects
@@ -381,10 +386,14 @@ export class ProjectService {
     // 获取指定库中的项目
     try {
       if (library) {
-        const projects = await this.projectsRepository.find({ folderId, userId, library, removed: RemovedEnum.NEVER })
+        const projects = await this.projectsRepository.find({
+          where: { folderId, userId, library, removed: RemovedEnum.NEVER }
+        })
         return projects
       }
-      const projects = await this.projectsRepository.find({ folderId, userId, removed: RemovedEnum.NEVER })
+      const projects = await this.projectsRepository.find({
+        where: { folderId, userId, removed: RemovedEnum.NEVER }
+      })
       return projects || []
     } catch (error) {
       console.log(error)
@@ -663,8 +672,8 @@ export class ProjectService {
   /** -------------------------------- 片段 ------------------------------------ */
   async addFragment(procedureId: string, userId: string, fragment: Fragment) {
     const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    procedure.fragments ? procedure.fragments.push(fragment) : (procedure.fragments = [fragment])
-    procedure.sequence ? procedure.sequence.push(fragment.id) : (procedure.sequence = [fragment.id])
+    procedure.fragments.push(fragment)
+    procedure.sequence.push(fragment.id)
     const newProcedure = await this.projectsRepository.save(procedure)
     if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '插入片段成功！' }
     else throw new Error(`插入新片段失败,项目id:${procedureId}`)

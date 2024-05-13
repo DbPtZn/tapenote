@@ -8,7 +8,7 @@ import { AuthModule } from 'src/auth/auth.module'
 import { ProjectModule } from 'src/project/project.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Folder]), UserModule, ProjectModule], //, AuthModule
+  imports: [TypeOrmModule.forFeature([Folder]), forwardRef(() => ProjectModule), UserModule], //, AuthModule
   controllers: [FolderController],
   providers: [FolderService],
   exports: [FolderService]

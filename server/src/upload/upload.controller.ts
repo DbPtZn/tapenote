@@ -19,10 +19,10 @@ export class UploadController {
         sourcePath: file.path,
         extname: extname(file.originalname),
         dirname: req.user.dirname,
-        userId: req.user._id
+        userId: req.user.id
       })
       const path = '/public' + (filePath as string).split('public')[1]
-      // console.log(path)
+      console.log(path)
       res.status(200).send(path)
     } catch (error) {
       console.log(error)

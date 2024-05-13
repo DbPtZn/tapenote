@@ -29,6 +29,7 @@ export class UserService {
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
   ) {}
+
   /** 创建新用户 */
   async create(createUserDto: CreateUserDto) {
     try {
@@ -39,9 +40,9 @@ export class UserService {
       if (!isValid) throw new Error('账号名称包含非法字符！')
       if (password.includes(' ')) throw new Error('密码中不能包含空格！')
       // 判断该用户是否存在
-      // const isUserExist = await this.findOneByAccount(account)
       const isUserExist = await this.usersRepository.existsBy({ account })
       if (isUserExist) {
+        this.logger.error(`用户 ${account} 已注册！`)
         throw new Error('该账号已注册！')
       }
       const dirname = await this.generateDirname()

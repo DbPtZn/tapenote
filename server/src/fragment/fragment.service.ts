@@ -44,14 +44,10 @@ export class FragmentService {
 
   async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: string, dirname: string) {
     const { procedureId, txt, role, speed } = createTTSFragmentDto
-    const _procedureId = procedureId
-    if (speed > 2 || speed <= 0) throw '语速不能大于2或小于等于0'
-    if (!txt || !procedureId || !dirname) {
-      console.log('输入错误')
-      throw { msg: '缺少必要参数！' }
-    }
-    const procudure = await this.projectService.findOneById(_procedureId, userId)
-    if (!procudure) throw { msg: '找不到项目工程文件！' }
+    if (speed > 2 || speed <= 0) throw new Error('语速不能大于2或小于等于0')
+    if (!txt || !procedureId || !dirname) throw new Error('缺少必要参数！')
+    const procudure = await this.projectService.findOneById(procedureId, userId)
+    if (!procudure) throw new Error('找不到项目工程文件！')
     const text = txt.replace(/\s*/g, '')
     const fragmentId = UUID.v4()
     /** 创建音频存储地址 */
@@ -63,6 +59,7 @@ export class FragmentService {
     })
     const fragment = new Fragment()
     fragment.id = UUID.v4()
+    fragment.project = procudure
     fragment.audio = filename
     fragment.duration = 0
     fragment.txt = text
@@ -74,7 +71,7 @@ export class FragmentService {
     fragment.removed = RemovedEnum.NEVER
 
     /** 先添加到项目工程文件中（占位） */
-    await this.projectService.addFragment(_procedureId, userId, fragment)
+    await this.projectService.addFragment(procedureId, userId, fragment)
 
     const temppath1 = this.storageService.createTempFilePath('.wav')
     // console.log(fragment.audio)
@@ -108,12 +105,12 @@ export class FragmentService {
         fragment.timestamps = timestamps
         if (filepath && fragment.duration !== 0) {
           // console.log(fragment)
-          await this.projectService.updateFragment(_procedureId, fragment, userId)
+          await this.projectService.updateFragment(procedureId, fragment, userId)
         }
       })
       .catch(async err => {
         console.log(err)
-        await this.projectService.removeErrorFragment(_procedureId, fragmentId, userId)
+        await this.projectService.removeErrorFragment(procedureId, fragmentId, userId)
       })
 
     // console.log(fragment)

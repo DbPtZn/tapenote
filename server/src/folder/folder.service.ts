@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { CreateFolderDto } from './dto/create-folder.dto'
 import { DropPosition, MoveFolderDto } from './dto/move-folder.dto'
 import { Folder } from './entities/folder.entity'
 import { InjectRepository } from '@nestjs/typeorm'
-import { MongoRepository } from 'typeorm'
+import { Not, Repository } from 'typeorm'
 import { UserService } from 'src/user/user.service'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { GetRecentlyDto } from './dto/get-recently.dto'
@@ -15,9 +15,10 @@ import { LoggerService } from 'src/logger/logger.service'
 export class FolderService {
   constructor(
     @InjectRepository(Folder)
-    private foldersRepository: MongoRepository<Folder>,
-    private readonly userService: UserService,
+    private foldersRepository: Repository<Folder>,
+    @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
+    private readonly userService: UserService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
   ) {}
@@ -122,10 +123,14 @@ export class FolderService {
   /** 获取文件夹数据 */
   async getFolderData(id: string, userId: string) {
     // console.log(id, userId)
-    const folder = await this.findOneById(id, userId)
+    const folder = await this.foldersRepository.findOne({
+      where: { id: id, userId },
+      relations: ['projects']
+    })
     const subfolders = await this.findChildrenById(id, userId)
-    const subfiles = await this.projectService.findAllByFolderId(folder.id, userId, folder.lib)
-
+    const subfiles = folder.projects
+    // const subfiles = await this.projectService.findAllByFolderId(folder.id, userId, folder.lib)
+    // console.log(subfiles)
     const data = {
       id: folder.id,
       name: folder.name,
@@ -140,11 +145,12 @@ export class FolderService {
     return data
   }
 
-  /** 获取最近编辑文档 */
+  /** 获取最近编辑文档 位置挪到projectService 中 */
   async getRecently(getRecentlyDto: GetRecentlyDto, userId: string) {
     const { lib, skip, take } = getRecentlyDto
-    // console.log([lib, skip, take])
+    console.log([lib, skip, take])
     const subfiles = await this.projectService.findByUpdateAt(skip, take, lib, userId)
+    // const subfiles = await this.foldersRepository.findOne({ where: { userId, lib } })
     const recentlyFiles = await this.recentlyFormatter(subfiles, lib, userId)
     const data = {
       id: 'recently',
@@ -157,7 +163,6 @@ export class FolderService {
       subfolders: [],
       subfiles: recentlyFiles
     }
-
     return data
   }
 
@@ -192,7 +197,7 @@ export class FolderService {
 
   async findBin(userId: string) {
     const folders = await this.foldersRepository.find({
-      where: { userId, removed: { $ne: RemovedEnum.NEVER } },
+      where: { userId, removed: Not(RemovedEnum.NEVER) },
       select: ['id', 'name', 'parentId', 'removed', 'lib', 'isCloud', 'updateAt', 'createAt']
     })
     return folders
@@ -241,13 +246,13 @@ export class FolderService {
   }
 
   async remove(id: string, userId: string) {
-    const folder = await this.foldersRepository.findOneAndUpdate(
-      { id, userId },
-      { $set: { removed: RemovedEnum.ACTIVE, updateAt: new Date() } }
-    )
-    if (folder.value.id) {
+    const folder = await this.foldersRepository.findOne({ where: { id, userId } })
+    // { $set: { removed: RemovedEnum.ACTIVE, updateAt: new Date() } }
+    folder.removed = RemovedEnum.ACTIVE
+    await this.foldersRepository.save(folder)
+    if (folder.id) {
       const removedIds: string[] = []
-      await this.updateRemovedRecursive(folder.value.id, RemovedEnum.PASSIVE, userId, removedIds)
+      await this.updateRemovedRecursive(folder.id, RemovedEnum.PASSIVE, userId, removedIds)
       return removedIds
     }
     return false
@@ -275,34 +280,34 @@ export class FolderService {
   }
 
   async rename(id: string, name: string, userId: string) {
-    const result = await this.foldersRepository.updateOne({ id, userId }, { $set: { name } })
-    return result.acknowledged
+    try {
+      const folder = await this.foldersRepository.findOne({ where: { id, userId } })
+      folder.name = name
+      return await this.foldersRepository.save(folder)
+    } catch (error) {
+      throw error
+    }
   }
 
   // TODO 这里只递归移除了文件夹，并没有处理其中文件的逻辑，考虑是否处理其中文件
   /** 递归更新移除状态 */
   async updateRemovedRecursive(folderId: string, removeMode: RemovedEnum, userId: string, removedIds?: string[]) {
-    // console.log('children')
-    removedIds && removedIds.push(folderId)
-    const children = await this.foldersRepository.find({
-      parentId: folderId,
-      removed: removeMode === RemovedEnum.NEVER ? RemovedEnum.PASSIVE : RemovedEnum.NEVER,
-      userId
-    })
-    if (children.length > 0) {
-      for (let i = 0; i < children.length; i++) {
-        const folder = await this.foldersRepository.findOneAndUpdate(
-          { id: children[i].id },
-          {
-            $set: {
-              removed: removeMode,
-              updateAt: new Date()
-            }
-          }
-        )
-        folder.value &&
-          (await this.updateRemovedRecursive(folder.value.id, removeMode, userId, removedIds && removedIds))
+    try {
+      removedIds && removedIds.push(folderId)
+      const parent = await this.foldersRepository.findOne({
+        where: { id: folderId, userId },
+        relations: ['children']
+      })
+      const children = parent.children
+      if (children.length > 0) {
+        for (let i = 0; i < children.length; i++) {
+          children[i].removed = removeMode
+          await this.foldersRepository.save(children[i])
+          await this.updateRemovedRecursive(children[i].id, removeMode, userId, removedIds && removedIds)
+        }
       }
+    } catch (error) {
+      throw error
     }
   }
 
@@ -437,4 +442,30 @@ function subfoldersFormatter(subfolders: Array<Folder>) {
       return 0
     })
   }
+    async updateRemovedRecursive(folderId: string, removeMode: RemovedEnum, userId: string, removedIds?: string[]) {
+      // console.log('children')
+      removedIds && removedIds.push(folderId)
+      const children = await this.foldersRepository.find({
+        where: {
+          parentId: folderId,
+          removed: removeMode === RemovedEnum.NEVER ? RemovedEnum.PASSIVE : RemovedEnum.NEVER,
+          userId
+        }
+      })
+      if (children.length > 0) {
+        for (let i = 0; i < children.length; i++) {
+          const folder = await this.foldersRepository.findOneAndUpdate(
+            { id: children[i].id },
+            {
+              $set: {
+                removed: removeMode,
+                updateAt: new Date()
+              }
+            }
+          )
+          folder.value &&
+            (await this.updateRemovedRecursive(folder.value.id, removeMode, userId, removedIds && removedIds))
+        }
+      }
+    }
 */

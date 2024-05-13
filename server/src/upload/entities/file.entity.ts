@@ -12,7 +12,10 @@ import {
 export class UploadFile {
   @PrimaryGeneratedColumn('uuid') id: string
 
-  @Column('uuid')
+  @Column({
+    type: 'uuid',
+    nullable: true
+  })
   userId: string // 用户ID
 
   @Column({
@@ -21,7 +24,8 @@ export class UploadFile {
   md5: string // 文件MD5
 
   @Column({
-    type: 'simple-array'
+    type: 'simple-array',
+    default: JSON.stringify([])
   })
   quote: string[] // 引用的项目 id
 

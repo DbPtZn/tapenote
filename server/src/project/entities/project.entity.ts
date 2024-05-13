@@ -34,21 +34,19 @@ export class Project {
   id: string
 
   @Column('uuid')
-  folderId: string // 文件夹 id
-
-  @ManyToOne(() => Folder, folder => folder.projects)
-  folder: Folder
-
-  @Column('uuid')
   userId: string // 用户 id
 
   @ManyToOne(() => User, user => user.projects)
   user: User
 
+  @Column('uuid')
+  folderId: string // 文件夹 id
+
+  @ManyToOne(() => Folder, folder => folder.projects)
+  folder: Folder
+
   @Column({
     type: 'varchar'
-    // type: 'enum',
-    // enum: LibraryEnum
   })
   library: LibraryEnum
 
