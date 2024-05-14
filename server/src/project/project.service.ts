@@ -316,7 +316,7 @@ export class ProjectService {
           })
           break
       }
-      console.log(project.sequence)
+      // console.log(project.sequence)
       return project
     } catch (error) {
       throw error
@@ -696,22 +696,24 @@ export class ProjectService {
   //   })
   //   await this.projectsRepository.save(procedure)
   // }
+
   /** 移除错误片段 */
   async removeErrorFragment(procedureId: string, fragmentId: string, userId: string) {
-    const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    // procedure.fragments.some((fragment, index, arr) => {
-    //   if (fragment.id === fragmentId) {
-    //     arr.splice(index, 1)
-    //     return true
-    //   }
-    // })
-    procedure.sequence.some((item, index, arr) => {
-      if (item === fragmentId) {
-        arr.splice(index, 1)
-        return true
+    try {
+      const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
+      const index = procedure.sequence.findIndex(i => i === fragmentId)
+      if (index !== -1) {
+        procedure.sequence.splice(index, 1)
+        await this.projectsRepository.save(procedure)
+        this.userlogger.log(`从项目【${procedureId}】序列中移除错误片段 【${fragmentId}】 成功！`)
+        console.log(procedure.sequence)
+      } else {
+        throw new Error('移除错误片段失败,片段不在序列中！')
       }
-    })
-    await this.projectsRepository.save(procedure)
+    } catch (error) {
+      this.userlogger.log(`从项目【${procedureId}】序列中移除错误片段 【${fragmentId}】 失败！`)
+      throw error
+    }
   }
 
   // async updateFragmentTranscript(procedureId: string, fragmentId: string, newTranscript: string[], userId: string) {
@@ -798,10 +800,7 @@ export class ProjectService {
       }
     })
     // eslint-disable-next-line prettier/prettier
-    if (!result)
-      throw new Error(
-        `片段恢复失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`
-      )
+    if (!result) throw new Error(`片段恢复失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`)
     const index = procedure.removedSequence.findIndex(i => i === fragmentId)
     procedure.removedSequence.splice(index, 1)
     procedure.sequence.push(fragmentId)
@@ -821,10 +820,7 @@ export class ProjectService {
       }
     })
     // eslint-disable-next-line prettier/prettier
-    if (!result)
-      throw new Error(
-        `片段彻底删除失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`
-      )
+    if (!result) throw new Error(`片段彻底删除失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`)
     // 删除移除序列中的片段
     const index = procedure.removedSequence.findIndex(i => i === fragmentId)
     procedure.removedSequence.splice(index, 1)
@@ -869,10 +865,7 @@ export class ProjectService {
     const newProcedure = await this.projectsRepository.save(procedure)
     if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '添加启动子成功！' }
     // eslint-disable-next-line prettier/prettier
-    else
-      throw new Error(
-        `添加启动子失败,项目id:${procedureId},片段id:${fragmentId},启动子编号:${promoterId}`
-      )
+    else throw new Error(`添加启动子失败,项目id:${procedureId},片段id:${fragmentId},启动子编号:${promoterId}`)
   }
 
   async removeFragmentPromoter(procedureId: string, fragmentId: string, userId: string, promoterIndex: number) {
@@ -885,17 +878,11 @@ export class ProjectService {
       }
     })
     // eslint-disable-next-line prettier/prettier
-    if (!result)
-      throw new Error(
-        `移除启动子失败, 未找到目标片段，项目id:${procedureId},片段id:${fragmentId}`
-      )
+    if (!result) throw new Error(`移除启动子失败, 未找到目标片段，项目id:${procedureId},片段id:${fragmentId}`)
     const newProcedure = await this.projectsRepository.save(procedure)
     if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '添加启动子成功！' }
     // eslint-disable-next-line prettier/prettier
-    else
-      throw new Error(
-        `添加启动子失败,项目id:${procedureId},片段id:${fragmentId},启动子下标:${promoterIndex}`
-      )
+    else throw new Error(`添加启动子失败,项目id:${procedureId},片段id:${fragmentId},启动子下标:${promoterIndex}`)
   }
 
   async updateSequence(id: string, fragmentId: string, userId: string, oldIndex: number, newIndex: number) {
@@ -1032,49 +1019,56 @@ export class ProjectService {
 
   // 检查并校正片段序列
   async checkAndCorrectFragmentSquence(id: string) {
-    const project = await this.projectsRepository.findOneBy({ id, library: LibraryEnum.PROCEDURE })
-    if (!project) return console.log('校验项目不存在！')
-    // 正常片段
-    const fragments = project.fragments.filter(fragment => fragment.removed === RemovedEnum.NEVER)
-    // 移除片段
-    const removedFragments = project.fragments.filter(fragment => fragment.removed !== RemovedEnum.NEVER)
-    // 正常片段是否全包含于正常序列中
-    fragments.forEach(fragment => {
-      const isInclude = project.sequence.some(id => id === fragment.id)
-      if (!isInclude) {
-        console.log(`${fragment.id} 片段未被包含于正常序列中`)
-        // 将未记录片段 id 添加至正常序列
-        project.sequence.push(fragment.id)
-      }
-    })
-    // 移除片段是否全包含于移除序列中
-    removedFragments.forEach(fragment => {
-      const isInclude = project.removedSequence.some(id => id === fragment.id)
-      if (!isInclude) {
-        console.log(`${fragment.id} 片段未被包含于移除序列中`)
-        // 将未记录片段 id 添加至移除序列
-        project.removedSequence.push(fragment.id)
-      }
-    })
-    // 正常序列中是否存在异常片段
-    project.sequence.forEach((fragmentId, index, arr) => {
-      const isInclude = fragments.some(fragment => fragment.id === fragmentId)
-      if (!isInclude) {
-        console.log(`正常片段中未找到 id 为 ${fragmentId} 的片段`)
-        // 移除异常片段 id
-        arr.splice(index, 1)
-      }
-    })
-    // 移除序列中是否存在异常片段
-    project.removedSequence.forEach((fragmentId, index, arr) => {
-      const isInclude = removedFragments.some(fragment => fragment.id === fragmentId)
-      if (!isInclude) {
-        console.log(`移除片段中未找到 id 为 ${fragmentId} 的片段`)
-        // 移除异常片段 id
-        arr.splice(index, 1)
-      }
-    })
-    await this.projectsRepository.save(project)
+    try {
+      const project = await this.projectsRepository.findOne({
+        where: { id, library: LibraryEnum.PROCEDURE },
+        relations: ['fragments']
+      })
+      if (!project) return
+      // 正常片段
+      const fragments = project.fragments.filter(fragment => fragment.removed === RemovedEnum.NEVER)
+      // 移除片段
+      const removedFragments = project.fragments.filter(fragment => fragment.removed !== RemovedEnum.NEVER)
+      // 正常片段是否全包含于正常序列中
+      fragments.forEach(fragment => {
+        const isInclude = project.sequence.some(id => id === fragment.id)
+        if (!isInclude) {
+          console.log(`${fragment.id} 片段未被包含于正常序列中`)
+          // 将未记录片段 id 添加至正常序列
+          project.sequence.push(fragment.id)
+        }
+      })
+      // 移除片段是否全包含于移除序列中
+      removedFragments.forEach(fragment => {
+        const isInclude = project.removedSequence.some(id => id === fragment.id)
+        if (!isInclude) {
+          console.log(`${fragment.id} 片段未被包含于移除序列中`)
+          // 将未记录片段 id 添加至移除序列
+          project.removedSequence.push(fragment.id)
+        }
+      })
+      // 正常序列中是否存在异常片段
+      project.sequence.forEach((fragmentId, index, arr) => {
+        const isInclude = fragments.some(fragment => fragment.id === fragmentId)
+        if (!isInclude) {
+          console.log(`正常片段中未找到 id 为 ${fragmentId} 的片段`)
+          // 移除异常片段 id
+          arr.splice(index, 1)
+        }
+      })
+      // 移除序列中是否存在异常片段
+      project.removedSequence.forEach((fragmentId, index, arr) => {
+        const isInclude = removedFragments.some(fragment => fragment.id === fragmentId)
+        if (!isInclude) {
+          console.log(`移除片段中未找到 id 为 ${fragmentId} 的片段`)
+          // 移除异常片段 id
+          arr.splice(index, 1)
+        }
+      })
+      await this.projectsRepository.save(project)
+    } catch (error) {
+      throw error
+    }
   }
   /** -------------------------------- 片段 ------------------------------------ */
 

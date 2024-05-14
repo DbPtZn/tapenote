@@ -59,7 +59,7 @@ export class FragmentService {
         extname: '.wav'
       })
       const fragment = new Fragment()
-      fragment.id = UUID.v4()
+      fragment.id = fragmentId
       fragment.userId = userId
       fragment.project = procudure
       fragment.audio = filename
@@ -121,15 +121,18 @@ export class FragmentService {
             await this.fragmentsRepository.save(fragment)
           }
         })
-        .catch(async err => {
-          console.log(err)
+        .catch(async error => {
+          console.log(`语音合成失败：${error.message}`)
           await this.projectService.removeErrorFragment(procedureId, fragmentId, userId)
+          throw error
         })
       // console.log(fragment)
+      this.userlogger.log(`合成语音创建片段成功！`)
       fragment.audio = filepath // 替换成完整地址返回给前端
       return fragment
     } catch (error) {
-      console.log(error)
+      console.log(`创建片段失败：${error.message}`)
+      this.userlogger.error(`创建片段失败，错误原因：${error.message} `)
       throw error
     }
   }
@@ -226,15 +229,16 @@ export class FragmentService {
           }
         })
         .catch(async error => {
-          console.log(error)
+          console.log(`语音识别失败：${error.message}`)
           this.userlogger.log(`语音识别失败，错误原因：${error.message} `)
           this.storageService.deleteSync(filepath)
           await this.projectService.removeErrorFragment(procedureId, fragment.id, userId)
+          throw error
         })
       fragment.audio = filepath
       return fragment
     } catch (error) {
-      this.userlogger.log(`创建片段失败，错误原因：${error.message} `)
+      this.userlogger.error(`创建片段失败，错误原因：${error.message} `)
       throw error
     }
   }

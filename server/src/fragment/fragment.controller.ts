@@ -56,8 +56,8 @@ export class FragmentController {
       }
       res.send(data)
     } catch (error) {
-      console.log(error)
-      res.status(400).send(error)
+      // console.log(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -92,7 +92,7 @@ export class FragmentController {
       res.send(data)
     } catch (error) {
       console.log(error)
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -115,7 +115,7 @@ export class FragmentController {
       res.send(data)
     } catch (error) {
       console.log(error)
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -151,7 +151,7 @@ export class FragmentController {
         res.status(200).send(updateAt)
       })
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -163,7 +163,7 @@ export class FragmentController {
         res.status(200).send(updateAt)
       })
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -178,10 +178,10 @@ export class FragmentController {
         })
         .catch(err => {
           console.log(err)
-          res.status(400).send(err)
+          res.status(400).send(err.message)
         })
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -192,7 +192,7 @@ export class FragmentController {
         res.status(200).send(updateAt)
       })
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -203,7 +203,7 @@ export class FragmentController {
         res.status(200).send(updateAt)
       })
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -214,7 +214,7 @@ export class FragmentController {
         res.status(200).send(updateAt)
       })
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -225,7 +225,7 @@ export class FragmentController {
         res.status(200).send(updateAt)
       })
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -236,7 +236,7 @@ export class FragmentController {
         res.status(200).send(updateAt)
       })
     } catch (error) {
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 
@@ -252,7 +252,7 @@ export class FragmentController {
       console.log(error)
       // const err = error as Error
       // if (typeof error === Error)
-      res.status(400).send(error)
+      res.status(400).send(error.message)
     }
   }
 }

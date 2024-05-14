@@ -485,6 +485,7 @@ export const useProjectStore = defineStore('projectStore', {
             }
           })
           console.error(err)
+          throw err
         })
       }
       /** 通过音频创建片段 */

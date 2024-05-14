@@ -36,6 +36,7 @@ export class ProjectController {
   @Get(`${REST.R}/:id`)
   async findOne(@Param('id') id: string, @Req() req, @Res() res) {
     try {
+      await this.projectService.checkAndCorrectFragmentSquence(id) // 确保片段顺序正确
       const project = await this.projectService.findOne(id, req.user.id, req.user.dirname)
       switch (project.library) {
         case LibraryEnum.NOTE:

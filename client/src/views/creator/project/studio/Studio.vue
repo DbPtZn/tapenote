@@ -3,7 +3,7 @@ import Draggable from 'vuedraggable'
 import { Character, AudioFragment, TTS, ASR, StudioToolbar, RoleSelectList, TxtEdit, FragmentTrash, CreateBlankFragment } from './private'
 import useStore from '@/store'
 import { computed, h, inject, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { NIcon, NMessageProvider, useDialog, useThemeVars } from 'naive-ui'
+import { NIcon, NMessageProvider, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import { Bridge } from '../bridge'
 import _ from 'lodash'
 import utils from '@/utils'
@@ -24,6 +24,7 @@ const props = defineProps<{
 }>()
 const { projectStore, userStore, timbreStore, clipboardStore } = useStore()
 const dialog = useDialog()
+const message = useMessage()
 const themeVars = useThemeVars()
 const scrollerRef = ref()
 const state = reactive({
@@ -51,6 +52,8 @@ const {
       txt: text,
       role: timbreStore.get(props.account, props.hostname)?.robot || 0,
       speed: state.ttsSpeed
+    }).catch(e => {
+      message.error('创建片段失败！')
     })
   },
   handleAudioOutput(data: { audio: Blob, duration: number }) {
@@ -59,6 +62,8 @@ const {
       audio: data.audio,
       duration: data.duration,
       role: timbreStore.get(props.account, props.hostname)?.role || 9999
+    }).catch(e => {
+      message.error('创建片段失败！')
     })
   },
   handleModeSwitch() {
@@ -102,7 +107,9 @@ const { handleRoleChange, handleTrashManage, handleAddBlank } = {
         () => h(
           CreateBlankFragment, {
           onConfirm: (result) => {
-            projectStore.fragment(props.id).createBlank(result)
+            projectStore.fragment(props.id).createBlank(result).catch(e => {
+              message.error('创建片段失败！')
+            })
             dialog.destroyAll()
           },
           onCancel: () => {
