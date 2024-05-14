@@ -14,7 +14,7 @@ interface Log {
 export class UserLoggerService implements LoggerService {
   constructor(
     private readonly storageService: StorageService,
-    private readonly requestScopedService: RequestScopedService,
+    private readonly requestScopedService: RequestScopedService
     // @Inject(REQUEST) private readonly request: any // 该方法会导致本地鉴权错误 ERROR [ExceptionsHandler] Unknown authentication strategy "local"
   ) {}
   /**

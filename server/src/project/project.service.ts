@@ -297,6 +297,12 @@ export class ProjectService {
               category: 'audio'
             })
             fragment.audio = filePath
+            // console.log(fragment.tags)
+            // console.log(typeof fragment.tags[0])
+            // console.log(fragment.promoters)
+            // console.log(typeof fragment.promoters[0])
+            // console.log(fragment.timestamps)
+            // console.log(typeof fragment.timestamps[0])
             return fragment
           })
           break
@@ -310,6 +316,7 @@ export class ProjectService {
           })
           break
       }
+      console.log(project.sequence)
       return project
     } catch (error) {
       throw error
@@ -670,34 +677,34 @@ export class ProjectService {
   // }
 
   /** -------------------------------- 片段 ------------------------------------ */
-  async addFragment(procedureId: string, userId: string, fragment: Fragment) {
+  async addFragment(procedureId: string, fragmentId: string, userId: string) {
     const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    procedure.fragments.push(fragment)
-    procedure.sequence.push(fragment.id)
-    const newProcedure = await this.projectsRepository.save(procedure)
-    if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '插入片段成功！' }
-    else throw new Error(`插入新片段失败,项目id:${procedureId}`)
+    // console.log(procedure.sequence)
+    // console.log(typeof procedure.sequence)
+    procedure.sequence.push(fragmentId)
+    const result = await this.projectsRepository.save(procedure)
+    return result
   }
 
-  async updateFragment(procedureId: string, data: Fragment, userId: string) {
-    const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    procedure.fragments.some((fragment, index, arr) => {
-      if (fragment.id === data.id) {
-        arr[index] = data
-        return true
-      }
-    })
-    await this.projectsRepository.save(procedure)
-  }
+  // async updateFragment(procedureId: string, data: Fragment, userId: string) {
+  //   const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
+  //   procedure.fragments.some((fragment, index, arr) => {
+  //     if (fragment.id === data.id) {
+  //       arr[index] = data
+  //       return true
+  //     }
+  //   })
+  //   await this.projectsRepository.save(procedure)
+  // }
   /** 移除错误片段 */
   async removeErrorFragment(procedureId: string, fragmentId: string, userId: string) {
     const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    procedure.fragments.some((fragment, index, arr) => {
-      if (fragment.id === fragmentId) {
-        arr.splice(index, 1)
-        return true
-      }
-    })
+    // procedure.fragments.some((fragment, index, arr) => {
+    //   if (fragment.id === fragmentId) {
+    //     arr.splice(index, 1)
+    //     return true
+    //   }
+    // })
     procedure.sequence.some((item, index, arr) => {
       if (item === fragmentId) {
         arr.splice(index, 1)
@@ -707,79 +714,79 @@ export class ProjectService {
     await this.projectsRepository.save(procedure)
   }
 
-  async updateFragmentTranscript(procedureId: string, fragmentId: string, newTranscript: string[], userId: string) {
-    const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    procedure.fragments.some((fragment, index, arr) => {
-      if (fragment.id === fragmentId) {
-        if (fragment.transcript.length !== newTranscript.length) {
-          throw new Error('更新片段转写文本失败,原片段转写文本数量与新文本长度不一致')
-        }
-        arr[index].transcript = newTranscript
-        return true
-      }
-    })
-    const newProcedure = await this.projectsRepository.save(procedure)
-    if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '更新片段转写文本成功！' }
-    else throw new Error(`更新片段转写文本失败,项目id:${procedureId},片段id:${fragmentId}`)
-  }
+  // async updateFragmentTranscript(procedureId: string, fragmentId: string, newTranscript: string[], userId: string) {
+  //   const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
+  //   procedure.fragments.some((fragment, index, arr) => {
+  //     if (fragment.id === fragmentId) {
+  //       if (fragment.transcript.length !== newTranscript.length) {
+  //         throw new Error('更新片段转写文本失败,原片段转写文本数量与新文本长度不一致')
+  //       }
+  //       arr[index].transcript = newTranscript
+  //       return true
+  //     }
+  //   })
+  //   const newProcedure = await this.projectsRepository.save(procedure)
+  //   if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '更新片段转写文本成功！' }
+  //   else throw new Error(`更新片段转写文本失败,项目id:${procedureId},片段id:${fragmentId}`)
+  // }
 
-  async updateFragmentsTags(
-    procedureId: string,
-    newData: {
-      fragmentId: string
-      tags: (string | null)[]
-    }[],
-    userId: string
-  ) {
-    try {
-      const data = newData.map(i => {
-        const fragment = {
-          fragmentId: i.fragmentId,
-          tags: i.tags
-        }
-        return fragment
-      })
-      const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-      procedure.fragments.forEach((fragment, index, arr) => {
-        if (fragment.removed === RemovedEnum.NEVER) {
-          // 特别注意：数据库中的片段是包含移除状态的，并且无排序，一般从前端传回的数据是排序的，所以不能依据顺序来更新！！！
-          const targetIndex = data.findIndex(i => i.fragmentId === fragment.id)
-          if (targetIndex !== -1) {
-            arr[index].tags = data[targetIndex].tags
-          }
-        }
-      })
-      const newProcedure = await this.projectsRepository.save(procedure)
-      if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '更新片段标记成功！' }
-      else throw new Error(`更新片段标记失败,项目id: ${procedureId}`)
-    } catch (error) {
-      // console.log(error)
-      throw error
-    }
-  }
+  // async updateFragmentsTags(
+  //   procedureId: string,
+  //   newData: {
+  //     fragmentId: string
+  //     tags: (string | null)[]
+  //   }[],
+  //   userId: string
+  // ) {
+  //   try {
+  //     const data = newData.map(i => {
+  //       const fragment = {
+  //         fragmentId: i.fragmentId,
+  //         tags: i.tags
+  //       }
+  //       return fragment
+  //     })
+  //     const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
+  //     procedure.fragments.forEach((fragment, index, arr) => {
+  //       if (fragment.removed === RemovedEnum.NEVER) {
+  //         // 特别注意：数据库中的片段是包含移除状态的，并且无排序，一般从前端传回的数据是排序的，所以不能依据顺序来更新！！！
+  //         const targetIndex = data.findIndex(i => i.fragmentId === fragment.id)
+  //         if (targetIndex !== -1) {
+  //           arr[index].tags = data[targetIndex].tags
+  //         }
+  //       }
+  //     })
+  //     const newProcedure = await this.projectsRepository.save(procedure)
+  //     if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '更新片段标记成功！' }
+  //     else throw new Error(`更新片段标记失败,项目id: ${procedureId}`)
+  //   } catch (error) {
+  //     // console.log(error)
+  //     throw error
+  //   }
+  // }
 
   async removeFragment(procedureId: string, fragmentId: string, userId: string) {
     const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    const result = procedure.fragments.some((fragment, index, arr) => {
-      if (fragment.id === fragmentId) {
-        arr[index].removed = RemovedEnum.ACTIVE
-        arr[index].tags.flatMap(i => null)
-        arr[index].promoters.flatMap(i => null)
-        return true
-      }
-    })
+    // const result = procedure.fragments.some((fragment, index, arr) => {
+    //   if (fragment.id === fragmentId) {
+    //     arr[index].removed = RemovedEnum.ACTIVE
+    //     arr[index].tags.flatMap(i => null)
+    //     arr[index].promoters.flatMap(i => null)
+    //     return true
+    //   }
+    // })
     // eslint-disable-next-line prettier/prettier
-    if (!result)
-      throw new Error(
-        `片段移除失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`
-      )
+    // if (!result)
+    //   throw new Error(
+    //     `片段移除失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`
+    //   )
     const index = procedure.sequence.findIndex(i => i === fragmentId)
     // console.log(index)
-    procedure.sequence.splice(index, 1) // 不能使用 indexOf 找 string
+    procedure.sequence.splice(index, 1)
     procedure.removedSequence.push(fragmentId)
-    const newProcedure = await this.projectsRepository.save(procedure)
-    if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '移除片段成功！' }
-    else throw new Error(`移除片段失败,项目id: ${procedureId}, 片段id: ${fragmentId}`)
+    await this.projectsRepository.save(procedure)
+    // if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '移除片段成功！' }
+    // else throw new Error(`移除片段失败,项目id: ${procedureId}, 片段id: ${fragmentId}`)
   }
 
   async restoreFragment(procedureId: string, fragmentId: string, userId: string) {

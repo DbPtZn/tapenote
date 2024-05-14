@@ -145,7 +145,7 @@ export class FolderService {
     return data
   }
 
-  /** 获取最近编辑文档 位置挪到projectService 中 */
+  /** 获取最近编辑文档 考虑位置挪到projectService 中 */
   async getRecently(getRecentlyDto: GetRecentlyDto, userId: string) {
     const { lib, skip, take } = getRecentlyDto
     console.log([lib, skip, take])

@@ -54,6 +54,7 @@ export class ProjectController {
           project.audio = '/public' + project.audio.split('public')[1] || ''
           break
       }
+      // console.log(project)
       res.status(200).send(project)
     } catch (error) {
       // TODO 错误处理的问题， 未处理的错误会阻塞程序运行

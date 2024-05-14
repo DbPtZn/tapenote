@@ -97,7 +97,8 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     const container = bridge.editor.get(VIEW_DOCUMENT)
     projectStore.fragment(procedureId).getBySort().forEach((fragment, index, arr) => {
       fragment.promoters.forEach((promoter, subscript) => {
-        if(promoter) {
+        console.log(typeof promoter)
+        if(promoter && promoter !== 'undefined') {
           console.log(promoter)
           const elem = container.querySelector(`[data-id="${promoter}"]`) as HTMLElement
           if (elem) {

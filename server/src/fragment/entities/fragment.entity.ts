@@ -28,6 +28,12 @@ export class Fragment {
   id: string
 
   @Column({
+    type: 'uuid',
+    nullable: true
+  })
+  userId: string
+
+  @Column({
     type: 'varchar',
     length: 255,
     default: ''
@@ -48,24 +54,26 @@ export class Fragment {
 
   // 可能包含逗号，不能使用 simple-array
   @Column({
-    type: 'text',
-    default: JSON.stringify([]),
-    transformer: { to: value => JSON.stringify(value), from: value => JSON.parse(value) }
+    type: 'simple-json',
+    default: JSON.stringify([])
   })
   transcript: string[]
 
   @Column({
-    type: 'simple-array'
+    type: 'simple-json',
+    default: JSON.stringify([])
   })
   tags: string[]
 
   @Column({
-    type: 'simple-array'
+    type: 'simple-json',
+    default: JSON.stringify([])
   })
   promoters: string[]
 
   @Column({
-    type: 'simple-array'
+    type: 'simple-json',
+    default: JSON.stringify([])
   })
   timestamps: number[]
 

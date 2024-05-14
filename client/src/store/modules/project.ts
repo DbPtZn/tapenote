@@ -124,8 +124,8 @@ export const useProjectStore = defineStore('projectStore', {
 
     },
     fetchAndSet(id: string, account: string, hostname: string) {
-      console.log('fetchAndSet')
-      console.log([id, account, hostname])
+      // console.log('fetchAndSet')
+      // console.log([id, account, hostname])
       return new Promise<Project>((resolve, reject) => {
         // console.log('fetchAndset')
         const index = this.data.findIndex(i => i.id === id)
@@ -135,6 +135,7 @@ export const useProjectStore = defineStore('projectStore', {
         } else {
           this.creatorApi(account, hostname).project.get(id)
             .then(res => {
+              console.log(res.data)
               const newItem = this.set(res.data, account, hostname)
               resolve(newItem)
             })
@@ -173,7 +174,7 @@ export const useProjectStore = defineStore('projectStore', {
         createAt: data.createAt || '',
         updateAt: data.updateAt || ''
       }
-      // console.log(item)
+      console.log(item)
       this.data.push(item)
       return item
     },

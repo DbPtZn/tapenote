@@ -230,7 +230,7 @@ const totalDuration = computed(() => {
               <Character
                 v-for="(item, index) in element.transcript"
                 :key="index"
-                :is-marked="element.tags[index] === null ? false : true"
+                :is-marked="element.tags[index] ? false : true"
                 @on-select="handlePromoterSelect(element.id, index)"
                 @on-update="handlePromoterUpdate(element.id, index, (element as Fragment).promoters[index])"
                 @on-remove="handlePromoterRemove(element.id, index)"

@@ -159,7 +159,7 @@ export class FragmentController {
   async updateFragmentsTags(@Body() updateFragmentsTagsDto: UpdateFragmentsTagsDto, @Req() req, @Res() res) {
     try {
       // console.log(updateFragmentsTagsDto)
-      await this.fragmentService.updateFragmentsTags(updateFragmentsTagsDto, req.user.id).then(updateAt => {
+      await this.fragmentService.updateTags(updateFragmentsTagsDto, req.user.id).then(updateAt => {
         res.status(200).send(updateAt)
       })
     } catch (error) {
