@@ -16,6 +16,7 @@ export class UploadService {
   ) {}
   async uploadImage(args: { sourcePath: string; extname: string; dirname: string; userId: string }) {
     const { sourcePath, extname, dirname, userId } = args
+    console.log(sourcePath, extname, dirname, userId)
     return new Promise((resolve, reject) => {
       this.calculateFileStats(sourcePath)
         .then(async stats => {

@@ -7,10 +7,14 @@
 /public
 /private
 /assets
-database.sqlite
 
 # sherpa model
 /sherpa
+
+# database
+database.sqlite
+*.sqlite
+*.SQLITE
 
 # build-electron-server
 /process

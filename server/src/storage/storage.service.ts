@@ -60,7 +60,13 @@ export class StorageService {
     prv?: boolean
   }) {
     const { dirname, category, originalname, extname, prv } = args
-    const dir = typeof dirname === 'string' ? dirname : dirname.join('/')
+    const dir =
+      typeof dirname === 'string'
+        ? dirname
+        : dirname
+            .map(s => s.trim()) // 去除包含空白字符在内的空字符串
+            .filter(s => s)
+            .join('/')
     const dirPath = this.getDocDir(dir, category, prv)
     const filename = `${originalname ? originalname : createDtId()}` + `${extname}`
     const filepath = dirPath + '/' + filename

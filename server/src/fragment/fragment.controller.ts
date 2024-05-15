@@ -232,7 +232,7 @@ export class FragmentController {
   @Patch(`${REST.U}/sequence`)
   async updateSequence(@Body() updateSequenceDto: UpdateSequenceDto, @Req() req, @Res() res) {
     try {
-      await this.fragmentService.updateSequence(updateSequenceDto, req.user.id).then(updateAt => {
+      await this.fragmentService.moveFragment(updateSequenceDto, req.user.id).then(updateAt => {
         res.status(200).send(updateAt)
       })
     } catch (error) {
@@ -243,11 +243,10 @@ export class FragmentController {
   @Patch(`${REST.U}/copy`)
   async copy(@Body() dto: CopyFragmentDto, @Req() req, @Res() res) {
     try {
-      const result = await this.fragmentService.copy(dto, req.user.id, req.user.dirname)
-      result.fragment.audio = '/public' + result.fragment.audio.split('public')[1]
-      result.fragment['id'] = result.fragment.id
-      delete result.fragment.id
-      res.status(200).send(result)
+      const fragment = await this.fragmentService.copy(dto, req.user.id, req.user.dirname)
+      fragment.audio = '/public' + fragment.audio.split('public')[1]
+      delete fragment.project
+      res.status(200).send({ updateAt: fragment.updateAt, fragment })
     } catch (error) {
       console.log(error)
       // const err = error as Error

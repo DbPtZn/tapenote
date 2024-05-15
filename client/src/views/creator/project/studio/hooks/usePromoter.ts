@@ -97,9 +97,9 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     const container = bridge.editor.get(VIEW_DOCUMENT)
     projectStore.fragment(procedureId).getBySort().forEach((fragment, index, arr) => {
       fragment.promoters.forEach((promoter, subscript) => {
-        console.log(typeof promoter)
-        if(promoter && promoter !== 'undefined') {
-          console.log(promoter)
+        // console.log(typeof promoter)
+        if(promoter) {
+          // console.log(promoter)
           const elem = container.querySelector(`[data-id="${promoter}"]`) as HTMLElement
           if (elem) {
             // 启动子存在但动画格式未被激活的情况，处理：重新激活动画块

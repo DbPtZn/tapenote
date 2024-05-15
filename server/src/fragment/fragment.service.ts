@@ -25,6 +25,7 @@ import { LoggerService } from 'src/logger/logger.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
+import fs from 'fs'
 
 @Injectable()
 export class FragmentService {
@@ -74,7 +75,7 @@ export class FragmentService {
 
       // 先添加到项目工程文件序列中（占位）
       this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
-      await this.projectService.addFragment(procedureId, fragment.id, userId)
+      await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
       // 创建临时文件地址
       const temppath1 = this.storageService.createTempFilePath('.wav')
@@ -123,7 +124,7 @@ export class FragmentService {
         })
         .catch(async error => {
           console.log(`语音合成失败：${error.message}`)
-          await this.projectService.removeErrorFragment(procedureId, fragmentId, userId)
+          await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
           throw error
         })
       // console.log(fragment)
@@ -154,9 +155,9 @@ export class FragmentService {
       }
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
-
+      const fragmentId = UUID.v4()
       const fragment = new Fragment()
-      fragment.id = UUID.v4()
+      fragment.id = fragmentId
       fragment.userId = userId
       fragment.project = procudure
       fragment.audio = ''
@@ -170,8 +171,8 @@ export class FragmentService {
       fragment.removed = RemovedEnum.NEVER
 
       // 先添加到项目工程文件中（占位）
-      this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragment.id} 片段...`)
-      await this.projectService.addFragment(procedureId, fragment.id, userId)
+      this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
+      await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
       // const d1 = await this.ffmpegService.calculateDuration(audio)
 
@@ -186,7 +187,7 @@ export class FragmentService {
       const { filename, filepath } = this.storageService.createFilePath({
         dirname: [dirname, procudure.dirname],
         category: 'audio',
-        originalname: fragment.id,
+        originalname: fragmentId,
         extname: '.wav'
       })
       fragment.audio = filename
@@ -232,7 +233,7 @@ export class FragmentService {
           console.log(`语音识别失败：${error.message}`)
           this.userlogger.log(`语音识别失败，错误原因：${error.message} `)
           this.storageService.deleteSync(filepath)
-          await this.projectService.removeErrorFragment(procedureId, fragment.id, userId)
+          await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
           throw error
         })
       fragment.audio = filepath
@@ -293,7 +294,7 @@ export class FragmentService {
         fragment.audio = filename
         if (filepath && fragment.transcript.length !== 0 && fragment.duration !== 0) {
           this.projectService
-            .addFragment(procedureId, fragment.id, userId)
+            .updateSequence({ procedureId, fragmentId: fragment.id, userId, type: 'add' })
             .then(() => {
               fragment.audio = filepath
               resolve(fragment)
@@ -324,6 +325,7 @@ export class FragmentService {
         throw new Error('更新片段转写文本失败,原片段转写文本数量与新文本长度不一致')
       }
       fragment.transcript = newTranscript
+      fragment.txt = newTranscript.join('')
       const result = await this.fragmentsRepository.save(fragment)
       this.userlogger.log(
         `修改片段[${fragmentId}]转写文本成功，原文本：【${fragment.transcript}】，新文本：【${newTranscript}】`
@@ -369,7 +371,7 @@ export class FragmentService {
       if (result) {
         result.removed = RemovedEnum.ACTIVE
         await this.fragmentsRepository.save(result)
-        await this.projectService.removeFragment(procedureId, fragmentId, userId)
+        await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'remove' })
         this.userlogger.log(`移除片段[${fragmentId}]成功,片段已移至回收站！`)
         return { updateAt: result.updateAt, msg: '移除片段成功！' }
       } else {
@@ -388,7 +390,7 @@ export class FragmentService {
       if (fragment) {
         fragment.removed = RemovedEnum.NEVER
         await this.fragmentsRepository.save(fragment)
-        await this.projectService.restoreFragment(procedureId, fragmentId, userId)
+        await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'restore' })
         this.userlogger.log(`恢复片段[${fragmentId}]成功,片段已从回收站恢复！`)
         return { updateAt: fragment.updateAt, msg: '恢复片段成功！' }
       } else {
@@ -414,7 +416,7 @@ export class FragmentService {
         category: 'audio'
       })
       this.storageService.deleteSync(filepath)
-      await this.projectService.deleteFragment(procedureId, fragmentId, userId)
+      await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'delete' })
     } catch (error) {
       this.userlogger.error(`删除片段[${fragmentId}]失败`, error.message)
       throw error
@@ -423,34 +425,192 @@ export class FragmentService {
 
   async addPromoter(addPromoterDto: AddPromoterDto, userId: string) {
     const { procedureId, fragmentId, promoterIndex, promoterSerial, promoterId } = addPromoterDto
-    const result = await this.projectService.addFragmentPromoter(
-      procedureId,
-      fragmentId,
-      userId,
-      promoterIndex,
-      promoterSerial,
-      promoterId
-    )
-    return result
+    try {
+      const fragment = await this.fragmentsRepository.findOneBy({ id: fragmentId, userId })
+      fragment.promoters[promoterIndex] = promoterId
+      fragment.tags[promoterIndex] = promoterSerial
+      await this.fragmentsRepository.save(fragment)
+      this.userlogger.log(`片段[${fragmentId}]添加启动子[${promoterId}]成功`)
+      this.projectService.updateTime(procedureId, userId)
+      return { updateAt: new Date(), msg: '添加启动子成功！' }
+    } catch (error) {
+      this.userlogger.error(`片段[${fragmentId}]添加启动子[${promoterId}]失败`, error.message)
+      throw error
+    }
   }
 
   async removePromoter(removePromoterDto: RemovePromoterDto, userId: string) {
     const { procedureId, fragmentId, promoterIndex } = removePromoterDto
-    const result = await this.projectService.removeFragmentPromoter(procedureId, fragmentId, userId, promoterIndex)
-    return result
+    try {
+      const fragment = await this.fragmentsRepository.findOneBy({ id: fragmentId, userId })
+      fragment.promoters[promoterIndex] = null
+      fragment.tags[promoterIndex] = null
+      await this.fragmentsRepository.save(fragment)
+      this.userlogger.log(`片段[${fragmentId}]移除启动子[${promoterIndex}]成功`)
+      this.projectService.updateTime(procedureId, userId)
+      return { updateAt: new Date(), msg: '移除启动子成功！' }
+    } catch (error) {
+      this.userlogger.error(`片段[${fragmentId}]移除启动子[${promoterIndex}]失败`, error.message)
+      throw error
+    }
   }
 
-  async updateSequence(updateSequenceDto: UpdateSequenceDto, userId: string) {
+  async moveFragment(updateSequenceDto: UpdateSequenceDto, userId: string) {
     const { procedureId, fragmentId, oldIndex, newIndex } = updateSequenceDto
-    const result = await this.projectService.updateSequence(procedureId, fragmentId, userId, oldIndex, newIndex)
-    return result
+    try {
+      await this.projectService.updateSequence({
+        procedureId,
+        fragmentId,
+        userId,
+        type: 'move',
+        oldIndex,
+        newIndex
+      })
+      this.userlogger.log(`更新项目[${procedureId}]片段[${fragmentId}]顺序成功`)
+      return { updateAt: new Date(), msg: '更新片段顺序成功！' }
+    } catch (error) {
+      this.userlogger.error(`更新片段[${fragmentId}]顺序失败`, error.message)
+      throw error
+    }
   }
 
   async copy(dto: CopyFragmentDto, userId: string, dirname: string) {
-    return this.projectService.copyFragment({
-      ...dto,
-      userId,
-      dirname
-    })
+    const { sourceProejctId, targetProejctId, sourceFragmentId, targetFragmentId, position, type } = dto
+    this.userlogger.log(
+      `从[${sourceProejctId}]${type}片段[${sourceFragmentId}]到[${targetProejctId}]的[${targetFragmentId}]${position}位置`
+    )
+    try {
+      if (sourceProejctId === targetProejctId && sourceFragmentId === targetFragmentId && type === 'cut') {
+        throw new Error('不能自己剪切自己,操作无意义')
+      }
+      const sourceFragment = await this.fragmentsRepository.findOne({
+        where: { id: sourceFragmentId, userId },
+        relations: ['project']
+      })
+
+      // 剪切的情况
+      if (type === 'cut') {
+        if (sourceProejctId === targetProejctId) {
+          // 这种情况等价于移动片段位置, 仅修改片段排序信息即可
+          // 取出片段
+          await this.projectService.updateSequence({
+            procedureId: sourceProejctId,
+            fragmentId: sourceFragmentId,
+            userId,
+            type: 'extract'
+          })
+          // 插入片段
+          await this.projectService.updateSequence({
+            procedureId: targetProejctId,
+            fragmentId: targetFragmentId,
+            userId,
+            type: 'insert',
+            insertFragmentId: sourceFragmentId,
+            insertPosition: position
+          })
+        } else {
+          const targetProject = await this.projectService.findOneById(targetProejctId, userId)
+          // 修改实体关系
+          sourceFragment.project = targetProject
+          // 修改排序信息
+          // 取出片段
+          await this.projectService.updateSequence({
+            procedureId: sourceProejctId,
+            fragmentId: sourceFragmentId,
+            userId,
+            type: 'extract'
+          })
+          await this.projectService.updateSequence({
+            procedureId: targetProejctId,
+            fragmentId: targetFragmentId,
+            userId,
+            type: 'insert',
+            insertPosition: position
+          })
+          // 移动至其它项目时重置启动子状态
+          sourceFragment.promoters.fill(null)
+          sourceFragment.tags.fill(null)
+          // 移动音频文件
+          const audiopath = this.storageService.getFilePath({
+            filename: sourceFragment.audio,
+            dirname: [dirname, sourceFragment.project.dirname],
+            category: 'audio'
+          })
+          const { filename, filepath } = this.storageService.createFilePath({
+            dirname: [dirname, targetProject.dirname],
+            category: 'audio',
+            originalname: sourceFragment.id,
+            extname: '.wav'
+          })
+          fs.renameSync(audiopath, filepath)
+          sourceFragment.audio = filename
+        }
+        const result = await this.fragmentsRepository.save(sourceFragment)
+        result.audio = this.storageService.getFilePath({
+          filename: sourceFragment.audio,
+          dirname: [dirname, sourceFragment.project.dirname],
+          category: 'audio'
+        })
+        return result
+      } else {
+        // 复制的情况
+        const newFragment = new Fragment()
+        const { id, project, audio, ...entityData } = sourceFragment
+        Object.assign(newFragment, entityData)
+        newFragment.id = UUID.v4()
+        newFragment.promoters.fill(null)
+        newFragment.tags.fill(null)
+
+        // 建立实体关系并更新排序信息
+        let targetProjectDirname = ''
+        if (sourceProejctId === targetProejctId) {
+          newFragment.project = project
+          await this.projectService.updateSequence({
+            procedureId: targetProejctId,
+            fragmentId: targetFragmentId,
+            userId,
+            type: 'insert',
+            insertFragmentId: newFragment.id,
+            insertPosition: position
+          })
+          targetProjectDirname = project.dirname
+        } else {
+          const targetProject = await this.projectService.findOneById(targetProejctId, userId)
+          newFragment.project = targetProject
+          await this.projectService.updateSequence({
+            procedureId: targetProejctId,
+            fragmentId: targetFragmentId,
+            userId,
+            type: 'insert',
+            insertFragmentId: newFragment.id,
+            insertPosition: position
+          })
+          targetProjectDirname = targetProject.dirname
+        }
+
+        // 复制音频
+        const audioPath = this.storageService.getFilePath({
+          filename: audio,
+          dirname: [dirname, targetProjectDirname],
+          category: 'audio'
+        })
+        const { filename: newAudioName, filepath: newAudioPath } = this.storageService.createFilePath({
+          dirname: [dirname, targetProjectDirname],
+          originalname: newFragment.id,
+          category: 'audio',
+          extname: '.wav'
+        })
+        this.storageService.copyFileSync(audioPath, newAudioPath)
+        newFragment.audio = newAudioName
+        const result = await this.fragmentsRepository.save(newFragment)
+        result.audio = newAudioPath
+        return result
+      }
+    } catch (error) {
+      this.projectService.checkAndCorrectFragmentSquence(sourceProejctId) // 校验片段序列
+      sourceProejctId !== targetProejctId && this.projectService.checkAndCorrectFragmentSquence(targetProejctId) // 校验片段序列
+      this.userlogger.error(`${type}片段失败`, error.message)
+      throw error
+    }
   }
 }

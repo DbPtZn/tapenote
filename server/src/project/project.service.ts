@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { Annotation, BGM, Project } from './entities/project.entity'
@@ -38,14 +39,6 @@ interface InheritDto {
   sidenote?: string
   annotations?: Annotation[]
 }
-// interface CopyDto extends InheritDto {
-//   audio?: string
-//   duration?: number
-//   promoterSequence?: Array<string>
-//   keyframeSequence?: Array<number>
-//   subtitleSequence?: Array<string>
-//   subtitleKeyframeSequence?: Array<number>
-// }
 
 const __rootdirname = process.cwd()
 @Injectable()
@@ -182,7 +175,7 @@ export class ProjectService {
   /** 生成微课数据 */
   async generateCourse(courseId: string, procedureId: string, userDirname: string, projectDirname: string) {
     try {
-      const procedure = await this.projectsRepository.findOneBy({ id: procedureId })
+      const procedure = await this.projectsRepository.findOne({ where: { id: procedureId }, relations: ['fragments'] })
       // 片段排序
       // console.log('procedure.sequence', procedure.sequence)
       const order = procedure.sequence.map(item => item) // string 类型 不支持直接使用 sort 进行排序
@@ -677,317 +670,116 @@ export class ProjectService {
   // }
 
   /** -------------------------------- 片段 ------------------------------------ */
-  async addFragment(procedureId: string, fragmentId: string, userId: string) {
-    const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    // console.log(procedure.sequence)
-    // console.log(typeof procedure.sequence)
-    procedure.sequence.push(fragmentId)
-    const result = await this.projectsRepository.save(procedure)
-    return result
-  }
-
-  // async updateFragment(procedureId: string, data: Fragment, userId: string) {
-  //   const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-  //   procedure.fragments.some((fragment, index, arr) => {
-  //     if (fragment.id === data.id) {
-  //       arr[index] = data
-  //       return true
-  //     }
-  //   })
-  //   await this.projectsRepository.save(procedure)
-  // }
-
-  /** 移除错误片段 */
-  async removeErrorFragment(procedureId: string, fragmentId: string, userId: string) {
-    try {
-      const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-      const index = procedure.sequence.findIndex(i => i === fragmentId)
-      if (index !== -1) {
-        procedure.sequence.splice(index, 1)
-        await this.projectsRepository.save(procedure)
-        this.userlogger.log(`从项目【${procedureId}】序列中移除错误片段 【${fragmentId}】 成功！`)
-        console.log(procedure.sequence)
-      } else {
-        throw new Error('移除错误片段失败,片段不在序列中！')
-      }
-    } catch (error) {
-      this.userlogger.log(`从项目【${procedureId}】序列中移除错误片段 【${fragmentId}】 失败！`)
-      throw error
-    }
-  }
-
-  // async updateFragmentTranscript(procedureId: string, fragmentId: string, newTranscript: string[], userId: string) {
-  //   const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-  //   procedure.fragments.some((fragment, index, arr) => {
-  //     if (fragment.id === fragmentId) {
-  //       if (fragment.transcript.length !== newTranscript.length) {
-  //         throw new Error('更新片段转写文本失败,原片段转写文本数量与新文本长度不一致')
-  //       }
-  //       arr[index].transcript = newTranscript
-  //       return true
-  //     }
-  //   })
-  //   const newProcedure = await this.projectsRepository.save(procedure)
-  //   if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '更新片段转写文本成功！' }
-  //   else throw new Error(`更新片段转写文本失败,项目id:${procedureId},片段id:${fragmentId}`)
-  // }
-
-  // async updateFragmentsTags(
-  //   procedureId: string,
-  //   newData: {
-  //     fragmentId: string
-  //     tags: (string | null)[]
-  //   }[],
-  //   userId: string
-  // ) {
-  //   try {
-  //     const data = newData.map(i => {
-  //       const fragment = {
-  //         fragmentId: i.fragmentId,
-  //         tags: i.tags
-  //       }
-  //       return fragment
-  //     })
-  //     const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-  //     procedure.fragments.forEach((fragment, index, arr) => {
-  //       if (fragment.removed === RemovedEnum.NEVER) {
-  //         // 特别注意：数据库中的片段是包含移除状态的，并且无排序，一般从前端传回的数据是排序的，所以不能依据顺序来更新！！！
-  //         const targetIndex = data.findIndex(i => i.fragmentId === fragment.id)
-  //         if (targetIndex !== -1) {
-  //           arr[index].tags = data[targetIndex].tags
-  //         }
-  //       }
-  //     })
-  //     const newProcedure = await this.projectsRepository.save(procedure)
-  //     if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '更新片段标记成功！' }
-  //     else throw new Error(`更新片段标记失败,项目id: ${procedureId}`)
-  //   } catch (error) {
-  //     // console.log(error)
-  //     throw error
-  //   }
-  // }
-
-  async removeFragment(procedureId: string, fragmentId: string, userId: string) {
-    try {
-      const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-      const index = procedure.sequence.findIndex(i => i === fragmentId)
-      if (index === -1) {
-        this.userlogger.error(`移除片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的序列中！`)
-        return
-      }
-      procedure.sequence.splice(index, 1)
-      procedure.removedSequence.push(fragmentId)
-      await this.projectsRepository.save(procedure)
-    } catch (error) {
-      throw error
-    }
-  }
-
-  async restoreFragment(procedureId: string, fragmentId: string, userId: string) {
-    try {
-      const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-      const index = procedure.removedSequence.findIndex(i => i === fragmentId)
-      if (index === -1) {
-        this.userlogger.error(`恢复片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的移除序列中！`)
-        return
-      }
-      procedure.removedSequence.splice(index, 1)
-      procedure.sequence.push(fragmentId)
-      await this.projectsRepository.save(procedure)
-    } catch (error) {
-      throw error
-    }
-  }
-
-  async deleteFragment(procedureId: string, fragmentId: string, userId: string) {
-    try {
-      const procedure = await this.findOneById(procedureId, userId)
-      const index = procedure.removedSequence.findIndex(i => i === fragmentId)
-      if (index === -1) {
-        this.userlogger.error(`彻底删除片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的移除序列中！`)
-        return
-      }
-      procedure.removedSequence.splice(index, 1)
-      await this.projectsRepository.save(procedure)
-    } catch (error) {
-      throw error
-    }
-  }
-
-  async addFragmentPromoter(
-    procedureId: string,
-    fragmentId: string,
-    userId: string,
-    promoterIndex: number,
-    promoterSerial: string,
-    promoterId: string
-  ) {
-    const procedure = await this.findOneById(procedureId, userId)
-    const result = procedure.fragments.some((fragment, index, arr) => {
-      if (fragment.id === fragmentId) {
-        arr[index].promoters[promoterIndex] = promoterId
-        arr[index].tags[promoterIndex] = promoterSerial
-        return true
-      }
-    })
-    // eslint-disable-next-line prettier/prettier
-    if (!result)
-      throw new Error(
-        `添加启动子失败, 未找到目标片段，项目id:${procedureId},片段id:${fragmentId},启动子编号:${promoterId}`
-      )
-    const newProcedure = await this.projectsRepository.save(procedure)
-    if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '添加启动子成功！' }
-    // eslint-disable-next-line prettier/prettier
-    else throw new Error(`添加启动子失败,项目id:${procedureId},片段id:${fragmentId},启动子编号:${promoterId}`)
-  }
-
-  async removeFragmentPromoter(procedureId: string, fragmentId: string, userId: string, promoterIndex: number) {
-    const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    const result = procedure.fragments.some((fragment, index, arr) => {
-      if (fragment.id === fragmentId) {
-        arr[index].promoters[promoterIndex] = null
-        arr[index].tags[promoterIndex] = null
-        return true
-      }
-    })
-    // eslint-disable-next-line prettier/prettier
-    if (!result) throw new Error(`移除启动子失败, 未找到目标片段，项目id:${procedureId},片段id:${fragmentId}`)
-    const newProcedure = await this.projectsRepository.save(procedure)
-    if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '添加启动子成功！' }
-    // eslint-disable-next-line prettier/prettier
-    else throw new Error(`添加启动子失败,项目id:${procedureId},片段id:${fragmentId},启动子下标:${promoterIndex}`)
-  }
-
-  async updateSequence(id: string, fragmentId: string, userId: string, oldIndex: number, newIndex: number) {
-    // console.log('updateSequence', id, fragmentId, userId, oldIndex, newIndex)
-    const procedure = await this.findOneById(id, userId)
-    procedure.sequence.splice(oldIndex, 1)
-    procedure.sequence.splice(newIndex, 0, fragmentId)
-    const newProcedure = await this.projectsRepository.save(procedure)
-    this.checkAndCorrectFragmentSquence(id) // 校验片段序列
-    if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '移动片段成功！' }
-    else throw new Error(`移动片段失败,项目id:${id},片段id:${fragmentId}`)
-  }
-
-  async copyFragment(args: {
-    sourceProejctId: string
-    targetProejctId: string
-    sourceFragmentId: string
-    targetFragmentId: string
-    position: 'before' | 'after'
-    type: 'copy' | 'cut'
+  async updateSequence(args: {
+    procedureId: string
+    fragmentId: string
     userId: string
-    dirname: string
+    type: 'add' | 'error' | 'remove' | 'restore' | 'delete' | 'move' | 'extract' | 'insert'
+    oldIndex?: number
+    newIndex?: number
+    insertFragmentId?: string
+    insertPosition?: 'before' | 'after'
   }) {
-    // eslint-disable-next-line prettier/prettier
-    const { sourceFragmentId, targetFragmentId, sourceProejctId, targetProejctId, userId, dirname, position, type } =
-      args
-    // console.log(args)
-    if (sourceProejctId === targetProejctId && sourceFragmentId === targetFragmentId && type === 'cut') {
-      throw new Error('不能自己剪切自己,操作无意义')
-    }
-    const source = await this.projectsRepository.findOneBy({ id: sourceProejctId, userId })
-    const target = await this.projectsRepository.findOneBy({ id: targetProejctId, userId })
-
-    if (!source) throw new Error('源项目不存在')
-    if (!target) throw new Error('目标项目不存在')
-    const fragment = source.fragments.find(i => i.id === sourceFragmentId)
-    if (!fragment) throw new Error('源片段不存在')
-    // 1. 获取源文件地址
-    const sourceFilepath = this.storageService.getFilePath({
-      filename: fragment.audio,
-      dirname: [dirname, source.dirname],
-      category: 'audio'
-    })
-    const newFragmentId = UUID.v4()
-    // 2. 创建复制文件地址
-    const { filename, filepath: targetFilepath } = this.storageService.createFilePath({
-      dirname: [dirname, target.dirname],
-      originalname: newFragmentId,
-      category: 'audio',
-      extname: '.wav'
-    })
-    // 3. 复制文件
+    const { procedureId, fragmentId, userId, type, oldIndex, newIndex, insertFragmentId, insertPosition } = args
     try {
-      this.storageService.copyFileSync(sourceFilepath, targetFilepath)
+      const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
+      const index = ['remove', 'move', 'error', 'extract', 'insert'].includes(type)
+        ? procedure.sequence.findIndex(i => i === fragmentId) // remove/move 在 sequence 查询片段
+        : procedure.removedSequence.findIndex(i => i === fragmentId) // delete/restore 在 removedSequence 查询片段
+      switch (type) {
+        case 'add':
+          procedure.sequence.push(fragmentId)
+          break
+        case 'error':
+          if (index === -1) {
+            this.userlogger.error(`移除错误片段 [${fragmentId}]出现异常，片段不在项目[${procedureId}]的'sequence'中！`)
+            return
+          }
+          procedure.sequence.splice(index, 1)
+          break
+        case 'remove':
+          if (index === -1) {
+            this.userlogger.error(`移除片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的'sequence'中！`)
+            return
+          }
+          procedure.sequence.splice(index, 1)
+          procedure.removedSequence.push(fragmentId)
+          break
+        case 'restore':
+          if (index === -1) {
+            this.userlogger.error(`恢复片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的'removeSequence'中！`)
+            return
+          }
+          procedure.removedSequence.splice(index, 1)
+          procedure.sequence.push(fragmentId)
+          break
+        case 'delete':
+          if (index === -1) {
+            // eslint-disable-next-line prettier/prettier
+            this.userlogger.error(`彻底删除片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的'removeSequence'中！`)
+            return
+          }
+          procedure.removedSequence.splice(index, 1)
+          break
+        case 'move':
+          if (oldIndex === undefined || newIndex === undefined) {
+            this.userlogger.error(`移动片段[${fragmentId}]出现异常，未提供有效'oldIndex'或'newIndex'参数！`)
+            return
+          }
+          if (index === -1) {
+            this.userlogger.error(`移动片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的'removeSequence'中！`)
+            return
+          }
+          if (index !== oldIndex || procedure.sequence[oldIndex] !== fragmentId) {
+            // eslint-disable-next-line prettier/prettier
+            this.userlogger.error(`移动片段[${fragmentId}]出现异常，片段在项目[${procedureId}]的'sequence'中的位置与参数'oldIndex'不符！`)
+            this.userlogger.error(`移动片段时的异常状态：${procedure.sequence.join('|')}, index:${index}, oldIndex:${oldIndex}, fragmentId:${fragmentId}, oldIndexFragmentId:${procedure.sequence[oldIndex]}`)
+            return
+          }
+          procedure.sequence.splice(oldIndex, 1)
+          procedure.sequence.splice(newIndex, 0, fragmentId)
+          break
+        case 'extract':
+          if (index === -1) {
+            this.userlogger.error(`取出片段 [${fragmentId}]出现异常，片段不在项目[${procedureId}]的'sequence'中！`)
+            return
+          }
+          procedure.sequence.splice(index, 1)
+          break
+        case 'insert':
+          if (!insertFragmentId) {
+            this.userlogger.error(`插入片段出现异常，参数'insertFragmentId'为空！`)
+            return
+          }
+          if (insertPosition === 'before') {
+            procedure.sequence.splice(index, 0, insertFragmentId)
+          }
+          if (insertPosition === 'after') {
+            procedure.sequence.splice(index + 1, 0, insertFragmentId)
+          }
+          break
+      }
+      await this.projectsRepository.save(procedure)
     } catch (error) {
-      throw new Error('复制文件失败')
-    }
-    // 创建复制片段对象
-    let newFragment = new Fragment()
-    newFragment = Object.assign(newFragment, {
-      id: newFragmentId, // 不复制 id 信息
-      audio: filename, // 新文件名称
-      duration: fragment.duration,
-      txt: fragment.txt,
-      transcript: fragment.transcript,
-      tags: new Array(fragment.transcript.length), // 不复制标记信息
-      promoters: new Array(fragment.transcript.length), // 不复制标记信息
-      timestamps: fragment.timestamps,
-      role: fragment.role,
-      removed: fragment.removed
-    })
-    // 查找目标片段位置
-    // console.log(target)
-    // console.log(targetFragmentId)
-    const index = target.sequence.findIndex(i => i === targetFragmentId)
-    // console.log(index)
-    if (index === -1) throw new Error('目标片段不存在')
-    if (position === 'before') {
-      // 在目标片段之前插入
-      target.sequence.splice(index, 0, newFragment.id)
-    }
-    if (position === 'after') {
-      // 在目标片段之后插入
-      target.sequence.splice(index + 1, 0, newFragment.id)
-    }
-    target.fragments.push(newFragment)
-    if (type === 'cut') {
-      // 剪切模式下，要将源片段移除掉
-      if (sourceProejctId === targetProejctId) {
-        // 如果源项目与目标项目相同，以目标项目数据为准
-        target.fragments.splice(
-          target.fragments.findIndex(i => i.id === fragment.id),
-          1
-        )
-        target.sequence.splice(
-          target.sequence.findIndex(i => i === fragment.id),
-          1
-        )
+      if (type === 'add') {
+        this.userlogger.error(`向项目[${procedureId}]的'sequence'中添加片段 [${fragmentId}] 失败！`, error.message)
       }
-      if (sourceProejctId !== targetProejctId) {
-        // 如果源项目与目标项目不相同的情况，需要移除源项目片段数据
-        source.fragments.splice(
-          source.fragments.findIndex(i => i.id === fragment.id),
-          1
-        )
-        source.sequence.splice(
-          source.sequence.findIndex(i => i === fragment.id),
-          1
-        )
-      }
+      throw error
+    }
+  }
 
-      // 删除对应源文件
-      try {
-        this.storageService.deleteSync(sourceFilepath)
-      } catch (error) {
-        console.log('剪切模式-删除源音频文件失败:' + error)
-        // 不阻断进程
-      }
+  async updateTime(id: string, userId: string) {
+    try {
+      await this.projectsRepository.update(
+        { id, userId },
+        {
+          updateAt: new Date()
+        }
+      )
+      this.userlogger.log(`更新项目[${id}]的 'updateAt'成功！`)
+    } catch (error) {
+      this.userlogger.error(`更新项目[${id}]的 'updateAt'失败！`, error.message)
     }
-    if (sourceProejctId === targetProejctId) {
-      // 源项目与目标项目相同，只需要保存更新目标项目
-      await this.projectsRepository.save(target)
-      this.checkAndCorrectFragmentSquence(target.id) // 校验片段序列
-    }
-    if (sourceProejctId !== targetProejctId) {
-      // 源项目与目标项目不相同，需要同时保存更新源项目与目标项目
-      await Promise.all([this.projectsRepository.save(source), this.projectsRepository.save(target)])
-      this.checkAndCorrectFragmentSquence(source.id) // 校验片段序列
-      this.checkAndCorrectFragmentSquence(target.id) // 校验片段序列
-    }
-    newFragment.audio = targetFilepath
-    return { fragment: newFragment, updateAt: target.updateAt, msg: '复制片段成功！' }
   }
 
   // 检查并校正片段序列
@@ -998,15 +790,19 @@ export class ProjectService {
         relations: ['fragments']
       })
       if (!project) return
+      this.userlogger.log(`检查并校正项目[${id}]的片段序列...`)
       // 正常片段
       const fragments = project.fragments.filter(fragment => fragment.removed === RemovedEnum.NEVER)
       // 移除片段
       const removedFragments = project.fragments.filter(fragment => fragment.removed !== RemovedEnum.NEVER)
+      // eslint-disable-next-line prettier/prettier
+      this.userlogger.log(`项目[${id}]的片段序列状态：正常片段数量：${fragments.length},移除片段数量：${removedFragments.length},正常排序长度：${project.sequence.length},移除排序长度：${project.removedSequence.length}`)
       // 正常片段是否全包含于正常序列中
       fragments.forEach(fragment => {
         const isInclude = project.sequence.some(id => id === fragment.id)
         if (!isInclude) {
           console.log(`${fragment.id} 片段未被包含于正常序列中`)
+          this.userlogger.warn(`${fragment.id} 片段未被包含于正常序列中`)
           // 将未记录片段 id 添加至正常序列
           project.sequence.push(fragment.id)
         }
@@ -1016,6 +812,7 @@ export class ProjectService {
         const isInclude = project.removedSequence.some(id => id === fragment.id)
         if (!isInclude) {
           console.log(`${fragment.id} 片段未被包含于移除序列中`)
+          this.userlogger.warn(`${fragment.id} 片段未被包含于移除序列中`)
           // 将未记录片段 id 添加至移除序列
           project.removedSequence.push(fragment.id)
         }
@@ -1025,6 +822,7 @@ export class ProjectService {
         const isInclude = fragments.some(fragment => fragment.id === fragmentId)
         if (!isInclude) {
           console.log(`正常片段中未找到 id 为 ${fragmentId} 的片段`)
+          this.userlogger.warn(`正常片段中未找到 id 为 ${fragmentId} 的片段`)
           // 移除异常片段 id
           arr.splice(index, 1)
         }
@@ -1034,12 +832,14 @@ export class ProjectService {
         const isInclude = removedFragments.some(fragment => fragment.id === fragmentId)
         if (!isInclude) {
           console.log(`移除片段中未找到 id 为 ${fragmentId} 的片段`)
+          this.userlogger.warn(`移除片段中未找到 id 为 ${fragmentId} 的片段`)
           // 移除异常片段 id
           arr.splice(index, 1)
         }
       })
       await this.projectsRepository.save(project)
     } catch (error) {
+      this.userlogger.error(`校正项目[${id}]得片段排序失败 `, error.message)
       throw error
     }
   }
@@ -1121,3 +921,124 @@ function subtitleProcessing(transcriptGroup: string[][], fragmentDurationGroup: 
   })
   return { subtitleGroup, subtitleKeyframeGroup }
 }
+
+// async copyFragment(args: {
+//   sourceProejctId: string
+//   targetProejctId: string
+//   sourceFragmentId: string
+//   targetFragmentId: string
+//   position: 'before' | 'after'
+//   type: 'copy' | 'cut'
+//   userId: string
+//   dirname: string
+// }) {
+//   // eslint-disable-next-line prettier/prettier
+//   const { sourceFragmentId, targetFragmentId, sourceProejctId, targetProejctId, userId, dirname, position, type } =
+//     args
+//   // console.log(args)
+//   if (sourceProejctId === targetProejctId && sourceFragmentId === targetFragmentId && type === 'cut') {
+//     throw new Error('不能自己剪切自己,操作无意义')
+//   }
+//   const source = await this.projectsRepository.findOneBy({ id: sourceProejctId, userId })
+//   const target = await this.projectsRepository.findOneBy({ id: targetProejctId, userId })
+
+//   if (!source) throw new Error('源项目不存在')
+//   if (!target) throw new Error('目标项目不存在')
+//   const fragment = source.fragments.find(i => i.id === sourceFragmentId)
+//   if (!fragment) throw new Error('源片段不存在')
+//   // 1. 获取源文件地址
+//   const sourceFilepath = this.storageService.getFilePath({
+//     filename: fragment.audio,
+//     dirname: [dirname, source.dirname],
+//     category: 'audio'
+//   })
+//   const newFragmentId = UUID.v4()
+//   // 2. 创建复制文件地址
+//   const { filename, filepath: targetFilepath } = this.storageService.createFilePath({
+//     dirname: [dirname, target.dirname],
+//     originalname: newFragmentId,
+//     category: 'audio',
+//     extname: '.wav'
+//   })
+//   // 3. 复制文件
+//   try {
+//     this.storageService.copyFileSync(sourceFilepath, targetFilepath)
+//   } catch (error) {
+//     throw new Error('复制文件失败')
+//   }
+//   // 创建复制片段对象
+//   let newFragment = new Fragment()
+//   newFragment = Object.assign(newFragment, {
+//     id: newFragmentId, // 不复制 id 信息
+//     audio: filename, // 新文件名称
+//     duration: fragment.duration,
+//     txt: fragment.txt,
+//     transcript: fragment.transcript,
+//     tags: new Array(fragment.transcript.length), // 不复制标记信息
+//     promoters: new Array(fragment.transcript.length), // 不复制标记信息
+//     timestamps: fragment.timestamps,
+//     role: fragment.role,
+//     removed: fragment.removed
+//   })
+//   // 查找目标片段位置
+//   // console.log(target)
+//   // console.log(targetFragmentId)
+//   const index = target.sequence.findIndex(i => i === targetFragmentId)
+//   // console.log(index)
+//   if (index === -1) throw new Error('目标片段不存在')
+//   if (position === 'before') {
+//     // 在目标片段之前插入
+//     target.sequence.splice(index, 0, newFragment.id)
+//   }
+//   if (position === 'after') {
+//     // 在目标片段之后插入
+//     target.sequence.splice(index + 1, 0, newFragment.id)
+//   }
+//   target.fragments.push(newFragment)
+//   if (type === 'cut') {
+//     // 剪切模式下，要将源片段移除掉
+//     if (sourceProejctId === targetProejctId) {
+//       // 如果源项目与目标项目相同，以目标项目数据为准
+//       target.fragments.splice(
+//         target.fragments.findIndex(i => i.id === fragment.id),
+//         1
+//       )
+//       target.sequence.splice(
+//         target.sequence.findIndex(i => i === fragment.id),
+//         1
+//       )
+//     }
+//     if (sourceProejctId !== targetProejctId) {
+//       // 如果源项目与目标项目不相同的情况，需要移除源项目片段数据
+//       source.fragments.splice(
+//         source.fragments.findIndex(i => i.id === fragment.id),
+//         1
+//       )
+//       source.sequence.splice(
+//         source.sequence.findIndex(i => i === fragment.id),
+//         1
+//       )
+//     }
+
+//     // 删除对应源文件
+//     try {
+//       this.storageService.deleteSync(sourceFilepath)
+//     } catch (error) {
+//       console.log('剪切模式-删除源音频文件失败:' + error)
+//       // 不阻断进程
+//     }
+//   }
+//   if (sourceProejctId === targetProejctId) {
+//     // 源项目与目标项目相同，只需要保存更新目标项目
+//     await this.projectsRepository.save(target)
+//     this.checkAndCorrectFragmentSquence(target.id) // 校验片段序列
+//   }
+//   if (sourceProejctId !== targetProejctId) {
+//     // 源项目与目标项目不相同，需要同时保存更新源项目与目标项目
+//     await Promise.all([this.projectsRepository.save(source), this.projectsRepository.save(target)])
+//     this.checkAndCorrectFragmentSquence(source.id) // 校验片段序列
+//     this.checkAndCorrectFragmentSquence(target.id) // 校验片段序列
+//   }
+//   newFragment.audio = targetFilepath
+//   return { fragment: newFragment, updateAt: target.updateAt, msg: '复制片段成功！' }
+// }

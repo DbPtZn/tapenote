@@ -86,11 +86,10 @@ export class FfmpegService {
     return new Promise((resolve, reject) => {
       // :stop_periods=1:stop_threshold=-50dB:stop_silence=1
       // TODO 实现依然存在问题，在不同机器的测试中发现有些时候会将音频中有效音部分也去除
+      // 目前通过把 start_duration 设置得尽量小解决问题，待后续观察
       ffmpeg()
         .input(inputPath)
-        .inputOption(
-          '-filter_complex silenceremove=start_periods=1:start_duration=0.5:start_threshold=-50dB:detection=peak'
-        )
+        .audioFilter('silenceremove=start_periods=1:start_duration=0.1:start_threshold=-50dB:detection=peak')
         .output(outputPath)
         .on('error', (err, stdout, stderr) => {
           console.error('清理静音部分出错:', err.message)
