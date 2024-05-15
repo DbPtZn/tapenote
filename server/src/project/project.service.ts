@@ -768,77 +768,50 @@ export class ProjectService {
   // }
 
   async removeFragment(procedureId: string, fragmentId: string, userId: string) {
-    const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    // const result = procedure.fragments.some((fragment, index, arr) => {
-    //   if (fragment.id === fragmentId) {
-    //     arr[index].removed = RemovedEnum.ACTIVE
-    //     arr[index].tags.flatMap(i => null)
-    //     arr[index].promoters.flatMap(i => null)
-    //     return true
-    //   }
-    // })
-    // eslint-disable-next-line prettier/prettier
-    // if (!result)
-    //   throw new Error(
-    //     `片段移除失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`
-    //   )
-    const index = procedure.sequence.findIndex(i => i === fragmentId)
-    // console.log(index)
-    procedure.sequence.splice(index, 1)
-    procedure.removedSequence.push(fragmentId)
-    await this.projectsRepository.save(procedure)
-    // if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '移除片段成功！' }
-    // else throw new Error(`移除片段失败,项目id: ${procedureId}, 片段id: ${fragmentId}`)
+    try {
+      const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
+      const index = procedure.sequence.findIndex(i => i === fragmentId)
+      if (index === -1) {
+        this.userlogger.error(`移除片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的序列中！`)
+        return
+      }
+      procedure.sequence.splice(index, 1)
+      procedure.removedSequence.push(fragmentId)
+      await this.projectsRepository.save(procedure)
+    } catch (error) {
+      throw error
+    }
   }
 
   async restoreFragment(procedureId: string, fragmentId: string, userId: string) {
-    const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
-    const result = procedure.fragments.some((fragment, index, arr) => {
-      if (fragment.id === fragmentId) {
-        arr[index].removed = RemovedEnum.NEVER
-        return true
+    try {
+      const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
+      const index = procedure.removedSequence.findIndex(i => i === fragmentId)
+      if (index === -1) {
+        this.userlogger.error(`恢复片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的移除序列中！`)
+        return
       }
-    })
-    // eslint-disable-next-line prettier/prettier
-    if (!result) throw new Error(`片段恢复失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`)
-    const index = procedure.removedSequence.findIndex(i => i === fragmentId)
-    procedure.removedSequence.splice(index, 1)
-    procedure.sequence.push(fragmentId)
-    const newProcedure = await this.projectsRepository.save(procedure)
-    if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '恢复片段成功！' }
-    else throw new Error(`恢复片段失败,项目id: ${procedureId}, 片段id: ${fragmentId}`)
+      procedure.removedSequence.splice(index, 1)
+      procedure.sequence.push(fragmentId)
+      await this.projectsRepository.save(procedure)
+    } catch (error) {
+      throw error
+    }
   }
 
-  async deleteFragment(procedureId: string, fragmentId: string, userId: string, dirname: string) {
-    const procedure = await this.findOneById(procedureId, userId)
-    let filename = ''
-    const result = procedure.fragments.some((fragment, index, arr) => {
-      if (fragment.id === fragmentId) {
-        filename = fragment.audio
-        arr.splice(index, 1)
-        return true
-      }
-    })
-    // eslint-disable-next-line prettier/prettier
-    if (!result) throw new Error(`片段彻底删除失败，未找到片段，项目id: ${procedureId}, 片段id: ${fragmentId}`)
-    // 删除移除序列中的片段
-    const index = procedure.removedSequence.findIndex(i => i === fragmentId)
-    procedure.removedSequence.splice(index, 1)
-    // 删除片段对应的音频文件
-    const filepath = this.storageService.getFilePath({
-      filename,
-      dirname: [dirname, procedure.dirname],
-      category: 'audio'
-    })
-    // console.log(filepath)
+  async deleteFragment(procedureId: string, fragmentId: string, userId: string) {
     try {
-      this.storageService.deleteSync(filepath)
+      const procedure = await this.findOneById(procedureId, userId)
+      const index = procedure.removedSequence.findIndex(i => i === fragmentId)
+      if (index === -1) {
+        this.userlogger.error(`彻底删除片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的移除序列中！`)
+        return
+      }
+      procedure.removedSequence.splice(index, 1)
+      await this.projectsRepository.save(procedure)
     } catch (error) {
-      console.log(error)
+      throw error
     }
-    const newProcedure = await this.projectsRepository.save(procedure)
-    if (newProcedure) return { updateAt: newProcedure.updateAt, msg: '彻底删除片段成功！' }
-    else throw new Error(`彻底删除片段失败,项目id: ${procedureId}, 片段id: ${fragmentId}`)
   }
 
   async addFragmentPromoter(

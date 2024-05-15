@@ -383,15 +383,42 @@ export class FragmentService {
 
   async restore(restoreFragmentDto: RestoreFragmentDto, userId: string) {
     const { procedureId, fragmentId } = restoreFragmentDto
-    const result = await this.projectService.restoreFragment(procedureId, fragmentId, userId)
-    return result
+    try {
+      const fragment = await this.fragmentsRepository.findOneBy({ id: fragmentId, userId, removed: RemovedEnum.ACTIVE })
+      if (fragment) {
+        fragment.removed = RemovedEnum.NEVER
+        await this.fragmentsRepository.save(fragment)
+        await this.projectService.restoreFragment(procedureId, fragmentId, userId)
+        this.userlogger.log(`恢复片段[${fragmentId}]成功,片段已从回收站恢复！`)
+        return { updateAt: fragment.updateAt, msg: '恢复片段成功！' }
+      } else {
+        throw new Error('找不到目标片段！')
+      }
+    } catch (error) {
+      this.userlogger.log(`恢复片段[${fragmentId}]失败,错误原因：${error.message} `)
+      throw error
+    }
   }
 
   async delete(deleteFragmentDto: DeleteFragmentDto, userId: string, dirname: string) {
     const { procedureId, fragmentId } = deleteFragmentDto
-    console.log(deleteFragmentDto)
-    const result = await this.projectService.deleteFragment(procedureId, fragmentId, userId, dirname)
-    return result
+    try {
+      const procedure = await this.projectService.findOneById(procedureId, userId)
+      const fragment = await this.fragmentsRepository.findOneBy({ id: fragmentId, userId })
+      const authname = fragment.audio
+      await this.fragmentsRepository.remove(fragment)
+      // 删除片段对应的音频文件
+      const filepath = this.storageService.getFilePath({
+        filename: authname,
+        dirname: [dirname, procedure.dirname],
+        category: 'audio'
+      })
+      this.storageService.deleteSync(filepath)
+      await this.projectService.deleteFragment(procedureId, fragmentId, userId)
+    } catch (error) {
+      this.userlogger.error(`删除片段[${fragmentId}]失败`, error.message)
+      throw error
+    }
   }
 
   async addPromoter(addPromoterDto: AddPromoterDto, userId: string) {
