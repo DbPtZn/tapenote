@@ -23,9 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: any) {
     // console.log('payload', payload)
     const authInfo = { id: payload.userId, account: payload.account, dirname: payload.dirname }
-    // this.context.set('authInfo', authInfo)
-    // globalThis.authInfo = authInfo
-    this.requestScopedService.setData(authInfo)
+    this.requestScopedService.setData(authInfo) //TODO 正在考虑为每个请求事务创建一个唯一标识，这样可以确定同一请求内产生的日志
     return authInfo
   }
 }

@@ -270,11 +270,12 @@ export class ProjectService {
 
   /** -------------------------------- 查询 ------------------------------------ */
   /** 找到指向项目于： 包含片段、音频完整路径等信息 */
-  async findOne(id: string, userId: string, dirname: string) {
+  async findOne(id: string, userId: string, dirname: string, relations = []) {
     try {
+      relations.includes('fragments') ? '' : relations.push('fragments') // fragments 是默认必选
       const project = await this.projectsRepository.findOne({
         where: { id, userId },
-        relations: ['fragments']
+        relations: relations
       })
       switch (project.library) {
         case LibraryEnum.NOTE:
@@ -511,16 +512,24 @@ export class ProjectService {
     }
   }
 
-  async copy(id: string, folderId: string, userId: string, dirname: string) {
-    const source = await this.findOne(id, userId, dirname)
+  async copy(projectId: string, folderId: string, userId: string, dirname: string) {
+    const source = await this.findOne(projectId, userId, dirname, ['folder', 'user'])
     if (!source) throw '找不到目标文件！'
     let target = new Project()
-    // 先进行全量复制
-    target = source
+    // 对相同属性进行复制
+    // target = source
+    // const { id, fragments, folderId, folder, audio, ...entityData } = source
+    target = Object.assign(target, source)
     // 对部分属性进行重写
     target.id = UUID.v4()
-    // 设置目标文件夹
-    target.folderId = folderId
+
+    // 设置目标文件夹 (目标与源不一样的情况才需要重新设置)
+    if (folderId !== source.folderId) {
+      target.folderId = folderId
+      const newFolder = await this.folderService.findOneById(folderId, userId)
+      target.folder = newFolder
+    }
+
     // 设置目标项目目录
     target.dirname = await this.generateDirname(dirname)
 
@@ -534,59 +543,92 @@ export class ProjectService {
         extname: '.wav'
       })
       // 2. 复制文件
-      try {
-        this.storageService.copyFileSync(source.audio, filepath)
-      } catch (error) {
-        throw '复制 audio 时出错！'
-      }
+      this.storageService.copyFileSync(source.audio, filepath)
       target.audio = filename
     }
+
     // 如果是工程，则应该复制 fragments 中的音频，并且每一个 fragment 都要重新生成
     // 相应的 sequence 和 removeSequence 都要重写
     if (target.library === LibraryEnum.PROCEDURE) {
-      target.fragments = source.fragments.map(fragment => {
+      target.fragments.forEach(fragment => {
         let newFragment = new Fragment()
-        newFragment = Object.assign(newFragment, {
-          id: UUID.v4(),
-          project: target,
-          audio: '',
-          duration: fragment.duration,
-          txt: fragment.txt,
-          transcript: fragment.transcript,
-          tags: fragment.tags,
-          promoters: fragment.promoters,
-          timestamps: fragment.timestamps,
-          role: fragment.role,
-          removed: fragment.removed
-        })
+        newFragment = Object.assign(newFragment, fragment)
+        // 赋予新 uuid
+        newFragment.id = UUID.v4()
+
+        // 建立新的实体关系
+        newFragment.project = target
+        
+        // 复制音频文件
         const { filename, filepath } = this.storageService.createFilePath({
           dirname: [dirname, target.dirname],
           category: 'audio',
           originalname: newFragment.id,
           extname: '.wav'
         })
-        // 复制文件
-        try {
-          this.storageService.copyFileSync(fragment.audio, filepath)
-        } catch (error) {
-          throw '复制片段音频的时候出错了！'
-        }
+        this.storageService.copyFileSync(fragment.audio, filepath)
         newFragment.audio = filename
+
         // 处理排序信息
         if (fragment.removed === RemovedEnum.NEVER) {
           // 获取片段在源项目中的排序位置
           const index = target.sequence.findIndex(item => item === fragment.id)
           if (index !== -1) target.sequence[index] = newFragment.id
-          else throw '替换片段的排序时出错，被替换片段在 sequence 列表中不存在！'
+          else this.userlogger.error(`替换片段的排序时出错，被替换片段[${fragment.id}]在 sequence 列表中不存在！`)
         }
         if (fragment.removed !== RemovedEnum.NEVER) {
           // 获取移除片段在源项目中的排序位置
           const index = target.removedSequence.findIndex(item => item === fragment.id)
           if (index !== -1) target.removedSequence[index] = newFragment.id
-          else throw '替换移除片段的排序时出错，被替换片段在 removedSequence 列表中不存在！'
+          else this.userlogger.error(`替换片段的排序时出错，被替换片段[${fragment.id}]在 removedSequence 列表中不存在！`)
         }
-        return newFragment
+        
       })
+      // target.fragments = source.fragments.map(fragment => {
+      //   let newFragment = new Fragment()
+      //   newFragment = Object.assign(newFragment, {
+      //     id: UUID.v4(),
+      //     project: target,
+      //     audio: '',
+      //     duration: fragment.duration,
+      //     txt: fragment.txt,
+      //     transcript: fragment.transcript,
+      //     tags: fragment.tags,
+      //     promoters: fragment.promoters,
+      //     timestamps: fragment.timestamps,
+      //     role: fragment.role,
+      //     removed: fragment.removed
+      //   })
+      //   const { filename, filepath } = this.storageService.createFilePath({
+      //     dirname: [dirname, target.dirname],
+      //     category: 'audio',
+      //     originalname: newFragment.id,
+      //     extname: '.wav'
+      //   })
+      //   // 复制文件
+      //   try {
+      //     this.storageService.copyFileSync(fragment.audio, filepath)
+      //   } catch (error) {
+      //     throw '复制片段音频的时候出错了！'
+      //   }
+      //   newFragment.audio = filename
+      //   // 处理排序信息
+      //   if (fragment.removed === RemovedEnum.NEVER) {
+      //     // 获取片段在源项目中的排序位置
+      //     const index = target.sequence.findIndex(item => item === fragment.id)
+      //     if (index !== -1) target.sequence[index] = newFragment.id
+      //     else throw '替换片段的排序时出错，被替换片段在 sequence 列表中不存在！'
+      //   }
+      //   if (fragment.removed !== RemovedEnum.NEVER) {
+      //     // 获取移除片段在源项目中的排序位置
+      //     const index = target.removedSequence.findIndex(item => item === fragment.id)
+      //     if (index !== -1) target.removedSequence[index] = newFragment.id
+      //     else throw '替换移除片段的排序时出错，被替换片段在 removedSequence 列表中不存在！'
+      //   }
+      //   return newFragment
+      // })
+
+
       // 校验 sequence 长度和内容是否完成替换
       if (target.sequence.length === source.sequence.length) {
         target.sequence.some(item => source.sequence.includes(item))
