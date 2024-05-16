@@ -326,27 +326,17 @@ export const useProjectStore = defineStore('projectStore', {
       }
     },
     pasteFragment(params: Parameters<typeof CreatorApi.prototype.fragment.copyFragment>[0], account: string, hostname: string) {
+      console.log(params)
       return this.creatorApi(account, hostname).fragment.copyFragment<{ fragment: Fragment, updateAt: string }>(params).then(res => {
         const { fragment, updateAt } = res.data
         fragment.audio = hostname + fragment.audio
-        const { sourceFragmentId, targetFragmentId, sourceProejctId, targetProejctId, type, position } = params
-        const source = this.get(sourceProejctId)!
-        const target = this.get(targetProejctId)!
-        // 查找目标片段位置
-        const index = target.sequence.findIndex(id => id === targetFragmentId)
-        if (index === -1) return console.error('目标片段不存在')
-        if (position === 'before') {
-          // 在目标片段之前插入
-          target.sequence.splice(index, 0, fragment.id)
-        }
-        if (position === 'after') {
-          // 在目标片段之后插入
-          target.sequence.splice(index + 1, 0, fragment.id)
-        }
-        target.fragments.push(fragment)
+        const { sourceFragmentId, targetFragmentId, sourceProjectId, targetProjectId, type, position } = params
+        const source = this.get(sourceProjectId)!
+        const target = this.get(targetProjectId)!
 
+        // 剪切的情况
         if (type === 'cut') {
-          if (sourceProejctId !== targetProejctId) {
+          if (sourceProjectId !== targetProjectId) {
             source.fragments.splice(
               source.fragments.findIndex(i => i.id === sourceFragmentId),
               1
@@ -356,6 +346,7 @@ export const useProjectStore = defineStore('projectStore', {
               1
             )
           } else {
+            // 这个情况 target 和 source 是同一个项目
             target.fragments.splice(
               target.fragments.findIndex(i => i.id === sourceFragmentId),
               1
@@ -366,14 +357,32 @@ export const useProjectStore = defineStore('projectStore', {
             )
           }
         }
-        if (sourceProejctId === targetProejctId) {
-          // 源项目与目标项目相同，只需要更新目标项目
-          this.setUpdateAt(targetProejctId, updateAt)
+
+        // 查找目标片段位置
+        const index = target.sequence.findIndex(id => id === targetFragmentId)
+        if (index === -1 && (targetFragmentId !== '' && position === 'insert')) return console.error('目标片段不存在')
+        if (position === 'before') {
+          // 在目标片段之前插入
+          target.sequence.splice(index, 0, fragment.id)
         }
-        if (sourceProejctId !== targetProejctId) {
+        if (position === 'after') {
+          // 在目标片段之后插入
+          target.sequence.splice(index + 1, 0, fragment.id)
+        }
+        if (position === 'insert') {
+          target.sequence.push(fragment.id)
+        }
+        target.fragments.push(fragment)
+        
+
+        if (sourceProjectId === targetProjectId) {
+          // 源项目与目标项目相同，只需要更新目标项目
+          this.setUpdateAt(targetProjectId, updateAt)
+        }
+        if (sourceProjectId !== targetProjectId) {
           // 源项目与目标项目不相同，需要同时保存更新源项目与目标项目
-          this.setUpdateAt(targetProejctId, updateAt)
-          this.setUpdateAt(sourceProejctId, updateAt)
+          this.setUpdateAt(targetProjectId, updateAt)
+          this.setUpdateAt(sourceProjectId, updateAt)
         }
 
       })

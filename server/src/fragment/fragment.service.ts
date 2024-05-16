@@ -475,12 +475,11 @@ export class FragmentService {
   }
 
   async copy(dto: CopyFragmentDto, userId: string, dirname: string) {
-    const { sourceProejctId, targetProejctId, sourceFragmentId, targetFragmentId, position, type } = dto
-    this.userlogger.log(
-      `从[${sourceProejctId}]${type}片段[${sourceFragmentId}]到[${targetProejctId}]的[${targetFragmentId}]${position}位置`
-    )
+    const { sourceProjectId, targetProjectId, sourceFragmentId, targetFragmentId, position, type } = dto
+    // eslint-disable-next-line prettier/prettier
+    this.userlogger.log(`从[${sourceProjectId}]${type}片段[${sourceFragmentId}]到[${targetProjectId}]的片段[${targetFragmentId}]${position}位置`)
     try {
-      if (sourceProejctId === targetProejctId && sourceFragmentId === targetFragmentId && type === 'cut') {
+      if (sourceProjectId === targetProjectId && sourceFragmentId === targetFragmentId && type === 'cut') {
         throw new Error('不能自己剪切自己,操作无意义')
       }
       const sourceFragment = await this.fragmentsRepository.findOne({
@@ -488,20 +487,23 @@ export class FragmentService {
         relations: ['project']
       })
 
+      // 原项目目录
+      const sourceProjectDirname = sourceFragment.project.dirname
+
       // 剪切的情况
       if (type === 'cut') {
-        if (sourceProejctId === targetProejctId) {
+        if (sourceProjectId === targetProjectId) {
           // 这种情况等价于移动片段位置, 仅修改片段排序信息即可
           // 取出片段
           await this.projectService.updateSequence({
-            procedureId: sourceProejctId,
+            procedureId: sourceProjectId,
             fragmentId: sourceFragmentId,
             userId,
             type: 'extract'
           })
           // 插入片段
           await this.projectService.updateSequence({
-            procedureId: targetProejctId,
+            procedureId: targetProjectId,
             fragmentId: targetFragmentId,
             userId,
             type: 'insert',
@@ -509,31 +511,34 @@ export class FragmentService {
             insertPosition: position
           })
         } else {
-          const targetProject = await this.projectService.findOneById(targetProejctId, userId)
+          const targetProject = await this.projectService.findOneById(targetProjectId, userId)
           // 修改实体关系
           sourceFragment.project = targetProject
           // 修改排序信息
           // 取出片段
           await this.projectService.updateSequence({
-            procedureId: sourceProejctId,
+            procedureId: sourceProjectId,
             fragmentId: sourceFragmentId,
             userId,
             type: 'extract'
           })
           await this.projectService.updateSequence({
-            procedureId: targetProejctId,
+            procedureId: targetProjectId,
             fragmentId: targetFragmentId,
             userId,
             type: 'insert',
+            insertFragmentId: sourceFragmentId,
             insertPosition: position
           })
+
           // 移动至其它项目时重置启动子状态
           sourceFragment.promoters.fill(null)
           sourceFragment.tags.fill(null)
+
           // 移动音频文件
           const audiopath = this.storageService.getFilePath({
             filename: sourceFragment.audio,
-            dirname: [dirname, sourceFragment.project.dirname],
+            dirname: [dirname, sourceProjectDirname],
             category: 'audio'
           })
           const { filename, filepath } = this.storageService.createFilePath({
@@ -542,6 +547,7 @@ export class FragmentService {
             originalname: sourceFragment.id,
             extname: '.wav'
           })
+          this.userlogger.log(`片段剪切：源音频位置：${audiopath}, 目标音频位置${filepath}`)
           fs.renameSync(audiopath, filepath)
           sourceFragment.audio = filename
         }
@@ -551,6 +557,7 @@ export class FragmentService {
           dirname: [dirname, sourceFragment.project.dirname],
           category: 'audio'
         })
+        this.userlogger.log(`剪切片段[${sourceFragmentId}]成功！`)
         return result
       } else {
         // 复制的情况
@@ -563,10 +570,10 @@ export class FragmentService {
 
         // 建立实体关系并更新排序信息
         let targetProjectDirname = ''
-        if (sourceProejctId === targetProejctId) {
+        if (sourceProjectId === targetProjectId) {
           newFragment.project = project
           await this.projectService.updateSequence({
-            procedureId: targetProejctId,
+            procedureId: targetProjectId,
             fragmentId: targetFragmentId,
             userId,
             type: 'insert',
@@ -575,10 +582,10 @@ export class FragmentService {
           })
           targetProjectDirname = project.dirname
         } else {
-          const targetProject = await this.projectService.findOneById(targetProejctId, userId)
+          const targetProject = await this.projectService.findOneById(targetProjectId, userId)
           newFragment.project = targetProject
           await this.projectService.updateSequence({
-            procedureId: targetProejctId,
+            procedureId: targetProjectId,
             fragmentId: targetFragmentId,
             userId,
             type: 'insert',
@@ -590,8 +597,8 @@ export class FragmentService {
 
         // 复制音频
         const audioPath = this.storageService.getFilePath({
+          dirname: [dirname, sourceProjectDirname],
           filename: audio,
-          dirname: [dirname, targetProjectDirname],
           category: 'audio'
         })
         const { filename: newAudioName, filepath: newAudioPath } = this.storageService.createFilePath({
@@ -604,11 +611,12 @@ export class FragmentService {
         newFragment.audio = newAudioName
         const result = await this.fragmentsRepository.save(newFragment)
         result.audio = newAudioPath
+        this.userlogger.log(`复制片段[${sourceFragmentId}]成功！`)
         return result
       }
     } catch (error) {
-      this.projectService.checkAndCorrectFragmentSquence(sourceProejctId) // 校验片段序列
-      sourceProejctId !== targetProejctId && this.projectService.checkAndCorrectFragmentSquence(targetProejctId) // 校验片段序列
+      this.projectService.checkAndCorrectFragmentSquence(sourceProjectId) // 校验片段序列
+      sourceProjectId !== targetProjectId && this.projectService.checkAndCorrectFragmentSquence(targetProjectId) // 校验片段序列
       this.userlogger.error(`${type}片段失败`, error.message)
       throw error
     }

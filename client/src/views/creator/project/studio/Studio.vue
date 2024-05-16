@@ -217,7 +217,7 @@ const totalDuration = computed(() => {
         <!-- <DpzIcon class="arrow" :icon="`${MaterialTypeEnum.FILLED}arrow_drop_down`" :size="24" /> -->
       </n-dropdown>
     </Header>
-    <div ref="scrollerRef" class="main" @contextmenu="ev => ev.preventDefault()">
+    <div ref="scrollerRef" class="main" @contextmenu="handleContextmenu">
       <Draggable class="draggable" v-model="fragments" :itemKey="'id'" @change="handleMove">
         <template #item="{ element }">
           <AudioFragment

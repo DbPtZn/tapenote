@@ -47,7 +47,7 @@ export function useFragment(id: string, bridge: Bridge) {
     // console.log(selectedFragments.value)
   }
   /** 右键菜单 */
-  function handleContextmenu(e: MouseEvent, fragment: Fragment) {
+  function handleContextmenu(e: MouseEvent, fragment?: Fragment) {
     player = bridge.editor.get(Player)
     const project = projectStore.get(id)
     if (!project) return
@@ -64,6 +64,7 @@ export function useFragment(id: string, bridge: Bridge) {
       {
         key: 'preview',
         label: '播放预览',
+        show: !!fragment,
         props: {
           onClick: () => {
             applyPlay(fragments)
@@ -78,7 +79,7 @@ export function useFragment(id: string, bridge: Bridge) {
         props: {
           onClick: () => {
             const allFragments = projectStore.fragment(id).getBySort()
-            const targetIndex = allFragments.indexOf(fragment)
+            const targetIndex = allFragments.indexOf(fragment!)
             if (targetIndex === -1) return
             const includeFragments = allFragments.slice(targetIndex)
             applyPlay(includeFragments)
@@ -89,6 +90,7 @@ export function useFragment(id: string, bridge: Bridge) {
       {
         key: 'remove',
         label: '移除',
+        show: !!fragment,
         props: {
           onClick: () => {
             const removeQueue = fragments.map(fragment => {
@@ -113,7 +115,7 @@ export function useFragment(id: string, bridge: Bridge) {
         props: {
           onClick: () => {
             clipboardStore.copyFragment({
-              fragmentId: fragment.id,
+              fragmentId: fragment!.id,
               projectId: id,
               type: 'copy',
               account: project.account,
@@ -133,7 +135,7 @@ export function useFragment(id: string, bridge: Bridge) {
         props: {
           onClick: () => {
             clipboardStore.copyFragment({
-              fragmentId: fragment.id,
+              fragmentId: fragment!.id,
               projectId: id,
               type: 'cut',
               account: project.account,
@@ -155,7 +157,7 @@ export function useFragment(id: string, bridge: Bridge) {
         props: {
           onClick: () => {
             clipboardStore.pasteFragment({
-              fragmentId: fragment.id,
+              fragmentId: fragment!.id,
               projectId: id,
               position: 'before',
               account: project.account,
@@ -180,7 +182,7 @@ export function useFragment(id: string, bridge: Bridge) {
         props: {
           onClick: () => {
             clipboardStore.pasteFragment({
-              fragmentId: fragment.id,
+              fragmentId: fragment!.id,
               projectId: id,
               position: 'after',
               account: project.account,
@@ -198,12 +200,34 @@ export function useFragment(id: string, bridge: Bridge) {
         }
       },
       {
+        key: 'insert',
+        label: '粘贴片段',
+        disabled: !(clipboardStore.fragment.length === 1),
+        show: fragments.length === 0,
+        props: {
+          onClick: () => {
+            clipboardStore.pasteFragment({
+              fragmentId: '',
+              projectId: id,
+              position: 'insert',
+              account: project.account,
+              hostname: project.hostname
+            }).then(() => {
+              clipboardStore.fragment = []
+            }).catch(err => {
+              message.error(err)
+            })
+            dropdownState.isShow = false
+          }
+        }
+      },
+      {
         key: 'copy-txt',
         label: '复制文本',
         show: fragments.length === 1,
         props: {
           onClick: () => {
-            const txt = fragment.txt || fragment.transcript.join('')
+            const txt = fragment?.txt || fragment!.transcript.join('')
             navigator.clipboard.writeText(txt)
             message.success(`已复制文本: ${txt}`)
             dropdownState.isShow = false

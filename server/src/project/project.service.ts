@@ -678,11 +678,13 @@ export class ProjectService {
     oldIndex?: number
     newIndex?: number
     insertFragmentId?: string
-    insertPosition?: 'before' | 'after'
+    insertPosition?: 'before' | 'after' | 'insert'
   }) {
+    // console.log(args)
     const { procedureId, fragmentId, userId, type, oldIndex, newIndex, insertFragmentId, insertPosition } = args
     try {
       const procedure = await this.projectsRepository.findOneBy({ id: procedureId, userId })
+      if (!procedure) throw new Error('找不到对应的工程！')
       const index = ['remove', 'move', 'error', 'extract', 'insert'].includes(type)
         ? procedure.sequence.findIndex(i => i === fragmentId) // remove/move 在 sequence 查询片段
         : procedure.removedSequence.findIndex(i => i === fragmentId) // delete/restore 在 removedSequence 查询片段
@@ -756,6 +758,9 @@ export class ProjectService {
           }
           if (insertPosition === 'after') {
             procedure.sequence.splice(index + 1, 0, insertFragmentId)
+          }
+          if (insertPosition === 'insert') {
+            procedure.sequence.push(insertFragmentId)
           }
           break
       }

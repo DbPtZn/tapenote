@@ -15,7 +15,7 @@ interface SourceFragment {
 interface TargetFragment {
   fragmentId: string
   projectId: string
-  position: 'before' | 'after'
+  position: 'before' | 'after' | 'insert'
   account: string
   hostname: string
 }
@@ -78,8 +78,8 @@ export const useClipboardStore = defineStore('clipboardStore', {
           return reject('操作无意义')
         }
         projectStore.pasteFragment({
-          sourceProejctId: source.projectId,
-          targetProejctId: target.projectId,
+          sourceProjectId: source.projectId,
+          targetProjectId: target.projectId,
           sourceFragmentId: source.fragmentId,
           targetFragmentId: target.fragmentId,
           position: target.position,

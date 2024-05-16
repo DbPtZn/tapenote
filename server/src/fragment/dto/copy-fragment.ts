@@ -1,8 +1,8 @@
 export interface CopyFragmentDto {
-  sourceProejctId: string
-  targetProejctId: string
+  sourceProjectId: string
+  targetProjectId: string
   sourceFragmentId: string
   targetFragmentId: string
-  position: 'before' | 'after'
+  position: 'before' | 'after' | 'insert'
   type: 'copy' | 'cut'
 }
