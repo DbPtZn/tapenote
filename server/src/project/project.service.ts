@@ -3,7 +3,7 @@ import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/commo
 import { CreateProjectDto } from './dto/create-project.dto'
 import { Annotation, BGM, Project } from './entities/project.entity'
 import { InjectRepository } from '@nestjs/typeorm'
-import { MongoRepository, Not, QueryFailedError, Repository } from 'typeorm'
+import { MongoRepository, Not, QueryFailedError, Repository, EntityManager, DataSource } from 'typeorm'
 import { StorageService } from 'src/storage/storage.service'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
@@ -13,10 +13,12 @@ import { UpdateSidenoteContentDto } from './dto/update-sidenote-content.dto'
 import { FfmpegService } from 'src/ffmpeg/ffmpeg.service'
 import path from 'path'
 import fs from 'fs'
+import fsx from 'fs-extra'
 import * as UUID from 'uuid'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { FolderService } from 'src/folder/folder.service'
+import { FragmentService } from 'src/fragment/fragment.service'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -46,8 +48,13 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private projectsRepository: Repository<Project>,
+    @InjectRepository(Fragment)
+    private fragmentsRepository: Repository<Fragment>,
+    // @Inject(forwardRef(() => FragmentService))
+    // private readonly fragmentService: FragmentService,
     @Inject(forwardRef(() => FolderService))
     private readonly folderService: FolderService,
+    private readonly dataSource: DataSource,
     private readonly storageService: StorageService,
     private readonly ffmpegService: FfmpegService,
     private readonly userlogger: UserLoggerService,
@@ -164,8 +171,7 @@ export class ProjectService {
       if (!result) {
         throw new Error(`创建项目失败！`)
       }
-      // this.userlogger.log(`创建 [${library}] 新项目成功，项目id：${result.id}`)
-      // this.logger.log(`创建 [${library}] 新项目成功，项目id：${result.id}`)
+      this.userlogger.log(`创建 [${library}] 新项目成功，项目id：${result.id}`)
       return result
     } catch (error) {
       throw error
@@ -274,7 +280,7 @@ export class ProjectService {
     try {
       relations.includes('fragments') ? '' : relations.push('fragments') // fragments 是默认必选
       const project = await this.projectsRepository.findOne({
-        where: { id, userId },
+        where: { id, userId, removed: RemovedEnum.NEVER },
         relations: relations
       })
       switch (project.library) {
@@ -497,6 +503,79 @@ export class ProjectService {
       throw error
     }
   }
+
+  async delete(id: string, userId: string, dirname: string) {
+    try {
+      const project = await this.projectsRepository.findOne({
+        where: { id, userId },
+        relations: { fragments: true }
+      })
+
+      // 使用事务来确保所有操作要么全部成功，要么全部撤销
+      const queryRunner = this.dataSource.createQueryRunner()
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+
+      try {
+        for (const fragment of project.fragments) {
+          await queryRunner.manager.remove(fragment)
+        }
+        await queryRunner.manager.remove(project)
+        await queryRunner.commitTransaction()
+      } catch (error) {
+        console.log('删除项目失败：' + error.message)
+        await queryRunner.rollbackTransaction()
+        throw error
+      } finally {
+        await queryRunner.release()
+      }
+      console.log('删除项目成功：')
+      console.log([project.library, project.dirname])
+      
+      const dir = this.storageService.getDocDir({ dir: [dirname, project.dirname] })
+      try {
+        fsx.removeSync(dir)
+      } catch (error) {
+        console.log(`删除项目目录时发生错误` + error)
+        this.userlogger.error(`删除项目[${project.id}]的目录:[${dir}]时发生错误`, error.message)
+        throw error
+      }
+      // 如果是 course，应当删除对应的音频文件
+      // if (project.library === LibraryEnum.COURSE) {
+      //   const filepath = this.storageService.getFilePath({
+      //     filename: project.audio,
+      //     dirname: [dirname, project.dirname],
+      //     category: 'audio'
+      //   })
+      //   try {
+      //     this.storageService.deleteSync(filepath)
+      //   } catch (error) {
+      //     console.log(`删除'audio'文件时发生错误` + error)
+      //     this.userlogger.error(`删除项目[${project.id}]的'audio':[${filepath}]时发生错误`, error.message)
+      //   }
+      // }
+
+      // 如果是 Procedure ，则找到所有片段并删除对应的音频文件
+      // if (project.library === LibraryEnum.PROCEDURE) {
+      //   for (const fragment of project.fragments) {
+      //     const filepath = this.storageService.getFilePath({
+      //       filename: fragment.audio,
+      //       dirname: [dirname, project.dirname],
+      //       category: 'audio'
+      //     })
+      //     try {
+      //       this.storageService.deleteSync(filepath)
+      //     } catch (error) {
+      //       console.log(`删除片段对应的音频时发送错误` + error)
+      //       this.userlogger.error(`删除项目[${project.id}]的'fragment.audio':[${filepath}]时发生错误`, error.message)
+      //     }
+      //   }
+      // }
+      return { msg: '删除成功！', date: new Date() }
+    } catch (error) {
+      throw error
+    }
+  }
   /** -------------------------------- 移除与恢复 ------------------------------------ */
 
   /** -------------------------------- 移动与复制 ------------------------------------ */
@@ -513,193 +592,126 @@ export class ProjectService {
   }
 
   async copy(projectId: string, folderId: string, userId: string, dirname: string) {
-    const source = await this.findOne(projectId, userId, dirname, ['folder', 'user'])
-    if (!source) throw '找不到目标文件！'
-    let target = new Project()
-    // 对相同属性进行复制
-    // target = source
-    // const { id, fragments, folderId, folder, audio, ...entityData } = source
-    target = Object.assign(target, source)
-    // 对部分属性进行重写
-    target.id = UUID.v4()
+    try {
+      const source = await this.findOne(projectId, userId, dirname, ['folder', 'user'])
+      if (!source) throw new Error('找不到目标文件！')
 
-    // 设置目标文件夹 (目标与源不一样的情况才需要重新设置)
-    if (folderId !== source.folderId) {
-      target.folderId = folderId
-      const newFolder = await this.folderService.findOneById(folderId, userId)
-      target.folder = newFolder
-    }
+      // 先进行克隆
+      const target = Object.assign(new Project(), source)
 
-    // 设置目标项目目录
-    target.dirname = await this.generateDirname(dirname)
+      // 对部分属性进行重写
+      target.id = UUID.v4()
 
-    // 如果是课程，则应该复制 audio
-    if (target.library === LibraryEnum.COURSE) {
-      // 1. 创建新的音频文件
-      const { filename, filepath } = this.storageService.createFilePath({
-        dirname: [dirname, target.dirname],
-        category: 'audio',
-        originalname: target.id,
-        extname: '.wav'
-      })
-      // 2. 复制文件
-      this.storageService.copyFileSync(source.audio, filepath)
-      target.audio = filename
-    }
+      // 设置目标文件夹 (目标与源不一样的情况才需要重新设置)
+      if (folderId !== source.folderId) {
+        target.folderId = folderId
+        const newFolder = await this.folderService.findOneById(folderId, userId)
+        target.folder = newFolder
+      }
 
-    // 如果是工程，则应该复制 fragments 中的音频，并且每一个 fragment 都要重新生成
-    // 相应的 sequence 和 removeSequence 都要重写
-    if (target.library === LibraryEnum.PROCEDURE) {
-      target.fragments.forEach(fragment => {
-        let newFragment = new Fragment()
-        newFragment = Object.assign(newFragment, fragment)
-        // 赋予新 uuid
-        newFragment.id = UUID.v4()
+      // 设置目标项目目录
+      target.dirname = await this.generateDirname(dirname)
 
-        // 建立新的实体关系
-        newFragment.project = target
-        
-        // 复制音频文件
+      // 如果是 course ，则应该生成新的音频文件，并且需要更新 audio
+      if (target.library === LibraryEnum.COURSE) {
+        // 创建新的音频文件
         const { filename, filepath } = this.storageService.createFilePath({
           dirname: [dirname, target.dirname],
           category: 'audio',
-          originalname: newFragment.id,
+          originalname: target.id,
           extname: '.wav'
         })
-        this.storageService.copyFileSync(fragment.audio, filepath)
-        newFragment.audio = filename
-
-        // 处理排序信息
-        if (fragment.removed === RemovedEnum.NEVER) {
-          // 获取片段在源项目中的排序位置
-          const index = target.sequence.findIndex(item => item === fragment.id)
-          if (index !== -1) target.sequence[index] = newFragment.id
-          else this.userlogger.error(`替换片段的排序时出错，被替换片段[${fragment.id}]在 sequence 列表中不存在！`)
-        }
-        if (fragment.removed !== RemovedEnum.NEVER) {
-          // 获取移除片段在源项目中的排序位置
-          const index = target.removedSequence.findIndex(item => item === fragment.id)
-          if (index !== -1) target.removedSequence[index] = newFragment.id
-          else this.userlogger.error(`替换片段的排序时出错，被替换片段[${fragment.id}]在 removedSequence 列表中不存在！`)
-        }
-        
-      })
-      // target.fragments = source.fragments.map(fragment => {
-      //   let newFragment = new Fragment()
-      //   newFragment = Object.assign(newFragment, {
-      //     id: UUID.v4(),
-      //     project: target,
-      //     audio: '',
-      //     duration: fragment.duration,
-      //     txt: fragment.txt,
-      //     transcript: fragment.transcript,
-      //     tags: fragment.tags,
-      //     promoters: fragment.promoters,
-      //     timestamps: fragment.timestamps,
-      //     role: fragment.role,
-      //     removed: fragment.removed
-      //   })
-      //   const { filename, filepath } = this.storageService.createFilePath({
-      //     dirname: [dirname, target.dirname],
-      //     category: 'audio',
-      //     originalname: newFragment.id,
-      //     extname: '.wav'
-      //   })
-      //   // 复制文件
-      //   try {
-      //     this.storageService.copyFileSync(fragment.audio, filepath)
-      //   } catch (error) {
-      //     throw '复制片段音频的时候出错了！'
-      //   }
-      //   newFragment.audio = filename
-      //   // 处理排序信息
-      //   if (fragment.removed === RemovedEnum.NEVER) {
-      //     // 获取片段在源项目中的排序位置
-      //     const index = target.sequence.findIndex(item => item === fragment.id)
-      //     if (index !== -1) target.sequence[index] = newFragment.id
-      //     else throw '替换片段的排序时出错，被替换片段在 sequence 列表中不存在！'
-      //   }
-      //   if (fragment.removed !== RemovedEnum.NEVER) {
-      //     // 获取移除片段在源项目中的排序位置
-      //     const index = target.removedSequence.findIndex(item => item === fragment.id)
-      //     if (index !== -1) target.removedSequence[index] = newFragment.id
-      //     else throw '替换移除片段的排序时出错，被替换片段在 removedSequence 列表中不存在！'
-      //   }
-      //   return newFragment
-      // })
-
-
-      // 校验 sequence 长度和内容是否完成替换
-      if (target.sequence.length === source.sequence.length) {
-        target.sequence.some(item => source.sequence.includes(item))
-      } else {
-        throw '替换片段的排序时出错，替换后的 sequence 长度不一致或存在未替换的片段！'
+        // 复制文件
+        this.storageService.copyFileSync(source.audio, filepath)
+        target.audio = filename
       }
-      if (target.removedSequence.length === source.removedSequence.length) {
-        target.removedSequence.some(item => source.removedSequence.includes(item))
-      } else {
-        throw '替换移除片段的排序时出错，替换后的 removedSequence 长度不一致或存在未替换的片段！'
-      }
-    }
-    // 其它共有数据
-    // target.userId = source.userId
-    // target.library = source.library
-    // target.title = source.title
-    // target.content = source.content
-    // target.abbrev = source.abbrev
-    // target.removed = source.removed
-    // target.detail = source.detail
 
-    // 其它课程数据
-    // target.duration = target.duration
-    // target.promoterSequence = source.promoterSequence
-    // target.keyframeSequence = source.keyframeSequence
-    // target.subtitleSequence = source.subtitleSequence
-    // target.subtitleKeyframeSequence = source.subtitleKeyframeSequence
-    // target.sidenote = source.sidenote
-    // target.annotations = source.annotations
+      // 如果是工程，则应该复制 fragments 中的音频，并且每一个 fragment 都要重新生成
+      // 相应的 sequence 和 removeSequence 都要重写
+      if (target.library === LibraryEnum.PROCEDURE) {
+        target.fragments = target.fragments.map(fragment => {
+          // 克隆 fragment 实体
+          const newFragment = Object.assign(new Fragment(), fragment)
 
-    // target.fromProcedureId = source.fromProcedureId
-    // target.fromNoteId = source.fromNoteId
-    const newProject = await this.projectsRepository.save(target)
-    return newProject
-  }
+          // 赋予新 uuid
+          newFragment.id = UUID.v4()
 
-  async delete(id: string, userId: string, dirname: string) {
-    try {
-      const project = await this.projectsRepository.findOneBy({ id, userId })
-      const result = await this.projectsRepository.remove(project)
-      // console.log(result)
-      // 如果是课程，则删除对应的音频文件
-      if (project.library === LibraryEnum.COURSE) {
-        const filepath = this.storageService.getFilePath({
-          filename: result.audio,
-          dirname: [dirname, project.dirname],
-          category: 'audio'
-        })
-        try {
-          this.storageService.deleteSync(filepath)
-        } catch (error) {
-          console.log(`删除课程对应的音频时发送错误` + error) // 仅打印日志
-        }
-      }
-      // 如果是工程，则找到所有片段并删除对应的音频文件
-      if (project.library === LibraryEnum.PROCEDURE) {
-        project.fragments.forEach(fragment => {
-          const filepath = this.storageService.getFilePath({
-            filename: fragment.audio,
-            dirname: [dirname, project.dirname],
-            category: 'audio'
+          // 建立新的实体关系
+          newFragment.project = target
+          
+          // 复制音频文件
+          const { filename, filepath } = this.storageService.createFilePath({
+            dirname: [dirname, target.dirname],
+            category: 'audio',
+            originalname: newFragment.id,
+            extname: '.wav'
           })
           try {
-            this.storageService.deleteSync(filepath)
+            this.storageService.copyFileSync(fragment.audio, filepath)
           } catch (error) {
-            console.log(`删除片段对应的音频时发送错误` + error) // 仅打印日志
+            this.userlogger.error(`复制音频文件时出错，被复制音频文件[${fragment.audio}]不存在！`)
+            newFragment.transcript.push('该片段音频文件已丢失！')
           }
+          newFragment.audio = filename
+
+          newFragment.removed = fragment.removed
+
+          // 处理排序信息
+          if (fragment.removed === RemovedEnum.NEVER) {
+            // 获取片段在源项目中的排序位置
+            const index = target.sequence.findIndex(item => item === fragment.id)
+            if (index !== -1) target.sequence[index] = newFragment.id
+            else this.userlogger.error(`替换片段的排序时出错，被替换片段[${fragment.id}]在 sequence 列表中不存在！`)
+          }
+          if (fragment.removed !== RemovedEnum.NEVER) {
+            // 获取移除片段在源项目中的排序位置
+            const index = target.removedSequence.findIndex(item => item === fragment.id)
+            if (index !== -1) target.removedSequence[index] = newFragment.id
+            else this.userlogger.error(`替换片段的排序时出错，被替换片段[${fragment.id}]在 removedSequence 列表中不存在！`)
+          }
+          return newFragment
         })
+
+        // 校验 sequence 长度和内容是否完成替换
+        if (target.sequence.length === source.sequence.length) {
+          target.sequence.some(item => source.sequence.includes(item))
+        } else {
+          this.userlogger.error('替换片段的排序时出错，替换后的 sequence 长度不一致或存在未替换的片段！')
+        }
+        if (target.removedSequence.length === source.removedSequence.length) {
+          target.removedSequence.some(item => source.removedSequence.includes(item))
+        } else {
+          this.userlogger.error(`替换移除片段的排序时出错，替换后的 removedSequence 长度不一致或存在未替换的片段！`)
+        }
       }
-      return { msg: '删除成功！', date: new Date() }
+
+      // 使用事务来确保所有操作要么全部成功，要么全部撤销
+      const queryRunner = this.dataSource.createQueryRunner()
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+
+      try {
+        await queryRunner.manager.save(target) // 保存新的实体
+        for (const fragment of target.fragments) {
+          await queryRunner.manager.save(fragment) // 保存新的子实体
+        }
+        await queryRunner.commitTransaction()
+      } catch (error) {
+        await queryRunner.rollbackTransaction()
+        await fsx.remove(this.storageService.getDocDir({ dir: [dirname, target.dirname]}))
+        this.userlogger.error(`保存克隆实体失败,项目id:${projectId}`, error.message)
+        throw error
+      } finally {
+        await queryRunner.release()
+      }
+
+      // console.log(`复制项目成功,源项目id:${projectId}，克隆项目id:${target.id}`)
+      this.userlogger.log(`复制项目成功,源项目id:${projectId}，克隆项目id:${target.id}`)
+      const newProject = await this.findOne(target.id, userId, dirname)
+      return newProject
     } catch (error) {
+      // console.log(error)
+      this.userlogger.error(`复制项目失败,项目id:${projectId}`, error.message)
       throw error
     }
   }
@@ -1089,3 +1101,46 @@ function subtitleProcessing(transcriptGroup: string[][], fragmentDurationGroup: 
 //   newFragment.audio = targetFilepath
 //   return { fragment: newFragment, updateAt: target.updateAt, msg: '复制片段成功！' }
 // }
+// target.fragments = source.fragments.map(fragment => {
+//   let newFragment = new Fragment()
+//   newFragment = Object.assign(newFragment, {
+//     id: UUID.v4(),
+//     project: target,
+//     audio: '',
+//     duration: fragment.duration,
+//     txt: fragment.txt,
+//     transcript: fragment.transcript,
+//     tags: fragment.tags,
+//     promoters: fragment.promoters,
+//     timestamps: fragment.timestamps,
+//     role: fragment.role,
+//     removed: fragment.removed
+//   })
+//   const { filename, filepath } = this.storageService.createFilePath({
+//     dirname: [dirname, target.dirname],
+//     category: 'audio',
+//     originalname: newFragment.id,
+//     extname: '.wav'
+//   })
+//   // 复制文件
+//   try {
+//     this.storageService.copyFileSync(fragment.audio, filepath)
+//   } catch (error) {
+//     throw '复制片段音频的时候出错了！'
+//   }
+//   newFragment.audio = filename
+//   // 处理排序信息
+//   if (fragment.removed === RemovedEnum.NEVER) {
+//     // 获取片段在源项目中的排序位置
+//     const index = target.sequence.findIndex(item => item === fragment.id)
+//     if (index !== -1) target.sequence[index] = newFragment.id
+//     else throw '替换片段的排序时出错，被替换片段在 sequence 列表中不存在！'
+//   }
+//   if (fragment.removed !== RemovedEnum.NEVER) {
+//     // 获取移除片段在源项目中的排序位置
+//     const index = target.removedSequence.findIndex(item => item === fragment.id)
+//     if (index !== -1) target.removedSequence[index] = newFragment.id
+//     else throw '替换移除片段的排序时出错，被替换片段在 removedSequence 列表中不存在！'
+//   }
+//   return newFragment
+// })

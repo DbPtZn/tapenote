@@ -26,11 +26,11 @@ export class Folder {
   parentId: string
 
   // 邻接列表
-  @OneToMany(type => Folder, folder => folder.children)
+  @ManyToOne(type => Folder, folder => folder.children)
   parent: Folder
 
   // 邻接列表
-  @ManyToOne(type => Folder, folder => folder.parent)
+  @OneToMany(type => Folder, folder => folder.parent)
   children: Folder[]
 
   @Column('uuid')
@@ -69,10 +69,8 @@ export class Folder {
   isCloud: boolean // 云同步
 
   @Column({
-    type: 'varchar'
-    // type: 'enum',
-    // enum: RemovedEnum,
-    // default: RemovedEnum.NEVER
+    type: 'varchar',
+    default: RemovedEnum.NEVER
   })
   removed: RemovedEnum // 移除状态
 
@@ -86,7 +84,6 @@ export class Folder {
   @BeforeInsert()
   createDate() {
     this.createAt = new Date()
-    this.removed = RemovedEnum.NEVER
   }
 
   /** 实体更新时自动更新时间 */

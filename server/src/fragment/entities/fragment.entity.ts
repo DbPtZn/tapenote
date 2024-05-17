@@ -83,7 +83,8 @@ export class Fragment {
   role: number
 
   @Column({
-    type: 'varchar'
+    type: 'varchar',
+    default: RemovedEnum.NEVER
     // type: 'enum',
     // enum: RemovedEnum,
     // default: RemovedEnum.NEVER
@@ -102,7 +103,6 @@ export class Fragment {
   @BeforeInsert()
   createDate() {
     this.createAt = new Date()
-    this.removed = RemovedEnum.NEVER
   }
 
   /** 实体更新时自动更新时间 */

@@ -7,11 +7,14 @@ import { StorageModule } from 'src/storage/storage.module'
 import { FfmpegModule } from 'src/ffmpeg/ffmpeg.module'
 import { UserLoggerModule } from 'src/user-logger/userLogger.module'
 import { FolderModule } from 'src/folder/folder.module'
+import { FragmentModule } from 'src/fragment/fragment.module'
+import { Fragment } from 'src/fragment/entities/fragment.entity'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project]),
+    TypeOrmModule.forFeature([Project, Fragment]),
     forwardRef(() => FolderModule),
+    // forwardRef(() => FragmentModule),
     StorageModule,
     FfmpegModule,
     UserLoggerModule

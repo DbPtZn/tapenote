@@ -16,9 +16,15 @@ export class StorageService {
    * @param prv 是否为私密文件夹
    * @returns 文件存储目录
    */
-  getUserDir(dirname: string, prv = false) {
+  getUserDir(args: { dir: string | string[]; prv?: boolean }) {
+    const { dir, prv } = args
     const common = this.configService.get<ReturnType<typeof commonConfig>>('common')
-    const dirPath = path.join(__rootdirname, common.userDir, prv ? common.privateDir : common.publicDir, dirname)
+    const dirPath = path.join(
+      __rootdirname,
+      common.userDir,
+      prv === true ? common.privateDir : common.publicDir,
+      typeof dir === 'string' ? dir : dir.join('/')
+    )
     // console.log(dirPath)
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true })
@@ -27,10 +33,14 @@ export class StorageService {
   }
 
   /** 获取用户目录下的指定二级文件夹（不存在时自动创建） */
-  getDocDir(dirname: string, category: Category, prv = false) {
-    const userDir = this.getUserDir(dirname, prv)
+  getDocDir(args: { dir: string | string[]; category?: Category; prv?: boolean }) {
+    const { dir, category, prv } = args
+    const userDir = this.getUserDir({
+      dir: typeof dir === 'string' ? dir : dir.join('/'),
+      prv: prv === undefined ? false : prv
+    })
     // console.log(userDir)
-    const dirPath = `${userDir}/${category}`
+    const dirPath = category ? `${userDir}/${category}` : userDir
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true })
     }
@@ -40,7 +50,7 @@ export class StorageService {
   getFilePath(args: { filename: string; dirname: string | string[]; category: Category; prv?: boolean }) {
     const { dirname, category, filename, prv } = args
     const dir = typeof dirname === 'string' ? dirname : dirname.join('/')
-    const dirPath = this.getDocDir(dir, category, prv)
+    const dirPath = this.getDocDir({ dir, category, prv })
     return `${dirPath}/${filename}`
   }
 
@@ -67,7 +77,7 @@ export class StorageService {
             .map(s => s.trim()) // 去除包含空白字符在内的空字符串
             .filter(s => s)
             .join('/')
-    const dirPath = this.getDocDir(dir, category, prv)
+    const dirPath = this.getDocDir({ dir, category, prv })
     const filename = `${originalname ? originalname : createDtId()}` + `${extname}`
     const filepath = dirPath + '/' + filename
     return {

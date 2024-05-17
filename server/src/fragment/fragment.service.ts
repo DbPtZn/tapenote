@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { Fragment } from './entities/fragment.entity'
 import { StorageService } from 'src/storage/storage.service'
@@ -32,6 +32,7 @@ export class FragmentService {
   constructor(
     @InjectRepository(Fragment)
     private fragmentsRepository: Repository<Fragment>,
+    // @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly storageService: StorageService,
     private readonly ffmpegService: FfmpegService,
@@ -309,6 +310,20 @@ export class FragmentService {
         }
       })
     })
+  }
+
+  /** 创建指定片段 */
+  async create(fragment: Fragment) {
+    try {
+      const isExits = await this.fragmentsRepository.existsBy({ id: fragment.id })
+      if (isExits) {
+        this.userlogger.log(`片段 ${fragment.id} 已存在,无法对其执行创建操作！`)
+        return
+      }
+      await this.fragmentsRepository.save(fragment)
+    } catch (error) {
+      throw error
+    }
   }
 
   useTTS(args: { txt: string; filepath: string; speakerId?: number; speed?: number }) {

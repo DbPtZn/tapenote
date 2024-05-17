@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 import { FragmentService } from './fragment.service'
 import { FragmentController } from './fragment.controller'
 import { StorageModule } from 'src/storage/storage.module'
@@ -28,6 +28,7 @@ import { Fragment } from './entities/fragment.entity'
         }
       })
     }),
+    // forwardRef(() => ProjectModule),
     ProjectModule,
     FfmpegModule,
     StorageModule,

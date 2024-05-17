@@ -128,9 +128,8 @@ export class FolderService {
       relations: ['projects']
     })
     const subfolders = await this.findChildrenById(id, userId)
-    const subfiles = folder.projects
-    // const subfiles = await this.projectService.findAllByFolderId(folder.id, userId, folder.lib)
-    // console.log(subfiles)
+    const subfiles = folder.projects.filter(item => item.removed === RemovedEnum.NEVER)
+
     const data = {
       id: folder.id,
       name: folder.name,
@@ -148,9 +147,8 @@ export class FolderService {
   /** 获取最近编辑文档 考虑位置挪到projectService 中 */
   async getRecently(getRecentlyDto: GetRecentlyDto, userId: string) {
     const { lib, skip, take } = getRecentlyDto
-    console.log([lib, skip, take])
+    // console.log([lib, skip, take])
     const subfiles = await this.projectService.findByUpdateAt(skip, take, lib, userId)
-    // const subfiles = await this.foldersRepository.findOne({ where: { userId, lib } })
     const recentlyFiles = await this.recentlyFormatter(subfiles, lib, userId)
     const data = {
       id: 'recently',
@@ -204,26 +202,29 @@ export class FolderService {
   }
 
   async move(moveFolderDto: MoveFolderDto, userId: string) {
-    // console.log(moveFolderDto)
-    const { sourceId, targetId, dropPosition } = moveFolderDto
-    if (sourceId === targetId) throw '不能将文件夹放入自身！'
-    const _sourceId = sourceId
-    const _targetId = targetId
-    const isAncestor = await this.isAncestorNode(_sourceId, _targetId, userId)
-    if (isAncestor) throw '目标节点是源节点的祖先节点！'
-    const sourceNode = await this.findOneById(_sourceId, userId)
-    const targetNode = await this.findOneById(_targetId, userId)
-    if (!sourceNode) throw '源节点不存在！'
-    if (!targetNode) throw '目标节点不存在！'
-    if (sourceNode.lib !== targetNode.lib) throw '不同库的文件夹无法拖放！'
-    if (dropPosition === DropPosition.BEFORE || dropPosition === DropPosition.AFTER) {
-      sourceNode.parentId = targetNode.parentId
-    } else if (dropPosition === DropPosition.INSIDE) {
-      sourceNode.parentId = targetNode.id
+    try {
+      const { sourceId, targetId, dropPosition } = moveFolderDto
+      if (sourceId === targetId) throw '不能将文件夹放入自身！'
+      const _sourceId = sourceId
+      const _targetId = targetId
+      const isAncestor = await this.isAncestorNode(_sourceId, _targetId, userId)
+      if (isAncestor) throw '目标节点是源节点的祖先节点！'
+      const sourceNode = await this.findOneById(_sourceId, userId)
+      const targetNode = await this.findOneById(_targetId, userId)
+      if (!sourceNode) throw '源节点不存在！'
+      if (!targetNode) throw '目标节点不存在！'
+      if (sourceNode.lib !== targetNode.lib) throw '不同库的文件夹无法拖放！'
+      if (dropPosition === DropPosition.BEFORE || dropPosition === DropPosition.AFTER) {
+        sourceNode.parentId = targetNode.parentId
+      } else if (dropPosition === DropPosition.INSIDE) {
+        sourceNode.parentId = targetNode.id
+      }
+      this.foldersRepository.save(sourceNode).then(() => {
+        return '文件夹移动成功！'
+      })
+    } catch (error) {
+      throw error
     }
-    this.foldersRepository.save(sourceNode).then(() => {
-      return '文件夹移动成功！'
-    })
   }
 
   async isAncestorNode(sourceId: string, targetId: string, userId: string) {
@@ -294,10 +295,12 @@ export class FolderService {
   async updateRemovedRecursive(folderId: string, removeMode: RemovedEnum, userId: string, removedIds?: string[]) {
     try {
       removedIds && removedIds.push(folderId)
+      this.foldersRepository.find
       const parent = await this.foldersRepository.findOne({
         where: { id: folderId, userId },
         relations: ['children']
       })
+      console.log(parent)
       const children = parent.children
       if (children.length > 0) {
         for (let i = 0; i < children.length; i++) {
@@ -314,15 +317,18 @@ export class FolderService {
   /** 彻底删除文件夹（仅删除该文件夹与其中的文件，暂不考虑递归删除子文件夹） */
   async delete(id: string, userId: string, dirname: string) {
     try {
-      const folder = await this.foldersRepository.findOneBy({ id, userId })
-      const result = await this.foldersRepository.remove(folder)
-      // 注意，删除成功后， folder.id 和 result.id 都会是 undefined
+      const folder = await this.foldersRepository.findOne({
+        where: { id, userId },
+        relations: ['projects']
+      })
       // 删除文件夹下的所有文件(不包括其子文件夹,也不包括其中已被移除的文件)
-      const projects = await this.projectService.findAllByFolderId(id, userId)
-      projects.forEach(async project => {
+      folder.projects.forEach(async project => {
         await this.projectService.delete(project.id, userId, dirname)
       })
+      await this.foldersRepository.remove(folder)
+      this.userLogger.log(`彻底删除文件夹[${folder.name}],id:[${id}]成功`)
     } catch (error) {
+      this.userLogger.error(`彻底删除文件夹id:[${id}]失败`, error)
       throw error
     }
   }

@@ -82,10 +82,8 @@ export class Project {
   abbrev: string // 内容缩略
 
   @Column({
-    type: 'varchar'
-    // type: 'enum',
-    // enum: RemovedEnum,
-    // default: RemovedEnum.NEVER
+    type: 'varchar',
+    default: RemovedEnum.NEVER
   })
   removed: RemovedEnum
 
@@ -239,7 +237,6 @@ export class Project {
   createDate() {
     this.createAt = new Date()
     this.updateAt = new Date()
-    this.removed = RemovedEnum.NEVER
   }
 
   /** 实体更新时自动更新时间 （仅在使用 save 方法进行更新时生效） */

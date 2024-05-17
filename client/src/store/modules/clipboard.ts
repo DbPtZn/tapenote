@@ -88,11 +88,11 @@ export const useClipboardStore = defineStore('clipboardStore', {
         target.account,
         target.hostname
         ).then(() => {
-          // this.fragment = [] // 移至事件中清理
+          // this.fragment = [] // 挪至事件中清理
           source.success()
           resolve('')
         }).catch(err => {
-          // this.fragment = [] // 移至事件中清理
+          // this.fragment = [] // 挪至事件中清理
           console.log(err)
           reject('粘贴失败')
         })
