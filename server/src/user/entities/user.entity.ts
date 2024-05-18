@@ -19,79 +19,30 @@ import {
 export type Sex = 'male' | 'female' | 'other' | 'secrecy'
 
 export class Dir {
-  // @Column({
-  //   type: 'uuid'
-  // })
   note: string
-
-  // @Column({
-  //   type: 'uuid'
-  // })
   course: string
-
-  // @Column({
-  //   type: 'uuid'
-  // })
   procedure: string
 }
 
 export class SubscriptionConfig {
-  // @Column({
-  //   type: 'uuid'
-  // })
   id: string
-
-  // @Column('varchar', { length: 50 })
   name: string
-
-  // @Column({
-  //   type: 'varchar',
-  //   default: ''
-  // })
   site: string
-
-  // @Column({
-  //   type: 'varchar',
-  //   default: ''
-  // })
   code: string
-
-  // @Column({
-  //   type: 'varchar',
-  //   default: ''
-  // })
   desc: string
 }
 
 export class SubmissionConfig {
-  // @Column({
-  //   type: 'uuid'
-  // })
   id: string
-
-  // @Column({
-  //   type: 'varchar',
-  //   length: 50
-  // })
   name: string
-
-  // @Column({
-  //   type: 'varchar',
-  //   default: ''
-  // })
   site: string
-
-  // @Column({
-  //   type: 'varchar',
-  //   default: ''
-  // })
   code: string
-
-  // @Column({
-  //   type: 'varchar',
-  //   default: ''
-  // })
   desc: string
+}
+
+export class UserConfig {
+  role: number
+  robot: boolean
 }
 
 @Entity()
@@ -100,10 +51,10 @@ export class User {
   id: string
 
   @OneToMany(() => Project, project => project.user)
-  projects: Project
+  projects: Project[]
 
   @OneToMany(() => Folder, folder => folder.user)
-  folders: Folder
+  folders: Folder[]
 
   @OneToOne(() => Timbre, timbre => timbre.user)
   timbre: Timbre
@@ -194,6 +145,12 @@ export class User {
     nullable: false
   })
   dirname: string
+
+  @Column({
+    type: 'simple-json',
+    default: JSON.stringify({})
+  })
+  config: UserConfig
 
   @Column({
     type: 'simple-json',

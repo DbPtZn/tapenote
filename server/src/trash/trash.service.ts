@@ -36,7 +36,7 @@ export class TrashService {
   }
 
   async getFolders(userId: string) {
-    const folders = await this.folderService.findBin(userId)
+    const folders = await this.folderService.findTrash(userId)
     const data: TrashDataFormat[] = []
     folders.forEach((item, index) => {
       data[index] = {

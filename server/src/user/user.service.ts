@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Dir, SubmissionConfig, SubscriptionConfig, User } from './entities/user.entity'
-import { Repository } from 'typeorm'
+import { DataSource, Repository } from 'typeorm'
 import { BcryptService } from 'src/bcrypt/bcrypt.service'
 import { UpdateUserPwdDto } from './dto/update-pwd.dto'
 import fs from 'fs'
@@ -15,6 +15,8 @@ import { TimbreService } from 'src/timbre/timbre.service'
 import { BgmService } from 'src/bgm/bgm.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
+import { LibraryEnum } from 'src/enum'
+import { Folder } from 'src/folder/entities/folder.entity'
 
 const __rootdirname = process.cwd()
 @Injectable()
@@ -22,6 +24,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private readonly dataSource: DataSource,
     private readonly storageService: StorageService,
     private readonly bcrtptService: BcryptService,
     private readonly timbreService: TimbreService,
@@ -54,12 +57,49 @@ export class UserService {
       user.nickname = nickname
       user.encryptedPassword = encryptedPassword
       user.dirname = dirname
-      const newUser = await this.usersRepository.save(user)
+
+      const folders = [LibraryEnum.NOTE, LibraryEnum.COURSE, LibraryEnum.PROCEDURE].map(lib => {
+        const folder = new Folder()
+        folder.id = UUID.v4()
+        folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
+        folder.desc = 'Root Folder'
+        folder.lib = lib
+        folder.parentId = null
+        return folder
+      })
+
+      // 创建根目录
+      user.dir = new Dir()
+      user.dir = {
+        note: folders.find(folder => folder.lib === LibraryEnum.NOTE).id,
+        course: folders.find(folder => folder.lib === LibraryEnum.COURSE).id,
+        procedure: folders.find(folder => folder.lib === LibraryEnum.PROCEDURE).id
+      }
+
+      // 使用事务来确保所有操作要么全部成功，要么全部撤销
+      const queryRunner = this.dataSource.createQueryRunner()
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+
+      try {
+        const newUser = await queryRunner.manager.save(user)
+        for (const folder of folders) {
+          folder.userId = newUser.id
+          folder.user = newUser
+          await queryRunner.manager.save(folder)
+        }
+        await queryRunner.commitTransaction()
+        return newUser
+      } catch (error) {
+        await queryRunner.rollbackTransaction()
+        throw error
+      } finally {
+        await queryRunner.release()
+      }
       // console.log(newUser)
-      this.timbreService.init(newUser.id) // 创建用户的音色列表
-      this.bgmService.init(newUser.id) // 创建 BGM 列表
-      this.logger.log(`创建新用户 ${newUser.account} 成功！`)
-      return newUser
+      // this.timbreService.init(newUser.id) // 创建用户的音色列表
+      // this.bgmService.init(newUser.id) // 创建 BGM 列表
+      // this.logger.log(`创建新用户 ${newUser.account} 成功！`)
     } catch (error) {
       this.logger.error(`创建新用户失败，失败原因：${error.message} `)
       throw error

@@ -25,11 +25,9 @@ export class FolderService {
 
   /** 新建根目录 */
   async createUserRoot(userId: string) {
-    // console.log('folder')
     this.userLogger.log(`正在创建用户根目录...`)
     try {
       const user = await this.userService.findOneById(userId)
-      // console.log(user)
       if (!user) return
       const dir = {
         note: null,
@@ -51,46 +49,74 @@ export class FolderService {
 
   /** 创建根目录 */
   async createRoot(lib: LibraryEnum, userId: string) {
-    const folder = new Folder()
-    folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
-    folder.desc = 'Root Folder'
-    folder.lib = lib
-    folder.isCloud = false
-    folder.userId = userId
-    folder.parentId = null
-    const res = await this.foldersRepository.save(folder)
-    return res.id
+    try {
+      const folder = new Folder()
+      folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
+      folder.desc = 'Root Folder'
+      folder.lib = lib
+      folder.isCloud = false
+      folder.userId = userId
+      folder.parentId = null
+      const result = await this.foldersRepository.save(folder)
+      this.userLogger.log(`创建'${lib}'根目录[${result.id}]成功`)
+      return result.id
+    } catch (error) {
+      this.userLogger.error(`创建'${lib}'根目录失败`, error.message)
+      throw error
+    }
   }
 
   /** 新建文件夹 */
   async create(createFolderDto: CreateFolderDto, userId: string) {
     const { name, desc, lib, parentId } = createFolderDto
-    const folder = new Folder()
-    folder.name = name
-    folder.desc = desc
-    folder.lib = lib
-    folder.userId = userId
-    folder.parentId = parentId
-    return this.foldersRepository.save(folder)
+    try {
+      const parent = await this.foldersRepository.findOneBy({ id: parentId, userId })
+      const folder = new Folder()
+      folder.name = name
+      folder.desc = desc
+      folder.lib = lib
+      folder.userId = userId
+      folder.parentId = parentId
+      folder.parent = parent
+      const result = await this.foldersRepository.save(folder)
+      this.userLogger.log(`创建文件夹[${result.id}]成功`)
+      return result
+    } catch (error) {
+      this.userLogger.error(`创建文件夹失败`, error.message)
+      throw error
+    }
   }
 
   /** 查询指定文件夹的子节点 */
   async findChildrenById(id: string, userId: string) {
-    const folders = await this.foldersRepository.find({
-      where: { parentId: id, userId, removed: RemovedEnum.NEVER },
-      select: ['id', 'name', 'parentId', 'lib', 'createAt']
-    })
-    for (let i = 0; i < folders.length; i++) {
-      const count = await this.foldersRepository.countBy({
-        parentId: folders[i].id,
-        userId,
-        removed: RemovedEnum.NEVER
+    try {
+      const parent = await this.foldersRepository.findOne({
+        where: { id, userId, removed: RemovedEnum.NEVER },
+        relations: { children: true }
       })
-      folders[i]['isLeaf'] = !(count > 0)
-      // folders[i]['children'] = count > 0 ? undefined : []
+      const children = parent.children
+      const folders = []
+      if (children && children.length > 0) {
+        for (const folder of children) {
+          const count = await this.foldersRepository.countBy({
+            parentId: folder.id,
+            userId,
+            removed: RemovedEnum.NEVER
+          })
+          folders.push({
+            id: folder.id,
+            name: folder.name,
+            parentId: folder.parentId,
+            lib: folder.lib,
+            createAt: folder.createAt,
+            isLeaf: !(count > 0)
+          })
+        }
+      }
+      return folders
+    } catch (error) {
+      throw error
     }
-    // console.log(folders)
-    return folders
   }
 
   /** 通过 id 查询 */
@@ -122,7 +148,6 @@ export class FolderService {
 
   /** 获取文件夹数据 */
   async getFolderData(id: string, userId: string) {
-    // console.log(id, userId)
     const folder = await this.foldersRepository.findOne({
       where: { id: id, userId },
       relations: ['projects']
@@ -192,7 +217,7 @@ export class FolderService {
     return ancestorNode
   }
 
-  async findBin(userId: string) {
+  async findTrash(userId: string) {
     const folders = await this.foldersRepository.find({
       where: { userId, removed: Not(RemovedEnum.NEVER) },
       select: ['id', 'name', 'parentId', 'removed', 'lib', 'isCloud', 'updateAt', 'createAt']
@@ -204,16 +229,14 @@ export class FolderService {
     try {
       const { sourceId, targetId, dropPosition } = moveFolderDto
       if (sourceId === targetId) throw '不能将文件夹放入自身！'
-      const _sourceId = sourceId
-      const _targetId = targetId
-      const isAncestor = await this.isAncestorNode(_sourceId, _targetId, userId)
+      const isAncestor = await this.isAncestorNode(sourceId, targetId, userId)
       if (isAncestor) throw '目标节点是源节点的祖先节点！'
       const sourceNode = await this.foldersRepository.findOne({
-        where: { id: _sourceId, userId },
+        where: { id: sourceId, userId },
         relations: { parent: true }
       })
       const targetNode = await this.foldersRepository.findOne({
-        where: { id: _sourceId, userId },
+        where: { id: targetId, userId },
         relations: { parent: true }
       })
       if (!sourceNode) throw '源节点不存在！'
@@ -235,22 +258,22 @@ export class FolderService {
   }
 
   async isAncestorNode(sourceId: string, targetId: string, userId: string) {
-    const source = await this.findOneById(sourceId, userId)
-    const target = await this.findOneById(targetId, userId)
-    // console.log([source, target])
-    if (!source || !target) return false
-    // console.log(target.parentId)
-    if (!target.parentId) return false
-    let t = target
-    // console.log(t.parentId)
-    while (t.parentId) {
-      // 注意：string 直接比较是不相等的，所以要转成字符串
-      if (t.parentId === source.id) return true
-      t = await this.findOneById(t.parentId, userId)
-      // console.log(t.parentId)
-      if (!t) return false
+    try {
+      const source = await this.findOneById(sourceId, userId)
+      const target = await this.findOneById(targetId, userId)
+      if (!source || !target) return false
+      if (!target.parentId) return false
+      let t = target
+      while (t.parentId) {
+        if (t.parentId === source.id) return true
+        t = await this.findOneById(t.parentId, userId)
+        if (!t) return false
+      }
+      return false
+    } catch (error) {
+      this.userLogger.error(`查询祖先节点时发生异常`, error.message)
+      throw error
     }
-    return false
   }
 
   async remove(id: string, userId: string) {
@@ -479,5 +502,24 @@ function subfoldersFormatter(subfolders: Array<Folder>) {
   //     })
   //   })
   //   return subfilesData
+  // }
+    // async findChildrenById(id: string, userId: string) {
+  //   try {
+  //     const folders = await this.foldersRepository.find({
+  //       where: { parentId: id, userId, removed: RemovedEnum.NEVER },
+  //       select: ['id', 'name', 'parentId', 'lib', 'createAt']
+  //     })
+  //     for (let i = 0; i < folders.length; i++) {
+  //       const count = await this.foldersRepository.countBy({
+  //         parentId: folders[i].id,
+  //         userId,
+  //         removed: RemovedEnum.NEVER
+  //       })
+  //       folders[i]['isLeaf'] = !(count > 0)
+  //     }
+  //     return folders
+  //   } catch (error) {
+  //     throw error
+  //   }
   // }
 */

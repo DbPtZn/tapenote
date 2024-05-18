@@ -538,8 +538,6 @@ export class ProjectService {
       } finally {
         await queryRunner.release()
       }
-      console.log('删除项目成功：')
-      console.log([project.lib, project.dirname])
       
       const dir = this.storageService.getDocDir({ dir: [dirname, project.dirname] })
       try {

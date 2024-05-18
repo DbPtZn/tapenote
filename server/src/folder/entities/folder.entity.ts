@@ -90,7 +90,9 @@ export class Folder {
   @AfterUpdate()
   updateDate() {
     this.updateAt = new Date()
-    if (this.parent && this.parentId === this.parent.id) {
+    if (this.parent && this.parentId !== this.parent.id) {
+      console.log('parentId:' + this.parentId)
+      console.log('parent.id:' + this.parent.id)
       console.log('警告⚠：当前更新的文件夹[parentId !== parent.id]')
     }
   }

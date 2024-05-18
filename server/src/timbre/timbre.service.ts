@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { AddRobotDto, AddRoleDto } from './dto/create-timbre.dto'
 import { Timbre } from './entities/timbre.entity'
 import { InjectRepository } from '@nestjs/typeorm'
-import { MongoRepository } from 'typeorm'
+import { Repository } from 'typeorm'
 import { StorageService } from 'src/storage/storage.service'
 import path from 'path'
 import { SherpaService } from 'src/sherpa/sherpa.service'
@@ -19,7 +19,7 @@ import * as UUID from 'uuid'
 export class TimbreService {
   constructor(
     @InjectRepository(Timbre)
-    private timbresRepository: MongoRepository<Timbre>,
+    private timbresRepository: Repository<Timbre>,
     private readonly storageService: StorageService,
     private readonly sherpaService: SherpaService
   ) {}
