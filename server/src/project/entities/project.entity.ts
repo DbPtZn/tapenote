@@ -114,6 +114,13 @@ export class Project {
   })
   fromNoteId: string
 
+  /** 参与的说话人 */
+  @Column({
+    type: 'simple-array',
+    default: JSON.stringify([])
+  })
+  speakers: string[]
+
   @Column({
     type: 'simple-json',
     default: JSON.stringify({

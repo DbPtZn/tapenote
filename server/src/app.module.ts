@@ -23,6 +23,7 @@ import { LoggerModule } from './logger/logger.module'
 import { HttpLoggerMiddleware } from './logger/logger.middleware'
 import { RequestScopedService } from './request-scoped/request-scoped.service'
 import { RequestScopedModule } from './request-scoped/request-scoped.module'
+import { SpeakerModule } from './speaker/speaker.module';
 
 @Module({
   imports: [
@@ -83,7 +84,8 @@ import { RequestScopedModule } from './request-scoped/request-scoped.module'
     BgmModule,
     UserLoggerModule,
     LoggerModule,
-    RequestScopedModule
+    RequestScopedModule,
+    SpeakerModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestScopedService]

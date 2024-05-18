@@ -2,6 +2,7 @@ import { MaxLength, MinLength } from 'class-validator'
 import { Bgm } from 'src/bgm/entities/bgm.entity'
 import { Folder } from 'src/folder/entities/folder.entity'
 import { Project } from 'src/project/entities/project.entity'
+import { Speaker } from 'src/speaker/entities/speaker.entity'
 import { Timbre } from 'src/timbre/entities/timbre.entity'
 import {
   AfterUpdate,
@@ -58,6 +59,9 @@ export class User {
 
   @OneToOne(() => Timbre, timbre => timbre.user)
   timbre: Timbre
+
+  @OneToMany(() => Speaker, speaker => speaker.user)
+  speakers: Speaker[]
 
   @OneToOne(() => Bgm, bgm => bgm.user)
   bgm: Bgm

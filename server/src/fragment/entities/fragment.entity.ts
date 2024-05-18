@@ -10,18 +10,12 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
-// export interface Fragment {
-//   _id: ObjectId
-//   audio: string
-//   duration: number
-//   txt: string
-//   transcript: string[]
-//   tags: string[]
-//   promoters: string[]
-//   timestamps: number[]
-//   role: number
-//   removed: RemovedEnum
-// }
+
+interface Speaker {
+  avatar: string
+  name: string
+  value: number
+}
 @Entity()
 export class Fragment {
   @PrimaryGeneratedColumn('uuid')
@@ -78,9 +72,14 @@ export class Fragment {
   timestamps: number[]
 
   @Column({
-    type: 'int'
+    type: 'simple-json',
+    default: JSON.stringify({
+      avatar: '',
+      name: '',
+      role: 0
+    })
   })
-  role: number
+  speaker: Speaker
 
   @Column({
     type: 'varchar',
