@@ -66,7 +66,7 @@ export class ProjectService {
 
   async create(createDto: CreateProjectDto, userId: string, dirname: string) {
     try {
-      const { library, folderId, noteId, procedureId, penname, email, homepage } = createDto
+      const { lib, folderId, noteId, procedureId, penname, email, homepage } = createDto
       // title, content, abbrev, wordage, filesize, fragments, sequence, removedSequence, sidenote, annotations
       let data: InheritDto = {
         title: '',
@@ -81,7 +81,7 @@ export class ProjectService {
         sidenote: '',
         annotations: []
       }
-      if (noteId && library === LibraryEnum.PROCEDURE) {
+      if (noteId && lib === LibraryEnum.PROCEDURE) {
         const note = await this.projectsRepository.findOneBy({ id: noteId })
         if (!note) throw new Error('未找到该笔记项目，无法创建工程项目')
         data = {
@@ -98,7 +98,7 @@ export class ProjectService {
           annotations: note.annotations || []
         }
       }
-      if (procedureId && library === LibraryEnum.COURSE) {
+      if (procedureId && lib === LibraryEnum.COURSE) {
         const procedure = await this.projectsRepository.findOneBy({ id: procedureId })
         if (!procedure) throw new Error('未找到该工程项目，无法创建课程项目')
         data = {
@@ -114,7 +114,7 @@ export class ProjectService {
       const folder = await this.folderService.findOneById(folderId, userId)
       const project = new Project()
       project.id = UUID.v4()
-      project.library = library
+      project.lib = lib
       project.dirname = await this.generateDirname(dirname)
       project.folderId = folderId
       project.folder = folder
@@ -133,7 +133,7 @@ export class ProjectService {
       }
 
       let _audiopath = ''
-      switch (library) {
+      switch (lib) {
         case LibraryEnum.NOTE:
           //
           break
@@ -171,7 +171,7 @@ export class ProjectService {
       if (!result) {
         throw new Error(`创建项目失败！`)
       }
-      this.userlogger.log(`创建 [${library}] 新项目成功，项目id：${result.id}`)
+      this.userlogger.log(`创建 [${lib}] 新项目成功，项目id：${result.id}`)
       return result
     } catch (error) {
       throw error
@@ -283,7 +283,7 @@ export class ProjectService {
         where: { id, userId, removed: RemovedEnum.NEVER },
         relations: relations
       })
-      switch (project.library) {
+      switch (project.lib) {
         case LibraryEnum.NOTE:
           //
           break
@@ -368,9 +368,9 @@ export class ProjectService {
     }
   }
 
-  async findAll(userId: string, library?: LibraryEnum) {
-    if (library) {
-      const projects = await this.projectsRepository.findBy({ userId, library, removed: RemovedEnum.NEVER })
+  async findAll(userId: string, lib?: LibraryEnum) {
+    if (lib) {
+      const projects = await this.projectsRepository.findBy({ userId, lib, removed: RemovedEnum.NEVER })
       return projects
     }
     const projects = await this.projectsRepository.findBy({ userId, removed: RemovedEnum.NEVER })
@@ -380,7 +380,7 @@ export class ProjectService {
   async findAllFromTrash(userId: string, lib: LibraryEnum) {
     try {
       const projects = await this.projectsRepository.find({
-        where: { userId, library: lib, removed: Not(RemovedEnum.NEVER) },
+        where: { userId, lib: lib, removed: Not(RemovedEnum.NEVER) },
         select: ['id', 'title', 'abbrev', 'folderId', 'updateAt', 'createAt']
       })
       return projects
@@ -389,12 +389,12 @@ export class ProjectService {
     }
   }
 
-  async findAllByFolderId(folderId: string, userId: string, library?: LibraryEnum) {
+  async findAllByFolderId(folderId: string, userId: string, lib?: LibraryEnum) {
     // 获取指定库中的项目
     try {
-      if (library) {
+      if (lib) {
         const projects = await this.projectsRepository.find({
-          where: { folderId, userId, library, removed: RemovedEnum.NEVER }
+          where: { folderId, userId, lib, removed: RemovedEnum.NEVER }
         })
         return projects
       }
@@ -408,16 +408,25 @@ export class ProjectService {
     }
   }
 
-  async findByUpdateAt(skip: number, take: number, library: LibraryEnum, userId: string) {
+  async findByUpdateAtDESC(skip: number, take: number, lib: LibraryEnum, userId: string) {
     try {
       const projects = await this.projectsRepository.find({
-        where: { userId: userId, library, removed: RemovedEnum.NEVER },
+        where: { userId: userId, lib, removed: RemovedEnum.NEVER },
+        relations: ['folder'],
         order: { updateAt: 'DESC' },
-        select: ['id', 'title', 'abbrev', 'folderId', 'updateAt', 'createAt'],
+        select: ['id', 'title', 'lib', 'abbrev', 'folderId', 'updateAt', 'createAt'],
         skip: skip,
         take: take
       })
-      return projects
+      const data = projects.map(project => {
+        const { folder, ...others } = project
+        const item = {
+          folderName: folder ? folder.name : '',
+          ...others
+        }
+        return item
+      })
+      return data
     } catch (error) {
       throw error
     }
@@ -530,7 +539,7 @@ export class ProjectService {
         await queryRunner.release()
       }
       console.log('删除项目成功：')
-      console.log([project.library, project.dirname])
+      console.log([project.lib, project.dirname])
       
       const dir = this.storageService.getDocDir({ dir: [dirname, project.dirname] })
       try {
@@ -541,7 +550,7 @@ export class ProjectService {
         throw error
       }
       // 如果是 course，应当删除对应的音频文件
-      // if (project.library === LibraryEnum.COURSE) {
+      // if (project.lib === LibraryEnum.COURSE) {
       //   const filepath = this.storageService.getFilePath({
       //     filename: project.audio,
       //     dirname: [dirname, project.dirname],
@@ -556,7 +565,7 @@ export class ProjectService {
       // }
 
       // 如果是 Procedure ，则找到所有片段并删除对应的音频文件
-      // if (project.library === LibraryEnum.PROCEDURE) {
+      // if (project.lib === LibraryEnum.PROCEDURE) {
       //   for (const fragment of project.fragments) {
       //     const filepath = this.storageService.getFilePath({
       //       filename: fragment.audio,
@@ -613,7 +622,7 @@ export class ProjectService {
       target.dirname = await this.generateDirname(dirname)
 
       // 如果是 course ，则应该生成新的音频文件，并且需要更新 audio
-      if (target.library === LibraryEnum.COURSE) {
+      if (target.lib === LibraryEnum.COURSE) {
         // 创建新的音频文件
         const { filename, filepath } = this.storageService.createFilePath({
           dirname: [dirname, target.dirname],
@@ -628,7 +637,7 @@ export class ProjectService {
 
       // 如果是工程，则应该复制 fragments 中的音频，并且每一个 fragment 都要重新生成
       // 相应的 sequence 和 removeSequence 都要重写
-      if (target.library === LibraryEnum.PROCEDURE) {
+      if (target.lib === LibraryEnum.PROCEDURE) {
         target.fragments = target.fragments.map(fragment => {
           // 克隆 fragment 实体
           const newFragment = Object.assign(new Fragment(), fragment)
@@ -845,7 +854,7 @@ export class ProjectService {
   async checkAndCorrectFragmentSquence(id: string) {
     try {
       const project = await this.projectsRepository.findOne({
-        where: { id, library: LibraryEnum.PROCEDURE },
+        where: { id, lib: LibraryEnum.PROCEDURE },
         relations: ['fragments']
       })
       if (!project) return

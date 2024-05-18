@@ -37,7 +37,7 @@ export interface Project {
   hostname: string
 
   id: string
-  library: LibraryEnum
+  lib: LibraryEnum
   dirname: string
   folderId: string
   title: string
@@ -76,11 +76,11 @@ export const useProjectStore = defineStore('projectStore', {
     creatorApi(account: string, hostname: string) {
       return creator.getCreatorApi(account, hostname)!
     },
-    create(folderId: string, library: LibraryEnum, account: string, hostname: string) {
+    create(folderId: string, lib: LibraryEnum, account: string, hostname: string) {
       const { userStore } = useStore()
       const author = { penname: userStore.nickname, email: userStore.email, homepage: userStore.homepage }
       // console.log(author)
-      return this.creatorApi(account, hostname).project.create<Project>({ folderId, library, ...author }).then(res => {
+      return this.creatorApi(account, hostname).project.create<Project>({ folderId, lib, ...author }).then(res => {
         // 这里不能设置state，否则在创建后自动切换页面时不会更新state，因为它已经存在
         res.data.account = account
         res.data.hostname = hostname
@@ -91,14 +91,14 @@ export const useProjectStore = defineStore('projectStore', {
         return res.data
       })
     },
-    createBy(args : {folderId: string, sourceId: string, library: LibraryEnum, account: string, hostname: string}) {
-      const { folderId, sourceId, library, account, hostname } = args
+    createBy(args : {folderId: string, sourceId: string, lib: LibraryEnum, account: string, hostname: string}) {
+      const { folderId, sourceId, lib, account, hostname } = args
       const { userStore } = useStore()
       const author = { penname: userStore.nickname, email: userStore.email, homepage: userStore.homepage }
       return new Promise<Project>((resolve, reject) => {
-        if (library === LibraryEnum.NOTE) {
+        if (lib === LibraryEnum.NOTE) {
           const noteId = sourceId
-          return this.creatorApi(account, hostname).project.create<Project>({ folderId, noteId, library: LibraryEnum.PROCEDURE, ...author }).then(res => {
+          return this.creatorApi(account, hostname).project.create<Project>({ folderId, noteId, lib: LibraryEnum.PROCEDURE, ...author }).then(res => {
             res.data.account = account
             res.data.hostname = hostname
             res.data.audio = res.data.audio ? hostname + res.data.audio : ''
@@ -108,9 +108,9 @@ export const useProjectStore = defineStore('projectStore', {
             resolve(res.data)
           }).catch(err => reject(err))
         }
-        if (library === LibraryEnum.PROCEDURE) {
+        if (lib === LibraryEnum.PROCEDURE) {
           const procedureId = sourceId
-          return this.creatorApi(account, hostname).project.create<Project>({ folderId, procedureId, library: LibraryEnum.COURSE, ...author }).then(res => {
+          return this.creatorApi(account, hostname).project.create<Project>({ folderId, procedureId, lib: LibraryEnum.COURSE, ...author }).then(res => {
             res.data.account = account
             res.data.hostname = hostname
             res.data.audio = res.data.audio ? hostname + res.data.audio : ''
@@ -150,7 +150,7 @@ export const useProjectStore = defineStore('projectStore', {
         account: account || '',
         hostname: hostname || '',
         id: data.id || '',
-        library: data.library || '',
+        lib: data.lib || '',
         dirname: data.dirname || '',
         folderId: data.folderId || '',
         title: data.title || '',

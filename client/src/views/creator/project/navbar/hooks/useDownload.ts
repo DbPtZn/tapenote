@@ -10,7 +10,7 @@ export function useDownloadDialog() {
   const { projectStore, userStore } = useStore()
   const handleDownloadDialog = (id: string) => {
     const data = projectStore.get(id)
-    const type = data?.library === 'course' ? 'course' : 'note'
+    const type = data?.lib === 'course' ? 'course' : 'note'
     if (!data) return
     if (!id) return
     dialog.create({

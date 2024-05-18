@@ -48,7 +48,7 @@ export class Project {
   @Column({
     type: 'varchar'
   })
-  library: LibraryEnum
+  lib: LibraryEnum
 
   @Column({
     type: 'int',

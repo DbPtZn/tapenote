@@ -3,7 +3,7 @@ import { ComponentLiteral } from '@textbus/core'
 import { AxiosInstance } from 'axios'
 
 interface CreateProjectDto {
-  library: LibraryEnum
+  lib: LibraryEnum
   folderId: string
   noteId?: string
   procedureId?: string

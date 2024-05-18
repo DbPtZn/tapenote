@@ -10,7 +10,7 @@ export function useShareDialog() {
   const { projectStore, userStore } = useStore()
   const handleExpandShareDialog = (id: string) => {
     const data = projectStore.get(id)
-    const type = data?.library === 'course' ? 'course' : 'note'
+    const type = data?.lib === 'course' ? 'course' : 'note'
     if (!data) return
     if (!id) return
     dialog.create({

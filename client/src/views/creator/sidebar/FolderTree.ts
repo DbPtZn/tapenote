@@ -235,6 +235,7 @@ export class FolderTree {
         show: lib !== LibraryEnum.COURSE,
         props: {
           onClick: () => {
+            console.log('新建文档'+lib)
             projectStore.create(node.id!, lib, userStore.account, userStore.hostname).then(newFile => {
               this.handleCreateFile(newFile, folderId, lib)
             })

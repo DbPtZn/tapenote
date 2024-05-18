@@ -2,7 +2,7 @@ import { IsEmpty, IsMongoId, IsNotEmpty, IsOptional, IsString, Length } from 'cl
 import { LibraryEnum } from 'src/enum'
 
 export class CreateProjectDto {
-  @IsString() @IsNotEmpty() @Length(0, 100) library: LibraryEnum
+  @IsString() @IsNotEmpty() @Length(0, 100) lib: LibraryEnum
   @IsString() @Length(0, 100) folderId: string
   @IsString() @IsOptional() @Length(0, 100) noteId: string
   @IsString() @IsOptional() @Length(0, 100) procedureId: string

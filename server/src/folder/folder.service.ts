@@ -148,8 +148,7 @@ export class FolderService {
   async getRecently(getRecentlyDto: GetRecentlyDto, userId: string) {
     const { lib, skip, take } = getRecentlyDto
     // console.log([lib, skip, take])
-    const subfiles = await this.projectService.findByUpdateAt(skip, take, lib, userId)
-    const recentlyFiles = await this.recentlyFormatter(subfiles, lib, userId)
+    const subfiles = await this.projectService.findByUpdateAtDESC(skip, take, lib, userId)
     const data = {
       id: 'recently',
       name: '',
@@ -159,7 +158,7 @@ export class FolderService {
       createAt: '',
       updateAt: '',
       subfolders: [],
-      subfiles: recentlyFiles
+      subfiles: subfiles
     }
     return data
   }
@@ -209,15 +208,23 @@ export class FolderService {
       const _targetId = targetId
       const isAncestor = await this.isAncestorNode(_sourceId, _targetId, userId)
       if (isAncestor) throw '目标节点是源节点的祖先节点！'
-      const sourceNode = await this.findOneById(_sourceId, userId)
-      const targetNode = await this.findOneById(_targetId, userId)
+      const sourceNode = await this.foldersRepository.findOne({
+        where: { id: _sourceId, userId },
+        relations: { parent: true }
+      })
+      const targetNode = await this.foldersRepository.findOne({
+        where: { id: _sourceId, userId },
+        relations: { parent: true }
+      })
       if (!sourceNode) throw '源节点不存在！'
       if (!targetNode) throw '目标节点不存在！'
       if (sourceNode.lib !== targetNode.lib) throw '不同库的文件夹无法拖放！'
       if (dropPosition === DropPosition.BEFORE || dropPosition === DropPosition.AFTER) {
         sourceNode.parentId = targetNode.parentId
+        sourceNode.parent = targetNode.parent
       } else if (dropPosition === DropPosition.INSIDE) {
         sourceNode.parentId = targetNode.id
+        sourceNode.parent = targetNode
       }
       this.foldersRepository.save(sourceNode).then(() => {
         return '文件夹移动成功！'
@@ -342,30 +349,6 @@ export class FolderService {
       return null
     }
   }
-
-  async recentlyFormatter(subfiles: Array<any>, lib: LibraryEnum, userId: string) {
-    const subfilesData = []
-    for (let i = 0; i < subfiles.length; i++) {
-      subfilesData[i] = {
-        id: subfiles[i].id,
-        title: subfiles[i].title,
-        lib: lib,
-        abbrev: subfiles[i].abbrev,
-        folderId: subfiles[i].folderId,
-        createAt: subfiles[i].createAt,
-        updateAt: subfiles[i].updateAt
-      }
-    }
-    const promiseArr = subfilesData.map(item => {
-      return this.getFolderName(item.folderId, userId)
-    })
-    await Promise.all(promiseArr).then(folderNames => {
-      subfilesData.forEach((item, index, arr) => {
-        arr[index].folderName = folderNames[index]
-      })
-    })
-    return subfilesData
-  }
 }
 
 function subfilesFormatter(subfiles: Array<any>, lib: LibraryEnum) {
@@ -474,4 +457,27 @@ function subfoldersFormatter(subfolders: Array<Folder>) {
         }
       }
     }
+      // async recentlyFormatter(subfiles: Array<any>, lib: LibraryEnum, userId: string) {
+  //   const subfilesData = []
+  //   for (let i = 0; i < subfiles.length; i++) {
+  //     subfilesData[i] = {
+  //       id: subfiles[i].id,
+  //       title: subfiles[i].title,
+  //       lib: lib,
+  //       abbrev: subfiles[i].abbrev,
+  //       folderId: subfiles[i].folderId,
+  //       createAt: subfiles[i].createAt,
+  //       updateAt: subfiles[i].updateAt
+  //     }
+  //   }
+  //   const promiseArr = subfilesData.map(item => {
+  //     return this.getFolderName(item.folderId, userId)
+  //   })
+  //   await Promise.all(promiseArr).then(folderNames => {
+  //     subfilesData.forEach((item, index, arr) => {
+  //       arr[index].folderName = folderNames[index]
+  //     })
+  //   })
+  //   return subfilesData
+  // }
 */
