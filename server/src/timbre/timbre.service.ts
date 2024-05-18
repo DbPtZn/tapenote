@@ -7,6 +7,7 @@ import { StorageService } from 'src/storage/storage.service'
 import path from 'path'
 import { SherpaService } from 'src/sherpa/sherpa.service'
 import * as UUID from 'uuid'
+import { User } from 'src/user/entities/user.entity'
 /**
  * 关于 role 值
  * 0 为机器人默认保留的 role(speakerId) 值
@@ -25,10 +26,10 @@ export class TimbreService {
   ) {}
 
   /** 初始化 */
-  init(userId: string) {
+  init(userId: string, user?: User) {
     const timbre = new Timbre()
-    // timbre.id = UUID.v4()
     timbre.userId = userId
+    timbre.user = user
     timbre.role = 9999
     timbre.robot = 0
     timbre.roleList = []
