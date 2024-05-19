@@ -4,26 +4,30 @@ import { computed, h, ref } from 'vue'
 import { VpnKeyOffOutlined, AddRound, VpnKeyOutlined, CloseRound, RemoveRound } from '@vicons/material'
 import AddRole from './AddRole.vue'
 import useStore from '@/store'
-import { FormNumber } from '@textbus/editor'
-type Timbre = ReturnType<typeof useStore>['timbreStore']['data'][0]
+type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
+type SpeakerType = 'human' | 'machine'
 const props = defineProps<{
   account: string
   hostname: string
-  data?: Timbre
-  type: 'role' | 'robot'
-  onSelect: (args: { key: number; type: 'role' | 'robot' }) => void
-  onAdd: (args: { type: 'role' | 'robot'; avatar: string; name: string; role: number; changer?: number }) => void
-  onRemove: (args: { type: 'role' | 'robot'; key: number }) => void
+  speakerHistory: { human: string; machine: string }
+  data: Speaker[]
+  type: SpeakerType
+  onSelect: (id: string) => void
+  onAdd: (args: { type: SpeakerType; avatar: string; name: string; role: number; changer?: number }) => void
+  onRemove: (args: { type: SpeakerType; key: number }) => void
 }>()
 const dialog = useDialog()
 const themeVars = useThemeVars()
 const isShowKey = ref(false)
-function handleClick(key: number, type: 'role' | 'robot') {
-  props.onSelect({ key, type })
+const humanSpeaker = computed(() => props.data.filter(i => i.type === 'human'))
+const machineSpeaker = computed(() => props.data.filter(i => i.type === 'machine'))
+
+function handleClick(id: string, type: SpeakerType) {
+  props.onSelect(id)
 }
-function handleAdd(type: 'role' | 'robot') {
+function handleAdd(type: SpeakerType) {
   const d = dialog.create({
-    title: `添加${type === 'role' ? '扮演角色' : '合成音色'}`,
+    title: `添加${type === 'human' ? '扮演角色' : '合成音色'}`,
     content: () =>
       h(
         NMessageProvider,
@@ -43,7 +47,7 @@ function handleAdd(type: 'role' | 'robot') {
       )
   })
 }
-function handleRemove(key: number, type: 'role' | 'robot') {
+function handleRemove(key: number, type: SpeakerType) {
   dialog.create({
       title: '删除',
       content: `是否删除？`,
@@ -66,44 +70,44 @@ function handleRemove(key: number, type: 'role' | 'robot') {
       </template>
       <n-tab-pane name="robot" tab="合成语音">
         <n-flex>
-          <div class="role-item" v-for="role in data?.robotList" :key="role[0]">
-            <div class="role-wrapper" :style="{ width: '50px' }" @click="handleClick(role[0], 'robot')">
-              <n-icon v-if="role[0] !== 0" class="role-close" :component="CloseRound" @click.stop ="handleRemove(role[0], 'robot')" />
+          <div class="role-item" v-for="speaker in machineSpeaker" :key="speaker.id">
+            <div class="role-wrapper" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'machine')">
+              <n-icon v-if="speaker.role !== 0" class="role-close" :component="CloseRound" @click.stop ="handleRemove(speaker.role, 'machine')" />
               <div class="role-avatar">
                 <img
-                  :src="role[1].avatar"
-                  :alt="role[1].name"
+                  :src="speaker.avatar"
+                  :alt="speaker.name"
                   :style="{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '3px' }"
                   @error="(e) => (e.target! as HTMLImageElement).src='./default.png'"
                 />
               </div>
-              <span v-if="!isShowKey" class="role-name">{{ role[1].name }}</span>
-              <span v-if="isShowKey" class="role-name">{{ role[0] }}</span>
+              <span v-if="!isShowKey" class="role-name">{{ speaker.name }}</span>
+              <span v-if="isShowKey" class="role-name">{{ speaker.role }}</span>
             </div>
           </div>
-          <div class="role-add" @click="handleAdd('robot')">
+          <div class="role-add" @click="handleAdd('machine')">
             <n-icon :component="AddRound" :size="24" />
           </div>
         </n-flex>
       </n-tab-pane>
       <n-tab-pane name="role" tab="扮演角色">
         <n-flex>
-          <div class="role-item" v-for="role in data?.roleList" :key="role[0]">
-            <div class="role-wrapper" :style="{ width: '50px' }" @click="handleClick(role[0], 'role')">
-              <n-icon v-if="role[0] !== 9999" class="role-close" :component="CloseRound" @click.stop ="handleRemove(role[0], 'role')" />
+          <div class="role-item" v-for="speaker in humanSpeaker" :key="speaker.id">
+            <div class="role-wrapper" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'human')">
+              <n-icon v-if="speaker.role !== 9999" class="role-close" :component="CloseRound" @click.stop ="handleRemove(speaker.role, 'human')" />
               <div class="role-avatar">
                 <img
-                  :src="role[1].avatar"
-                  :alt="role[1].name"
+                  :src="speaker.avatar"
+                  :alt="speaker.name"
                   :style="{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '3px' }"
                   @error="(e) => (e.target! as HTMLImageElement).src='./default.png'"
                 />
               </div>
-              <span v-if="!isShowKey" class="role-name">{{ role[1].name }}</span>
-              <span v-if="isShowKey" class="role-name">{{ role[0] }}</span>
+              <span v-if="!isShowKey" class="role-name">{{ speaker.name }}</span>
+              <span v-if="isShowKey" class="role-name">{{ speaker.role }}</span>
             </div>
           </div>
-          <div class="role-add" @click="handleAdd('role')">
+          <div class="role-add" @click="handleAdd('human')">
             <n-icon :component="AddRound" :size="24" />
           </div>
         </n-flex>

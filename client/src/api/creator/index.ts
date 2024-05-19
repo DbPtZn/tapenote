@@ -11,6 +11,7 @@ import { synthesizer } from './synthesizer'
 import { timbre } from './timbre'
 import { bgm } from './bgm'
 import useStore from '@/store'
+import { speaker } from './speaker'
 
 export class CreatorApi {
   user: ReturnType<typeof user>
@@ -20,6 +21,7 @@ export class CreatorApi {
   fragment: ReturnType<typeof fragment>
   trash: ReturnType<typeof trash>
   timbre: ReturnType<typeof timbre>
+  speaker: ReturnType<typeof speaker>
   bgm: ReturnType<typeof bgm>
   constructor(account: string, hostname: string) {
     const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
@@ -81,6 +83,7 @@ export class CreatorApi {
     this.project = project(caxios)
     this.synthesizer = synthesizer(caxios)
     this.timbre = timbre(caxios)
+    this.speaker = speaker(caxios)
     this.bgm = bgm(caxios)
   }
 }

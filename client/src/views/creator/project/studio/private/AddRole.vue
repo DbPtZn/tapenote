@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { FormInst, FormItemRule, FormRules, UploadFileInfo, useMessage } from 'naive-ui'
 import useStore from '@/store';
 interface ModelType {
-  type: 'role' | 'robot'
+  type:  'human' | 'machine'
   avatar: string
   name: string
   role: number
@@ -11,11 +11,11 @@ interface ModelType {
 }
 type Response = ModelType & Record<string, unknown>
 const message = useMessage()
-const { timbreStore } = useStore()
+const { speakerStore } = useStore()
 const props = defineProps<{
   account: string
   hostname: string
-  type: 'role' | 'robot'
+  type:  'human' | 'machine'
   submit: (res: Response) => void
 }>()
 const formRef = ref<FormInst | null>(null)
@@ -58,7 +58,7 @@ const rules: FormRules = {
       message: '扮演角色的音色编号不能小于或等于 9999',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: number) => {
-        if (props.type === 'role') {
+        if (props.type === 'human') {
           if (value <= 9999) {
             return false
           }
@@ -69,7 +69,7 @@ const rules: FormRules = {
       message: '合成语音的音色编号不能大于 9998 或等于 0',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: number) => {
-        if (props.type === 'robot') {
+        if (props.type === 'machine') {
           if (value >= 9998 || value === 0) {
             return false
           }
@@ -80,16 +80,19 @@ const rules: FormRules = {
       message: '该角色值已存在！',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: number) => {
-        if (props.type === 'role') {
-          if (timbreStore.get(props.account, props.hostname)?.roleList.has(model.value.role)) {
-            return false
-          }
+        if (speakerStore.data.some(speaker => speaker.role === model.value.role)) {
+          return false
         }
-        if (props.type === 'robot') {
-          if (timbreStore.get(props.account, props.hostname)?.robotList.has(model.value.role)) {
-            return false
-          }
-        }
+        // if (props.type === 'human') {
+        //   if (speakerStore.data.some(speaker => speaker.role === model.value.role)) {
+        //     return false
+        //   }
+        // }
+        // if (props.type === 'machine') {
+        //   if (timbreStore.get(props.account, props.hostname)?.robotList.has(model.value.role)) {
+        //     return false
+        //   }
+        // }
       }
     }
   ]
@@ -130,7 +133,7 @@ function handleTest(role: number) {
     return
   }
   isLoading.value = true
-  timbreStore.testRobot(role, props.account, props.hostname).then(res => {
+  speakerStore.testTts(role, props.account, props.hostname).then(res => {
     const url = props.hostname + res.data as string
     const audio = new Audio(url)
     isLoading.value = false
@@ -139,7 +142,7 @@ function handleTest(role: number) {
       // 如果没有缓存，则缓存，并通知服务端移除临时音频文件
       if (!audioCache.has(role)) {
         audioCache.set(role, audio)
-        timbreStore.clearTemp(url, props.account, props.hostname)
+        speakerStore.clearTemp(url, props.account, props.hostname)
       }
     }
   })
@@ -170,7 +173,7 @@ function handleTest(role: number) {
           <n-button class="test" @click="handleTest(model.role)">测试</n-button>
           <n-spin v-show="isLoading" size="small" />
         </n-form-item>
-        <n-form-item v-if="type === 'role'" path="changer" label="变声器编号(暂不可用)">
+        <n-form-item v-if="type === 'human'" path="changer" label="变声器编号(暂不可用)">
           <n-input-number v-model:value="model.changer" placeholder="请输入变身器编号" :show-button="false" disabled />
         </n-form-item>
       </n-form>

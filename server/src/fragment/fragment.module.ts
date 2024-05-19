@@ -10,6 +10,7 @@ import { ProjectModule } from 'src/project/project.module'
 import { FfmpegModule } from 'src/ffmpeg/ffmpeg.module'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Fragment } from './entities/fragment.entity'
+import { SpeakerModule } from 'src/speaker/speaker.module'
 @Module({
   imports: [
     TypeOrmModule.forFeature([Fragment]),
@@ -30,6 +31,7 @@ import { Fragment } from './entities/fragment.entity'
     }),
     // forwardRef(() => ProjectModule),
     ProjectModule,
+    SpeakerModule,
     FfmpegModule,
     StorageModule,
     SherpaModule

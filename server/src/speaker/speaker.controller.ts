@@ -1,7 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res } from '@nestjs/common'
 import { SpeakerService } from './speaker.service'
 import { CreateSpeakerDto } from './dto/create-speaker.dto'
-import { UpdateSpeakerDto } from './dto/update-speaker.dto'
 import { REST } from 'src/enum'
 
 @Controller('speaker')
@@ -38,7 +37,7 @@ export class SpeakerController {
     }
   }
 
-  @Get(`${REST.R}/robot/test/:role`)
+  @Get(`${REST.R}/test/:role`)
   async testTts(@Param('role') role: number, @Req() req, @Res() res) {
     try {
       const filepath = await this.speakerService.testTts(Number(role))

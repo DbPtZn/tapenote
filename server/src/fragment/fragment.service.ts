@@ -26,6 +26,7 @@ import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
 import fs from 'fs'
+import { Speaker } from 'src/speaker/entities/speaker.entity'
 
 @Injectable()
 export class FragmentService {
@@ -71,7 +72,12 @@ export class FragmentService {
       fragment.tags = new Array(text.length).fill(null)
       fragment.promoters = new Array(text.length).fill(null)
       fragment.timestamps = []
-      fragment.role = Number(role) || 0
+      // fragment.role = Number(role) || 0
+      fragment.speaker = {
+        name: '',
+        avatar: '',
+        role: Number(role) || 0
+      }
       fragment.removed = RemovedEnum.NEVER
 
       // 先添加到项目工程文件序列中（占位）
@@ -168,7 +174,12 @@ export class FragmentService {
       fragment.tags = []
       fragment.promoters = []
       fragment.timestamps = []
-      fragment.role = Number(role) || 9999
+      // fragment.role = Number(role) || 9999
+      fragment.speaker = {
+        name: '',
+        avatar: '',
+        role: Number(role) || 10000
+      }
       fragment.removed = RemovedEnum.NEVER
 
       // 先添加到项目工程文件中（占位）
@@ -270,7 +281,11 @@ export class FragmentService {
     fragment.tags = new Array(text.length).fill(null)
     fragment.promoters = new Array(text.length).fill(null)
     fragment.timestamps = timestamps
-    fragment.role = 0
+    fragment.speaker = {
+      name: '',
+      avatar: '',
+      role: 0
+    }
     fragment.removed = RemovedEnum.NEVER
 
     return new Promise<Fragment>((resolve, reject) => {

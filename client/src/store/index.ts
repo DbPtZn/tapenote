@@ -9,7 +9,8 @@ import {
   useDragStore,
   useClipboardStore,
   useProjectStore,
-  useTimbreStore
+  useTimbreStore,
+  useSpeakerStore
 } from './modules/_api'
 
 const useStore = () => ({
@@ -22,7 +23,8 @@ const useStore = () => ({
   trashStore: useTrashStore(),
   clipboardStore: useClipboardStore(),
   projectStore: useProjectStore(),
-  timbreStore: useTimbreStore()
+  timbreStore: useTimbreStore(),
+  speakerStore: useSpeakerStore()
 })
 
 

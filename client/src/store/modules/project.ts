@@ -5,7 +5,11 @@ import utils from '@/utils'
 import router from '@/router'
 import { LibraryEnum } from '@/enums'
 import useStore from '..'
-
+interface FragmentSpeaker {
+  avatar: string
+  name: string
+  role: number
+}
 
 interface Fragment {
   key?: string
@@ -24,7 +28,8 @@ interface Fragment {
   // 排序号
   // sortNum: number
   projectId: string
-  role: number
+  // role: number
+  speaker: FragmentSpeaker
   removed: 'never' | 'active' | 'passive'
 }
 
@@ -47,6 +52,8 @@ export interface Project {
   fragments: Fragment[]
   sequence: Array<string>
   removedSequence: Array<string>
+  speakerRecorder: string[]
+  speakerHistory: { human: string; machine: string }
 
   audio: string
   duration: number
@@ -162,6 +169,8 @@ export const useProjectStore = defineStore('projectStore', {
         }) || [],
         sequence: data.sequence || [],
         removedSequence: data.removedSequence || [],
+        speakerRecorder: data.speakerRecorder || [],
+        speakerHistory: data.speakerHistory || { human: '', machine: '' },
         audio: data.audio ? hostname + data.audio : '',
         duration: data.duration || 0,
         promoterSequence: data.promoterSequence || [],
@@ -280,6 +289,9 @@ export const useProjectStore = defineStore('projectStore', {
           resolve(true)
         }
       })
+    },
+    updateSpeakerHistory(id: string, speakerId: string, account: string, hostname: string) {
+      //
     },
     /** 清理缓存 */
     cleanCache(id: string, account: string, hostname: string) {
@@ -448,7 +460,12 @@ export const useProjectStore = defineStore('projectStore', {
           promoters: new Array(txt.length),
           timestamps: [],
           projectId: procedureId,
-          role: params.role,
+          // role: params.role,
+          speaker: {
+            name: '',
+            avatar: '',
+            role: params.role
+          },
           removed: 'never'
         }
         get()?.push(fragment) // 不完全片段
@@ -514,7 +531,12 @@ export const useProjectStore = defineStore('projectStore', {
           promoters: [],
           timestamps: [],
           projectId: procedureId,
-          role: params.role,
+          // role: params.role,
+          speaker: {
+            name: '',
+            avatar: '',
+            role: params.role
+          },
           removed: 'never'
         }
         // console.log(key)

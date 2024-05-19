@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Draggable from 'vuedraggable'
-import { Character, AudioFragment, TTS, ASR, StudioToolbar, RoleSelectList, TxtEdit, FragmentTrash, CreateBlankFragment } from './private'
+import { Character, AudioFragment, TTS, ASR, StudioToolbar, SpeakerSelectList, TxtEdit, FragmentTrash, CreateBlankFragment } from './private'
 import useStore from '@/store'
 import { computed, h, inject, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { NIcon, NMessageProvider, useDialog, useMessage, useThemeVars } from 'naive-ui'
@@ -22,7 +22,7 @@ const props = defineProps<{
   focus: () => boolean
   readonly: () => boolean
 }>()
-const { projectStore, userStore, timbreStore, clipboardStore } = useStore()
+const { projectStore, userStore, speakerStore, clipboardStore } = useStore()
 const dialog = useDialog()
 const message = useMessage()
 const themeVars = useThemeVars()
@@ -31,7 +31,17 @@ const state = reactive({
   isReadonly: computed(() => props.readonly()),
   isFocus: computed(() => props.focus()),
   ttsSpeed: 1,
-  recorderMode: 'TTS' as 'TTS' | 'ASR'
+  recorderMode: 'TTS' as 'TTS' | 'ASR',
+})
+// const data = computed(() => projectStore.get(props.id))
+// const speakerType = computed(() => {
+//   return state.recorderMode === 'TTS' ? 'machine' : 'human'
+// })
+const speakerId = computed(() => {
+  return state.recorderMode === 'TTS' ? projectStore.get(props.id)?.speakerHistory.machine : projectStore.get(props.id)?.speakerHistory.human
+})
+const speaker = computed(() => {
+  return speakerStore.get(speakerId.value || '', props.account, props.hostname, state.recorderMode === 'TTS' ? 'machine' : 'human')!
 })
 const speedOptions = [
   { label: '2.0x', value: 2.0 },
@@ -50,7 +60,7 @@ const {
     if (text.length === 0) return
     projectStore.fragment(props.id).createByText({
       txt: text,
-      role: timbreStore.get(props.account, props.hostname)?.robot || 0,
+      role: speakerStore.get(speakerId.value || '', props.account, props.hostname)?.role || 0,
       speed: state.ttsSpeed
     }).catch(e => {
       message.error('创建片段失败！')
@@ -61,7 +71,7 @@ const {
     projectStore.fragment(props.id).createByAudio({
       audio: data.audio,
       duration: data.duration,
-      role: timbreStore.get(props.account, props.hostname)?.role || 9999
+      role: speakerStore.get(speakerId.value || '', props.account, props.hostname)?.role || 9999
     }).catch(e => {
       message.error('创建片段失败！')
     })
@@ -70,31 +80,34 @@ const {
     state.recorderMode === 'ASR' ? (state.recorderMode = 'TTS') : (state.recorderMode = 'ASR')
   }
 }
-const { handleRoleChange, handleTrashManage, handleAddBlank } = {
+const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
   /** 切换语音合成角色 */
-  handleRoleChange(type: 'role' | 'robot') {
+  handleSpeakerChange(type: 'human' | 'machine') {
     dialog.destroyAll()
     dialog.create({
       icon: () => h(NIcon, { component: AddReactionSharp, size: 24, style: { marginRight: '8px' } }),
       title: ' 切换角色',
-      content: () => h(RoleSelectList, {
+      content: () => h(SpeakerSelectList, {
         account: props.account,
         hostname: props.hostname,
-        data: timbreStore.get(props.account, props.hostname),
+        speakerHistory: projectStore.get(props.id)?.speakerHistory || { human: '', machine: '' },
+        data: speakerStore.data,
         type: type,
-        onSelect: (result) => {
-          timbreStore.selected(result.key, result.type, props.account, props.hostname)
+        onSelect: (speakerId: string) => {
+          // timbreStore.selected(result.key, result.type, props.account, props.hostname)
+          // speakerStore.selected
+          projectStore.updateSpeakerHistory(props.id, speakerId, props.account, props.hostname)
           dialog.destroyAll()
         },
         onAdd: (result) => {
-          if (result.type === 'role') {
-            timbreStore.addRole(result, props.account, props.hostname)
+          if (result.type === 'human') {
+            // timbreStore.addRole(result, props.account, props.hostname)
           } else {
-            timbreStore.addRobot(result, props.account, props.hostname)
+            // timbreStore.addRobot(result, props.account, props.hostname)
           }
         },
         onRemove: (result) => {
-            timbreStore.remove(result.key, result.type, props.account, props.hostname)
+            // timbreStore.remove(result.key, result.type, props.account, props.hostname)
         },
       }),
     })
@@ -124,7 +137,6 @@ const { handleRoleChange, handleTrashManage, handleAddBlank } = {
     dialog.create({
       title: '回收站',
       content: () => h(FragmentTrash, {
-        timberData: timbreStore.get(props.account, props.hostname),
         data: removedFragments.value,
         onRestore: (fragmentId: string) => {
           projectStore.fragment(props.id).restore({ fragmentId })
@@ -180,7 +192,7 @@ const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe((editor
 const studioRef = ref()
 onMounted(() => {
   bridge.studioRef = studioRef.value
-  timbreStore.fetchAndSet(props.account, props.hostname) // 获取音色列表
+  // timbreStore.fetchAndSet(props.account, props.hostname) // 获取音色列表
 })
 onUnmounted(() => {
   subscription.unsubscribe()
@@ -223,9 +235,7 @@ const totalDuration = computed(() => {
           <AudioFragment
             :key="element.id"
             :is-loading="!!element.key"
-            :role="Number(element.role)"
-            :role-list="timbreStore.get(account, hostname)?.roleList"
-            :robot-list="timbreStore.get(account, hostname)?.robotList"
+            :speaker="element.speaker"
             :is-cut="clipboardStore.fragment.length > 0 && clipboardStore.fragment[0].fragmentId === element.id && clipboardStore.fragment[0].type === 'cut'"
             :multiple="selectedFragments.length > 1"
             :duration="Number(element.duration)"
@@ -288,20 +298,20 @@ const totalDuration = computed(() => {
             <template #trigger>
               <n-button class="toolbar-btn" quaternary size="small" :disabled="state.isReadonly">
                 <template #icon>
-                  <n-icon :component="Interpreter" :size="24" @click="handleRoleChange(state.recorderMode === 'ASR'? 'role' : 'robot')" />
+                  <n-icon :component="Interpreter" :size="24" @click="handleSpeakerChange(state.recorderMode === 'ASR'? 'human' : 'machine')" />
                 </template>
               </n-button>
             </template>
             <div class="role" :style="{ width: '60px', height: '70px', cursor: 'pointer' }">
               <img
                 class="role-avatar"
-                :src="timbreStore.getCurrent(state.recorderMode === 'ASR'? 'role' : 'robot', account, hostname)?.avatar"
-                :alt="timbreStore.getCurrent(state.recorderMode === 'ASR'? 'role' : 'robot', account, hostname)?.name"
+                :src="speaker.avatar"
+                :alt="speaker.name"
                 :style="{ width: '50px', height: '50px', objectFit: 'contain' }"
                 @error="(e) => (e.target! as HTMLImageElement).src='./avatar03.png'"
-                @click="handleRoleChange(state.recorderMode === 'ASR'? 'role' : 'robot')"
+                @click="handleSpeakerChange(state.recorderMode === 'ASR'? 'human' : 'machine')"
               >
-              <span class="role-name">{{ timbreStore.getCurrent(state.recorderMode === 'ASR'? 'role' : 'robot', account, hostname)?.name }}</span>
+              <!-- <span class="role-name">{{ timbreStore.getCurrent(state.recorderMode === 'ASR'? 'human' : 'machine', account, hostname)?.name }}</span> -->
             </div>
           </n-popover>
         </template>

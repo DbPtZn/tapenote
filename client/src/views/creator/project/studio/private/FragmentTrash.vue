@@ -5,7 +5,6 @@ import { HeadsetOutlined, RestoreOutlined, DeleteOutlined } from '@vicons/materi
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Timbre = ReturnType<typeof useStore>['timbreStore']['data'][0]
 const props = defineProps<{
-  timberData?: Timbre
   data: Fragment[]
   onRestore: (fragmentId: string) => void
   onDelete: (fragmentId: string) => void
@@ -31,9 +30,9 @@ function handlePlay(audio: string) {
     </Header> -->
     <Main class="main">
       <n-scrollbar style="max-height: 300px">
-        <TrashFragment v-for="item in data" :key="item.id" :role="item.role">
+        <TrashFragment v-for="item in data" :key="item.id" :role="item.speaker.role">
           <template #avatar>
-            <img :src="item.role < 9999 ? timberData?.robotList.get(item.role)?.avatar : timberData?.roleList.get(item.role)?.avatar || './empty.png'" @error="handleError" />
+            <img :src="item.speaker.avatar || './empty.png'" @error="handleError" />
           </template>
           <template #txt>
             <span>{{ item.transcript.join('') }}</span>

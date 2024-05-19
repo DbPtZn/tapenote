@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { Speaker } from './entities/speaker.entity'
 import { UserModule } from 'src/user/user.module'
 import { StorageModule } from 'src/storage/storage.module'
+import { SherpaModule } from 'src/sherpa/sherpa.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Speaker]), UserModule, StorageModule],
+  imports: [TypeOrmModule.forFeature([Speaker]), UserModule, StorageModule, SherpaModule],
   controllers: [SpeakerController],
   providers: [SpeakerService],
   exports: [SpeakerService]

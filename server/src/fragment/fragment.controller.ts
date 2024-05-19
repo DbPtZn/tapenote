@@ -51,7 +51,8 @@ export class FragmentController {
         tags: fragment.tags,
         promoters: fragment.promoters,
         timestamps: fragment.timestamps,
-        role: fragment.role,
+        // role: fragment.role,
+        speaker: fragment.speaker,
         removed: fragment.removed
       }
       res.send(data)
@@ -86,7 +87,8 @@ export class FragmentController {
         tags: fragment.tags,
         promoters: fragment.promoters,
         timestamps: fragment.timestamps,
-        role: fragment.role,
+        // role: fragment.role,
+        speaker: fragment.speaker,
         removed: fragment.removed
       }
       res.send(data)
@@ -109,7 +111,8 @@ export class FragmentController {
         tags: fragment.tags,
         promoters: fragment.promoters,
         timestamps: fragment.timestamps,
-        role: fragment.role,
+        // role: fragment.role,
+        speaker: fragment.speaker,
         removed: fragment.removed
       }
       res.send(data)

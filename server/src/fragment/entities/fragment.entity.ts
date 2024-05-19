@@ -14,7 +14,7 @@ import {
 interface Speaker {
   avatar: string
   name: string
-  value: number
+  role: number
 }
 @Entity()
 export class Fragment {

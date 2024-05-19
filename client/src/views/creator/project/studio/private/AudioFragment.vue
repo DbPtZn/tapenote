@@ -3,13 +3,16 @@ import utils from '@/utils'
 import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
 import { useThemeVars } from 'naive-ui'
 import { onMounted, ref } from 'vue'
+import useStore from '@/store'
+type FragmentSpeaker = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]['speaker']
 const props = defineProps<{
   // 角色列表
-  roleList?: Map<number, { name: string; avatar: string }>
+  // roleList?: Map<number, { name: string; avatar: string }>
   // 机器人列表
-  robotList?: Map<number, { name: string; avatar: string }>
+  // robotList?: Map<number, { name: string; avatar: string }>
   // 角色
-  role: number
+  // role: number
+  speaker: FragmentSpeaker
   // 是否多选
   multiple: boolean
   // 时长
@@ -86,11 +89,11 @@ function useClickoutside() {
     @contextmenu="handleContextmenu"
   >
     <!-- ------------------------------------------- Left --------------------------------------------- -->
-    <div class="fragment-wrapper left-fragment" v-if="role < 9999">
+    <div class="fragment-wrapper left-fragment" v-if="speaker.role < 9999">
       <!-- 左侧 -->
       <LeftSide>
         <div class="avator">
-          <img :src="robotList?.get(role)?.avatar || './empty.png'" @error="handleError" />
+          <img :src="speaker.avatar || './empty.png'" @error="handleError" />
         </div>
       </LeftSide>
       <!-- 中间 -->
@@ -122,7 +125,7 @@ function useClickoutside() {
       </RightSide>
     </div>
     <!-- ------------------------------------------- Right --------------------------------------------- -->
-    <div class="fragment-wrapper right-fragment" v-if="role >= 9999">
+    <div class="fragment-wrapper right-fragment" v-if="speaker.role >= 9999">
       <!-- 左侧 -->
       <LeftSide :width="50">
         <!-- Placeholder -->
@@ -153,7 +156,7 @@ function useClickoutside() {
       <!-- 右侧 -->
       <RightSide>
         <div class="avator">
-          <img :src="roleList?.get(role)?.avatar || './default.png'" @error="handleError" />
+          <img :src="speaker.avatar || './default.png'" @error="handleError" />
         </div>
       </RightSide>
     </div>

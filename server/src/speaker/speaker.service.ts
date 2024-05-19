@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { CreateSpeakerDto } from './dto/create-speaker.dto'
-import { UpdateSpeakerDto } from './dto/update-speaker.dto'
 import { Speaker } from './entities/speaker.entity'
 import { InjectRepository } from '@nestjs/typeorm'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'

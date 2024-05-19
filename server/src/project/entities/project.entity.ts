@@ -114,12 +114,20 @@ export class Project {
   })
   fromNoteId: string
 
-  /** 参与的说话人 */
   @Column({
     type: 'simple-array',
     default: JSON.stringify([])
   })
-  speakers: string[]
+  speakerRecorder: string[] // 记录项目中使用的 speaker 仅在 procedure 模式下使用
+
+  @Column({
+    type: 'simple-json',
+    default: JSON.stringify({
+      human: '',
+      machine: ''
+    })
+  })
+  speakerHistory: { human: string; machine: string } // 记录项目中最近使用的 speaker 仅在 procedure 模式下使用
 
   @Column({
     type: 'simple-json',
