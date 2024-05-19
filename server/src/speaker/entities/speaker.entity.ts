@@ -45,7 +45,14 @@ export class Speaker {
     default: '',
     length: 255
   })
-  avatar: string
+  avatar: string // 头像地址
+
+  @Column({
+    type: 'varchar',
+    default: '',
+    length: 255
+  })
+  audio: string // 快速测试音频地址 仅在 type 为 mechanic 时生效
 
   @Column({
     type: 'varchar',

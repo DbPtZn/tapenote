@@ -10,6 +10,8 @@ import { LoggerService } from 'src/logger/logger.service'
 import path from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { SherpaService } from 'src/sherpa/sherpa.service'
+import { ConfigService } from '@nestjs/config'
+import * as UUID from 'uuid'
 
 @Injectable()
 export class SpeakerService {
@@ -19,6 +21,7 @@ export class SpeakerService {
     private readonly userService: UserService,
     private readonly storageService: StorageService,
     private readonly sherpaService: SherpaService,
+    private readonly configService: ConfigService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
   ) {}
@@ -28,15 +31,37 @@ export class SpeakerService {
     try {
       const user = await this.userService.findOneById(userId)
       const speaker = new Speaker()
+      speaker.id = UUID.v4()
       speaker.userId = userId
       speaker.user = user
       speaker.type = role > 9999 ? 'human' : 'machine'
+      speaker.model =
+        speaker.type === 'human'
+          ? this.configService.get('sherpa.model.asr')
+          : this.configService.get('sherpa.model.tts')
       speaker.role = role
       speaker.name = name
       speaker.avatar = path.basename(avatar)
       speaker.changer = changer ? changer : 0
-      await this.speakersRepository.save(speaker)
+      if (speaker.type === 'machine') {
+        try {
+          const txt = '哈库拉玛塔塔'
+          const { filepath, filename } = this.storageService.createFilePath({
+            dirname: dirname,
+            category: 'audio',
+            originalname: speaker.id,
+            extname: '.wav'
+          })
+          await this.sherpaService.tts(txt, filepath, role, 1)
+          speaker.audio = filename
+        } catch (error) {
+          this.userLogger.error(`创建快速测试音频失败`, error.message)
+          throw error
+        }
+      }
+      return await this.speakersRepository.save(speaker)
     } catch (error) {
+      this.userLogger.error(`创建 speaker 失败`, error.message)
       throw error
     }
   }
@@ -54,25 +79,48 @@ export class SpeakerService {
         })
         arr[index].avatar = filepath
       })
+      this.userLogger.log(`查询 speakers 成功`)
       return speakers
+    } catch (error) {
+      this.userLogger.error(`查询 speakers 失败`, error.message)
+      throw error
+    }
+  }
+
+  async remove(id: string, userId: string) {
+    try {
+      await this.speakersRepository.delete({ id, userId })
+      this.userLogger.log(`删除 speaker [${id}]配置成功`)
+      return `This action removes a #${id} speaker`
     } catch (error) {
       throw error
     }
   }
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} speaker`
-  // }
-
-  // update(id: number, updateSpeakerDto: UpdateSpeakerDto) {
-  //   return `This action updates a #${id} speaker`
-  // }
-
-  async remove(id: string, userId: string) {
+  async testTts(speakerId: number, speed = 1) {
     try {
-      await this.speakersRepository.delete({ id, userId })
-      this.userLogger.log(`删除说话人[${id}]配置成功`)
-      return `This action removes a #${id} speaker`
+      const txt = '哈库拉玛塔塔'
+      const { filepath } = this.storageService.createFilePath({
+        dirname: 'temp',
+        extname: '.wav',
+        category: 'audio'
+      })
+      await this.sherpaService.tts(txt, filepath, speakerId, speed)
+      return filepath
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async clearTemp(url: string) {
+    try {
+      const originalname = path.basename(url)
+      const filepath = this.storageService.getFilePath({
+        dirname: 'temp',
+        filename: originalname,
+        category: 'audio'
+      })
+      this.storageService.deleteSync(filepath)
     } catch (error) {
       throw error
     }

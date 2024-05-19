@@ -1,6 +1,10 @@
 import { registerAs } from '@nestjs/config'
 
 export default registerAs('sherpa', () => ({
+  model: {
+    tts: 'vits-zh-hf-fanchen-C',
+    asr: 'sherpa-onnx-paraformer-zh-2023-09-14'
+  },
   offline: {
     ttsConfig: {
       offlineTtsModelConfig: {
