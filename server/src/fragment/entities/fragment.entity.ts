@@ -11,7 +11,8 @@ import {
   UpdateDateColumn
 } from 'typeorm'
 
-interface Speaker {
+export interface FragmentSpeaker {
+  type: 'human' | 'machine'
   avatar: string
   name: string
   role: number
@@ -74,12 +75,13 @@ export class Fragment {
   @Column({
     type: 'simple-json',
     default: JSON.stringify({
+      type: 'machine',
       avatar: '',
       name: '',
       role: 0
     })
   })
-  speaker: Speaker
+  speaker: FragmentSpeaker
 
   @Column({
     type: 'varchar',

@@ -113,11 +113,11 @@ export class Project {
   })
   fromNoteId: string
 
-  @Column({
-    type: 'simple-array',
-    default: JSON.stringify([])
-  })
-  speakerRecorder: string[] // 记录项目中使用的 speaker 仅在 procedure 模式下使用
+  // @Column({
+  //   type: 'simple-array',
+  //   default: JSON.stringify([])
+  // })
+  // speakerRecorder: string[] // 记录项目中使用的 speaker 仅在 procedure 模式下使用
 
   @Column({
     type: 'simple-json',

@@ -1,6 +1,6 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
-import { Fragment } from './entities/fragment.entity'
+import { Fragment, FragmentSpeaker } from './entities/fragment.entity'
 import { StorageService } from 'src/storage/storage.service'
 import { CreateASRFragmentDto } from './dto/create-asr-fragment.dto'
 import { RemovedEnum } from 'src/enum'
@@ -44,6 +44,72 @@ export class FragmentService {
     private readonly logger: LoggerService
   ) {}
 
+  async getFragmentSpeaker(
+    speakerId: string,
+    type: 'human' | 'machine',
+    userId: string,
+    dirname: string,
+    projectDirname: string
+  ) {
+    try {
+      let fragmentSpeaker: FragmentSpeaker
+      if (speakerId) {
+        const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
+        if (speaker) {
+          const filepath = this.storageService.getFilePath({
+            dirname: [dirname, projectDirname],
+            filename: speakerId + '.png',
+            category: 'image'
+          })
+          if (fs.existsSync(filepath)) {
+            fragmentSpeaker = {
+              type,
+              name: speaker.name,
+              avatar: speakerId + '.png',
+              role: speaker.role
+            }
+          } else {
+            const avatarpath = this.storageService.getFilePath({
+              dirname,
+              filename: speaker.avatar,
+              category: 'image'
+            })
+            const { filepath, filename } = this.storageService.createFilePath({
+              dirname: [dirname, projectDirname],
+              category: 'image',
+              originalname: speakerId,
+              extname: '.png'
+            })
+            fs.copyFileSync(avatarpath, filepath)
+            fragmentSpeaker = {
+              type,
+              name: speaker.name,
+              avatar: filename,
+              role: speaker.role
+            }
+          }
+        } else {
+          fragmentSpeaker = {
+            type,
+            name: '',
+            avatar: '',
+            role: type === 'human' ? 10000 : 0
+          }
+        }
+      } else {
+        fragmentSpeaker = {
+          type,
+          name: '',
+          avatar: '',
+          role: type === 'human' ? 10000 : 0
+        }
+      }
+      return fragmentSpeaker
+    } catch (error) {
+      throw error
+    }
+  }
+
   /** 通过文本创建音频片段 */
   async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: string, dirname: string) {
     const { procedureId, txt, speakerId, speed } = createTTSFragmentDto
@@ -53,10 +119,9 @@ export class FragmentService {
       if (!txt || !procedureId || !dirname) throw new Error('缺少必要参数！')
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
-      const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
-      if (procudure.speakerRecorder.includes(speakerId)) {
-        //
-      }
+
+      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname, procudure.dirname)
+
       const text = txt.replace(/\s*/g, '')
       const fragmentId = UUID.v4()
 
@@ -79,11 +144,7 @@ export class FragmentService {
       fragment.promoters = new Array(text.length).fill(null)
       fragment.timestamps = []
       // fragment.role = Number(role) || 0
-      fragment.speaker = {
-        name: '',
-        avatar: '',
-        role: Number(speaker.role) || 0
-      }
+      fragment.speaker = fragmentSpeaker
       fragment.removed = RemovedEnum.NEVER
 
       // 先添加到项目工程文件序列中（占位）
@@ -131,7 +192,6 @@ export class FragmentService {
           fragment.timestamps = timestamps
           if (filepath && fragment.duration !== 0) {
             // console.log(fragment)
-            // await this.projectService.updateFragment(procedureId, fragment, userId)
             await this.fragmentsRepository.save(fragment)
           }
         })
@@ -168,10 +228,9 @@ export class FragmentService {
       }
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
-      const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
-      if (procudure.speakerRecorder.includes(speakerId)) {
-        //
-      }
+
+      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname, procudure.dirname)
+
       const fragmentId = UUID.v4()
       const fragment = new Fragment()
       fragment.id = fragmentId
@@ -185,11 +244,7 @@ export class FragmentService {
       fragment.promoters = []
       fragment.timestamps = []
       // fragment.role = Number(role) || 9999
-      fragment.speaker = {
-        name: '',
-        avatar: '',
-        role: Number(speaker.role) || 10000
-      }
+      fragment.speaker = fragmentSpeaker
       fragment.removed = RemovedEnum.NEVER
 
       // 先添加到项目工程文件中（占位）
@@ -292,6 +347,7 @@ export class FragmentService {
     fragment.promoters = new Array(text.length).fill(null)
     fragment.timestamps = timestamps
     fragment.speaker = {
+      type: 'machine',
       name: '',
       avatar: '',
       role: 0
@@ -517,7 +573,9 @@ export class FragmentService {
   async copy(dto: CopyFragmentDto, userId: string, dirname: string) {
     const { sourceProjectId, targetProjectId, sourceFragmentId, targetFragmentId, position, type } = dto
     // eslint-disable-next-line prettier/prettier
-    this.userlogger.log(`从[${sourceProjectId}]${type}片段[${sourceFragmentId}]到[${targetProjectId}]的片段[${targetFragmentId}]${position}位置`)
+    this.userlogger.log(
+      `从[${sourceProjectId}]${type}片段[${sourceFragmentId}]到[${targetProjectId}]的片段[${targetFragmentId}]${position}位置`
+    )
     try {
       if (sourceProjectId === targetProjectId && sourceFragmentId === targetFragmentId && type === 'cut') {
         throw new Error('不能自己剪切自己,操作无意义')

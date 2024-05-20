@@ -73,12 +73,12 @@ export class SpeakerService {
       const speaker = await this.speakersRepository.findOne({
         where: { id, userId }
       })
-      const filepath = this.storageService.getFilePath({
-        dirname,
-        filename: speaker.avatar,
-        category: 'image'
-      })
-      speaker.avatar = filepath
+      // const filepath = this.storageService.getFilePath({
+      //   dirname,
+      //   filename: speaker.avatar,
+      //   category: 'image'
+      // })
+      // speaker.avatar = filepath
       return speaker
     } catch (error) {
       throw error

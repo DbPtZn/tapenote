@@ -144,7 +144,7 @@ export class ProjectService {
           project.sequence = data.sequence || []
           project.removedSequence = data.removedSequence || []
           project.speakerHistory = { human: '', machine: '' }
-          project.speakerRecorder = []
+          // project.speakerRecorder = []
           break
         case LibraryEnum.COURSE:
           noteId && (project.fromNoteId = noteId)
@@ -504,19 +504,19 @@ export class ProjectService {
     }
   }
 
-  async updateSpeakerRecorder(updateSpeakerRecorderDto: UpdateSpeakerRecorderDto, userId: string) {
-    const { id, speakerId } = updateSpeakerRecorderDto
-    try {
-      const procedure = await this.projectsRepository.findOneBy({ id, userId })
-      procedure.speakerRecorder.push(speakerId)
-      const result = await this.projectsRepository.save(procedure)
-      this.userlogger.log(`更新说话人记录器成功,项目id:${id},新增说话人id:${speakerId}`)
-      return { updateAt: result.updateAt, msg: '更新成功！' }
-    } catch (error) {
-      this.userlogger.error(`更新说话人记录器失败,项目id:${id}`)
-      throw error
-    }
-  }
+  // async updateSpeakerRecorder(updateSpeakerRecorderDto: UpdateSpeakerRecorderDto, userId: string) {
+  //   const { id, speakerId } = updateSpeakerRecorderDto
+  //   try {
+  //     const procedure = await this.projectsRepository.findOneBy({ id, userId })
+  //     procedure.speakerRecorder.push(speakerId)
+  //     const result = await this.projectsRepository.save(procedure)
+  //     this.userlogger.log(`更新说话人记录器成功,项目id:${id},新增说话人id:${speakerId}`)
+  //     return { updateAt: result.updateAt, msg: '更新成功！' }
+  //   } catch (error) {
+  //     this.userlogger.error(`更新说话人记录器失败,项目id:${id}`)
+  //     throw error
+  //   }
+  // }
 
   /** -------------------------------- 更新 ------------------------------------ */
 
