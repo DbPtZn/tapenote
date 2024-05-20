@@ -1,9 +1,9 @@
-import { IsString, IsNumber } from 'class-validator'
+import { IsString, IsNumber, IsOptional } from 'class-validator'
 
 export class CreateTTSFragmentDto {
   @IsString() key: string
   @IsString() procedureId: string
   @IsString() txt: string
-  @IsNumber() role?: number
+  @IsString() @IsOptional() speakerId?: string
   @IsNumber() speed: number
 }

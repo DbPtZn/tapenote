@@ -27,6 +27,7 @@ import { Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
 import fs from 'fs'
 import { Speaker } from 'src/speaker/entities/speaker.entity'
+import { SpeakerService } from 'src/speaker/speaker.service'
 
 @Injectable()
 export class FragmentService {
@@ -35,6 +36,7 @@ export class FragmentService {
     private fragmentsRepository: Repository<Fragment>,
     // @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
+    private readonly speakerService: SpeakerService,
     private readonly storageService: StorageService,
     private readonly ffmpegService: FfmpegService,
     private readonly sherpaService: SherpaService,
@@ -44,13 +46,17 @@ export class FragmentService {
 
   /** 通过文本创建音频片段 */
   async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: string, dirname: string) {
-    const { procedureId, txt, role, speed } = createTTSFragmentDto
+    const { procedureId, txt, speakerId, speed } = createTTSFragmentDto
     try {
       this.userlogger.log(`正在为项目${procedureId}创建文本转音频片段...`)
       if (speed > 2 || speed <= 0) throw new Error('语速不能大于2或小于等于0')
       if (!txt || !procedureId || !dirname) throw new Error('缺少必要参数！')
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
+      const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
+      if (procudure.speakerRecorder.includes(speakerId)) {
+        //
+      }
       const text = txt.replace(/\s*/g, '')
       const fragmentId = UUID.v4()
 
@@ -76,7 +82,7 @@ export class FragmentService {
       fragment.speaker = {
         name: '',
         avatar: '',
-        role: Number(role) || 0
+        role: Number(speaker.role) || 0
       }
       fragment.removed = RemovedEnum.NEVER
 
@@ -146,11 +152,11 @@ export class FragmentService {
   }
 
   async createByAudio(
-    createASRFragmentDto: { procedureId: string; audio: string; duration: number; role: number },
+    createASRFragmentDto: { procedureId: string; audio: string; duration: number; speakerId: string },
     userId: string,
     dirname: string
   ) {
-    const { procedureId, audio, duration, role } = createASRFragmentDto
+    const { procedureId, audio, duration, speakerId } = createASRFragmentDto
     try {
       this.userlogger.log(`正在为项目${procedureId}创建音频转文本片段...`)
       if (!audio || !procedureId || !dirname) {
@@ -162,6 +168,10 @@ export class FragmentService {
       }
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
+      const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
+      if (procudure.speakerRecorder.includes(speakerId)) {
+        //
+      }
       const fragmentId = UUID.v4()
       const fragment = new Fragment()
       fragment.id = fragmentId
@@ -178,7 +188,7 @@ export class FragmentService {
       fragment.speaker = {
         name: '',
         avatar: '',
-        role: Number(role) || 10000
+        role: Number(speaker.role) || 10000
       }
       fragment.removed = RemovedEnum.NEVER
 

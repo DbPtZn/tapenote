@@ -12,7 +12,7 @@ import { Fragment } from 'src/fragment/entities/fragment.entity'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, Fragment]),
+    TypeOrmModule.forFeature([Project]),
     forwardRef(() => FolderModule),
     // forwardRef(() => FragmentModule),
     StorageModule,

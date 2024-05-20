@@ -36,7 +36,6 @@ export class ButtonTool implements Tool {
   private controller!: Controller
   private isHighlight: Ref<boolean>
   private isDisabled: Ref<boolean>
-  // params: Writable<UIButtonDefineProps> = {}
 
   constructor(private factory: (injector: Injector) => ButtonToolConfig<any>) {
     this.isHighlight = ref(false)

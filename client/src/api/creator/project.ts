@@ -27,6 +27,13 @@ interface UpdateSidenoteContentDto {
   content: string
 }
 
+interface UpdateSpeakerHistoryDto {
+  id: string
+  type: 'human' | 'machine'
+  speakerId: string
+}
+
+
 interface SubmitProjectDto {
   id: string
   site: string
@@ -71,6 +78,9 @@ export const project = (axios: AxiosInstance) => {
       /** sidenote update */
     updateSidenoteContent<T>(dto: UpdateSidenoteContentDto) {
       return axios.patch<T>('/project/update/sidenote/content', dto)
+    },
+    updateSpeakerHistory<T>(dto: UpdateSpeakerHistoryDto) {
+      return axios.patch<T>('/project/update/speaker/history', dto)
     },
     /** 批量投稿（待开发） */
     // submit<T>(dto: SubmitProjectDto) {

@@ -55,11 +55,22 @@ const rules: FormRules = {
       }
     },
     {
-      message: '扮演角色的音色编号不能小于或等于 9999',
+      message: '扮演角色的角色值不能小于或等于 9999',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: number) => {
         if (props.type === 'human') {
           if (value <= 9999) {
+            return false
+          }
+        }
+      }
+    },
+    {
+      message: '扮演角色的角色值不能超过 99999',
+      trigger: 'blur',
+      validator: (rule: FormItemRule, value: number) => {
+        if (props.type === 'human') {
+          if (value > 99999) {
             return false
           }
         }
@@ -80,19 +91,9 @@ const rules: FormRules = {
       message: '该角色值已存在！',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: number) => {
-        if (speakerStore.data.some(speaker => speaker.role === model.value.role)) {
+        if (speakerStore.data.some(speaker => speaker.role === value)) {
           return false
         }
-        // if (props.type === 'human') {
-        //   if (speakerStore.data.some(speaker => speaker.role === model.value.role)) {
-        //     return false
-        //   }
-        // }
-        // if (props.type === 'machine') {
-        //   if (timbreStore.get(props.account, props.hostname)?.robotList.has(model.value.role)) {
-        //     return false
-        //   }
-        // }
       }
     }
   ]

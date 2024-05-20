@@ -107,7 +107,6 @@ export class Project {
   removedSequence: string[]
 
   /** ------------------------------------------ Procedure -------------------------------------------- */
-
   @Column({
     type: 'uuid',
     nullable: true

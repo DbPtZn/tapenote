@@ -21,12 +21,16 @@ interface Speaker {
   // updateAt: Date // 更新时间
 }
 interface State {
+  account: string
+  hostname: string
   data: Speaker[]
 }
 
 export const useSpeakerStore = defineStore('speakerStore', {
   state(): State {
     return {
+      account: '',
+      hostname: '',
       data: []
     }
   },
@@ -34,23 +38,38 @@ export const useSpeakerStore = defineStore('speakerStore', {
     creatorApi(account: string, hostname: string) {
       return creator.getCreatorApi(account, hostname)!
     },
-    fetchAndSet(account: string, hostname: string) {
-      return this.fetch<Speaker[]>(account, hostname).then(res => {
-        return this.set(res.data, account, hostname)
+    create(params: Parameters<typeof CreatorApi.prototype.speaker.create>[0], account: string, hostname: string) {
+      this.creatorApi(account, hostname).speaker.create<Speaker>(params).then(res => {
+        const speaker = res.data
+        console.log(speaker)
+        if (speaker) {
+          speaker.avatar = hostname + speaker.avatar
+          this.data.push(speaker)
+        }
+        console.log(this.data)
       })
+    },
+    fetchAndSet(account: string, hostname: string) {
+      if(this.data.length === 0 || this.account !== account || this.hostname !== hostname) {
+        return this.fetch<Speaker[]>(account, hostname).then(res => {
+          this.account = account
+          this.hostname = hostname
+          return this.set(res.data, account, hostname)
+        })
+      }
     },
     fetch<T>(account: string, hostname: string) {
       return this.creatorApi(account, hostname).speaker.getAll<T>()
     },
     set(data: Speaker[], account: string, hostname: string) {
-      // const { userListStore } = useStore()
-      // const user = userListStore.get(account, hostname)
       const state = data.map(speaker => {
         speaker.account = account
         speaker.hostname = hostname
         speaker.avatar = hostname + speaker.avatar
         return speaker
       })
+      state.unshift(this.getDefault('human', account, hostname))
+      state.unshift(this.getDefault('machine', account, hostname))
       this.data = state
       return state
     },
@@ -61,6 +80,10 @@ export const useSpeakerStore = defineStore('speakerStore', {
           return this.data.find(i => i.id === id && i.account === account && i.hostname === hostname)
         }
       }
+      const defaultSpeaker = type === 'human' ? this.getDefault('human', account, hostname) : this.getDefault('machine', account, hostname)
+      return defaultSpeaker
+    },
+    getDefault(type: 'human' | 'machine', account: string, hostname: string) {
       let defaultSpeaker: Speaker
       if (type === 'human') {
         const { userListStore } = useStore()
@@ -99,42 +122,20 @@ export const useSpeakerStore = defineStore('speakerStore', {
     //     this.get(account, hostname)!.robot = key
     //   }
     // },
-    /** 添加新角色 */
-    // addRole<T>(params: Parameters<typeof CreatorApi.prototype.speaker.addRole>[0], account: string, hostname: string) {
-    //   return this.creatorApi(account, hostname).speaker.addRole<T>(params).then(() => {
-    //     this.get(account, hostname)!.roleList.set(params.role, {
-    //       name: params.name,
-    //       avatar: params.avatar,
-    //       changer: params.changer || 0
-    //     })
-    //   })
-    // },
-    /** 添加新合成语音 */
-    // addRobot<T>(params: Parameters<typeof CreatorApi.prototype.speaker.addRobot>[0], account: string, hostname: string) {
-    //   return this.creatorApi(account, hostname).speaker.addRobot<T>(params).then(() => {
-    //     this.get(account, hostname)!.robotList.set(params.role, {
-    //       name: params.name,
-    //       avatar: params.avatar
-    //     })
-    //   })
-    // },
-    // remove(role: number, type: 'role' | 'robot', account: string, hostname: string) {
-    //   return this.creatorApi(account, hostname).speaker.delete(role, type).then(() => {
-    //     if (type === 'role') {
-    //       this.get(account, hostname)!.roleList.delete(role)
-    //     }
-    //     if (type === 'robot') {
-    //       this.get(account, hostname)!.robotList.delete(role)
-    //     }
-    //   })
-    // },
+    delete(id: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).speaker.delete(id).then(() => {
+        const index = this.data.findIndex(i => i.id === id)
+        if (index !== -1) {
+          this.data.splice(index, 1)
+        }
+      })
+    },
     testTts(role: number, account: string, hostname: string) {
       return this.creatorApi(account, hostname).speaker.testTts(role)
     },
     clearTemp(url: string, account: string, hostname: string) {
       return this.creatorApi(account, hostname).speaker.clearTemp(url)
     }
-    // getChangerList() {},
   },
   getters: {
     //

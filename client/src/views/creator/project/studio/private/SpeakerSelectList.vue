@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { NMessageProvider, useDialog, useThemeVars } from 'naive-ui'
-import { computed, h, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import { VpnKeyOffOutlined, AddRound, VpnKeyOutlined, CloseRound, RemoveRound } from '@vicons/material'
-import AddRole from './AddRole.vue'
+import AddSpeaker from './AddSpeaker.vue'
 import useStore from '@/store'
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 type SpeakerType = 'human' | 'machine'
@@ -12,10 +12,15 @@ const props = defineProps<{
   speakerHistory: { human: string; machine: string }
   data: Speaker[]
   type: SpeakerType
-  onSelect: (id: string) => void
+  onSelect: (id: string, type: SpeakerType) => void
   onAdd: (args: { type: SpeakerType; avatar: string; name: string; role: number; changer?: number }) => void
-  onRemove: (args: { type: SpeakerType; key: number }) => void
+  onRemove: (id: string) => void
 }>()
+
+onMounted(() => {
+  console.log(props.data)
+})
+
 const dialog = useDialog()
 const themeVars = useThemeVars()
 const isShowKey = ref(false)
@@ -23,7 +28,7 @@ const humanSpeaker = computed(() => props.data.filter(i => i.type === 'human'))
 const machineSpeaker = computed(() => props.data.filter(i => i.type === 'machine'))
 
 function handleClick(id: string, type: SpeakerType) {
-  props.onSelect(id)
+  props.onSelect(id, type)
 }
 function handleAdd(type: SpeakerType) {
   const d = dialog.create({
@@ -34,7 +39,7 @@ function handleAdd(type: SpeakerType) {
         {},
         {
           default: () =>
-            h(AddRole, {
+            h(AddSpeaker, {
               account: props.account,
               hostname: props.hostname,
               type,
@@ -47,33 +52,33 @@ function handleAdd(type: SpeakerType) {
       )
   })
 }
-function handleRemove(key: number, type: SpeakerType) {
+function handleRemove(id: string, type?: SpeakerType) {
   dialog.create({
       title: '删除',
       content: `是否删除？`,
       positiveText: '删除',
       negativeText: '取消',
       onPositiveClick: () => {
-        props.onRemove({ type, key })
+        props.onRemove(id)
       }
     })
 }
 </script>
 
 <template>
-  <div class="role-select-list">
+  <div class="speaker-select-list">
     <n-tabs type="line" animated :default-value="type">
       <template #suffix>
         <n-button text>
           <n-icon :component="!isShowKey ? VpnKeyOutlined : VpnKeyOffOutlined" :size="24" @click="isShowKey = !isShowKey" />
         </n-button>
       </template>
-      <n-tab-pane name="robot" tab="合成语音">
+      <n-tab-pane name="machine" tab="合成语音">
         <n-flex>
-          <div class="role-item" v-for="speaker in machineSpeaker" :key="speaker.id">
-            <div class="role-wrapper" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'machine')">
-              <n-icon v-if="speaker.role !== 0" class="role-close" :component="CloseRound" @click.stop ="handleRemove(speaker.role, 'machine')" />
-              <div class="role-avatar">
+          <div class="speaker-item" v-for="speaker in machineSpeaker" :key="speaker.id">
+            <div class="speaker-wrapper" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'machine')">
+              <n-icon v-if="speaker.role !== 0" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'machine')" />
+              <div class="speaker-avatar">
                 <img
                   :src="speaker.avatar"
                   :alt="speaker.name"
@@ -81,21 +86,21 @@ function handleRemove(key: number, type: SpeakerType) {
                   @error="(e) => (e.target! as HTMLImageElement).src='./default.png'"
                 />
               </div>
-              <span v-if="!isShowKey" class="role-name">{{ speaker.name }}</span>
-              <span v-if="isShowKey" class="role-name">{{ speaker.role }}</span>
+              <span v-if="!isShowKey" class="speaker-name">{{ speaker.name }}</span>
+              <span v-if="isShowKey" class="speaker-name">{{ speaker.role }}</span>
             </div>
           </div>
-          <div class="role-add" @click="handleAdd('machine')">
+          <div class="speaker-add" @click="handleAdd('machine')">
             <n-icon :component="AddRound" :size="24" />
           </div>
         </n-flex>
       </n-tab-pane>
-      <n-tab-pane name="role" tab="扮演角色">
+      <n-tab-pane name="human" tab="角色扮演">
         <n-flex>
-          <div class="role-item" v-for="speaker in humanSpeaker" :key="speaker.id">
-            <div class="role-wrapper" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'human')">
-              <n-icon v-if="speaker.role !== 9999" class="role-close" :component="CloseRound" @click.stop ="handleRemove(speaker.role, 'human')" />
-              <div class="role-avatar">
+          <div class="speaker-item" v-for="speaker in humanSpeaker" :key="speaker.id">
+            <div class="speaker-wrapper" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'human')">
+              <n-icon v-if="speaker.role !== 10000" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'human')" />
+              <div class="speaker-avatar">
                 <img
                   :src="speaker.avatar"
                   :alt="speaker.name"
@@ -103,11 +108,11 @@ function handleRemove(key: number, type: SpeakerType) {
                   @error="(e) => (e.target! as HTMLImageElement).src='./default.png'"
                 />
               </div>
-              <span v-if="!isShowKey" class="role-name">{{ speaker.name }}</span>
-              <span v-if="isShowKey" class="role-name">{{ speaker.role }}</span>
+              <span v-if="!isShowKey" class="speaker-name">{{ speaker.name }}</span>
+              <span v-if="isShowKey" class="speaker-name">{{ speaker.role }}</span>
             </div>
           </div>
-          <div class="role-add" @click="handleAdd('human')">
+          <div class="speaker-add" @click="handleAdd('human')">
             <n-icon :component="AddRound" :size="24" />
           </div>
         </n-flex>
@@ -117,7 +122,7 @@ function handleRemove(key: number, type: SpeakerType) {
 </template>
 
 <style lang="scss" scoped>
-.role-select-list {
+.speaker-select-list {
   height: 100%;
   width: 100%;
   display: flex;
@@ -126,7 +131,7 @@ function handleRemove(key: number, type: SpeakerType) {
   padding: 10px 0px;
   margin-bottom: 20px;
 }
-.role-wrapper {
+.speaker-wrapper {
   user-select: none;
   position: relative;
   width: 50px;
@@ -138,7 +143,7 @@ function handleRemove(key: number, type: SpeakerType) {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  .role-close {
+  .speaker-close {
     position: absolute;
     top: 0;
     right: 0;
@@ -149,12 +154,12 @@ function handleRemove(key: number, type: SpeakerType) {
       color: v-bind('themeVars.textColor1');
     }
   }
-  .role-avatar {
+  .speaker-avatar {
     width: 50px;
     height: 50px;
     border-radius: 3px;
   }
-  .role-name {
+  .speaker-name {
     font-size: 14px;
     line-height: 18px;
     margin-top: 8px;
@@ -166,17 +171,17 @@ function handleRemove(key: number, type: SpeakerType) {
   }
   &:hover {
     background-color: v-bind('themeVars.buttonColor2Hover');
-    .role-close {
+    .speaker-close {
       opacity: 1;
     }
   }
 }
-.role-item {
+.speaker-item {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.role-add {
+.speaker-add {
   width: 50px;
   height: 80px;
   padding: 4px;

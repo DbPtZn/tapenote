@@ -71,7 +71,7 @@ export class FragmentController {
           procedureId: formData.procedureId,
           audio: audio.path,
           duration: formData.duration,
-          role: formData.role
+          speakerId: formData.speakerId
         },
         req.user.id,
         req.user.dirname

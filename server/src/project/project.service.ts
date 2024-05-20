@@ -19,6 +19,7 @@ import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { FolderService } from 'src/folder/folder.service'
 import { FragmentService } from 'src/fragment/fragment.service'
+import { UpdateSpeakerHistoryDto, UpdateSpeakerRecorderDto } from './dto/update.dto'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -48,8 +49,8 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private projectsRepository: Repository<Project>,
-    @InjectRepository(Fragment)
-    private fragmentsRepository: Repository<Fragment>,
+    // @InjectRepository(Fragment)
+    // private fragmentsRepository: Repository<Fragment>,
     // @Inject(forwardRef(() => FragmentService))
     // private readonly fragmentService: FragmentService,
     @Inject(forwardRef(() => FolderService))
@@ -142,6 +143,8 @@ export class ProjectService {
           project.fragments = []
           project.sequence = data.sequence || []
           project.removedSequence = data.removedSequence || []
+          project.speakerHistory = { human: '', machine: '' }
+          project.speakerRecorder = []
           break
         case LibraryEnum.COURSE:
           noteId && (project.fromNoteId = noteId)
@@ -479,6 +482,38 @@ export class ProjectService {
       return { updateAt: newCourse.updateAt, msg: '旁注更新成功！' }
     } catch (error) {
       this.userlogger.error(`更新旁注失败,项目id:${id}`)
+      throw error
+    }
+  }
+  async updateSpeakerHistory(updateSpeakerHistoryDto: UpdateSpeakerHistoryDto, userId: string) {
+    const { id, type, speakerId } = updateSpeakerHistoryDto
+    try {
+      const procedure = await this.projectsRepository.findOneBy({ id, userId })
+      if (type === 'human') {
+        procedure.speakerHistory.human = speakerId
+      }
+      if (type === 'machine') {
+        procedure.speakerHistory.machine = speakerId
+      }
+      const result = await this.projectsRepository.save(procedure)
+      this.userlogger.log(`更新说话人历史记录成功,项目id:${id},${type}说话人id:${speakerId}`)
+      return { updateAt: result.updateAt, msg: '更新成功！' }
+    } catch (error) {
+      this.userlogger.error(`更新说话人历史记录失败,项目id:${id}`)
+      throw error
+    }
+  }
+
+  async updateSpeakerRecorder(updateSpeakerRecorderDto: UpdateSpeakerRecorderDto, userId: string) {
+    const { id, speakerId } = updateSpeakerRecorderDto
+    try {
+      const procedure = await this.projectsRepository.findOneBy({ id, userId })
+      procedure.speakerRecorder.push(speakerId)
+      const result = await this.projectsRepository.save(procedure)
+      this.userlogger.log(`更新说话人记录器成功,项目id:${id},新增说话人id:${speakerId}`)
+      return { updateAt: result.updateAt, msg: '更新成功！' }
+    } catch (error) {
+      this.userlogger.error(`更新说话人记录器失败,项目id:${id}`)
       throw error
     }
   }

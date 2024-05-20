@@ -27,6 +27,7 @@ export class SpeakerService {
 
   async create(createSpeakerDto: CreateSpeakerDto, userId: string, dirname: string) {
     const { role, name, avatar, changer } = createSpeakerDto
+    console.log(createSpeakerDto)
     try {
       const user = await this.userService.findOneById(userId)
       const speaker = new Speaker()
@@ -51,16 +52,35 @@ export class SpeakerService {
             originalname: speaker.id,
             extname: '.wav'
           })
-          await this.sherpaService.tts(txt, filepath, role, 1)
+          this.sherpaService.tts(txt, filepath, role, 1)
           speaker.audio = filename
         } catch (error) {
           this.userLogger.error(`创建快速测试音频失败`, error.message)
           throw error
         }
       }
-      return await this.speakersRepository.save(speaker)
+      const result = await this.speakersRepository.save(speaker)
+      result.avatar = avatar
+      return result
     } catch (error) {
       this.userLogger.error(`创建 speaker 失败`, error.message)
+      throw error
+    }
+  }
+
+  async findOneById(id: string, userId: string, dirname: string) {
+    try {
+      const speaker = await this.speakersRepository.findOne({
+        where: { id, userId }
+      })
+      const filepath = this.storageService.getFilePath({
+        dirname,
+        filename: speaker.avatar,
+        category: 'image'
+      })
+      speaker.avatar = filepath
+      return speaker
+    } catch (error) {
       throw error
     }
   }

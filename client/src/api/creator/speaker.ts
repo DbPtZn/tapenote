@@ -12,7 +12,7 @@ export const speaker = (axios: AxiosInstance) => {
       return axios.post<T>('/speaker/write/create', dto)
     },
     getAll<T>() {
-      return axios.get<T>('/speaker/read')
+      return axios.get<T>('/speaker/read/all')
     },
     delete<T>(id: string) {
       return axios.delete<T>(`/speaker/delete/` + id)

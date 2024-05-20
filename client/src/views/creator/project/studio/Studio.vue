@@ -93,21 +93,22 @@ const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
         speakerHistory: projectStore.get(props.id)?.speakerHistory || { human: '', machine: '' },
         data: speakerStore.data,
         type: type,
-        onSelect: (speakerId: string) => {
-          // timbreStore.selected(result.key, result.type, props.account, props.hostname)
-          // speakerStore.selected
-          projectStore.updateSpeakerHistory(props.id, speakerId, props.account, props.hostname)
+        onSelect: (speakerId: string, type: 'human' | 'machine') => {
+          projectStore.updateSpeakerHistory({ id: props.id, type, speakerId }, props.account, props.hostname).catch(e => {
+            message.error('Speaker history update error！')
+          })
           dialog.destroyAll()
         },
         onAdd: (result) => {
-          if (result.type === 'human') {
-            // timbreStore.addRole(result, props.account, props.hostname)
-          } else {
-            // timbreStore.addRobot(result, props.account, props.hostname)
-          }
+          speakerStore.create({
+            role: result.role,
+            name: result.name,
+            avatar: result.avatar,
+            changer: result.changer
+          }, props.account, props.hostname)
         },
-        onRemove: (result) => {
-            // timbreStore.remove(result.key, result.type, props.account, props.hostname)
+        onRemove: (id: string) => {
+            speakerStore.delete(id, props.account, props.hostname)
         },
       }),
     })
@@ -192,7 +193,7 @@ const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe((editor
 const studioRef = ref()
 onMounted(() => {
   bridge.studioRef = studioRef.value
-  // timbreStore.fetchAndSet(props.account, props.hostname) // 获取音色列表
+  speakerStore.fetchAndSet(props.account, props.hostname) // 获取说话人列表
 })
 onUnmounted(() => {
   subscription.unsubscribe()
@@ -220,18 +221,21 @@ const totalDuration = computed(() => {
         <span v-if="isTotalDurationShow && !playerState.isPlaying" style="display: inline-block; min-width: 72px;">{{ utils.durationFormat(totalDuration) }}</span>
         <span v-if="playerState.isPlaying" style="display: inline-block; min-width: 72px;">{{ utils.durationFormat(playerState.currentTime) }}</span>
       </strong>
+      <!-- 顶部下拉列表 -->
       <n-dropdown trigger="click" :options="studioOptions" :disabled="state.isReadonly">
         <n-button class="arrow" text size="small" :disabled="state.isReadonly">
           <template #icon>
             <n-icon :component="ArrowDropDown" :size="24"/>
           </template>
         </n-button>
-        <!-- <DpzIcon class="arrow" :icon="`${MaterialTypeEnum.FILLED}arrow_drop_down`" :size="24" /> -->
       </n-dropdown>
     </Header>
+    <!-- 主展示区 -->
     <div ref="scrollerRef" class="main" @contextmenu="handleContextmenu">
+      <!-- 拖拽组件 -->
       <Draggable class="draggable" v-model="fragments" :itemKey="'id'" @change="handleMove">
         <template #item="{ element }">
+          <!-- 片段 -->
           <AudioFragment
             :key="element.id"
             :is-loading="!!element.key"
@@ -269,19 +273,16 @@ const totalDuration = computed(() => {
             <!-- 播放音频 -->
             <template #play>
               <n-icon v-if="!element.key" :component="HeadsetOutlined" :size="18" @click="handlePlay(element)" />
-              <!-- <DpzIcon :icon="'material-icons-outlined-headset'" :size="18" @click="handlePlay(element)"/> -->
             </template>
             <!-- 编辑文字 -->
             <template #edit>
               <n-icon :component="EditOutlined" :size="18" @click="handleEdit(element)" />
-              <!-- <DpzIcon :icon="'material-icons-outlined-edit'" :size="18" @click="handleEdit(element)"/> -->
             </template>
             <!-- 移除片段 -->
             <template #delete>
               <n-popconfirm positive-text="确认" negative-text="取消"  @positive-click="handleRemove(element)">
                 <template #trigger>
                   <n-icon :component="DeleteOutlined" :size="18" />
-                  <!-- <DpzIcon :icon="'material-icons-outlined-delete'" :size="18"/> -->
                 </template>
                 是否移除该片段 ?
               </n-popconfirm>
@@ -290,7 +291,9 @@ const totalDuration = computed(() => {
         </template>
       </Draggable>
     </div>
+    <!-- 底部 -->
     <Footer :height="200" :overflow-x="'unset'">
+      <!-- 工具栏 -->
       <StudioToolbar>
         <template #left>
           <!-- 角色选择 -->
@@ -311,7 +314,7 @@ const totalDuration = computed(() => {
                 @error="(e) => (e.target! as HTMLImageElement).src='./avatar03.png'"
                 @click="handleSpeakerChange(state.recorderMode === 'ASR'? 'human' : 'machine')"
               >
-              <!-- <span class="role-name">{{ timbreStore.getCurrent(state.recorderMode === 'ASR'? 'human' : 'machine', account, hostname)?.name }}</span> -->
+              <span class="role-name">{{ speaker.name }}</span>
             </div>
           </n-popover>
         </template>
@@ -320,9 +323,6 @@ const totalDuration = computed(() => {
           <n-popselect v-if="state.recorderMode === 'TTS'" v-model:value="state.ttsSpeed" :options="speedOptions" placement="top" trigger="click">
             <n-button class="toolbar-btn"  ghost size="small" :style="{ width: '50px' }" :disabled="state.isReadonly">
               {{ `${state.ttsSpeed === 1 ? '语速' : `${state.ttsSpeed}x`}`}}
-              <!-- <template #icon>
-                <n-icon :component="SpeedRound" :size="24"/>
-              </template> -->
             </n-button>
           </n-popselect>
           <!-- 导入音频文件 -->
@@ -351,9 +351,11 @@ const totalDuration = computed(() => {
           </n-button>
         </template>
       </StudioToolbar>
+      <!-- 输入区 -->
       <TTS v-if="state.recorderMode === 'TTS'" :readonly="state.isReadonly" @on-text-output="handleTextOutput"  />
       <ASR v-if="state.recorderMode === 'ASR'" :readonly="state.isReadonly" :shortcut="state.isFocus" @on-audio-output="handleAudioOutput" />
     </Footer>
+    <!-- 下拉列表 -->
     <n-dropdown
       placement="bottom-start"
       trigger="manual"

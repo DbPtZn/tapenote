@@ -8,11 +8,11 @@ export class CreateSpeakerDto {
   role: number
 
   @IsString()
-  @Length(36)
+  @Length(0, 36)
   name: string
 
   @IsString()
-  @Length(255)
+  @Length(0, 255)
   avatar: string
 
   @IsNotEmpty({ message: 'changer 值不能为空' })

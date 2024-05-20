@@ -13,7 +13,7 @@ import { CreatorShell } from '../shell'
 import { useThemeVars } from 'naive-ui'
 import elementResizeDetector from 'element-resize-detector'
 
-const { projectStore, userStore } = useStore()
+const { projectStore, userStore, speakerStore } = useStore()
 const shell = useShell<CreatorShell>()
 // watch(() => shell.workbench.itemId, (newVal, oldVal) => {
 //   console.log(newVal)

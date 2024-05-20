@@ -6,6 +6,7 @@ import { LibraryEnum, REST } from 'src/enum'
 import { UpdateTitleDto } from './dto/update-title.dto'
 import { UpdateContentDto } from './dto/update-content.dto'
 import { UpdateSidenoteContentDto } from './dto/update-sidenote-content.dto'
+import { UpdateSpeakerHistoryDto } from './dto/update.dto'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('project')
@@ -142,6 +143,16 @@ export class ProjectController {
   async updateSidenoteContent(@Body() updateSidenoteContentDto: UpdateSidenoteContentDto, @Req() req, @Res() res) {
     try {
       const result = await this.projectService.updateSidenoteContent(updateSidenoteContentDto, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error)
+    }
+  }
+
+  @Patch(`${REST.U}/speaker/history`)
+  async updateSpeakerHistory(@Body() updateSpeakerHistoryDto: UpdateSpeakerHistoryDto, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.updateSpeakerHistory(updateSpeakerHistoryDto, req.user.id)
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error)

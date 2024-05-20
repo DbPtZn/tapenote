@@ -290,8 +290,12 @@ export const useProjectStore = defineStore('projectStore', {
         }
       })
     },
-    updateSpeakerHistory(id: string, speakerId: string, account: string, hostname: string) {
-      //
+    updateSpeakerHistory(params: Parameters<typeof CreatorApi.prototype.project.updateSpeakerHistory>[0], account: string, hostname: string) {
+      const { id, speakerId, type } = params
+      type === 'human' ? (this.get(id)!.speakerHistory.human = speakerId) : (this.get(id)!.speakerHistory.machine = speakerId)
+      return this.creatorApi(account, hostname).project.updateSpeakerHistory<{ updateAt: string }>(params).then(res => {
+        this.get(id)!.updateAt = res.data.updateAt
+      })
     },
     /** 清理缓存 */
     cleanCache(id: string, account: string, hostname: string) {
