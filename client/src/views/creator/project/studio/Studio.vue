@@ -13,6 +13,7 @@ import { LibraryEnum } from '@/enums'
 import { Voice, DrawText, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
 import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp, SpeedRound } from '@vicons/material'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
+type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
@@ -37,12 +38,38 @@ const state = reactive({
 // const speakerType = computed(() => {
 //   return state.recorderMode === 'TTS' ? 'machine' : 'human'
 // })
+// const speakerHistory = computed(() => {
+//   console.log(state.recorderMode)
+//   return projectStore.get(props.id)?.speakerHistory
+// })
 const speakerId = computed(() => {
+  console.log(state.recorderMode)
   return state.recorderMode === 'TTS' ? projectStore.get(props.id)?.speakerHistory.machine : projectStore.get(props.id)?.speakerHistory.human
 })
+// console.log(speakerId)
+// const speaker = ref<Speaker>()
+// onMounted(() => {
+//    // 获取说话人列表
+//   speakerStore.fetchAndSet(props.account, props.hostname)?.then(() => {
+//     speaker.value = speakerStore.get((state.recorderMode === 'TTS' ? projectStore.get(props.id)?.speakerHistory.machine : projectStore.get(props.id)?.speakerHistory.human) || '', props.account, props.hostname, state.recorderMode === 'TTS' ? 'machine' : 'human')
+//   })
+//   console.log(speaker.value)
+// })
+// watch(() => projectStore.get(props.id)?.speakerHistory.human, (value) => {
+//   speaker.value = speakerStore.get(value || '', props.account, props.hostname, 'human')
+// })
+// watch(() => projectStore.get(props.id)?.speakerHistory.machine, (value) => {
+//   speaker.value = speakerStore.get(value || '', props.account, props.hostname, 'machine' )
+// })
+// const machineId = computed(() => projectStore.get(props.id)?.speakerHistory.machine)
+// const humanId = computed(() => projectStore.get(props.id)?.speakerHistory.human)
 const speaker = computed(() => {
-  return speakerStore.get(speakerId.value || '', props.account, props.hostname, state.recorderMode === 'TTS' ? 'machine' : 'human')!
+  console.log('ddd')
+  return speakerStore.get(speakerId.value || '', props.account, props.hostname, state.recorderMode === 'TTS' ? 'machine' : 'human')
 })
+// const speaker = computed(() => {
+//   return state.recorderMode === 'TTS' ? ttsSpeaker.value : asrSpeaker.value
+// })
 const speedOptions = [
   { label: '2.0x', value: 2.0 },
   { label: '1.5x', value: 1.5 },
@@ -60,7 +87,7 @@ const {
     if (text.length === 0) return
     projectStore.fragment(props.id).createByText({
       txt: text,
-      role: speakerStore.get(speakerId.value || '', props.account, props.hostname)?.role || 0,
+      speakerId: speaker.value?.id || '',
       speed: state.ttsSpeed
     }).catch(e => {
       message.error('创建片段失败！')
@@ -71,7 +98,7 @@ const {
     projectStore.fragment(props.id).createByAudio({
       audio: data.audio,
       duration: data.duration,
-      role: speakerStore.get(speakerId.value || '', props.account, props.hostname)?.role || 9999
+      speakerId: speaker.value?.id || '',
     }).catch(e => {
       message.error('创建片段失败！')
     })
@@ -108,7 +135,7 @@ const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
           }, props.account, props.hostname)
         },
         onRemove: (id: string) => {
-            speakerStore.delete(id, props.account, props.hostname)
+          speakerStore.delete(id, props.account, props.hostname)
         },
       }),
     })
@@ -193,7 +220,6 @@ const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe((editor
 const studioRef = ref()
 onMounted(() => {
   bridge.studioRef = studioRef.value
-  speakerStore.fetchAndSet(props.account, props.hostname) // 获取说话人列表
 })
 onUnmounted(() => {
   subscription.unsubscribe()
@@ -235,7 +261,6 @@ const totalDuration = computed(() => {
       <!-- 拖拽组件 -->
       <Draggable class="draggable" v-model="fragments" :itemKey="'id'" @change="handleMove">
         <template #item="{ element }">
-          <!-- 片段 -->
           <AudioFragment
             :key="element.id"
             :is-loading="!!element.key"
@@ -308,13 +333,13 @@ const totalDuration = computed(() => {
             <div class="role" :style="{ width: '60px', height: '70px', cursor: 'pointer' }">
               <img
                 class="role-avatar"
-                :src="speaker.avatar"
-                :alt="speaker.name"
+                :src="speaker?.avatar"
+                :alt="speaker?.name"
                 :style="{ width: '50px', height: '50px', objectFit: 'contain' }"
                 @error="(e) => (e.target! as HTMLImageElement).src='./avatar03.png'"
                 @click="handleSpeakerChange(state.recorderMode === 'ASR'? 'human' : 'machine')"
               >
-              <span class="role-name">{{ speaker.name }}</span>
+              <span class="role-name">{{ speaker?.name || '' }}</span>
             </div>
           </n-popover>
         </template>

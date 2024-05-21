@@ -41,6 +41,9 @@ export class FragmentController {
     try {
       const fragment = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname)
       // console.log(fragment.audio)
+      if (fragment.speaker.avatar) {
+        fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
+      }
       const data = {
         key: createTTSFragmentDto.key, // 返回的信息中添加 key 值标识
         id: fragment.id,
@@ -77,6 +80,9 @@ export class FragmentController {
         req.user.dirname
       )
       // console.log(formData)
+      if (fragment.speaker.avatar) {
+        fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
+      }
       const data = {
         key: formData.key, // 返回的信息中添加 key 值标识
         id: fragment.id,

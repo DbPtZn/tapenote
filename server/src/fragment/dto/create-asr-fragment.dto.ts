@@ -4,6 +4,6 @@ export class CreateASRFragmentDto {
   @IsString() key: string
   @IsString() procedureId: string
   audio: Blob
-  @IsNumber() duration: number
+  @IsString() duration: number
   @IsString() @IsOptional() speakerId?: string
 }

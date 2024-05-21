@@ -6,6 +6,7 @@ import router from '@/router'
 import { LibraryEnum } from '@/enums'
 import useStore from '..'
 interface FragmentSpeaker {
+  type: 'human' | 'machine'
   avatar: string
   name: string
   role: number
@@ -72,6 +73,8 @@ export interface Project {
 interface State {
   data: Project[]
 }
+
+const userInfoMap = new Map()
 
 export const useProjectStore = defineStore('projectStore', {
   state(): State {
@@ -165,6 +168,7 @@ export const useProjectStore = defineStore('projectStore', {
         abbrev: data.abbrev || '',
         fragments: data.fragments?.map(fragment => {
           fragment.audio = hostname + fragment.audio
+          fragment.speaker = this.fragmentSpeakerFilter(fragment.speaker, account, hostname)
           return fragment
         }) || [],
         sequence: data.sequence || [],
@@ -186,6 +190,38 @@ export const useProjectStore = defineStore('projectStore', {
       console.log(item)
       this.data.push(item)
       return item
+    },
+    fragmentSpeakerFilter(speaker: FragmentSpeaker, account: string, hostname: string) {
+      switch(speaker.type) {
+        case 'human':
+          if (speaker.role === 10000) {
+            const namekey = `${account}&${hostname}:name`
+            const avatarkey = `${account}&${hostname}:avatar`
+            if (userInfoMap.has(namekey) && userInfoMap.has(avatarkey)) {
+              speaker.name = userInfoMap.get(namekey)
+              speaker.avatar = userInfoMap.get(avatarkey)
+            } else {
+              const { userListStore } = useStore()
+              const user = userListStore.get(account, hostname)
+              userInfoMap.set(`${account}&${hostname}:name`, user.nickname)
+              userInfoMap.set(`${account}&${hostname}:avatar`, user.avatar)
+              speaker.name = user.nickname
+              speaker.avatar = user.avatar
+            }
+          } else {
+            speaker.avatar = hostname + speaker.avatar
+          }
+          break
+        case 'machine':
+          if (speaker.role === 0) {
+            speaker.name = '默认'
+            speaker.avatar = './robot.png'
+          } else {
+            speaker.avatar = hostname + speaker.avatar
+          }
+          break
+      }
+      return speaker
     },
     get(id: string) {
       const index = this.data.findIndex(i => i.id === id)
@@ -292,9 +328,20 @@ export const useProjectStore = defineStore('projectStore', {
     },
     updateSpeakerHistory(params: Parameters<typeof CreatorApi.prototype.project.updateSpeakerHistory>[0], account: string, hostname: string) {
       const { id, speakerId, type } = params
-      type === 'human' ? (this.get(id)!.speakerHistory.human = speakerId) : (this.get(id)!.speakerHistory.machine = speakerId)
+      // console.log(params)
+      this.data.some(i => {
+        if (i.id === id) {
+          if (type === 'human') {
+            i.speakerHistory.human = speakerId
+          }
+          if (type === 'machine') {
+            i.speakerHistory.machine = speakerId
+          }
+          return true
+        }
+      })
       return this.creatorApi(account, hostname).project.updateSpeakerHistory<{ updateAt: string }>(params).then(res => {
-        this.get(id)!.updateAt = res.data.updateAt
+        this.setUpdateAt(id, res.data.updateAt)
       })
     },
     /** 清理缓存 */
@@ -403,11 +450,8 @@ export const useProjectStore = defineStore('projectStore', {
 
       })
     },
-
-    // /** 批量导出（待开发） */
-    // batchdownload(id: string, account: string, hostname: string) {
-    //   //
-    // },
+    // 批量导出
+    // 批量导入
 
     /** ------------------------------- fragment ------------------------------------------- */
     fragment(procedureId: string) {
@@ -448,6 +492,8 @@ export const useProjectStore = defineStore('projectStore', {
       }
       /** 通过文本创建片段 */
       const createByText = (params: Parameters<typeof CreatorApi.prototype.fragment.createByText>[0]) => {
+        const { speakerStore } = useStore()
+        const speaker = speakerStore.get(params.speakerId, account!, hostname!, 'machine')!
         const key = utils.randomString()
         const txt = params.txt.replace(/\s*/g, '')
         params.procedureId = procedureId
@@ -466,9 +512,10 @@ export const useProjectStore = defineStore('projectStore', {
           projectId: procedureId,
           // role: params.role,
           speaker: {
-            name: '',
-            avatar: '',
-            role: params.role
+            type: 'machine',
+            name: speaker.name,
+            avatar: speaker.avatar,
+            role: speaker.role
           },
           removed: 'never'
         }
@@ -477,6 +524,8 @@ export const useProjectStore = defineStore('projectStore', {
         return this.creatorApi(account!, hostname!).fragment.createByText<Fragment>(params).then(res => {
           const data = res.data
           data.audio = hostname + data.audio
+          if (params.speakerId !== '')  data.speaker.avatar = hostname + data.speaker.avatar
+          else data.speaker = fragment.speaker
           if(data.key) {
             // 用片段 id 替换排序信息中的占位 key
             sequence?.some((item, index, arr) => {
@@ -520,6 +569,9 @@ export const useProjectStore = defineStore('projectStore', {
       }
       /** 通过音频创建片段 */
       const createByAudio = (params: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0]) => {
+        const { speakerStore } = useStore()
+        const speaker = speakerStore.get(params.speakerId, account!, hostname!, 'human')!
+        
         const key = utils.randomString()
         params.procedureId = procedureId
         params.key = key
@@ -535,20 +587,21 @@ export const useProjectStore = defineStore('projectStore', {
           promoters: [],
           timestamps: [],
           projectId: procedureId,
-          // role: params.role,
           speaker: {
-            name: '',
-            avatar: '',
-            role: params.role
+            type: 'human',
+            name: speaker.name,
+            avatar: speaker.avatar,
+            role: speaker.role
           },
           removed: 'never'
         }
-        // console.log(key)
         get()?.push(fragment) // 不完全片段
         sequence?.push(key) // 用 key 占位
         return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment>(params).then(res => {
           const data = res.data
           data.audio = hostname + data.audio
+          if (params.speakerId !== '')  data.speaker.avatar = hostname + data.speaker.avatar
+          else data.speaker = fragment.speaker
           if(data.key) {
             // 用片段 id 替换排序信息中的占位 key
             sequence?.some((item, index, arr) => {

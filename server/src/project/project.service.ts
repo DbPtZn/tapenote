@@ -294,12 +294,16 @@ export class ProjectService {
           // 补全片段音频路径
           if (!dirname) throw new Error('未指定 dirname！')
           project.fragments = project.fragments.map(fragment => {
-            const filePath = this.storageService.getFilePath({
+            fragment.audio = this.storageService.getFilePath({
               dirname: [dirname, project.dirname],
               filename: fragment.audio,
               category: 'audio'
             })
-            fragment.audio = filePath
+            fragment.speaker.avatar = this.storageService.getFilePath({
+              dirname: [dirname, project.dirname],
+              category: 'image',
+              filename: fragment.speaker.avatar
+            })
             // console.log(fragment.tags)
             // console.log(typeof fragment.tags[0])
             // console.log(fragment.promoters)
@@ -487,6 +491,7 @@ export class ProjectService {
   }
   async updateSpeakerHistory(updateSpeakerHistoryDto: UpdateSpeakerHistoryDto, userId: string) {
     const { id, type, speakerId } = updateSpeakerHistoryDto
+    // console.log(updateSpeakerHistoryDto)
     try {
       const procedure = await this.projectsRepository.findOneBy({ id, userId })
       if (type === 'human') {

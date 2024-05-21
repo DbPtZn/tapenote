@@ -60,6 +60,7 @@ export class SpeakerService {
         }
       }
       const result = await this.speakersRepository.save(speaker)
+      delete speaker.user
       result.avatar = avatar
       return result
     } catch (error) {

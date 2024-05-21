@@ -17,9 +17,9 @@ const props = defineProps<{
   onRemove: (id: string) => void
 }>()
 
-onMounted(() => {
-  console.log(props.data)
-})
+// onMounted(() => {
+//   console.log(props.data)
+// })
 
 const dialog = useDialog()
 const themeVars = useThemeVars()

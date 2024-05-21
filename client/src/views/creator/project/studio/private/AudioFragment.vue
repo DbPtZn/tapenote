@@ -75,9 +75,6 @@ function useClickoutside() {
     })
   )
 }
-// onMounted(() => {
-//   // console.log(props.roleList?.get(props.role))
-// })
 </script>
 
 <template>
@@ -89,7 +86,7 @@ function useClickoutside() {
     @contextmenu="handleContextmenu"
   >
     <!-- ------------------------------------------- Left --------------------------------------------- -->
-    <div class="fragment-wrapper left-fragment" v-if="speaker.role < 9999">
+    <div class="fragment-wrapper left-fragment" v-if="speaker.role <= 9999">
       <!-- 左侧 -->
       <LeftSide>
         <div class="avator">
@@ -125,7 +122,7 @@ function useClickoutside() {
       </RightSide>
     </div>
     <!-- ------------------------------------------- Right --------------------------------------------- -->
-    <div class="fragment-wrapper right-fragment" v-if="speaker.role >= 9999">
+    <div class="fragment-wrapper right-fragment" v-if="speaker.role > 9999">
       <!-- 左侧 -->
       <LeftSide :width="50">
         <!-- Placeholder -->

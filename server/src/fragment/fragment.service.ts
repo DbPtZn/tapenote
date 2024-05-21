@@ -28,6 +28,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import fs from 'fs'
 import { Speaker } from 'src/speaker/entities/speaker.entity'
 import { SpeakerService } from 'src/speaker/speaker.service'
+import sharp from 'sharp'
 
 @Injectable()
 export class FragmentService {
@@ -55,6 +56,7 @@ export class FragmentService {
       let fragmentSpeaker: FragmentSpeaker
       if (speakerId) {
         const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
+        console.log('speaker', speaker)
         if (speaker) {
           const filepath = this.storageService.getFilePath({
             dirname: [dirname, projectDirname],
@@ -80,7 +82,8 @@ export class FragmentService {
               originalname: speakerId,
               extname: '.png'
             })
-            fs.copyFileSync(avatarpath, filepath)
+            await sharp(avatarpath).toFormat('png').png({ quality: 50 }).toFile(filepath)
+            // fs.copyFileSync(avatarpath, filepath)
             fragmentSpeaker = {
               type,
               name: speaker.name,
@@ -106,6 +109,7 @@ export class FragmentService {
       }
       return fragmentSpeaker
     } catch (error) {
+      console.log(error)
       throw error
     }
   }
@@ -203,6 +207,11 @@ export class FragmentService {
       // console.log(fragment)
       this.userlogger.log(`合成语音创建片段成功！`)
       fragment.audio = filepath // 替换成完整地址返回给前端
+      fragment.speaker.avatar = this.storageService.getFilePath({
+        dirname: [dirname, procudure.dirname],
+        category: 'image',
+        filename: fragmentSpeaker.avatar
+      })
       return fragment
     } catch (error) {
       console.log(`创建片段失败：${error.message}`)
@@ -229,7 +238,7 @@ export class FragmentService {
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
 
-      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname, procudure.dirname)
+      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname, procudure.dirname)
 
       const fragmentId = UUID.v4()
       const fragment = new Fragment()
@@ -314,6 +323,11 @@ export class FragmentService {
           throw error
         })
       fragment.audio = filepath
+      fragment.speaker.avatar = this.storageService.getFilePath({
+        dirname: [dirname, procudure.dirname],
+        category: 'image',
+        filename: fragmentSpeaker.avatar
+      })
       return fragment
     } catch (error) {
       this.userlogger.error(`创建片段失败，错误原因：${error.message} `)

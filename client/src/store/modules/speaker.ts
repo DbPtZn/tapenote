@@ -74,6 +74,7 @@ export const useSpeakerStore = defineStore('speakerStore', {
       return state
     },
     get(id: string, account: string, hostname: string, type?: 'human' | 'machine') {
+      console.log([id, account, hostname, type])
       if(id !== '') {
         const index = this.data.findIndex(i => i.id === id && i.account === account && i.hostname === hostname)
         if (index !== -1) {
@@ -114,14 +115,6 @@ export const useSpeakerStore = defineStore('speakerStore', {
       }
       return defaultSpeaker
     },
-    // selected(key: number, type: 'role' | 'robot', account: string, hostname: string) {
-    //   if (type === 'role') {
-    //     this.get(account, hostname)!.role = key
-    //   }
-    //   if (type === 'robot') {
-    //     this.get(account, hostname)!.robot = key
-    //   }
-    // },
     delete(id: string, account: string, hostname: string) {
       return this.creatorApi(account, hostname).speaker.delete(id).then(() => {
         const index = this.data.findIndex(i => i.id === id)

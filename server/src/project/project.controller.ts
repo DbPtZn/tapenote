@@ -48,6 +48,9 @@ export class ProjectController {
           project.fragments = project.fragments.map(fragment => {
             fragment['id'] = fragment.id // 用于前端的 id
             fragment.audio = '/public' + fragment.audio.split('public')[1]
+            if (fragment.speaker.avatar) {
+              fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
+            }
             return fragment
           }) as any
           break

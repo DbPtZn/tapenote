@@ -4,13 +4,13 @@ interface CreateASRFragmentDto {
   key?: string
   audio: Blob
   duration: number
-  role: number
+  speakerId: string
 }
 interface CreateTTSFragmentDto {
   procedureId?: string
   key?: string
   txt: string
-  role: number
+  speakerId: string
   speed: number
 }
 interface CreateBlankFragmentDto {
@@ -74,7 +74,7 @@ export const fragment = (axios: AxiosInstance) => {
       formdata.append('procedureId', dto.procedureId!)
       formdata.append('audio', dto.audio, 'audio.wav') // 必须添加文件名和后缀
       formdata.append('duration', dto.duration.toString())
-      formdata.append('role', dto.role.toString())
+      formdata.append('speakerId', dto.speakerId)
       formdata.append('key', dto.key!)
       return axios.post<T>('/fragment/write/create/asr', formdata, {
         headers: {
