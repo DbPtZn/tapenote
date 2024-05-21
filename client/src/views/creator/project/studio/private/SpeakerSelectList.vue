@@ -17,10 +17,6 @@ const props = defineProps<{
   onRemove: (id: string) => void
 }>()
 
-// onMounted(() => {
-//   console.log(props.data)
-// })
-
 const dialog = useDialog()
 const themeVars = useThemeVars()
 const isShowKey = ref(false)
@@ -76,7 +72,7 @@ function handleRemove(id: string, type?: SpeakerType) {
       <n-tab-pane name="machine" tab="合成语音">
         <n-flex>
           <div class="speaker-item" v-for="speaker in machineSpeaker" :key="speaker.id">
-            <div class="speaker-wrapper" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'machine')">
+            <div :class="['speaker-wrapper', speakerHistory.machine === speaker.id ? 'active' : '']" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'machine')">
               <n-icon v-if="speaker.role !== 0" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'machine')" />
               <div class="speaker-avatar">
                 <img
@@ -98,7 +94,7 @@ function handleRemove(id: string, type?: SpeakerType) {
       <n-tab-pane name="human" tab="角色扮演">
         <n-flex>
           <div class="speaker-item" v-for="speaker in humanSpeaker" :key="speaker.id">
-            <div class="speaker-wrapper" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'human')">
+            <div :class="['speaker-wrapper', speakerHistory.human === speaker.id ? 'active' : '']" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'human')">
               <n-icon v-if="speaker.role !== 10000" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'human')" />
               <div class="speaker-avatar">
                 <img
@@ -130,6 +126,9 @@ function handleRemove(id: string, type?: SpeakerType) {
   box-sizing: border-box;
   padding: 10px 0px;
   margin-bottom: 20px;
+}
+.active {
+  background-color: v-bind('themeVars.buttonColor2Pressed');
 }
 .speaker-wrapper {
   user-select: none;

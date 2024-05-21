@@ -34,42 +34,14 @@ const state = reactive({
   ttsSpeed: 1,
   recorderMode: 'TTS' as 'TTS' | 'ASR',
 })
-// const data = computed(() => projectStore.get(props.id))
-// const speakerType = computed(() => {
-//   return state.recorderMode === 'TTS' ? 'machine' : 'human'
-// })
-// const speakerHistory = computed(() => {
-//   console.log(state.recorderMode)
-//   return projectStore.get(props.id)?.speakerHistory
-// })
-const speakerId = computed(() => {
-  console.log(state.recorderMode)
-  return state.recorderMode === 'TTS' ? projectStore.get(props.id)?.speakerHistory.machine : projectStore.get(props.id)?.speakerHistory.human
+onMounted(() => {
+   // 获取说话人列表
+  speakerStore.fetchAndSet(props.account, props.hostname)
 })
-// console.log(speakerId)
-// const speaker = ref<Speaker>()
-// onMounted(() => {
-//    // 获取说话人列表
-//   speakerStore.fetchAndSet(props.account, props.hostname)?.then(() => {
-//     speaker.value = speakerStore.get((state.recorderMode === 'TTS' ? projectStore.get(props.id)?.speakerHistory.machine : projectStore.get(props.id)?.speakerHistory.human) || '', props.account, props.hostname, state.recorderMode === 'TTS' ? 'machine' : 'human')
-//   })
-//   console.log(speaker.value)
-// })
-// watch(() => projectStore.get(props.id)?.speakerHistory.human, (value) => {
-//   speaker.value = speakerStore.get(value || '', props.account, props.hostname, 'human')
-// })
-// watch(() => projectStore.get(props.id)?.speakerHistory.machine, (value) => {
-//   speaker.value = speakerStore.get(value || '', props.account, props.hostname, 'machine' )
-// })
-// const machineId = computed(() => projectStore.get(props.id)?.speakerHistory.machine)
-// const humanId = computed(() => projectStore.get(props.id)?.speakerHistory.human)
+const speakerId = computed(() => state.recorderMode === 'TTS' ? projectStore.get(props.id)?.speakerHistory.machine : projectStore.get(props.id)?.speakerHistory.human)
 const speaker = computed(() => {
-  console.log('ddd')
   return speakerStore.get(speakerId.value || '', props.account, props.hostname, state.recorderMode === 'TTS' ? 'machine' : 'human')
 })
-// const speaker = computed(() => {
-//   return state.recorderMode === 'TTS' ? ttsSpeaker.value : asrSpeaker.value
-// })
 const speedOptions = [
   { label: '2.0x', value: 2.0 },
   { label: '1.5x', value: 1.5 },
@@ -87,7 +59,7 @@ const {
     if (text.length === 0) return
     projectStore.fragment(props.id).createByText({
       txt: text,
-      speakerId: speaker.value?.id || '',
+      speakerId: speakerId.value || '',
       speed: state.ttsSpeed
     }).catch(e => {
       message.error('创建片段失败！')
@@ -98,7 +70,7 @@ const {
     projectStore.fragment(props.id).createByAudio({
       audio: data.audio,
       duration: data.duration,
-      speakerId: speaker.value?.id || '',
+      speakerId: speakerId.value || '',
     }).catch(e => {
       message.error('创建片段失败！')
     })

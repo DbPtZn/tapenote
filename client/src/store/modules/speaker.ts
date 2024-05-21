@@ -41,8 +41,10 @@ export const useSpeakerStore = defineStore('speakerStore', {
     create(params: Parameters<typeof CreatorApi.prototype.speaker.create>[0], account: string, hostname: string) {
       this.creatorApi(account, hostname).speaker.create<Speaker>(params).then(res => {
         const speaker = res.data
-        console.log(speaker)
+        // console.log(speaker)
         if (speaker) {
+          speaker.account = account
+          speaker.hostname = hostname
           speaker.avatar = hostname + speaker.avatar
           this.data.push(speaker)
         }
@@ -52,6 +54,7 @@ export const useSpeakerStore = defineStore('speakerStore', {
     fetchAndSet(account: string, hostname: string) {
       if(this.data.length === 0 || this.account !== account || this.hostname !== hostname) {
         return this.fetch<Speaker[]>(account, hostname).then(res => {
+          console.log(res.data)
           this.account = account
           this.hostname = hostname
           return this.set(res.data, account, hostname)
@@ -71,12 +74,14 @@ export const useSpeakerStore = defineStore('speakerStore', {
       state.unshift(this.getDefault('human', account, hostname))
       state.unshift(this.getDefault('machine', account, hostname))
       this.data = state
+      console.log(state)
       return state
     },
     get(id: string, account: string, hostname: string, type?: 'human' | 'machine') {
-      console.log([id, account, hostname, type])
+      // console.log([id, account, hostname, type])
       if(id !== '') {
         const index = this.data.findIndex(i => i.id === id && i.account === account && i.hostname === hostname)
+        // console.log(index)
         if (index !== -1) {
           return this.data.find(i => i.id === id && i.account === account && i.hostname === hostname)
         }
