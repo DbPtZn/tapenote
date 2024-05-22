@@ -1,22 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common'
 import fs from 'fs'
-import path, { join } from 'path'
+import path, { join, resolve } from 'path'
 import wav from 'wav'
-// import sherpa_ncnn from 'sherpa-ncnn'
-// import sherpa_onnx from 'sherpa-onnx'
 import { Readable } from 'stream'
 import { ConfigService, ConfigType } from '@nestjs/config'
 import { sherpaDevConfig } from '../config'
 import { Worker } from 'worker_threads'
-// import myPlugin from 'build/Release/my_plugin.node'
-// // 读取 wasm 模块文件
-// import sherpa_onnx from 'wasm'
-// let sherpa_onnx: any
-// const __rootdirname = process.cwd()
-// import(path.resolve(__rootdirname, 'build', 'Release', 'cpp_plugin.node')).then(plugin => {
-//   console.log(plugin)
-//   console.log(plugin.sayHello())
-// })
+import sherpa_onnx from 'sherpa-onnx-node'
 
 interface RecognizerResult {
   text: string
@@ -32,262 +22,339 @@ export class SherpaService {
     @Inject(sherpaDevConfig.KEY)
     private sherpaConfig: ConfigType<typeof sherpaDevConfig>
   ) {
-    // console.log(this.sherpaConfig.offline.asrConfig)
-    // index.js
-    // const addon = require('./build/Release/addon')
-    // console.log(addon.sayHello());
+    // this.addPunct(
+    //   '我们爱上了TypeScript但最重要的是我们喜欢 Nodejs 这就是为什么 Nest 兼容 TypeScript 和纯 JavaScript Nest 默认基于最新的语言特性要在 Nest 中使用原生的 JavaScript 框架我们需要一个 Babel 编译器'
+    // )
   }
   asr(filepath: string) {
     return new Promise<RecognizerResult>((resolve, reject) => {
-      const config = this.sherpaConfig.offline.asrConfig
-      const worker = new Worker('./wasm/asr-worker.mjs', {
-        workerData: {
-          filepath,
-          config
-        }
-      })
-      worker.on('message', message => {
-        console.log('接收到子线程返回的结果：-----------------------------------------')
-        worker.terminate()
-        resolve(message)
-      })
-      worker.on('error', error => {
-        console.log('接收到子线程返回的错误：-----------------------------------------')
-        console.log(error)
-        worker.terminate()
+      try {
+        const config = this.sherpaConfig.offline.asrConfig
+        const recognizer = new sherpa_onnx.OfflineRecognizer(config)
+        console.log('Started')
+        const start = Date.now()
+        const stream = recognizer.createStream()
+        const wave = sherpa_onnx.readWave(filepath)
+        stream.acceptWaveform({ sampleRate: wave.sampleRate, samples: wave.samples })
+
+        recognizer.decode(stream)
+        const result = recognizer.getResult(stream)
+        const stop = Date.now()
+        console.log('Done')
+
+        const elapsed_seconds = (stop - start) / 1000
+        const duration = wave.samples.length / wave.sampleRate
+        const real_time_factor = elapsed_seconds / duration
+
+        console.log('Wave duration', duration.toFixed(3), 'secodns')
+        console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
+        console.log(`RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`, real_time_factor.toFixed(3))
+        console.log(filepath)
+        console.log('result\n', result)
+
+        this.addPunct(result.text).then(result => {
+          console.log('punct result\n', result)
+        })
+
+        resolve({ text: result.text, tokens: result.tokens, timestamps: result.timestamps })
+      } catch (error) {
         reject(error)
-      })
+      }
     })
   }
 
   tts(txt: string, filepath: string, speakerId?: number, speed?: number) {
     return new Promise<string>((resolve, reject) => {
-      const config = this.sherpaConfig.offline.ttsConfig
-      const worker = new Worker('./wasm/tts-worker.mjs', {
-        workerData: {
-          txt,
-          filepath,
-          speakerId,
-          speed,
-          config
-        }
-      })
-      worker.on('message', message => {
-        console.log('接收到子线程返回的结果：-----------------------------------------')
-        worker.terminate()
-        resolve(message)
-      })
-      worker.on('error', error => {
-        console.log('接收到子线程返回的错误：-----------------------------------------')
-        console.log(error)
-        worker.terminate()
+      try {
+        const config = this.sherpaConfig.offline.ttsConfig
+        // console.log(config)
+        const tts = new sherpa_onnx.OfflineTts(config)
+
+        const start = Date.now()
+        const audio = tts.generate({ text: txt, sid: 88, speed: 1.0 })
+        const stop = Date.now()
+        const elapsed_seconds = (stop - start) / 1000
+        const duration = audio.samples.length / audio.sampleRate
+        const real_time_factor = elapsed_seconds / duration
+
+        console.log('Wave duration', duration.toFixed(3), 'secodns')
+        console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
+        console.log(`RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`, real_time_factor.toFixed(3))
+
+        sherpa_onnx.writeWave(filepath, { samples: audio.samples, sampleRate: audio.sampleRate })
+
+        console.log(`Saved to ${filepath}`)
+        resolve(filepath)
+      } catch (error) {
         reject(error)
-      })
+      }
+    })
+  }
+
+  addPunct(txt: string) {
+    return new Promise<string>((resolve, reject) => {
+      try {
+        const config = this.sherpaConfig.offline.punctConfig
+        const punct = new sherpa_onnx.Punctuation(config)
+        console.log(txt)
+        const punct_text = punct.addPunct(txt)
+        console.log(punct_text)
+        resolve(punct_text)
+      } catch (error) {
+        throw error
+      }
     })
   }
 
   // asr(filepath: string) {
   //   return new Promise<RecognizerResult>((resolve, reject) => {
   //     const config = this.sherpaConfig.offline.asrConfig
-  //     const recognizer = sherpa_onnx.createOfflineRecognizer(config)
-  //     const stream = recognizer.createStream()
-
-  //     const waveFilename = filepath
-
-  //     const reader = new wav.Reader()
-  //     const readable = new Readable().wrap(reader)
-  //     const buf = []
-
-  //     reader.on('format', ({ audioFormat, bitDepth, channels, sampleRate }) => {
-  //       if (sampleRate != recognizer.config.featConfig.sampleRate) {
-  //         throw new Error(`Only support sampleRate ${recognizer.config.featConfig.sampleRate}. Given ${sampleRate}`)
-  //       }
-
-  //       if (audioFormat != 1) {
-  //         throw new Error(`Only support PCM format. Given ${audioFormat}`)
-  //       }
-
-  //       if (channels != 1) {
-  //         throw new Error(`Only a single channel. Given ${channels}`)
-  //       }
-
-  //       if (bitDepth != 16) {
-  //         throw new Error(`Only support 16-bit samples. Given ${bitDepth}`)
+  //     const worker = new Worker('./wasm/asr-worker.mjs', {
+  //       workerData: {
+  //         filepath,
+  //         config
   //       }
   //     })
-
-  //     fs.createReadStream(waveFilename, { highWaterMark: 4096 })
-  //       .pipe(reader)
-  //       .on('finish', function (err) {
-  //         // tail padding
-  //         const floatSamples = new Float32Array(recognizer.config.featConfig.sampleRate * 0.5)
-
-  //         buf.push(floatSamples)
-  //         const flattened = Float32Array.from(buf.reduce((a, b) => [...a, ...b], []))
-
-  //         stream.acceptWaveform(recognizer.config.featConfig.sampleRate, flattened)
-  //         recognizer.decode(stream)
-
-  //         /** getTimestamps */
-  //         const r = recognizer.Module._GetOfflineStreamResult(stream.handle)
-  //         // 读取 tokens 值
-  //         // const tokensPtr = recognizer.Module.getValue(r + 4, 'i8*')
-  //         // const tokens = recognizer.Module.UTF8ToString(tokensPtr)
-  //         // console.log('tokens')
-  //         // console.log(tokens)
-  //         // const tokensArrPtr = recognizer.Module.getValue(r + 8, 'i8**');
-  //         // const tokensArr = []
-  //         // let i = 0
-  //         // while (true) {
-  //         //   const tokenPtr = recognizer.Module.getValue(tokensArrPtr + i * 4, 'i8*')
-  //         //   if (tokenPtr === 0) break
-  //         //   const token = recognizer.Module.UTF8ToString(tokenPtr)
-  //         //   tokensArr.push(token)
-  //         //   i++
-  //         // }
-  //         // console.log('tokenPtr')
-  //         // console.log(tokensArr)
-  //         // // 读取 timestamps 数组的指针
-  //         // const timestampsPtr = recognizer.Module.getValue(r + 12, 'i8*')
-  //         // console.log(timestampsPtr)
-  //         // // 读取 count 值
-  //         // const count = recognizer.Module.getValue(r + 16, 'i32')
-  //         // console.log(count)
-  //         // // 将指针解引用为浮点数数组
-  //         // const timestamps = new Float32Array(count)
-  //         // for (let k = 0; k < count; ++k) {
-  //         //   console.log(k)
-  //         //   timestamps[k] = recognizer.Module.HEAPF32[timestampsPtr / 4 + k]
-  //         // }
-  //         // console.log(timestamps)
-  //         // const text = recognizer.getResult(stream)
-
-  //         //  读取 json 值
-  //         const jsonPtr = recognizer.Module.getValue(r + 20, 'i8*')
-  //         const json = recognizer.Module.UTF8ToString(jsonPtr)
-  //         // console.log(json)
-  //         resolve(JSON.parse(json))
-  //         // 释放内存
-  //         stream.free()
-  //         recognizer.free()
-  //       })
-
-  //     readable.on('readable', function () {
-  //       let chunk: { buffer: ArrayBufferLike; byteOffset: number; length: number }
-  //       while ((chunk = readable.read()) != null) {
-  //         const int16Samples = new Int16Array(
-  //           chunk.buffer,
-  //           chunk.byteOffset,
-  //           chunk.length / Int16Array.BYTES_PER_ELEMENT
-  //         )
-
-  //         const floatSamples = new Float32Array(int16Samples.length)
-  //         for (let i = 0; i < floatSamples.length; i++) {
-  //           floatSamples[i] = int16Samples[i] / 32768.0
-  //         }
-
-  //         buf.push(floatSamples)
-  //       }
+  //     worker.on('message', message => {
+  //       console.log('接收到子线程返回的结果：-----------------------------------------')
+  //       worker.terminate()
+  //       resolve(message)
+  //     })
+  //     worker.on('error', error => {
+  //       console.log('接收到子线程返回的错误：-----------------------------------------')
+  //       console.log(error)
+  //       worker.terminate()
+  //       reject(error)
   //     })
   //   })
   // }
 
-  // async tts(txt: string, filepath: string, speakerId?: number, speed?: number) {
+  // tts(txt: string, filepath: string, speakerId?: number, speed?: number) {
   //   return new Promise<string>((resolve, reject) => {
   //     const config = this.sherpaConfig.offline.ttsConfig
-  //     const tts = sherpa_onnx.createOfflineTts(config)
-  //     try {
-  //       const _speakerId = speakerId || 0
-  //       const _speed = speed || 1
-  //       const audio = tts.generate({ text: txt, sid: _speakerId, speed: _speed })
-  //       // console.log(audio)
-  //       tts.save(filepath, audio)
-  //       resolve(filepath)
-  //       // console.log('Saved to test-zh.wav successfully.')
-  //       tts.free()
-  //     } catch (error) {
-  //       tts.free()
+  //     const worker = new Worker('./wasm/tts-worker.mjs', {
+  //       workerData: {
+  //         txt,
+  //         filepath,
+  //         speakerId,
+  //         speed,
+  //         config
+  //       }
+  //     })
+  //     worker.on('message', message => {
+  //       console.log('接收到子线程返回的结果：-----------------------------------------')
+  //       worker.terminate()
+  //       resolve(message)
+  //     })
+  //     worker.on('error', error => {
+  //       console.log('接收到子线程返回的错误：-----------------------------------------')
+  //       console.log(error)
+  //       worker.terminate()
   //       reject(error)
-  //     }
+  //     })
   //   })
   // }
-  // private createOfflineTts() {
-  //   const offlineTtsVitsModelConfig = {
-  //     model: 'sherpa//vits-zh-hf-fanchen-C/vits-zh-hf-fanchen-C.onnx',
-  //     lexicon: 'sherpa/vits-zh-hf-fanchen-C/lexicon.txt',
-  //     tokens: 'sherpa/vits-zh-hf-fanchen-C/tokens.txt',
-  //     dataDir: '',
-  //     noiseScale: 0.667,
-  //     noiseScaleW: 0.8,
-  //     lengthScale: 1.0
-  //   }
-  //   const offlineTtsModelConfig = {
-  //     offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
-  //     numThreads: 1,
-  //     debug: 1,
-  //     provider: 'cpu'
-  //   }
-  //   const offlineTtsConfig = {
-  //     offlineTtsModelConfig: offlineTtsModelConfig,
-  //     ruleFsts: 'sherpa/vits-zh-hf-fanchen-C/rule.fst',
-  //     maxNumSentences: 1
-  //   }
-
-  //   return sherpa_onnx.createOfflineTts(offlineTtsConfig)
-  // }
-
-  // private createOfflineRecognizer() {
-  //   const featConfig = {
-  //     sampleRate: 16000,
-  //     featureDim: 80
-  //   }
-
-  //   const modelConfig = {
-  //     transducer: {
-  //       encoder: '',
-  //       decoder: '',
-  //       joiner: ''
-  //     },
-  //     paraformer: {
-  //       model: 'sherpa/sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx'
-  //     },
-  //     nemoCtc: {
-  //       model: ''
-  //     },
-  //     whisper: {
-  //       encoder: '',
-  //       decoder: '',
-  //       language: '',
-  //       task: ''
-  //     },
-  //     tdnn: {
-  //       model: ''
-  //     },
-  //     tokens: 'sherpa/sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt',
-  //     numThreads: 1,
-  //     debug: 0,
-  //     provider: 'cpu',
-  //     modelType: 'paraformer'
-  //   }
-
-  //   const lmConfig = {
-  //     model: '',
-  //     scale: 1.0
-  //   }
-
-  //   const config = {
-  //     featConfig: featConfig,
-  //     modelConfig: modelConfig,
-  //     lmConfig: lmConfig,
-  //     decodingMethod: 'greedy_search',
-  //     maxActivePaths: 4,
-  //     hotwordsFile: '',
-  //     hotwordsScore: 1.5
-  //   }
-  //   return sherpa_onnx.createOfflineRecognizer(config)
-  // }
 }
+// asr(filepath: string) {
+//   return new Promise<RecognizerResult>((resolve, reject) => {
+//     const config = this.sherpaConfig.offline.asrConfig
+//     const recognizer = sherpa_onnx.createOfflineRecognizer(config)
+//     const stream = recognizer.createStream()
 
+//     const waveFilename = filepath
+
+//     const reader = new wav.Reader()
+//     const readable = new Readable().wrap(reader)
+//     const buf = []
+
+//     reader.on('format', ({ audioFormat, bitDepth, channels, sampleRate }) => {
+//       if (sampleRate != recognizer.config.featConfig.sampleRate) {
+//         throw new Error(`Only support sampleRate ${recognizer.config.featConfig.sampleRate}. Given ${sampleRate}`)
+//       }
+
+//       if (audioFormat != 1) {
+//         throw new Error(`Only support PCM format. Given ${audioFormat}`)
+//       }
+
+//       if (channels != 1) {
+//         throw new Error(`Only a single channel. Given ${channels}`)
+//       }
+
+//       if (bitDepth != 16) {
+//         throw new Error(`Only support 16-bit samples. Given ${bitDepth}`)
+//       }
+//     })
+
+//     fs.createReadStream(waveFilename, { highWaterMark: 4096 })
+//       .pipe(reader)
+//       .on('finish', function (err) {
+//         // tail padding
+//         const floatSamples = new Float32Array(recognizer.config.featConfig.sampleRate * 0.5)
+
+//         buf.push(floatSamples)
+//         const flattened = Float32Array.from(buf.reduce((a, b) => [...a, ...b], []))
+
+//         stream.acceptWaveform(recognizer.config.featConfig.sampleRate, flattened)
+//         recognizer.decode(stream)
+
+//         /** getTimestamps */
+//         const r = recognizer.Module._GetOfflineStreamResult(stream.handle)
+//         // 读取 tokens 值
+//         // const tokensPtr = recognizer.Module.getValue(r + 4, 'i8*')
+//         // const tokens = recognizer.Module.UTF8ToString(tokensPtr)
+//         // console.log('tokens')
+//         // console.log(tokens)
+//         // const tokensArrPtr = recognizer.Module.getValue(r + 8, 'i8**');
+//         // const tokensArr = []
+//         // let i = 0
+//         // while (true) {
+//         //   const tokenPtr = recognizer.Module.getValue(tokensArrPtr + i * 4, 'i8*')
+//         //   if (tokenPtr === 0) break
+//         //   const token = recognizer.Module.UTF8ToString(tokenPtr)
+//         //   tokensArr.push(token)
+//         //   i++
+//         // }
+//         // console.log('tokenPtr')
+//         // console.log(tokensArr)
+//         // // 读取 timestamps 数组的指针
+//         // const timestampsPtr = recognizer.Module.getValue(r + 12, 'i8*')
+//         // console.log(timestampsPtr)
+//         // // 读取 count 值
+//         // const count = recognizer.Module.getValue(r + 16, 'i32')
+//         // console.log(count)
+//         // // 将指针解引用为浮点数数组
+//         // const timestamps = new Float32Array(count)
+//         // for (let k = 0; k < count; ++k) {
+//         //   console.log(k)
+//         //   timestamps[k] = recognizer.Module.HEAPF32[timestampsPtr / 4 + k]
+//         // }
+//         // console.log(timestamps)
+//         // const text = recognizer.getResult(stream)
+
+//         //  读取 json 值
+//         const jsonPtr = recognizer.Module.getValue(r + 20, 'i8*')
+//         const json = recognizer.Module.UTF8ToString(jsonPtr)
+//         // console.log(json)
+//         resolve(JSON.parse(json))
+//         // 释放内存
+//         stream.free()
+//         recognizer.free()
+//       })
+
+//     readable.on('readable', function () {
+//       let chunk: { buffer: ArrayBufferLike; byteOffset: number; length: number }
+//       while ((chunk = readable.read()) != null) {
+//         const int16Samples = new Int16Array(
+//           chunk.buffer,
+//           chunk.byteOffset,
+//           chunk.length / Int16Array.BYTES_PER_ELEMENT
+//         )
+
+//         const floatSamples = new Float32Array(int16Samples.length)
+//         for (let i = 0; i < floatSamples.length; i++) {
+//           floatSamples[i] = int16Samples[i] / 32768.0
+//         }
+
+//         buf.push(floatSamples)
+//       }
+//     })
+//   })
+// }
+
+// async tts(txt: string, filepath: string, speakerId?: number, speed?: number) {
+//   return new Promise<string>((resolve, reject) => {
+//     const config = this.sherpaConfig.offline.ttsConfig
+//     const tts = sherpa_onnx.createOfflineTts(config)
+//     try {
+//       const _speakerId = speakerId || 0
+//       const _speed = speed || 1
+//       const audio = tts.generate({ text: txt, sid: _speakerId, speed: _speed })
+//       // console.log(audio)
+//       tts.save(filepath, audio)
+//       resolve(filepath)
+//       // console.log('Saved to test-zh.wav successfully.')
+//       tts.free()
+//     } catch (error) {
+//       tts.free()
+//       reject(error)
+//     }
+//   })
+// }
+// private createOfflineTts() {
+//   const offlineTtsVitsModelConfig = {
+//     model: 'sherpa//vits-zh-hf-fanchen-C/vits-zh-hf-fanchen-C.onnx',
+//     lexicon: 'sherpa/vits-zh-hf-fanchen-C/lexicon.txt',
+//     tokens: 'sherpa/vits-zh-hf-fanchen-C/tokens.txt',
+//     dataDir: '',
+//     noiseScale: 0.667,
+//     noiseScaleW: 0.8,
+//     lengthScale: 1.0
+//   }
+//   const offlineTtsModelConfig = {
+//     offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
+//     numThreads: 1,
+//     debug: 1,
+//     provider: 'cpu'
+//   }
+//   const offlineTtsConfig = {
+//     offlineTtsModelConfig: offlineTtsModelConfig,
+//     ruleFsts: 'sherpa/vits-zh-hf-fanchen-C/rule.fst',
+//     maxNumSentences: 1
+//   }
+
+//   return sherpa_onnx.createOfflineTts(offlineTtsConfig)
+// }
+
+// private createOfflineRecognizer() {
+//   const featConfig = {
+//     sampleRate: 16000,
+//     featureDim: 80
+//   }
+
+//   const modelConfig = {
+//     transducer: {
+//       encoder: '',
+//       decoder: '',
+//       joiner: ''
+//     },
+//     paraformer: {
+//       model: 'sherpa/sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx'
+//     },
+//     nemoCtc: {
+//       model: ''
+//     },
+//     whisper: {
+//       encoder: '',
+//       decoder: '',
+//       language: '',
+//       task: ''
+//     },
+//     tdnn: {
+//       model: ''
+//     },
+//     tokens: 'sherpa/sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt',
+//     numThreads: 1,
+//     debug: 0,
+//     provider: 'cpu',
+//     modelType: 'paraformer'
+//   }
+
+//   const lmConfig = {
+//     model: '',
+//     scale: 1.0
+//   }
+
+//   const config = {
+//     featConfig: featConfig,
+//     modelConfig: modelConfig,
+//     lmConfig: lmConfig,
+//     decodingMethod: 'greedy_search',
+//     maxActivePaths: 4,
+//     hotwordsFile: '',
+//     hotwordsScore: 1.5
+//   }
+//   return sherpa_onnx.createOfflineRecognizer(config)
+// }
 /**
 getTimestamps(stream) {
   const r = this.Module._GetOfflineStreamResult(stream.handle);

@@ -210,25 +210,7 @@ export const useFolderStore = defineStore('folderStore', {
     /** 初始化状态管理 */
     init() {
       this.$reset()
-    },
-    // movefolder(sourceId: string, targetId: string, type: string) {
-    //   return creatorApi.folder.moveFolder(sourceId, targetId, type)
-    // },
-    // moveFile(fileId: string, targetId: string, lib: LibraryEnum) {
-    //   return creatorApi.folder.moveFile(fileId, targetId, lib)
-    // },
-    // rename(newName: string, folderId: string) {
-    //   return creatorApi.folder.rename(newName, folderId)
-    // },
-    // restore(folderId: string) {
-    //   return creatorApi.folder.restore(folderId)
-    // },
-    // remove(folderId: string) {
-    //   return creatorApi.folder.remove(folderId)
-    // },
-    // delete(folderId: string) {
-    //   return creatorApi.folder.delete(folderId)
-    // }
+    }
   },
   getters: {
     getSubfilesSortByName(): Subfile[] {
@@ -264,9 +246,3 @@ export const useFolderStore = defineStore('folderStore', {
     
   }
 })
-
-// removeSubFileByIndex(index: number) {
-//   // 实际渲染是重新排序后的file，所以 index 和 状态管理数据不一致。
-//   const files = this.subfiles?.splice(index, 1)
-//   return files && files[0]
-// },

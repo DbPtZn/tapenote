@@ -10,8 +10,8 @@ import utils from '@/utils'
 import { useFragment, usePromoter } from './hooks/_index'
 import { auditTime } from '@tanbo/stream'
 import { LibraryEnum } from '@/enums'
-import { Voice, DrawText, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
-import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp, SpeedRound } from '@vicons/material'
+import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
+import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp } from '@vicons/material'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 const bridge = inject('bridge') as Bridge
@@ -23,7 +23,7 @@ const props = defineProps<{
   focus: () => boolean
   readonly: () => boolean
 }>()
-const { projectStore, userStore, speakerStore, clipboardStore } = useStore()
+const { projectStore, speakerStore, clipboardStore } = useStore()
 const dialog = useDialog()
 const message = useMessage()
 const themeVars = useThemeVars()
@@ -76,7 +76,7 @@ const {
     })
   },
   handleModeSwitch() {
-    state.recorderMode === 'ASR' ? (state.recorderMode = 'TTS') : (state.recorderMode = 'ASR')
+    state.recorderMode = state.recorderMode === 'ASR' ? 'TTS' : 'ASR'
   }
 }
 const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
@@ -154,7 +154,7 @@ const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
   }
 }
 
-const { dropdownState, selectedFragments, playerState, studioOptions, handleContextmenu, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge)
+const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, handleContextmenu, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge)
 const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, checkAnimeState, checkPromoter } = usePromoter(props.id, bridge)
 const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort())
 const fragmentsLength = computed(() => fragments.value.length)
@@ -215,7 +215,7 @@ const totalDuration = computed(() => {
       <!-- 占位 -->
       <div style="width: 24px;" />
       <strong :class="[state.isReadonly ? 'disabled' : '']" style="white-space: nowrap; user-select: none;" @click="isTotalDurationShow = !isTotalDurationShow">
-        <span v-if="!isTotalDurationShow && !playerState.isPlaying" style="display: inline-block; min-width: 72px;">录音棚</span>
+        <span v-if="!isTotalDurationShow && !playerState.isPlaying" style="display: inline-block; min-width: 72px;">录音台</span>
         <span v-if="isTotalDurationShow && !playerState.isPlaying" style="display: inline-block; min-width: 72px;">{{ utils.durationFormat(totalDuration) }}</span>
         <span v-if="playerState.isPlaying" style="display: inline-block; min-width: 72px;">{{ utils.durationFormat(playerState.currentTime) }}</span>
       </strong>
@@ -235,8 +235,9 @@ const totalDuration = computed(() => {
         <template #item="{ element }">
           <AudioFragment
             :key="element.id"
-            :is-loading="!!element.key"
             :speaker="element.speaker"
+            :is-loading="!!element.key"
+            :is-show-name="isShowName"
             :is-cut="clipboardStore.fragment.length > 0 && clipboardStore.fragment[0].fragmentId === element.id && clipboardStore.fragment[0].type === 'cut'"
             :multiple="selectedFragments.length > 1"
             :duration="Number(element.duration)"

@@ -196,19 +196,3 @@ function removeFolder(foldersData: TrashData[], targetId: string) {
     }
   }
 }
-
-
-// export default useBinStore
-
-// function collectToName(collect: 'note' | 'course' | 'project') {
-//   switch (collect) {
-//     case collectionTypeEnum.NOTE:
-//       return '笔记集合'
-//     case collectionTypeEnum.COURSE:
-//       return '微课集合'
-//     case collectionTypeEnum.PROJECT:
-//       return '工程文件集合'
-//     default:
-//       return '其它'
-//   }
-// }

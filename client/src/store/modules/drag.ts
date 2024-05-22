@@ -1,7 +1,5 @@
-// import { localApi } from '@/api/local'
 import { LibraryEnum } from '@/enums'
 import { defineStore } from 'pinia'
-import { Component, Ref, ref } from 'vue'
 
 export interface DragState {
   // id: string

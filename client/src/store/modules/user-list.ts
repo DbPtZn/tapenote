@@ -1,10 +1,8 @@
-import { auth, creator, CreatorApi } from '@/api'
-import { LibraryEnum } from '@/enums'
+import { auth, creator } from '@/api'
 import { Subject } from '@tanbo/stream'
 import _ from 'lodash'
 import { defineStore } from 'pinia'
 import useStore from '..'
-import { markRaw, nextTick } from 'vue'
 export interface SubmissionConfig {
   id: string
   name: string
@@ -39,11 +37,6 @@ export interface User {
 export interface UserState extends User {
   hostname: string
 }
-
-
-// export interface UserInfo extends UserState {
-//   key: string
-// }
 
 type State = {
   data: UserState[]
@@ -169,7 +162,6 @@ export const useUserListStore = defineStore('userListStore', {
     },
     /** 请求用户信息（token 存在的情况下才会生效） */
     fetch(account: string, hostname: string): Promise<UserState | null> {
-      // console.log(this.creatorApi(account, hostname))
       return this.creatorApi(account, hostname).user
         .get<User>()
         .then(res => {
@@ -300,7 +292,7 @@ export const useUserListStore = defineStore('userListStore', {
         }
       })
     },
-    getCache() {},
+    // getCache() {},
     /** 设置缓存 */
     setCache(data: UserState) {
       if (data.account === '' || data.hostname === '') return
@@ -350,9 +342,6 @@ export const useUserListStore = defineStore('userListStore', {
     }
   },
   getters: {
-    // creatorApi() {
-    //   return creatorApi
-    // },
     getData(state) {
       return state.data.map((item) => {
         return {

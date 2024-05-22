@@ -20,6 +20,43 @@ export class FfmpegService {
   //   const d2 = await this.calculateDuration(audio)
   //   console.log([d1, d2])
   // }
+
+  createBlankAudio(duration: number, outputPath: string) {
+    return new Promise<string>((resolve, reject) => {
+      try {
+        ffmpeg()
+          // 设置输入源为 anullsrc
+          .input('anullsrc=r=44100:cl=mono')
+          .inputFormat('lavfi')
+          .audioChannels(1) // 设置单声道
+          .audioFrequency(44100) // 设置采样率
+          .duration(duration)
+          // 设置输出格式为 WAV
+          .outputFormat('wav')
+          // 设置持续时间
+          // 设置输出文件路径
+          .output(outputPath)
+          // 执行转换
+          .on('start', function (commandLine) {
+            // console.log('Spawned Ffmpeg with command: ' + commandLine)
+          })
+          .on('progress', function (progress) {
+            // console.log('Processing: ' + progress.percent + '% done')
+          })
+          .on('end', function () {
+            // console.log('Finished processing')
+            resolve(outputPath)
+          })
+          .on('error', function (err) {
+            console.error('生成空白音频失败: ' + err.message)
+            reject(err)
+          })
+          .run() // 执行命令
+      } catch (error) {
+        throw error
+      }
+    })
+  }
   /**
    * 音频格式化处理
    * @param inputPath 源文件路径（可以是指向资源文件的路径也可以是文件数据），此方法会自动删除源文件 inputPath指向的资源文件

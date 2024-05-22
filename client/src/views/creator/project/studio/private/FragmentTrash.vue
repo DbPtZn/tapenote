@@ -3,7 +3,6 @@ import TrashFragment from './TrashFragment.vue'
 import useStore from '@/store'
 import { HeadsetOutlined, RestoreOutlined, DeleteOutlined } from '@vicons/material'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
-type Timbre = ReturnType<typeof useStore>['timbreStore']['data'][0]
 const props = defineProps<{
   data: Fragment[]
   onRestore: (fragmentId: string) => void

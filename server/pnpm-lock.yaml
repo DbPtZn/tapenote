@@ -95,6 +95,9 @@ dependencies:
   sharp:
     specifier: ^0.33.4
     version: 0.33.4
+  sherpa-onnx-node:
+    specifier: ^1.0.24
+    version: 1.0.24
   svg-captcha:
     specifier: ^1.4.0
     version: 1.4.0
@@ -5574,6 +5577,56 @@ packages:
       interpret: 1.4.0
       rechoir: 0.6.2
     dev: true
+
+  /sherpa-onnx-darwin-arm64@1.0.24:
+    resolution: {integrity: sha512-tRxg09I3Q4VbORx0N1BHYU3G36KtVJ6Pnhn0ZBZp+zXXcX1swSN4nG0ekBn2Qbbk1GaZRGA5xZghFOijRRblaQ==}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /sherpa-onnx-darwin-x64@1.0.24:
+    resolution: {integrity: sha512-ZMCB/nmMAGPNQhwaefvd4138YMEegaKa/9PgNi7mLvfQnuRM/8vQ6bBn31q9/xfnftiG/2+mc/EuaYJYad1C+w==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /sherpa-onnx-linux-arm64@1.0.24:
+    resolution: {integrity: sha512-3SCa7xpFZUEc20zAf37gORY2UNfctHBSmfA+nHVpxyEd2TYxt0bml8LZ97sR5XSV4ljQnxnGPpLUqr7jR3pN9w==}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /sherpa-onnx-linux-x64@1.0.24:
+    resolution: {integrity: sha512-EEky1CZJ/v7f4XOtIW1tVlN5GS+DXp0QiGgrYvOcONE7Zh/5nWvyYQlh0YJkbKPy/2Kh47B5mZABeXKUzUps8g==}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /sherpa-onnx-node@1.0.24:
+    resolution: {integrity: sha512-VwFk28T5Wjj1WQOkC/93jxvXnlhnv7Q5ACc/LADQ5CWJteNX608GuvgLYB/NoXxOuVH+FEFwII3f1j1ivCJ6hA==}
+    optionalDependencies:
+      sherpa-onnx-darwin-arm64: 1.0.24
+      sherpa-onnx-darwin-x64: 1.0.24
+      sherpa-onnx-linux-arm64: 1.0.24
+      sherpa-onnx-linux-x64: 1.0.24
+      sherpa-onnx-win-x64: 1.0.24
+    dev: false
+
+  /sherpa-onnx-win-x64@1.0.24:
+    resolution: {integrity: sha512-eqn0siBFoq6Kf3vpGPYETOUTEu5/DYjXX2kuLXHAYVAlr8GShV6IZigwwp8YT8VIq1AMejt0g1x4jsPYEWliuw==}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: false
+    optional: true
 
   /side-channel@1.0.6:
     resolution: {integrity: sha512-fDW/EZ6Q9RiO8eFG8Hj+7u/oW+XrPTIChwCOM2+th2A6OblDtYYIpve9m+KvI9Z4C9qSEXlaGR6bTEYHReuglA==}

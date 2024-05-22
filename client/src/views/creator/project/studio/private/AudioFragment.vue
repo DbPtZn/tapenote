@@ -2,21 +2,17 @@
 import utils from '@/utils'
 import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
 import { useThemeVars } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import useStore from '@/store'
 type FragmentSpeaker = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]['speaker']
 const props = defineProps<{
-  // 角色列表
-  // roleList?: Map<number, { name: string; avatar: string }>
-  // 机器人列表
-  // robotList?: Map<number, { name: string; avatar: string }>
-  // 角色
-  // role: number
   speaker: FragmentSpeaker
   // 是否多选
   multiple: boolean
   // 时长
   duration: number
+  // 是否显示名称
+  isShowName: boolean
   // 是否被剪切
   isCut: boolean
   // 加载中
@@ -25,22 +21,19 @@ const props = defineProps<{
   readonly: boolean
 }>()
 const emits = defineEmits<{
-  // (e: '-context-menu', event: MouseEvent, onBlur: () => void): void
-  onContextmenu: [ MouseEvent ]
-  onSelect: [ boolean ]
+  onContextmenu: [MouseEvent]
+  onSelect: [boolean]
 }>()
 const subs: Subscription[] = []
 const themeVars = useThemeVars()
 const fragmentRef = ref()
 const handleError = (ev: Event) => {
-  // console.log(ev)
   const target = ev.target as HTMLImageElement
   target.src = './default.png'
-  //https://pic2.zhimg.com/v2-98b37ce27a8ab5badda738b57de9ec25_is.jpg
 }
 const isFocus = ref(false)
 const handleContextmenu = (ev: MouseEvent) => {
-  if (!isFocus.value && !props.multiple || ev.ctrlKey) {
+  if ((!isFocus.value && !props.multiple) || ev.ctrlKey) {
     isFocus.value = true
     emits('onSelect', isFocus.value)
   }
@@ -55,16 +48,18 @@ const handleClick = (ev: MouseEvent) => {
   }
 }
 function useClickoutside() {
-  if(subs.length !== 0) return
+  if (subs.length !== 0) return
   subs.push(
-    fromEvent<MouseEvent>(document, 'click', true).pipe(auditTime(5)).subscribe(event => {
-      if (!event.ctrlKey) {
-        isFocus.value = false
-        emits('onSelect', isFocus.value)
-        subs.forEach(sub => sub.unsubscribe())
-        subs.length = 0
-      }
-    }),
+    fromEvent<MouseEvent>(document, 'click', true)
+      .pipe(auditTime(5))
+      .subscribe(event => {
+        if (!event.ctrlKey) {
+          isFocus.value = false
+          emits('onSelect', isFocus.value)
+          subs.forEach(sub => sub.unsubscribe())
+          subs.length = 0
+        }
+      }),
     fromEvent<MouseEvent>(document, 'contextmenu', true).subscribe(event => {
       if (!event.ctrlKey && !props.multiple) {
         isFocus.value = false
@@ -88,15 +83,20 @@ function useClickoutside() {
     <!-- ------------------------------------------- Left --------------------------------------------- -->
     <div class="fragment-wrapper left-fragment" v-if="speaker.role <= 9999">
       <!-- 左侧 -->
-      <LeftSide>
+      <div class="left-side">
         <div class="avator">
           <img :src="speaker.avatar || './empty.png'" @error="handleError" />
         </div>
-      </LeftSide>
+      </div>
       <!-- 中间 -->
-      <MiddleSide :flex="1" class="middle">
-        <div class="msg msg-left">
-          <slot name="txt" />
+      <div class="middle">
+        <div class="content">
+          <div class="name" v-if="isShowName">
+            {{ speaker.name }}
+          </div>
+          <div class="msg msg-left">
+            <slot name="txt" />
+          </div>
         </div>
         <div v-if="isLoading" class="loading">
           <span>
@@ -114,22 +114,22 @@ function useClickoutside() {
             <slot name="play" />
           </span>
         </div>
-        <div v-if="isFocus && !isLoading" class="duration">{{ utils.durationFormat(duration || 0) }}</div> 
-      </MiddleSide>
+        <div v-if="isFocus && !isLoading" class="duration">{{ utils.durationFormat(duration || 0) }}</div>
+      </div>
       <!-- 右侧 -->
-      <RightSide :width="50">
+      <div class="right-side" :style="{ width: `50px` }">
         <!-- Placeholder -->
-      </RightSide>
+      </div>
     </div>
     <!-- ------------------------------------------- Right --------------------------------------------- -->
     <div class="fragment-wrapper right-fragment" v-if="speaker.role > 9999">
       <!-- 左侧 -->
-      <LeftSide :width="50">
+      <div class="left-side" :style="{ width: `50px` }">
         <!-- Placeholder -->
-      </LeftSide>
+      </div>
       <!-- 中间 -->
-      <MiddleSide :flex="1" class="middle">
-        <div v-if="isFocus && !isLoading" class="duration">{{ utils.durationFormat(duration || 0) }}</div> 
+      <div class="middle">
+        <div v-if="isFocus && !isLoading" class="duration">{{ utils.durationFormat(duration || 0) }}</div>
         <div v-if="isLoading" class="loading">
           <span>
             <slot name="loading" />
@@ -146,21 +146,54 @@ function useClickoutside() {
             <slot name="delete" />
           </span>
         </div>
-        <div class="msg msg-right">
-          <slot name="txt" />
+        <div class="content">
+          <div class="name name-right" v-if="isShowName">
+            {{ speaker.name }}
+          </div>
+          <div class="msg msg-right">
+            <slot name="txt" />
+          </div>
         </div>
-      </MiddleSide>
+      </div>
       <!-- 右侧 -->
-      <RightSide>
+      <div class="right-side">
         <div class="avator">
           <img :src="speaker.avatar || './default.png'" @error="handleError" />
         </div>
-      </RightSide>
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.left-side {
+  display: flex;
+  box-sizing: border-box;
+  position: relative;
+}
+.right-side {
+  display: flex;
+  box-sizing: border-box;
+  position: relative;
+}
+.middle {
+  flex: 1;
+  display: flex;
+  box-sizing: border-box;
+  position: relative;
+  .content {
+    display: flex;
+    flex-direction: column;
+    .name {
+      font-size: 12px;
+    }
+    .name-right {
+      display: flex;
+      flex-direction: row-reverse;
+    }
+  }
+}
+
 .fragment {
   --toolbar-width: 72px;
   margin: 5px;
@@ -198,7 +231,7 @@ function useClickoutside() {
   }
 }
 .right-fragment {
- .middle {
+  .middle {
     display: flex;
     justify-content: flex-end;
   }

@@ -279,7 +279,7 @@ export class ProjectService {
 
   /** -------------------------------- 查询 ------------------------------------ */
   /** 找到指向项目于： 包含片段、音频完整路径等信息 */
-  async findOne(id: string, userId: string, dirname: string, relations = []) {
+  async findOne(id: string, userId: string, dirname: string, relations = [], isGetFullSpeakerAvatar = true) {
     try {
       relations.includes('fragments') ? '' : relations.push('fragments') // fragments 是默认必选
       const project = await this.projectsRepository.findOne({
@@ -299,17 +299,13 @@ export class ProjectService {
               filename: fragment.audio,
               category: 'audio'
             })
-            fragment.speaker.avatar = this.storageService.getFilePath({
-              dirname: [dirname, project.dirname],
-              category: 'image',
-              filename: fragment.speaker.avatar
-            })
-            // console.log(fragment.tags)
-            // console.log(typeof fragment.tags[0])
-            // console.log(fragment.promoters)
-            // console.log(typeof fragment.promoters[0])
-            // console.log(fragment.timestamps)
-            // console.log(typeof fragment.timestamps[0])
+            if (isGetFullSpeakerAvatar) {
+              fragment.speaker.avatar = this.storageService.getFilePath({
+                dirname: [dirname, project.dirname],
+                category: 'image',
+                filename: fragment.speaker.avatar
+              })
+            }
             return fragment
           })
           break
@@ -491,7 +487,6 @@ export class ProjectService {
   }
   async updateSpeakerHistory(updateSpeakerHistoryDto: UpdateSpeakerHistoryDto, userId: string) {
     const { id, type, speakerId } = updateSpeakerHistoryDto
-    // console.log(updateSpeakerHistoryDto)
     try {
       const procedure = await this.projectsRepository.findOneBy({ id, userId })
       if (type === 'human') {
@@ -508,21 +503,6 @@ export class ProjectService {
       throw error
     }
   }
-
-  // async updateSpeakerRecorder(updateSpeakerRecorderDto: UpdateSpeakerRecorderDto, userId: string) {
-  //   const { id, speakerId } = updateSpeakerRecorderDto
-  //   try {
-  //     const procedure = await this.projectsRepository.findOneBy({ id, userId })
-  //     procedure.speakerRecorder.push(speakerId)
-  //     const result = await this.projectsRepository.save(procedure)
-  //     this.userlogger.log(`更新说话人记录器成功,项目id:${id},新增说话人id:${speakerId}`)
-  //     return { updateAt: result.updateAt, msg: '更新成功！' }
-  //   } catch (error) {
-  //     this.userlogger.error(`更新说话人记录器失败,项目id:${id}`)
-  //     throw error
-  //   }
-  // }
-
   /** -------------------------------- 更新 ------------------------------------ */
 
   /** -------------------------------- 移除与恢复 ------------------------------------ */
@@ -587,6 +567,7 @@ export class ProjectService {
         this.userlogger.error(`删除项目[${project.id}]的目录:[${dir}]时发生错误`, error.message)
         throw error
       }
+      // 注：因为现在我改成将 project 相关的文件放在 project.dirname 下，所以当项目彻底删除时只需要删除 project.dirname 目录即可
       // 如果是 course，应当删除对应的音频文件
       // if (project.lib === LibraryEnum.COURSE) {
       //   const filepath = this.storageService.getFilePath({
@@ -640,7 +621,7 @@ export class ProjectService {
 
   async copy(projectId: string, folderId: string, userId: string, dirname: string) {
     try {
-      const source = await this.findOne(projectId, userId, dirname, ['folder', 'user'])
+      const source = await this.findOne(projectId, userId, dirname, ['folder', 'user'], false)
       if (!source) throw new Error('找不到目标文件！')
 
       // 先进行克隆
@@ -669,7 +650,7 @@ export class ProjectService {
           extname: '.wav'
         })
         // 复制文件
-        this.storageService.copyFileSync(source.audio, filepath)
+        await fsx.copyFile(source.audio, filepath)
         target.audio = filename
       }
 
@@ -694,7 +675,7 @@ export class ProjectService {
             extname: '.wav'
           })
           try {
-            this.storageService.copyFileSync(fragment.audio, filepath)
+            fsx.copyFileSync(fragment.audio, filepath)
           } catch (error) {
             this.userlogger.error(`复制音频文件时出错，被复制音频文件[${fragment.audio}]不存在！`)
             newFragment.transcript.push('该片段音频文件已丢失！')
@@ -718,6 +699,18 @@ export class ProjectService {
           }
           return newFragment
         })
+
+
+        // 复制片段的 speaker 头像文件
+        const sourceSpeakerDirPath = this.storageService.getDocDir({
+          dir: [dirname, source.dirname],
+          category: 'image'
+        })
+        const targetSpeakerDirPath = this.storageService.getDocDir({
+          dir: [dirname, target.dirname],
+          category: 'image'
+        })
+        await fsx.copy(sourceSpeakerDirPath, targetSpeakerDirPath)
 
         // 校验 sequence 长度和内容是否完成替换
         if (target.sequence.length === source.sequence.length) {

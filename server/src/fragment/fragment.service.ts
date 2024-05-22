@@ -15,7 +15,7 @@ import {
   UpdateTranscriptDto
 } from './dto'
 import { SherpaService } from 'src/sherpa/sherpa.service'
-import { exec } from 'child_process'
+import { exec, execSync } from 'child_process'
 import { CreateBlankFragmentDto } from './dto/create-blank-fragment.dto'
 import { ProjectService } from 'src/project/project.service'
 import { FfmpegService } from 'src/ffmpeg/ffmpeg.service'
@@ -56,7 +56,7 @@ export class FragmentService {
       let fragmentSpeaker: FragmentSpeaker
       if (speakerId) {
         const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
-        console.log('speaker', speaker)
+        // console.log('speaker', speaker)
         if (speaker) {
           const filepath = this.storageService.getFilePath({
             dirname: [dirname, projectDirname],
@@ -82,8 +82,8 @@ export class FragmentService {
               originalname: speakerId,
               extname: '.png'
             })
+            // 复制图片并压缩，统一成 png 格式
             await sharp(avatarpath).toFormat('png').png({ quality: 50 }).toFile(filepath)
-            // fs.copyFileSync(avatarpath, filepath)
             fragmentSpeaker = {
               type,
               name: speaker.name,
@@ -147,7 +147,6 @@ export class FragmentService {
       fragment.tags = new Array(text.length).fill(null)
       fragment.promoters = new Array(text.length).fill(null)
       fragment.timestamps = []
-      // fragment.role = Number(role) || 0
       fragment.speaker = fragmentSpeaker
       fragment.removed = RemovedEnum.NEVER
 
@@ -252,7 +251,6 @@ export class FragmentService {
       fragment.tags = []
       fragment.promoters = []
       fragment.timestamps = []
-      // fragment.role = Number(role) || 9999
       fragment.speaker = fragmentSpeaker
       fragment.removed = RemovedEnum.NEVER
 
@@ -336,39 +334,38 @@ export class FragmentService {
   }
 
   async createBlank(dto: CreateBlankFragmentDto, userId: string, dirname: string) {
-    const { procedureId, txtLength, duration } = dto
-    const procudure = await this.projectService.findOneById(procedureId, userId)
-    if (!procudure) {
-      throw { msg: '找不到项目工程文件！' }
-    }
-    const text: string[] = []
-    for (let i = 0; i < txtLength; i++) {
-      text.push('#')
-    }
-    /** 计算 timestamps */
-    const section = duration / txtLength
-    const timestamps = text.map((char, index) => {
-      return Number((section * index).toFixed(3))
-    })
-    const fragment = new Fragment()
-    fragment.id = UUID.v4()
-    fragment.userId = userId
-    fragment.audio = ''
-    fragment.duration = Number(duration)
-    fragment.txt = text.join('')
-    fragment.transcript = Array.from(text)
-    fragment.tags = new Array(text.length).fill(null)
-    fragment.promoters = new Array(text.length).fill(null)
-    fragment.timestamps = timestamps
-    fragment.speaker = {
-      type: 'machine',
-      name: '',
-      avatar: '',
-      role: 0
-    }
-    fragment.removed = RemovedEnum.NEVER
+    try {
+      const { procedureId, txtLength, duration } = dto
+      const procudure = await this.projectService.findOneById(procedureId, userId)
+      if (!procudure) throw new Error('找不到项目工程文件！')
+      const text: string[] = []
+      for (let i = 0; i < txtLength; i++) {
+        text.push('#')
+      }
+      /** 计算 timestamps */
+      const section = duration / txtLength
+      const timestamps = text.map((char, index) => {
+        return Number((section * index).toFixed(3))
+      })
+      const fragment = new Fragment()
+      fragment.id = UUID.v4()
+      fragment.userId = userId
+      fragment.project = procudure
+      fragment.audio = ''
+      fragment.duration = Number(duration)
+      fragment.txt = text.join('')
+      fragment.transcript = Array.from(text)
+      fragment.tags = new Array(text.length).fill(null)
+      fragment.promoters = new Array(text.length).fill(null)
+      fragment.timestamps = timestamps
+      fragment.speaker = {
+        type: 'machine',
+        name: '',
+        avatar: '',
+        role: 0
+      }
+      fragment.removed = RemovedEnum.NEVER
 
-    return new Promise<Fragment>((resolve, reject) => {
       // 指定生成文件的位置
       const { filename, filepath } = this.storageService.createFilePath({
         dirname: [dirname, procudure.dirname],
@@ -376,35 +373,31 @@ export class FragmentService {
         originalname: fragment.id,
         extname: '.wav'
       })
-      // 定义FFmpeg命令
-      const ffmpegCommand = `ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t ${duration} ${filepath}`
 
       // 执行FFmpeg命令
-      exec(ffmpegCommand, (error, stdout, stderr) => {
-        if (error) {
-          console.error('执行FFmpeg命令出错:', error)
-          return
-        }
-        console.log('空白音频生成成功！')
-        // 执行成功后的操作，例如：重命名文件、移动文件等
-        fragment.audio = filename
-        if (filepath && fragment.transcript.length !== 0 && fragment.duration !== 0) {
-          this.projectService
-            .updateSequence({ procedureId, fragmentId: fragment.id, userId, type: 'add' })
-            .then(() => {
-              fragment.audio = filepath
-              resolve(fragment)
-            })
-            .catch(err => {
-              this.storageService.deleteSync(filepath)
-              reject(err)
-            })
-        } else {
-          this.storageService.deleteSync(filepath)
-          reject('空白音频生成失败！')
-        }
-      })
-    })
+      try {
+        // 定义FFmpeg命令
+        // const ffmpegCommand = `ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t ${duration} ${filepath}`
+        // execSync(ffmpegCommand)
+        await this.ffmpegService.createBlankAudio(duration, filepath)
+      } catch (error) {
+        console.error('执行FFmpeg命令出错:', error)
+        this.storageService.deleteSync(filepath)
+        throw new Error('空白音频生成失败！')
+      }
+
+      fragment.audio = filename
+
+      const result = await this.fragmentsRepository.save(fragment)
+      this.userlogger.log(`创建空白片段成功，片段ID为：${result.id}`)
+      await this.projectService.updateSequence({ procedureId, fragmentId: fragment.id, userId, type: 'add' })
+      result.audio = filepath
+      return result
+    } catch (error) {
+      console.log(error)
+      this.userlogger.error(`创建空白片段失败`, error.message)
+      throw error
+    }
   }
 
   /** 创建指定片段 */

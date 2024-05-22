@@ -11,9 +11,9 @@ import { Subscription } from '@tanbo/stream'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 export function useFragment(id: string, bridge: Bridge) {
   const { projectStore, clipboardStore } = useStore()
+  const isShowName = ref(false)
   const dialog = useDialog()
   const message = useMessage()
-  // let player: PreviewPlayer | null = null
   let player: Player | null = null
   const subs: Subscription[] = []
   const { checkAnimeState, handleReorder } = usePromoter(id, bridge)
@@ -270,6 +270,15 @@ export function useFragment(id: string, bridge: Bridge) {
       }
     },
     {
+      key: 'showname',
+      label: () => `${isShowName.value ? '隐藏' : '显示'}名称`,
+      props: {
+        onClick: () => {
+          isShowName.value = !isShowName.value
+        }
+      }
+    },
+    {
       key: 'language',
       disabled: true,
       label: '语言',
@@ -429,6 +438,7 @@ export function useFragment(id: string, bridge: Bridge) {
     dropdownState,
     playerState,
     studioOptions,
+    isShowName,
     handleContextmenu,
     handleSelect,
     handlePlay,
