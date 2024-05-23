@@ -28,6 +28,14 @@ export class SherpaService {
     //     this.align(puntxt, result)
     //   })
     // })
+    const punText = '你知道 are you ok 这句话吗？'
+    const result = {
+      text: '你知道 are you ok 这句话吗',
+      tokens: ['你', '知', '道', 'are', 'you', 'o', 'k', '这', '句', '话', '吗'],
+      timestamps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    }
+    console.log(this.align(punText, result))
+    // TODO 继续加工 punText，先数组化 punText，再对其中的英文单词进行合并
   }
 
   asr(filepath: string) {
@@ -110,7 +118,9 @@ export class SherpaService {
   align(punText: string, asrResult: { text: string; tokens: string[]; timestamps: number[] }) {
     const regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？\s]/
     const data = asrResult
-    data.tokens = data.tokens.map(token => {
+    // eslint-disable-next-line prefer-const
+    let { text, tokens, timestamps } = data
+    tokens = tokens.map(token => {
       if (token.includes('@')) {
         const txt = token
           .split('')
@@ -122,39 +132,39 @@ export class SherpaService {
     })
     if (this.checkPunText(punText, data)) {
       const punTextArr = Array.from(punText)
-      console.log(data.tokens)
+      console.log(tokens)
       console.log(punTextArr)
       for (let i = 0; i < punTextArr.length; i++) {
-        if (data.tokens[i] !== punTextArr[i]) {
-          // console.log(punTextArr[i], regex.test(punTextArr[i]), regex.test(punTextArr[i]))
-          // console.log(regex.test(punTextArr[i]))
-          if (regex.test(punTextArr[i])) {
-            console.log('插入标点符号：' + punTextArr[i])
-            // tokens 插入标点符号
-            data.tokens.splice(i, 0, punTextArr[i])
-            // timestamps 插入标点符号时间（取中间值）
-            let punTimestamps = 0
-            if (data.timestamps[i] && data.timestamps[i - 1]) {
-              punTimestamps = (data.timestamps[i] - data.timestamps[i - 1]) / 2 + data.timestamps[i - 1]
-            } else {
-              punTimestamps = data.timestamps[i - 2] + 0.01
-            }
-            data.timestamps.splice(i, 0, Number(Number(punTimestamps).toFixed(3)))
+        if (tokens.length === 1) {
+          if (tokens[i] !== punTextArr[i]) {
+            if (regex.test(punTextArr[i])) {
+              console.log('插入标点符号：' + punTextArr[i])
+              // tokens 插入标点符号
+              tokens.splice(i, 0, punTextArr[i])
+              // timestamps 插入标点符号时间（取中间值）
+              let punTimestamps = 0
+              if (timestamps[i] && timestamps[i - 1]) {
+                punTimestamps = (timestamps[i] - timestamps[i - 1]) / 2 + timestamps[i - 1]
+              } else {
+                punTimestamps = timestamps[i - 2] + 0.01
+              }
+              timestamps.splice(i, 0, Number(Number(punTimestamps).toFixed(3)))
 
-            i--
+              i--
+            }
           }
         }
       }
     } else {
       throw new Error(`添加标点后的文本与原文本无法对齐`)
     }
-    console.log(data.tokens)
-    data.text = data.tokens.join('')
+    console.log(tokens)
+    data.text = tokens.join('')
     console.log(data)
     console.log('punText:' + punText.length)
-    console.log('txt:' + data.text.length)
-    console.log('tokens:' + data.tokens.length)
-    console.log('timestamps:' + data.timestamps.length)
+    console.log('txt:' + text.length)
+    console.log('tokens:' + tokens.length)
+    console.log('timestamps:' + timestamps.length)
     return data
   }
 
@@ -182,6 +192,7 @@ export class SherpaService {
     }
     console.log(punText)
     console.log(text)
+    // TODO 继续加工 punText，先数组化 punText，再对其中的英文单词进行合并
     if (punText === text) return text
     else throw new Error(`文本归一化错误！`)
   }
