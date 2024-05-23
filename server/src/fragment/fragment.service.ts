@@ -288,21 +288,15 @@ export class FragmentService {
         .asr(filepath)
         .then(async result => {
           if (result) {
+            const punText = await this.sherpaService.addPunct(result.text)
+            console.log(punText)
+            const data = this.sherpaService.align(punText, result)
             this.userlogger.log(`语音识别成功，转写文本为: ${result.text}`)
-            fragment.txt = result.text
-            fragment.timestamps = result.timestamps
-            const length = result.tokens?.length
-            const tokens = result.tokens.map(token => {
-              if (token.includes('@')) {
-                const txt = token
-                  .split('')
-                  .filter(char => char !== '@')
-                  .join('')
-                return txt
-              }
-              return token
-            })
-            fragment.transcript = tokens
+
+            fragment.txt = data.text
+            fragment.timestamps = data.timestamps
+            const length = data.tokens?.length
+            fragment.transcript = data.tokens
             fragment.tags = new Array(length)
             fragment.promoters = new Array(length)
           }

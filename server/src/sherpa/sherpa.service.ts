@@ -1,9 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import fs from 'fs'
-import path, { join, resolve } from 'path'
-import wav from 'wav'
-import { Readable } from 'stream'
-import { ConfigService, ConfigType } from '@nestjs/config'
+import { ConfigType } from '@nestjs/config'
 import { sherpaDevConfig } from '../config'
 import { Worker } from 'worker_threads'
 import sherpa_onnx from 'sherpa-onnx-node'
@@ -18,76 +14,68 @@ interface RecognizerResult {
 export class SherpaService {
   recognizer: any
   stream: any
+  regex: RegExp
   constructor(
     @Inject(sherpaDevConfig.KEY)
     private sherpaConfig: ConfigType<typeof sherpaDevConfig>
   ) {
-    // this.addPunct(
-    //   '我们爱上了TypeScript但最重要的是我们喜欢 Nodejs 这就是为什么 Nest 兼容 TypeScript 和纯 JavaScript Nest 默认基于最新的语言特性要在 Nest 中使用原生的 JavaScript 框架我们需要一个 Babel 编译器'
-    // )
+    this.regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？]/
+    // const audio =
+    //   'C:\\Users\\admin\\Desktop\\tapenote\\server\\assets\\public\\IM3Sl1fm\\z5bYeQqU\\audio\\ce783e5c-0e85-4e65-bd10-f8e5810c4f98.wav'
+    // this.asr(audio).then(result => {
+    //   this.addPunct(result.text).then(puntxt => {
+    //     console.log(puntxt)
+    //     this.align(puntxt, result)
+    //   })
+    // })
   }
+
   asr(filepath: string) {
     return new Promise<RecognizerResult>((resolve, reject) => {
-      try {
-        const config = this.sherpaConfig.offline.asrConfig
-        const recognizer = new sherpa_onnx.OfflineRecognizer(config)
-        console.log('Started')
-        const start = Date.now()
-        const stream = recognizer.createStream()
-        const wave = sherpa_onnx.readWave(filepath)
-        stream.acceptWaveform({ sampleRate: wave.sampleRate, samples: wave.samples })
-
-        recognizer.decode(stream)
-        const result = recognizer.getResult(stream)
-        const stop = Date.now()
-        console.log('Done')
-
-        const elapsed_seconds = (stop - start) / 1000
-        const duration = wave.samples.length / wave.sampleRate
-        const real_time_factor = elapsed_seconds / duration
-
-        console.log('Wave duration', duration.toFixed(3), 'secodns')
-        console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
-        console.log(`RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`, real_time_factor.toFixed(3))
-        console.log(filepath)
-        console.log('result\n', result)
-
-        this.addPunct(result.text).then(result => {
-          console.log('punct result\n', result)
-        })
-
-        resolve({ text: result.text, tokens: result.tokens, timestamps: result.timestamps })
-      } catch (error) {
+      const config = this.sherpaConfig.offline.asrConfig
+      const worker = new Worker('./workers/asr-worker.mjs', {
+        workerData: {
+          filepath,
+          config
+        }
+      })
+      worker.on('message', message => {
+        console.log('接收到子线程返回的结果：-----------------------------------------')
+        worker.terminate()
+        resolve(message)
+      })
+      worker.on('error', error => {
+        console.log('接收到子线程返回的错误：-----------------------------------------')
+        console.log(error)
+        worker.terminate()
         reject(error)
-      }
+      })
     })
   }
 
   tts(txt: string, filepath: string, speakerId?: number, speed?: number) {
     return new Promise<string>((resolve, reject) => {
-      try {
-        const config = this.sherpaConfig.offline.ttsConfig
-        // console.log(config)
-        const tts = new sherpa_onnx.OfflineTts(config)
-
-        const start = Date.now()
-        const audio = tts.generate({ text: txt, sid: 88, speed: 1.0 })
-        const stop = Date.now()
-        const elapsed_seconds = (stop - start) / 1000
-        const duration = audio.samples.length / audio.sampleRate
-        const real_time_factor = elapsed_seconds / duration
-
-        console.log('Wave duration', duration.toFixed(3), 'secodns')
-        console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
-        console.log(`RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`, real_time_factor.toFixed(3))
-
-        sherpa_onnx.writeWave(filepath, { samples: audio.samples, sampleRate: audio.sampleRate })
-
-        console.log(`Saved to ${filepath}`)
-        resolve(filepath)
-      } catch (error) {
+      const config = this.sherpaConfig.offline.ttsConfig
+      const worker = new Worker('./workers/tts-worker.mjs', {
+        workerData: {
+          txt,
+          filepath,
+          speakerId,
+          speed,
+          config
+        }
+      })
+      worker.on('message', message => {
+        console.log('接收到子线程返回的结果：-----------------------------------------')
+        worker.terminate()
+        resolve(message)
+      })
+      worker.on('error', error => {
+        console.log('接收到子线程返回的错误：-----------------------------------------')
+        console.log(error)
+        worker.terminate()
         reject(error)
-      }
+      })
     })
   }
 
@@ -95,66 +83,237 @@ export class SherpaService {
     return new Promise<string>((resolve, reject) => {
       try {
         const config = this.sherpaConfig.offline.punctConfig
-        const punct = new sherpa_onnx.Punctuation(config)
-        console.log(txt)
-        const punct_text = punct.addPunct(txt)
-        console.log(punct_text)
-        resolve(punct_text)
+        const worker = new Worker('./workers/punct-worker.mjs', {
+          workerData: {
+            txt,
+            config
+          }
+        })
+        worker.on('message', message => {
+          console.log('接收到子线程返回的结果：-----------------------------------------')
+          worker.terminate()
+          const punText = this.normalization(message, txt)
+          resolve(punText)
+        })
+        worker.on('error', error => {
+          console.log('接收到子线程返回的错误：-----------------------------------------')
+          console.log(error)
+          worker.terminate()
+          reject(error)
+        })
       } catch (error) {
         throw error
       }
     })
   }
 
-  // asr(filepath: string) {
-  //   return new Promise<RecognizerResult>((resolve, reject) => {
-  //     const config = this.sherpaConfig.offline.asrConfig
-  //     const worker = new Worker('./wasm/asr-worker.mjs', {
-  //       workerData: {
-  //         filepath,
-  //         config
-  //       }
-  //     })
-  //     worker.on('message', message => {
-  //       console.log('接收到子线程返回的结果：-----------------------------------------')
-  //       worker.terminate()
-  //       resolve(message)
-  //     })
-  //     worker.on('error', error => {
-  //       console.log('接收到子线程返回的错误：-----------------------------------------')
-  //       console.log(error)
-  //       worker.terminate()
-  //       reject(error)
-  //     })
-  //   })
-  // }
+  align(punText: string, asrResult: { text: string; tokens: string[]; timestamps: number[] }) {
+    const regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？\s]/
+    const data = asrResult
+    data.tokens = data.tokens.map(token => {
+      if (token.includes('@')) {
+        const txt = token
+          .split('')
+          .filter(char => char !== '@')
+          .join('')
+        return txt
+      }
+      return token
+    })
+    if (this.checkPunText(punText, data)) {
+      const punTextArr = Array.from(punText)
+      console.log(data.tokens)
+      console.log(punTextArr)
+      for (let i = 0; i < punTextArr.length; i++) {
+        if (data.tokens[i] !== punTextArr[i]) {
+          // console.log(punTextArr[i], regex.test(punTextArr[i]), regex.test(punTextArr[i]))
+          // console.log(regex.test(punTextArr[i]))
+          if (regex.test(punTextArr[i])) {
+            console.log('插入标点符号：' + punTextArr[i])
+            // tokens 插入标点符号
+            data.tokens.splice(i, 0, punTextArr[i])
+            // timestamps 插入标点符号时间（取中间值）
+            let punTimestamps = 0
+            if (data.timestamps[i] && data.timestamps[i - 1]) {
+              punTimestamps = (data.timestamps[i] - data.timestamps[i - 1]) / 2 + data.timestamps[i - 1]
+            } else {
+              punTimestamps = data.timestamps[i - 2] + 0.01
+            }
+            data.timestamps.splice(i, 0, Number(Number(punTimestamps).toFixed(3)))
 
-  // tts(txt: string, filepath: string, speakerId?: number, speed?: number) {
-  //   return new Promise<string>((resolve, reject) => {
-  //     const config = this.sherpaConfig.offline.ttsConfig
-  //     const worker = new Worker('./wasm/tts-worker.mjs', {
-  //       workerData: {
-  //         txt,
-  //         filepath,
-  //         speakerId,
-  //         speed,
-  //         config
-  //       }
-  //     })
-  //     worker.on('message', message => {
-  //       console.log('接收到子线程返回的结果：-----------------------------------------')
-  //       worker.terminate()
-  //       resolve(message)
-  //     })
-  //     worker.on('error', error => {
-  //       console.log('接收到子线程返回的错误：-----------------------------------------')
-  //       console.log(error)
-  //       worker.terminate()
-  //       reject(error)
-  //     })
-  //   })
-  // }
+            i--
+          }
+        }
+      }
+    } else {
+      throw new Error(`添加标点后的文本与原文本无法对齐`)
+    }
+    console.log(data.tokens)
+    data.text = data.tokens.join('')
+    console.log(data)
+    console.log('punText:' + punText.length)
+    console.log('txt:' + data.text.length)
+    console.log('tokens:' + data.tokens.length)
+    console.log('timestamps:' + data.timestamps.length)
+    return data
+  }
+
+  private normalization(_punText: string, _text: string) {
+    let punText = _punText
+    let text = _text
+    const punctNum = countPunctuation(punText) // 标点符号数量
+    const finalLength = text.length + punctNum // 最终结果的字符长度
+    for (let i = 0; i < finalLength; i++) {
+      if (punText[i] === undefined && text[i] === undefined) {
+        break
+      }
+      if (punText[i] !== text[i]) {
+        if (this.regex.test(punText[i])) {
+          console.log('插入标点符号：' + punText[i])
+          text = insertAt(text, i, punText[i])
+          i--
+        }
+        if (text[i] === ' ') {
+          console.log('插入空格')
+          punText = insertAt(punText, i, ' ')
+          i--
+        }
+      }
+    }
+    console.log(punText)
+    console.log(text)
+    if (punText === text) return text
+    else throw new Error(`文本归一化错误！`)
+  }
+
+  // 检查无标点文本和标点文本的文字、tokens文字内容是否一致，tokens 和 timestamps 长度是否一致
+  private checkPunText(punText: string, data: { text: string; tokens: string[]; timestamps: number[] }) {
+    console.log('punText:' + punText)
+    console.log('txt:' + data.text)
+    // console.log('punText:' + punText.length)
+    const regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？]/
+    const { text, tokens, timestamps } = data
+    const textWithoutPunctuation = Array.from(punText)
+      .filter(char => !regex.test(char))
+      .join('')
+    const tokensText = tokens.join('')
+    if (text !== textWithoutPunctuation) {
+      console.log(`text 与 清理标点后的文本不一致`)
+      console.log(`原文本：` + text)
+      console.log(`清理后文本：` + textWithoutPunctuation)
+      return false
+    }
+    if (text.replace(/\s/g, '') !== tokensText) {
+      console.log(`text 与 tokensText 不一致`)
+      console.log(text)
+      console.log(tokensText)
+      return false
+    }
+    if (tokens.length !== timestamps.length) {
+      console.log(`tokens 和 timestamps 长度不一致`)
+      console.log('tokens:' + tokens.length)
+      console.log('timestamps:' + timestamps.length)
+      return false
+    }
+    return true
+  }
 }
+
+/** 在字符串指定位置插入字符 */
+function insertAt(str: string, index: number, insertStr: string) {
+  return `${str.slice(0, index)}${insertStr}${str.slice(index)}`
+}
+
+/** 计算文本中标点符号数量 */
+function countPunctuation(sentence: string) {
+  // 定义标点符号的正则表达式
+  const regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？]/g
+  
+  // 使用match方法找到所有匹配的标点符号
+  const punctuations = sentence.match(regex);
+  
+  // 返回标点符号的数量，如果没有匹配到则返回0
+  return punctuations ? punctuations.length : 0;
+}
+
+// addPunct(txt: string) {
+//   return new Promise<string>((resolve, reject) => {
+//     try {
+//       const config = this.sherpaConfig.offline.punctConfig
+//       const punct = new sherpa_onnx.Punctuation(config)
+//       // console.log(txt)
+//       const punct_text = punct.addPunct(txt)
+//       // console.log(punct_text)
+//       resolve(punct_text)
+//     } catch (error) {
+//       throw error
+//     }
+//   })
+// }
+// asr(filepath: string) {
+//   return new Promise<RecognizerResult>((resolve, reject) => {
+//     try {
+//       const config = this.sherpaConfig.offline.asrConfig
+//       const recognizer = new sherpa_onnx.OfflineRecognizer(config)
+//       console.log('Started')
+//       const start = Date.now()
+//       const stream = recognizer.createStream()
+//       const wave = sherpa_onnx.readWave(filepath)
+//       stream.acceptWaveform({ sampleRate: wave.sampleRate, samples: wave.samples })
+
+//       recognizer.decode(stream)
+//       const result = recognizer.getResult(stream)
+//       const stop = Date.now()
+//       console.log('Done')
+
+//       const elapsed_seconds = (stop - start) / 1000
+//       const duration = wave.samples.length / wave.sampleRate
+//       const real_time_factor = elapsed_seconds / duration
+
+//       console.log('Wave duration', duration.toFixed(3), 'secodns')
+//       console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
+//       console.log(`RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`, real_time_factor.toFixed(3))
+//       console.log(filepath)
+//       console.log('result\n', result)
+
+//       this.addPunct(result.text).then(result => {
+//         console.log('punct result\n', result)
+//       })
+
+//       resolve({ text: result.text, tokens: result.tokens, timestamps: result.timestamps })
+//     } catch (error) {
+//       reject(error)
+//     }
+//   })
+// }
+
+// tts(txt: string, filepath: string, speakerId?: number, speed?: number) {
+//   return new Promise<string>((resolve, reject) => {
+//     try {
+//       const config = this.sherpaConfig.offline.ttsConfig
+//       // console.log(config)
+//       const tts = new sherpa_onnx.OfflineTts(config)
+
+//       const start = Date.now()
+//       const audio = tts.generate({ text: txt, sid: 88, speed: 1.0 })
+//       const stop = Date.now()
+//       const elapsed_seconds = (stop - start) / 1000
+//       const duration = audio.samples.length / audio.sampleRate
+//       const real_time_factor = elapsed_seconds / duration
+
+//       console.log('Wave duration', duration.toFixed(3), 'secodns')
+//       console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
+//       console.log(`RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`, real_time_factor.toFixed(3))
+
+//       sherpa_onnx.writeWave(filepath, { samples: audio.samples, sampleRate: audio.sampleRate })
+
+//       console.log(`Saved to ${filepath}`)
+//       resolve(filepath)
+//     } catch (error) {
+//       reject(error)
+//     }
+//   })
+// }
 // asr(filepath: string) {
 //   return new Promise<RecognizerResult>((resolve, reject) => {
 //     const config = this.sherpaConfig.offline.asrConfig
