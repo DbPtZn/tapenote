@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
+import { Module } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { databaseConfig, jwtConfig, commonConfig, sherpaDevConfig, sherpaProdConfig } from './config'
@@ -16,14 +16,13 @@ import { TrashModule } from './trash/trash.module'
 import { UploadModule } from './upload/upload.module'
 import { UserModule } from './user/user.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { TypeOrmModule, TypeOrmModuleAsyncOptions, TypeOrmModuleOptions } from '@nestjs/typeorm'
+import { TypeOrmModule } from '@nestjs/typeorm'
 import { UserLoggerModule } from './user-logger/userLogger.module'
 import { LoggerModule } from './logger/logger.module'
 // import saslprep from 'saslprep'
-import { HttpLoggerMiddleware } from './logger/logger.middleware'
 import { RequestScopedService } from './request-scoped/request-scoped.service'
 import { RequestScopedModule } from './request-scoped/request-scoped.module'
-import { SpeakerModule } from './speaker/speaker.module';
+import { SpeakerModule } from './speaker/speaker.module'
 
 @Module({
   imports: [
@@ -51,6 +50,8 @@ import { SpeakerModule } from './speaker/speaker.module';
             type: 'better-sqlite3', // 数据库类型
             database: 'database.sqlite', // 库名
             // entities: [__dirname + '/**/*.entity{.ts,.js}'], //实体文件
+            retryDelay: 5000, // 重试连接数据库间隔
+            retryAttempts: 5, // 重试连接数据库次数
             synchronize: true, // synchronize字段代表是否自动将实体类同步到数据库
             autoLoadEntities: true // 如果为true,将自动加载实体 forFeature() 方法注册的每个实体都将自动添加到配置对象的实体数组中
           }

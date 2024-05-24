@@ -3,7 +3,7 @@ import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/commo
 import { CreateProjectDto } from './dto/create-project.dto'
 import { Annotation, BGM, Project } from './entities/project.entity'
 import { InjectRepository } from '@nestjs/typeorm'
-import { MongoRepository, Not, QueryFailedError, Repository, EntityManager, DataSource } from 'typeorm'
+import { Not, Repository, DataSource } from 'typeorm'
 import { StorageService } from 'src/storage/storage.service'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
@@ -18,8 +18,7 @@ import * as UUID from 'uuid'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { FolderService } from 'src/folder/folder.service'
-import { FragmentService } from 'src/fragment/fragment.service'
-import { UpdateSpeakerHistoryDto, UpdateSpeakerRecorderDto } from './dto/update.dto'
+import { UpdateSpeakerHistoryDto } from './dto/update.dto'
 /** 继承数据 */
 interface InheritDto {
   title?: string
