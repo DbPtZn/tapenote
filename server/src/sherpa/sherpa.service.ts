@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { ConfigType } from '@nestjs/config'
 import { sherpaDevConfig } from '../config'
 import { Worker } from 'worker_threads'
-import sherpa_onnx from 'sherpa-onnx-node'
+// import sherpa_onnx from 'sherpa-onnx-node'
 
 interface RecognizerResult {
   text: string
@@ -14,29 +14,10 @@ interface RecognizerResult {
 export class SherpaService {
   recognizer: any
   stream: any
-  regex: RegExp
   constructor(
     @Inject(sherpaDevConfig.KEY)
     private sherpaConfig: ConfigType<typeof sherpaDevConfig>
-  ) {
-    this.regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？]/
-    // const audio =
-    //   'C:\\Users\\admin\\Desktop\\tapenote\\server\\assets\\public\\IM3Sl1fm\\z5bYeQqU\\audio\\ce783e5c-0e85-4e65-bd10-f8e5810c4f98.wav'
-    // this.asr(audio).then(result => {
-    //   this.addPunct(result.text).then(puntxt => {
-    //     console.log(puntxt)
-    //     this.align(puntxt, result)
-    //   })
-    // })
-    const punText = '你知道 are you ok 这句话吗？'
-    const result = {
-      text: '你知道 are you ok 这句话吗',
-      tokens: ['你', '知', '道', 'are', 'you', 'o', 'k', '这', '句', '话', '吗'],
-      timestamps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    }
-    console.log(this.align(punText, result))
-    // TODO 继续加工 punText，先数组化 punText，再对其中的英文单词进行合并
-  }
+  ) {}
 
   asr(filepath: string) {
     return new Promise<RecognizerResult>((resolve, reject) => {
@@ -47,9 +28,10 @@ export class SherpaService {
           config
         }
       })
-      worker.on('message', message => {
+      worker.on('message', (message: RecognizerResult) => {
         console.log('接收到子线程返回的结果：-----------------------------------------')
         worker.terminate()
+        message.text = message.text.trim()
         resolve(message)
       })
       worker.on('error', error => {
@@ -100,8 +82,12 @@ export class SherpaService {
         worker.on('message', message => {
           console.log('接收到子线程返回的结果：-----------------------------------------')
           worker.terminate()
-          const punText = this.normalization(message, txt)
-          resolve(punText)
+          // console.log(`添加标点结果：`)
+          // console.log(message)
+          // console.log(Array.from(message))
+          const punText = message.trim() // 清理字符串首尾的空白字符
+          const result = this.normalization(punText, txt)
+          resolve(result)
         })
         worker.on('error', error => {
           console.log('接收到子线程返回的错误：-----------------------------------------')
@@ -117,9 +103,9 @@ export class SherpaService {
 
   align(punText: string, asrResult: { text: string; tokens: string[]; timestamps: number[] }) {
     const regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？\s]/
-    const data = asrResult
-    // eslint-disable-next-line prefer-const
-    let { text, tokens, timestamps } = data
+    let tokens = asrResult.tokens
+    const timestamps = asrResult.timestamps
+    const text = asrResult.text
     tokens = tokens.map(token => {
       if (token.includes('@')) {
         const txt = token
@@ -130,55 +116,73 @@ export class SherpaService {
       }
       return token
     })
-    if (this.checkPunText(punText, data)) {
+    if (this.checkPunText(punText, { text, tokens, timestamps })) {
       const punTextArr = Array.from(punText)
+      console.log('source tokens:')
       console.log(tokens)
-      console.log(punTextArr)
+      console.log('source timestamps:')
+      console.log(timestamps)
       for (let i = 0; i < punTextArr.length; i++) {
-        if (tokens.length === 1) {
-          if (tokens[i] !== punTextArr[i]) {
-            if (regex.test(punTextArr[i])) {
-              console.log('插入标点符号：' + punTextArr[i])
-              // tokens 插入标点符号
-              tokens.splice(i, 0, punTextArr[i])
-              // timestamps 插入标点符号时间（取中间值）
-              let punTimestamps = 0
-              if (timestamps[i] && timestamps[i - 1]) {
-                punTimestamps = (timestamps[i] - timestamps[i - 1]) / 2 + timestamps[i - 1]
-              } else {
-                punTimestamps = timestamps[i - 2] + 0.01
-              }
-              timestamps.splice(i, 0, Number(Number(punTimestamps).toFixed(3)))
-
-              i--
+        if (tokens[i] !== punTextArr[i]) {
+          if (regex.test(punTextArr[i])) {
+            // console.log('插入标点符号：' + punTextArr[i])
+            // tokens 插入标点符号
+            tokens.splice(i, 0, punTextArr[i])
+            // timestamps 插入标点符号时间（取中间值）
+            let punTimestamps = 0
+            if (timestamps[i] && timestamps[i - 1]) {
+              punTimestamps = (timestamps[i] - timestamps[i - 1]) / 2 + timestamps[i - 1]
+            } else {
+              punTimestamps = timestamps[i - 1] + 0.01
             }
+            timestamps.splice(i, 0, Number(Number(punTimestamps).toFixed(3)))
+
+            i--
+            continue
+          }
+          if (tokens[i] !== undefined && tokens[i].length > 1 && punTextArr[i].length == 1) {
+            let chunk = ''
+            // console.log(tokens[i].length)
+            for (let k = 0; k < tokens[i].length; k++) {
+              // console.log(punTextArr[i + k])
+              chunk += punTextArr[i + k]
+            }
+            // console.log('chunk:' + chunk)
+            punTextArr.splice(i, tokens[i].length, chunk)
+            // console.log('punTextArr:' + punTextArr)
+            i--
           }
         }
       }
     } else {
-      throw new Error(`添加标点后的文本与原文本无法对齐`)
+      console.log('添加标点后的文本与原文本无法对齐')
+      // throw new Error(`添加标点后的文本与原文本无法对齐`)
     }
+    console.log('target tokens:')
     console.log(tokens)
-    data.text = tokens.join('')
-    console.log(data)
-    console.log('punText:' + punText.length)
-    console.log('txt:' + text.length)
-    console.log('tokens:' + tokens.length)
-    console.log('timestamps:' + timestamps.length)
-    return data
+    console.log('target timestamps:')
+    console.log(timestamps)
+    return {
+      text: tokens.join(''),
+      tokens,
+      timestamps
+    }
   }
 
   private normalization(_punText: string, _text: string) {
     let punText = _punText
     let text = _text
+    // console.log('source text:' + [text, text.length])
+    // console.log('source punText:' + [punText, punText.length])
     const punctNum = countPunctuation(punText) // 标点符号数量
     const finalLength = text.length + punctNum // 最终结果的字符长度
+    const regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？]/
     for (let i = 0; i < finalLength; i++) {
       if (punText[i] === undefined && text[i] === undefined) {
         break
       }
       if (punText[i] !== text[i]) {
-        if (this.regex.test(punText[i])) {
+        if (regex.test(punText[i])) {
           console.log('插入标点符号：' + punText[i])
           text = insertAt(text, i, punText[i])
           i--
@@ -190,17 +194,19 @@ export class SherpaService {
         }
       }
     }
-    console.log(punText)
-    console.log(text)
-    // TODO 继续加工 punText，先数组化 punText，再对其中的英文单词进行合并
+    // console.log('文本归一化：')
+    // console.log('target text:' + [text, text.length])
+    // console.log('target punText' + [punText, punText.length])
+    // console.log('punTextArr')
+    // console.log(Array.from(punText))
     if (punText === text) return text
     else throw new Error(`文本归一化错误！`)
   }
 
   // 检查无标点文本和标点文本的文字、tokens文字内容是否一致，tokens 和 timestamps 长度是否一致
   private checkPunText(punText: string, data: { text: string; tokens: string[]; timestamps: number[] }) {
-    console.log('punText:' + punText)
-    console.log('txt:' + data.text)
+    // console.log('punText:' + punText)
+    // console.log('txt:' + data.text)
     // console.log('punText:' + punText.length)
     const regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？]/
     const { text, tokens, timestamps } = data
@@ -239,12 +245,10 @@ function insertAt(str: string, index: number, insertStr: string) {
 function countPunctuation(sentence: string) {
   // 定义标点符号的正则表达式
   const regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？]/g
-  
   // 使用match方法找到所有匹配的标点符号
-  const punctuations = sentence.match(regex);
-  
+  const punctuations = sentence.match(regex)
   // 返回标点符号的数量，如果没有匹配到则返回0
-  return punctuations ? punctuations.length : 0;
+  return punctuations ? punctuations.length : 0
 }
 
 // addPunct(txt: string) {

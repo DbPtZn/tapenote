@@ -28,7 +28,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 import fs from 'fs'
 import { Speaker } from 'src/speaker/entities/speaker.entity'
 import { SpeakerService } from 'src/speaker/speaker.service'
-import sharp from 'sharp'
+// import sharp from 'sharp'
+import Jimp from 'jimp'
 
 @Injectable()
 export class FragmentService {
@@ -83,7 +84,11 @@ export class FragmentService {
               extname: '.png'
             })
             // 复制图片并压缩，统一成 png 格式
-            await sharp(avatarpath).toFormat('png').png({ quality: 50 }).toFile(filepath)
+            // await sharp(avatarpath).toFormat('png').png({ quality: 50 }).toFile(filepath)
+            await Jimp.read(avatarpath, async (err, lenna) => {
+              if (err) throw err
+              await lenna.quality(50).writeAsync(filepath)
+            })
             fragmentSpeaker = {
               type,
               name: speaker.name,
@@ -427,6 +432,7 @@ export class FragmentService {
       this.userlogger.log(
         `修改片段[${fragmentId}]转写文本成功，原文本：【${fragment.transcript}】，新文本：【${newTranscript}】`
       )
+      this.projectService.updateTime(procedureId, userId)
       return { updateAt: result.updateAt, msg: '更新片段转写文本成功！' }
     } catch (error) {
       this.userlogger.log(`修改片段[${fragmentId}]转写文本失败，目标文本：${newTranscript}`)

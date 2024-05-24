@@ -21,7 +21,7 @@ function handleConfirm() {
 function handleInput(ev: Event, index: number) {
   const target = ev.target as HTMLInputElement
   target.style.width = 24 + target.value.length * 12 + 'px'
-  inputs[index] = target.value
+  inputs[index] = target.value ? target.value : ' ' // 不能为空
 }
 function handleBlur() {
   focus.value = -1
@@ -59,9 +59,11 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
-// .content {
-//   // position: relative;
-// }
+.content {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
 .token {
   display: inline-flex;
   align-items: center;
@@ -92,6 +94,7 @@ onUnmounted(() => {
   min-width: 24px;
   width: fit-content;
   height: 24px;
+  // line-height: 24px;
   background-color: v-bind('themeVars.inputColor');
   cursor: pointer;
 }
