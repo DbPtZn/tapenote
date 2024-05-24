@@ -254,6 +254,7 @@ export class FragmentController {
     try {
       const fragment = await this.fragmentService.copy(dto, req.user.id, req.user.dirname)
       fragment.audio = '/public' + fragment.audio.split('public')[1]
+      fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
       delete fragment.project
       res.status(200).send({ updateAt: fragment.updateAt, fragment })
     } catch (error) {

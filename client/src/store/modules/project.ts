@@ -393,6 +393,7 @@ export const useProjectStore = defineStore('projectStore', {
       return this.creatorApi(account, hostname).fragment.copyFragment<{ fragment: Fragment, updateAt: string }>(params).then(res => {
         const { fragment, updateAt } = res.data
         fragment.audio = hostname + fragment.audio
+        fragment.speaker.avatar = hostname + fragment.speaker.avatar
         const { sourceFragmentId, targetFragmentId, sourceProjectId, targetProjectId, type, position } = params
         const source = this.get(sourceProjectId)!
         const target = this.get(targetProjectId)!

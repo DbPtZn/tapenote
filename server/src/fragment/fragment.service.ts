@@ -655,12 +655,32 @@ export class FragmentService {
           this.userlogger.log(`片段剪切：源音频位置：${audiopath}, 目标音频位置${filepath}`)
           fs.renameSync(audiopath, filepath)
           sourceFragment.audio = filename
+
+          // 复制 speaker avatar 文件
+          const sourceAvatarPath = this.storageService.getFilePath({
+            filename: sourceFragment.speaker.avatar,
+            dirname: [dirname, sourceProjectDirname],
+            category: 'image'
+          })
+          const targetAvatarPath = this.storageService.getFilePath({
+            filename: sourceFragment.speaker.avatar,
+            dirname: [dirname, targetProject.dirname],
+            category: 'image'
+          })
+          if (!fs.existsSync(targetAvatarPath)) {
+            fs.copyFileSync(sourceAvatarPath, targetAvatarPath)
+          }
         }
         const result = await this.fragmentsRepository.save(sourceFragment)
         result.audio = this.storageService.getFilePath({
           filename: sourceFragment.audio,
-          dirname: [dirname, sourceFragment.project.dirname],
+          dirname: [dirname, sourceFragment.project.dirname], // 如果是非相同项目的情况下，实体关系已经变成 sourceFragment.project ==>> targetProject
           category: 'audio'
+        })
+        result.speaker.avatar = this.storageService.getFilePath({
+          dirname: [dirname, sourceFragment.project.dirname], // 如果是非相同项目的情况下，实体关系已经变成 sourceFragment.project ==>> targetProject
+          category: 'image',
+          filename: result.speaker.avatar
         })
         this.userlogger.log(`剪切片段[${sourceFragmentId}]成功！`)
         return result
@@ -698,6 +718,21 @@ export class FragmentService {
             insertPosition: position
           })
           targetProjectDirname = targetProject.dirname
+
+          // 复制 speaker avatar 文件
+          const sourceAvatarPath = this.storageService.getFilePath({
+            filename: sourceFragment.speaker.avatar,
+            dirname: [dirname, sourceProjectDirname],
+            category: 'image'
+          })
+          const targetAvatarPath = this.storageService.getFilePath({
+            filename: newFragment.speaker.avatar,
+            dirname: [dirname, targetProject.dirname],
+            category: 'image'
+          })
+          if (!fs.existsSync(targetAvatarPath)) {
+            fs.copyFileSync(sourceAvatarPath, targetAvatarPath)
+          }
         }
 
         // 复制音频
@@ -716,6 +751,11 @@ export class FragmentService {
         newFragment.audio = newAudioName
         const result = await this.fragmentsRepository.save(newFragment)
         result.audio = newAudioPath
+        result.speaker.avatar = this.storageService.getFilePath({
+          dirname: [dirname, targetProjectDirname],
+          category: 'image',
+          filename: result.speaker.avatar
+        })
         this.userlogger.log(`复制片段[${sourceFragmentId}]成功！`)
         return result
       }
