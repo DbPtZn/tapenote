@@ -1,8 +1,8 @@
-// worker.ts
+// calculate md5 and size
 import * as fs from 'fs'
 import * as crypto from 'crypto'
 
-process.on('message', (msg) => {
+process.on('message', msg => {
   // console.log('message', msg)
   const filePath = msg
   try {

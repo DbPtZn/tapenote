@@ -20,6 +20,7 @@ sherpa
 database
 assets
 logs
+database.sqlite
 
 #env
 .env.electron.local

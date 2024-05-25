@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import path from 'path'
 import fs from 'fs'
 import randomstring from 'randomstring'
-import { tmpdir } from 'os'
+import os from 'os'
 import { ConfigService } from '@nestjs/config'
 import { commonConfig } from 'src/config'
 type Category = 'audio' | 'image' | 'bgm' | 'logs'
@@ -118,9 +118,11 @@ export class StorageService {
 
   /** 参数： 拓展名， 如 '.wav' */
   createTempFilePath(extname: string) {
-    const tempDir = tmpdir() // 获取系统临时目录路径
-    const tempFileName = `temp-${Date.now()}-${Math.random().toString(16).slice(2)}${extname}` // 生成随机文件名
-    return path.join(tempDir, tempFileName) // 拼接临时文件路径
+    // const tempDir = tmpdir() // 获取系统临时目录路径 ((
+    // const tempDir = 'temp'
+    // const tempFileName = `temp-${Date.now()}${extname}` // 生成随机文件名
+    // return path.join(process.cwd(), tempDir, tempFileName) // 拼接临时文件路径
+    return path.join(os.tmpdir(), 'tempfile-' + Date.now() + extname)
   }
 
   deleteSync(filePath: string) {

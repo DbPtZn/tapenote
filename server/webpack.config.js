@@ -23,7 +23,8 @@ module.exports = {
   // 打包后的文件名称以及位置
   output: {
     filename: 'server.cjs',
-    path: path.resolve(__dirname, 'process'),
+    // path: path.resolve(__dirname, 'process'),
+    path: path.resolve(__dirname, '..', 'client', 'electron', 'server'),
     libraryTarget: 'umd'
   },
   resolve: {

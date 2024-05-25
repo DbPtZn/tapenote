@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { DropdownOption, useThemeVars } from 'naive-ui'
-import { VNode, computed, inject, onBeforeMount, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import useStore from '@/store'
 import { useDraggable } from '@vueuse/core'
 import CacheCard from './private/CacheCard.vue'
@@ -9,6 +9,7 @@ import utils from '@/utils'
 import { LibraryEnum } from '@/enums'
 import { CreatorShell } from '../shell'
 import { useShell } from '@/renderer'
+import { watch } from 'vue'
 type Project = typeof projectStore.data[0]
 const { projectStore, settingStore, dragStore } = useStore()
 const shell = useShell<CreatorShell>()
@@ -18,7 +19,12 @@ const dragRef = ref()
 const rootRef = document.body
 const rect = rootRef.getBoundingClientRect()
 const state = reactive({
-  isCollapse: false
+  isCollapse: false,
+})
+const cacheState = reactive({
+  limitSize: 0,
+  usedSize: 0,
+  totalSize: 0
 })
 const { x, y, style } = useDraggable(elementRef, {
   handle: dragRef,
@@ -27,6 +33,21 @@ const { x, y, style } = useDraggable(elementRef, {
   preventDefault: true, // 阻止默认事件 (阻止拖拽时选中文本)
   stopPropagation: true // 阻止冒泡
 })
+watch(() => projectStore.data.length, () => {
+  const memoryInfo = performance['memory']
+  // console.log("总内存限制 (JS Heap Total):", memoryInfo.jsHeapSizeLimit / (1024 * 1024), "MB");
+  // console.log("已使用内存 (JS Heap Used):", memoryInfo.usedJSHeapSize / (1024 * 1024), "MB");
+  // console.log("内存占用峰值 (JS Heap Peak):", memoryInfo.totalJSHeapSize / (1024 * 1024), "MB");
+  cacheState.limitSize = +(memoryInfo.jsHeapSizeLimit / (1024 * 1024)).toFixed(2)
+  cacheState.usedSize = +(memoryInfo.usedJSHeapSize / (1024 * 1024)).toFixed(2)
+  cacheState.totalSize = +(memoryInfo.totalJSHeapSize / (1024 * 1024)).toFixed(2)
+})
+function handleUpdateCacheState() {
+  const memoryInfo = performance['memory']
+  cacheState.limitSize = +(memoryInfo.jsHeapSizeLimit / (1024 * 1024)).toFixed(2)
+  cacheState.usedSize = +(memoryInfo.usedJSHeapSize / (1024 * 1024)).toFixed(2)
+  cacheState.totalSize = +(memoryInfo.totalJSHeapSize / (1024 * 1024)).toFixed(2)
+}
 const data = computed(() => {
   return projectStore.data.slice().reverse()
 })
@@ -47,9 +68,9 @@ function handleDragEnd(ev: DragEvent) {
   dragStore.isCache = false
   ev.dataTransfer?.clearData()
 }
-function  handleToFile(item: Project) {
+function handleToFile(item: Project) {
   shell.useWorkbench()
-  shell.workbench.setById({ id: item.id, lib: item.library, account: item.account, hostname: item.hostname })
+  shell.workbench.setById({ id: item.id, lib: item.lib, account: item.account, hostname: item.hostname })
 }
 function handleRemove(item: Project) {
   projectStore.cleanCache(item.id, item.account, item.hostname)
@@ -89,7 +110,16 @@ function handleSelect() {
     <div ref="warpperRef" :class="['wrapper', state.isCollapse && 'collapse']">
       <div ref="dragRef" class="cache-header" @click="dropdownState.isShow = false">
         <div class="cache-header-title">
-          缓存列表
+          <n-popover trigger="click">
+            <template #trigger>
+              <div @click="handleUpdateCacheState">缓存列表</div>
+            </template>
+            <n-list>
+              <n-list-item>{{ '总内存限制:' +  cacheState.limitSize + 'MB'  }}</n-list-item>
+              <n-list-item>{{ '已使用内存:' + cacheState.usedSize + 'MB'  }}</n-list-item>
+              <n-list-item>{{ '内存占用峰值:' + cacheState.totalSize + 'MB' }}</n-list-item>
+            </n-list>
+          </n-popover>
         </div>
         <div class="cache-header-icon" @dblclick="handleIconDbclick" @contextmenu.prevent="dropdownState.isShow = true">
           <n-dropdown trigger="manual" :show="dropdownState.isShow" :options="options" @clickoutside="dropdownState.isShow = false" @select="handleSelect">
@@ -110,7 +140,7 @@ function handleSelect() {
           :date="utils.dateFormat(new Date(item.updateAt))"
           :active="shell.workbench.itemId === item.id"
           draggable="true"
-          @dragstart="handleDragStart($event, item.id, item.library)"
+          @dragstart="handleDragStart($event, item.id, item.lib)"
           @dragend="handleDragEnd"
           @click="handleToFile(item)"
           @on-remove="handleRemove(item)"

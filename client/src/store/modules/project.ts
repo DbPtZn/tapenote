@@ -140,12 +140,12 @@ export const useProjectStore = defineStore('projectStore', {
         // console.log('fetchAndset')
         const index = this.data.findIndex(i => i.id === id)
         if (index !== -1) {
-          console.log(this.data[index])
+          // console.log(this.data[index])
           resolve(this.data[index])
         } else {
           this.creatorApi(account, hostname).project.get(id)
             .then(res => {
-              console.log(res.data)
+              // console.log(res.data)
               const newItem = this.set(res.data, account, hostname)
               resolve(newItem)
             })
@@ -187,7 +187,7 @@ export const useProjectStore = defineStore('projectStore', {
         createAt: data.createAt || '',
         updateAt: data.updateAt || ''
       }
-      console.log(item)
+      // console.log(item)
       this.data.push(item)
       return item
     },
