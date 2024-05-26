@@ -9,8 +9,23 @@ try {
   console.log('Started')
   const start = Date.now()
   const stream = recognizer.createStream()
-  const wave = sherpa_onnx.readWave(filepath)
-  stream.acceptWaveform({ sampleRate: wave.sampleRate, samples: wave.samples })
+  let wave
+  try {
+    wave = sherpa_onnx.readWave(filepath)
+  } catch (error) {
+    console.log('readwave error')
+    console.log(error)
+    throw error
+  }
+
+  try {
+    stream.acceptWaveform({ sampleRate: wave.sampleRate, samples: wave.samples })
+  } catch (error) {
+    console.log('acceptWaveform error')
+    console.log(error)
+    throw error
+  }
+ 
 
   recognizer.decode(stream)
   const result = recognizer.getResult(stream)

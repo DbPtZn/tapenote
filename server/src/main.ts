@@ -24,7 +24,7 @@ async function bootstrap() {
     path: dotenvPath
   })
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    bufferLogs: false // 开启后 nest 日志会写入到 LoggerService 中
+    bufferLogs: process.env.LOG_OPEN === 'true' // 开启后 nest 日志会写入到 LoggerService 中
   })
   // 生产环境下开启自动记录系统日志功能
   process.env.LOG_OPEN === 'true' && app.useLogger(app.get(LoggerService))

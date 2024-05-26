@@ -1,13 +1,19 @@
-import { defineConfig, loadEnv } from 'vite'
+import {  type Plugin, defineConfig,  normalizePath, loadEnv } from 'vite'
 import path from 'node:path'
+import fs from 'node:fs'
 import electron from 'vite-plugin-electron/simple'
 import vue from '@vitejs/plugin-vue'
 // import eslintPlugin from 'vite-plugin-eslint'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
+import os from 'node:os'
+import nodePolyfills from 'rollup-plugin-node-polyfills'
+import native from 'vite-plugin-native'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
+  const platform_arch =
+    `${os.platform() == 'win32' ? 'win' : os.platform()}-${os.arch()}`;
   return {
     plugins: [
       vue(),
@@ -15,6 +21,38 @@ export default defineConfig(({ command, mode }) => {
         main: {
           // Shortcut of `build.lib.entry`.
           entry: 'electron/main.ts',
+          onstart({ reload }) {
+            reload()
+          },
+          vite: {
+            plugins: [
+              // native({})
+            ],
+            build: {
+              // polyfillModulePreload: true,
+              minify: false,
+              rollupOptions: {
+                // output: {
+                //   inlineDynamicImports: true
+                // },
+                // external: [
+                //   'sherpa-onnx-node',
+                // ]
+              },
+              commonjsOptions: {
+                ignoreDynamicRequires: true,
+              //   dynamicRequireRoot: path.join(__dirname, 'node_modules/.pnpm/sherpa-onnx-node'),
+              //   dynamicRequireTargets: [
+              //     '../build/Release/sherpa-onnx.node',
+              //     '../build/Debug/sherpa-onnx.node',
+              //     `./node_modules/sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
+              //     `../sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
+              //     './sherpa-onnx.node',
+              //   ],
+              //   include: ["**/*.node"]
+              }
+            }
+          }
         },
         preload: {
           // Shortcut of `build.rollupOptions.input`.
@@ -40,12 +78,49 @@ export default defineConfig(({ command, mode }) => {
         // 可以指定放置类型声明文件的位置和名称
         dts: 'src/types/components.d.ts'
       }),
-      
+      // bindingSqlite3()
     ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src') // 路径别名
       }
     },
+    // assetsInclude: ["**/*.node"]
   }
 })
+
+function bindingSqlite3(options: {
+  output?: string;
+  better_sqlite3_node?: string;
+  command?: string;
+} = {}): Plugin {
+  const TAG = '[vite-plugin-binding-sqlite3]'
+  options.output ??= 'dist-native'
+  options.better_sqlite3_node ??= 'better_sqlite3.node'
+  options.command ??= 'build'
+
+  return {
+    name: 'vite-plugin-binding-sqlite3',
+    config(config) {
+      // https://github.com/vitejs/vite/blob/v4.4.9/packages/vite/src/node/config.ts#L496-L499
+      const resolvedRoot = normalizePath(config.root ? path.resolve(config.root) : process.cwd())
+      const output = path.posix.resolve(resolvedRoot, options.output!)
+      const better_sqlite3 = require.resolve('better-sqlite3')
+      const better_sqlite3_root = path.posix.join(better_sqlite3.slice(0, better_sqlite3.lastIndexOf('node_modules')), 'node_modules/better-sqlite3')
+      const better_sqlite3_node = path.posix.join(better_sqlite3_root, 'build/Release', options.better_sqlite3_node!)
+      const better_sqlite3_copy = path.posix.join(output, options.better_sqlite3_node!)
+      if (!fs.existsSync(better_sqlite3_node)) {
+        throw new Error(`${TAG} Can not found "${better_sqlite3_node}".`)
+      }
+      if (!fs.existsSync(output)) {
+        fs.mkdirSync(output, { recursive: true })
+      }
+      fs.copyFileSync(better_sqlite3_node, better_sqlite3_copy)
+      /** `dist-native/better_sqlite3.node` */
+      const BETTER_SQLITE3_BINDING = better_sqlite3_copy.replace(resolvedRoot + '/', '')
+      fs.writeFileSync(path.join(resolvedRoot, '.env'), `VITE_BETTER_SQLITE3_BINDING=${BETTER_SQLITE3_BINDING}`)
+
+      console.log(TAG, `binding to ${BETTER_SQLITE3_BINDING}`)
+    },
+  }
+}

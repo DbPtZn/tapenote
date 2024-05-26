@@ -36,8 +36,10 @@ export function initServerProcess() {
   // });
 
   serverProcess = utilityProcess.fork(serverPath, [], {
-    stdio: 'pipe'
+    stdio: 'pipe',
+    allowLoadingUnsignedLibraries: true
   })
+  
   serverProcess.on?.('spawn', () => {
     serverProcess?.stdout?.on('data', data => {
       console.log(`serverProcess output: ${data}`)
