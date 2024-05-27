@@ -119,6 +119,7 @@ export const useProjectStore = defineStore('projectStore', {
           }).catch(err => reject(err))
         }
         if (lib === LibraryEnum.PROCEDURE) {
+          console.log(sourceId)
           const procedureId = sourceId
           return this.creatorApi(account, hostname).project.create<Project>({ folderId, procedureId, lib: LibraryEnum.COURSE, ...author }).then(res => {
             res.data.account = account

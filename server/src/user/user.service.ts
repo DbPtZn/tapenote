@@ -11,8 +11,6 @@ import path from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
 import * as UUID from 'uuid'
-import { TimbreService } from 'src/timbre/timbre.service'
-import { BgmService } from 'src/bgm/bgm.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { LibraryEnum } from 'src/enum'
@@ -27,8 +25,6 @@ export class UserService {
     private readonly dataSource: DataSource,
     private readonly storageService: StorageService,
     private readonly bcrtptService: BcryptService,
-    private readonly timbreService: TimbreService,
-    private readonly bgmService: BgmService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
   ) {}
@@ -75,6 +71,11 @@ export class UserService {
         course: folders.find(folder => folder.lib === LibraryEnum.COURSE).id,
         procedure: folders.find(folder => folder.lib === LibraryEnum.PROCEDURE).id
       }
+
+      // 其它配置
+      user.submissionConfig = []
+      user.subscriptionConfig = []
+      user.config = {}
 
       // 使用事务来确保所有操作要么全部成功，要么全部撤销
       const queryRunner = this.dataSource.createQueryRunner()

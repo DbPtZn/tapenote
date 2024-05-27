@@ -88,7 +88,7 @@ const { handleCreate, handleDirSelected, handleDownload } = {
         projectStore.createBy({
           folderId: configure.folderId,
           sourceId: props.id,
-          library: props.lib,
+          lib: props.lib,
           account: props.account,
           hostname: props.hostname
         }).then(res => {

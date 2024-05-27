@@ -7,13 +7,13 @@ const { txt, filepath, speakerId, speed, config } = workerData
 try {
   console.log(filepath)
   // console.log('fs')
-  // console.log(fs)
+  console.log('fffffffffffffffffffffffffffffffffffff__________________________')
   const tts = new sherpa_onnx.OfflineTts(config)
 
   const start = Date.now()
   let audio = null
   try {
-    audio = tts.generate({ text: txt, sid: speakerId || 88, speed: speed || 1.0 })
+    audio = tts.generate({ text: txt, sid: speakerId || 88, speed: speed || 1.0, enableExternalBuffer: false })
   } catch (error) {
     console.log('生成音频失败！')
     console.log(error)

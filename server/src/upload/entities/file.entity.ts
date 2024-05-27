@@ -24,8 +24,8 @@ export class UploadFile {
   md5: string // 文件MD5
 
   @Column({
-    type: 'simple-array',
-    default: JSON.stringify([])
+    type: 'simple-array'
+    // default: JSON.stringify([])
   })
   quote: string[] // 引用的项目 id
 

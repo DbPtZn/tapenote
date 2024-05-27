@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common'
 import { CreateProjectDto } from './dto/create-project.dto'
-import { Annotation, BGM, Project } from './entities/project.entity'
+import { Annotation, Project, ProjectBGM } from './entities/project.entity'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Not, Repository, DataSource } from 'typeorm'
 import { StorageService } from 'src/storage/storage.service'
@@ -30,7 +30,7 @@ interface InheritDto {
   fragments?: Fragment[]
   sequence?: string[]
   removedSequence?: string[]
-  bgm: BGM
+  bgm?: ProjectBGM
   // course
   audio?: string
   duration?: number
@@ -72,7 +72,7 @@ export class ProjectService {
         title: '',
         content: '',
         abbrev: '',
-        bgm: { audio: '', name: '', volumn: 1 },
+        bgm: null,
         wordage: 0,
         filesize: 0,
         fragments: [],
@@ -88,7 +88,7 @@ export class ProjectService {
           title: note.title || '',
           content: note.content || '',
           abbrev: note.abbrev || '',
-          bgm: note.bgm || { audio: '', name: '', volumn: 1 },
+          bgm: note.bgm || null,
           wordage: note.detail?.wordage || 0,
           filesize: note.detail?.filesize || 0,
           fragments: note.fragments || [],
@@ -105,7 +105,7 @@ export class ProjectService {
           title: procedure.title || '',
           content: procedure.content || '',
           abbrev: procedure.abbrev || '',
-          bgm: procedure.bgm || { audio: '', name: '', volumn: 1 },
+          bgm: procedure.bgm || null,
           wordage: procedure.detail?.wordage || 0,
           filesize: procedure.detail?.filesize || 0
         }
@@ -143,7 +143,6 @@ export class ProjectService {
           project.sequence = data.sequence || []
           project.removedSequence = data.removedSequence || []
           project.speakerHistory = { human: '', machine: '' }
-          // project.speakerRecorder = []
           break
         case LibraryEnum.COURSE:
           noteId && (project.fromNoteId = noteId)

@@ -40,6 +40,7 @@ export class UploadService {
               image.type = extname
               image.md5 = md5
               image.size = size
+              image.quote = []
               await this.uploadFilesRepository.save(image)
               resolve(filepath)
             })

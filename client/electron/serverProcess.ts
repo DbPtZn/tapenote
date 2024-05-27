@@ -37,7 +37,7 @@ export function initServerProcess() {
 
   serverProcess = utilityProcess.fork(serverPath, [], {
     stdio: 'pipe',
-    allowLoadingUnsignedLibraries: true
+    // allowLoadingUnsignedLibraries: true
   })
   
   serverProcess.on?.('spawn', () => {

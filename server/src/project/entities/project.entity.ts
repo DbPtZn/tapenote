@@ -22,10 +22,13 @@ export interface Annotation {
   updateAt: Date
   createAt: Date
 }
-export interface BGM {
+export interface ProjectBGM {
+  id: string
+  picture: string
   name: string
   audio: string
   volumn: number
+  duration: number
 }
 
 @Entity()
@@ -63,21 +66,19 @@ export class Project {
   dirname: string // 文件夹路径
 
   @Column({
-    type: 'text',
-    length: 255,
-    default: '未命名文档'
+    type: 'text'
+    // default: '未命名文档'
   })
   title: string // 标题
 
   @Column({
-    type: 'text',
-    default: ''
+    type: 'text'
+    // default: ''
   })
   content: string // 内容
 
   @Column({
-    type: 'text',
-    length: 32
+    type: 'text'
   })
   abbrev: string // 内容缩略
 
@@ -95,14 +96,16 @@ export class Project {
   /** 文档中的正常片段的顺序 */
   @Column({
     type: 'simple-array',
-    default: JSON.stringify([])
+    nullable: true
+    // default: JSON.stringify([])
   })
   sequence: string[]
 
   /** 文档中的被移除片段的顺序 */
   @Column({
     type: 'simple-array',
-    default: JSON.stringify([])
+    nullable: true
+    // default: JSON.stringify([])
   })
   removedSequence: string[]
 
@@ -115,22 +118,27 @@ export class Project {
 
   @Column({
     type: 'simple-json',
-    default: JSON.stringify({
-      human: '',
-      machine: ''
-    })
+    nullable: true
+    // default: JSON.stringify({
+    //   human: '',
+    //   machine: ''
+    // })
   })
   speakerHistory: { human: string; machine: string } // 记录项目中最近使用的 speaker 仅在 procedure 模式下使用
 
   @Column({
     type: 'simple-json',
-    default: JSON.stringify({
-      name: '',
-      audio: '',
-      volumn: 1
-    })
+    // default: JSON.stringify({
+    //   id: '',
+    //   picture: '',
+    //   name: '',
+    //   audio: '',
+    //   volumn: 1,
+    //   duration: 0
+    // }),
+    nullable: true
   })
-  bgm: BGM // 背景音乐
+  bgm: ProjectBGM // 背景音乐, 一般会先查询项目本地的 bgm.audio, 如果没有，则通过 bgmid 到 bgm 库查询，如果都没有，则项目没有配置 bgm
 
   /** ------------------------------------------  course  -------------------------------------------- */
   @Column({
@@ -141,7 +149,8 @@ export class Project {
 
   @Column({
     type: 'text',
-    default: ''
+    nullable: true
+    // default: ''
   })
   sidenote: string
 
@@ -159,31 +168,36 @@ export class Project {
 
   @Column({
     type: 'simple-array',
-    default: JSON.stringify([])
+    nullable: true
+    // default: JSON.stringify([])
   })
   promoterSequence: Array<string> // 启动子序列
 
   @Column({
     type: 'simple-array',
-    default: JSON.stringify([])
+    nullable: true
+    // default: JSON.stringify([])
   })
   keyframeSequence: Array<number> // 关键帧序列
 
   @Column({
     type: 'simple-array',
-    default: JSON.stringify([])
+    nullable: true
+    // default: JSON.stringify([])
   })
   subtitleSequence: Array<string> // 字幕序列
 
   @Column({
     type: 'simple-array',
-    default: JSON.stringify([])
+    nullable: true
+    // default: JSON.stringify([])
   })
   subtitleKeyframeSequence: Array<number> // 字幕关键帧序列
 
   @Column({
     type: 'simple-json',
-    default: JSON.stringify([])
+    nullable: true
+    // default: JSON.stringify([])
   })
   annotations: Annotation[]
 
@@ -197,11 +211,12 @@ export class Project {
 
   @Column({
     type: 'simple-json',
-    default: JSON.stringify({
-      version: 0,
-      date: new Date(),
-      remarks: ''
-    })
+    nullable: true
+    // default: JSON.stringify({
+    //   version: 0,
+    //   date: new Date(),
+    //   remarks: ''
+    // })
   })
   snapshot: {
     version: number // 版本号
@@ -224,13 +239,14 @@ export class Project {
   /** 详情 */
   @Column({
     type: 'simple-json',
-    default: JSON.stringify({
-      penname: '',
-      homepage: '',
-      email: '',
-      wordage: 0,
-      filesize: 0
-    })
+    nullable: true
+    // default: JSON.stringify({
+    //   penname: '',
+    //   homepage: '',
+    //   email: '',
+    //   wordage: 0,
+    //   filesize: 0
+    // })
   })
   detail: {
     penname: string

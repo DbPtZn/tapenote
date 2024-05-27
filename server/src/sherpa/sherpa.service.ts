@@ -99,6 +99,7 @@ export class SherpaService {
 
   asr(filepath: string) {
     return new Promise<RecognizerResult>((resolve, reject) => {
+      console.log('asr')
       const config = this.sherpaConfig.offline.asrConfig
       const worker = new Worker('./workers/asr-worker.mjs', {
         workerData: {

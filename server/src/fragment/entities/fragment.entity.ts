@@ -42,44 +42,43 @@ export class Fragment {
   duration: number
 
   @Column({
-    type: 'text',
-    default: ''
+    type: 'text'
   })
   txt: string
 
   // 可能包含逗号，不能使用 simple-array
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify([])
+    type: 'simple-json'
+    // default: JSON.stringify([]) // QueryFailedError: BLOB, TEXT, GEOMETRY or JSON column 'promoters' can't have a default value
   })
   transcript: string[]
 
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify([])
+    type: 'simple-json'
+    // default: JSON.stringify([])
   })
   tags: string[]
 
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify([])
+    type: 'simple-json'
+    // default: JSON.stringify([])
   })
   promoters: string[]
 
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify([])
+    type: 'simple-json'
+    // default: JSON.stringify([])
   })
   timestamps: number[]
 
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify({
-      type: 'machine',
-      avatar: '',
-      name: '',
-      role: 0
-    })
+    type: 'simple-json'
+    // default: JSON.stringify({
+    //   type: 'machine',
+    //   avatar: '',
+    //   name: '',
+    //   role: 0
+    // })
   })
   speaker: FragmentSpeaker
 

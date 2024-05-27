@@ -78,6 +78,7 @@ app.whenReady().then(() => {
   // createPunctWorker()
   // createAsrWorker()
   // createTtsWorker()
+  createSpeakerIdentWorker()
   createWindow()
 })
 function createPunctWorker() {
@@ -96,6 +97,23 @@ function createPunctWorker() {
       console.log('标点添加结果：')
       console.log(message)
       // message.text = message.text.trim()
+    }
+    worker.terminate()
+  })
+}
+
+function createSpeakerIdentWorker() {
+  const filepath = path.join(process.cwd(), 'workers', 'speaker_ident-worker.mjs')
+  const worker = new Worker(filepath, {
+    workerData: {}
+  })
+  worker.on('message', (message: any) => {
+    console.log('接收到子线程返回的结果：-----------------------------------------')
+    if (message.error) {
+      console.log('说话人识别发生错误：' + message.error)
+    } else {
+      console.log('说话人识别结果：')
+      console.log(message)
     }
     worker.terminate()
   })
@@ -123,32 +141,32 @@ function createAsrWorker() {
   })
 }
 
-// function createTtsWorker() {
-//   const filepath = path.join(process.cwd(), 'workers', 'tts-worker.mjs')
-//   const worker = new Worker(filepath, {
-//     workerData: {
-//       txt: '当你听到这句话的时候我已经消失了请你不要悼念我',
-//       filepath: './test.wav',
-//       speakerId: 1,
-//       speed: 1.0,
-//       config: ttsConfig
-//     },
-//     stdin: true,
-//     stdout: true,
-//     stderr: true,
-//   })
-//   worker.on('message', (message: any) => {
-//     console.log('接收到子线程返回的结果：-----------------------------------------')
-//     if (message.error) {
-//       console.log('语音识别发生错误：' + message.error)
-//     } else {
-//       console.log('语音识别结果：')
-//       console.log(message)
-//       message.text = message.text.trim()
-//     }
-//     worker.terminate()
-//   })
-// }
+function createTtsWorker() {
+  const filepath = path.join(process.cwd(), 'workers', 'tts-worker.mjs')
+  const worker = new Worker(filepath, {
+    workerData: {
+      txt: '当你听到这句话的时候我已经消失了请你不要悼念我',
+      filepath: './test.wav',
+      speakerId: 1,
+      speed: 1.0,
+      config: ttsConfig
+    },
+    stdin: true,
+    stdout: true,
+    stderr: true,
+  })
+  worker.on('message', (message: any) => {
+    console.log('接收到子线程返回的结果：-----------------------------------------')
+    if (message.error) {
+      console.log('语音识别发生错误：' + message.error)
+    } else {
+      console.log('语音识别结果：')
+      console.log(message)
+      message.text = message.text.trim()
+    }
+    worker.terminate()
+  })
+}
 
 // function createAsr() {
 //   const audiopath = 'C:/Users/admin/Desktop/tapenote/client/assets/public/5wWbTjc3/KucHgdUy/audio/1ad7fe25-3ea9-44e1-b0dc-b98b4462b35d.wav'

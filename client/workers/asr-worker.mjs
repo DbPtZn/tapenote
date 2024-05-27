@@ -11,7 +11,7 @@ try {
   const stream = recognizer.createStream()
   let wave
   try {
-    wave = sherpa_onnx.readWave(filepath)
+    wave = sherpa_onnx.readWave(filepath, false)
   } catch (error) {
     console.log('readwave error')
     console.log(error)

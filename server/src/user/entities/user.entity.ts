@@ -3,7 +3,6 @@ import { Bgm } from 'src/bgm/entities/bgm.entity'
 import { Folder } from 'src/folder/entities/folder.entity'
 import { Project } from 'src/project/entities/project.entity'
 import { Speaker } from 'src/speaker/entities/speaker.entity'
-import { Timbre } from 'src/timbre/entities/timbre.entity'
 import {
   AfterUpdate,
   BeforeInsert,
@@ -41,10 +40,7 @@ export class SubmissionConfig {
   desc: string
 }
 
-export class UserConfig {
-  role: number
-  robot: boolean
-}
+export class UserConfig {}
 
 @Entity()
 export class User {
@@ -57,14 +53,11 @@ export class User {
   @OneToMany(() => Folder, folder => folder.user)
   folders: Folder[]
 
-  @OneToOne(() => Timbre, timbre => timbre.user)
-  timbre: Timbre
-
   @OneToMany(() => Speaker, speaker => speaker.user)
   speakers: Speaker[]
 
-  @OneToOne(() => Bgm, bgm => bgm.user)
-  bgm: Bgm
+  @OneToMany(() => Bgm, bgm => bgm.user)
+  bgms: Bgm[]
 
   @Column({
     type: 'varchar',
@@ -134,12 +127,12 @@ export class User {
   desc: string // 描述
 
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify({
-      note: '',
-      course: '',
-      procedure: ''
-    })
+    type: 'simple-json'
+    // default: JSON.stringify({
+    //   note: '',
+    //   course: '',
+    //   procedure: ''
+    // })
   })
   dir: Dir
 
@@ -151,20 +144,20 @@ export class User {
   dirname: string
 
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify({})
+    type: 'simple-json'
+    // default: JSON.stringify({})
   })
   config: UserConfig
 
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify([])
+    type: 'simple-json'
+    // default: JSON.stringify([])
   })
   submissionConfig: SubmissionConfig[]
 
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify([])
+    type: 'simple-json'
+    // default: JSON.stringify([])
   })
   subscriptionConfig: SubscriptionConfig[]
 

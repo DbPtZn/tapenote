@@ -1,5 +1,13 @@
 import { User } from 'src/user/entities/user.entity'
-import { Column, CreateDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
+} from 'typeorm'
 
 export interface BgmItem {
   id: string
@@ -13,14 +21,28 @@ export class Bgm {
 
   @Column() userId: string // 用户 id
 
-  @OneToOne(() => User, user => user.bgm)
+  @ManyToOne(() => User, user => user.bgms)
   user: User
 
   @Column({
-    type: 'simple-json',
-    default: JSON.stringify([])
+    type: 'varchar',
+    length: 255,
+    default: ''
   })
-  list: BgmItem[]
+  name: string
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    default: ''
+  })
+  audio: string
+
+  @Column({
+    type: 'float',
+    default: 0
+  })
+  duration: number
 
   @CreateDateColumn()
   createAt: Date

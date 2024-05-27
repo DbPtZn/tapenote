@@ -78,11 +78,8 @@ dependencies:
     specifier: ^0.2.2
     version: 0.2.2
   sherpa-onnx-node:
-    specifier: ^1.0.25
-    version: 1.0.25
-  sherpa-onnx-win-x64:
-    specifier: ^1.0.25
-    version: 1.0.25
+    specifier: ^1.0.27
+    version: 1.0.27
   tslib:
     specifier: ^2.6.2
     version: 2.6.2
@@ -4432,54 +4429,55 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /sherpa-onnx-darwin-arm64@1.0.25:
-    resolution: {integrity: sha512-GIcOnnokIkPWLF9SDGVCxQbi36zOqnKrBPkjJbQVden8Zca2dhm+GfcQZVpaSaJB4tIqnzhy48yGJdJWpUfCQA==}
+  /sherpa-onnx-darwin-arm64@1.0.27:
+    resolution: {integrity: sha512-NX+6+vdKsR3A57ra/Mu49pUqpXEapAfnzThtEVWHQljvC1jr3uYhApHvdAGwVs2sK2MFIdREAjB7Mbo4nxQGTg==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     dev: false
     optional: true
 
-  /sherpa-onnx-darwin-x64@1.0.25:
-    resolution: {integrity: sha512-jRnN1HTjoS967dNjrCUedsajmQW9v5b5JDcrmdeHOOV8//g0xiMIE8ZzC9+NsN3zoXcFiwy7XUH6sKcwg0ahPg==}
+  /sherpa-onnx-darwin-x64@1.0.27:
+    resolution: {integrity: sha512-f7ouspNmJ+ewD6V0zJknms7m+nV3mLPU+EtoZF5ehKuaY+n/SEvvjCH49OeiPHP85ZBpszDGsEpgsrT/j4wofA==}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
     dev: false
     optional: true
 
-  /sherpa-onnx-linux-arm64@1.0.25:
-    resolution: {integrity: sha512-kCc7HG8mF8xczrU5meWabHpF+rVrovPEDZ8pKHw5kLZZvY9hWVX97RskIXt477mfVkdzmHDbrwXjQBsyTJhViw==}
+  /sherpa-onnx-linux-arm64@1.0.27:
+    resolution: {integrity: sha512-11nJd+W74YAuZqENrG5UEn2RZYqf2hAasGsneUc3ugLPF0+rpXqZNTKaUvH266WALonFjmNFIvaq5rXnESGrIA==}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     dev: false
     optional: true
 
-  /sherpa-onnx-linux-x64@1.0.25:
-    resolution: {integrity: sha512-tbIdqhZDM93g0iMjbNiKuhXPPopdDC6SCv6Ijtxs4ohTmk3LlSUWm0pW1BTDbo2fwY/d1UDkBnXj1Rpp7lnlZA==}
+  /sherpa-onnx-linux-x64@1.0.27:
+    resolution: {integrity: sha512-RGs9fohKzNE7CUoYMhFiDYfJ2KRQ1VsKP3eDmiN0H3/yFWZoFoN2wEdDTLcsynJiQVMG605xIZhZel8jcPaYOw==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     dev: false
     optional: true
 
-  /sherpa-onnx-node@1.0.25:
-    resolution: {integrity: sha512-NDP9aeDJqRAyXrcU+n7T441NYAf2UStCE/pQbLXGY8hV2U8fwWLrvmw8Wrg1bS3DQnCJH9QbYGQ+WH+jKLt2wQ==}
+  /sherpa-onnx-node@1.0.27:
+    resolution: {integrity: sha512-RELXLFlB7Vd+ckOU8NmI2PmFEn2ToiJB0eysaAx7v0X/scGOj791VUsvPyAT4m5JQF/VRLBGBVzwkMTeJw867Q==}
     optionalDependencies:
-      sherpa-onnx-darwin-arm64: 1.0.25
-      sherpa-onnx-darwin-x64: 1.0.25
-      sherpa-onnx-linux-arm64: 1.0.25
-      sherpa-onnx-linux-x64: 1.0.25
-      sherpa-onnx-win-x64: 1.0.25
+      sherpa-onnx-darwin-arm64: 1.0.27
+      sherpa-onnx-darwin-x64: 1.0.27
+      sherpa-onnx-linux-arm64: 1.0.27
+      sherpa-onnx-linux-x64: 1.0.27
+      sherpa-onnx-win-x64: 1.0.27
     dev: false
 
-  /sherpa-onnx-win-x64@1.0.25:
-    resolution: {integrity: sha512-aycZ/NBr0HTxX6CJwtE/4d0CUld2+G+JbEkXGTW8TmhQYJqxz3GJKonJbA9BUH5gxpYp/LZtNh0+vC8d58KdtA==}
+  /sherpa-onnx-win-x64@1.0.27:
+    resolution: {integrity: sha512-IXkGn/XNmZ5bJ4Pd1vAa5i1WwlmSTWajkD50Eae75tjii1PbYY/AI15MyHBSfZhcIxc5dHW6sTXcYiceo9KS5Q==}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
     dev: false
+    optional: true
 
   /siginfo@2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}

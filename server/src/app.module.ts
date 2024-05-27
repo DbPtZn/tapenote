@@ -11,7 +11,6 @@ import { FragmentModule } from './fragment/fragment.module'
 import { ProjectModule } from './project/project.module'
 import { SherpaModule } from './sherpa/sherpa.module'
 import { StorageModule } from './storage/storage.module'
-import { TimbreModule } from './timbre/timbre.module'
 import { TrashModule } from './trash/trash.module'
 import { UploadModule } from './upload/upload.module'
 import { UserModule } from './user/user.module'
@@ -42,9 +41,9 @@ import { SpeakerModule } from './speaker/speaker.module'
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         // FIXME 警告：设置 synchronize: true 不能被用于生产环境，否则您可能会丢失生产环境数据
-        // const config = configService.get<ReturnType<typeof databaseConfig>>('database')
+        const config = configService.get<ReturnType<typeof databaseConfig>>('database')
+        console.log(config)
         console.log('NODE_ENV:' + process.env.NODE_ENV)
-        // console.log(config)
         if (process.env.NODE_ENV === 'electron') {
           return {
             type: 'better-sqlite3', // 数据库类型
@@ -83,7 +82,6 @@ import { SpeakerModule } from './speaker/speaker.module'
     SherpaModule,
     ProjectModule,
     FfmpegModule,
-    TimbreModule,
     BgmModule,
     UserLoggerModule,
     LoggerModule,
