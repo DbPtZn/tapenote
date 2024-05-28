@@ -7,7 +7,7 @@
     "dev": "cross-env NODE_ENV=electron vite",
     "dev:web": "vite --config vite-web.config.ts",
     "build": "vue-tsc && vite build && electron-builder",
-    "build:web": "vue-tsc && vite build --config vite-web.config.ts",
+    "build:web": "vue-tsc && vite build --config vite-web.config.ts --mode production",
     "build:editor": "vite build --config build-editor.config.ts",
     "build:container": "vite build --config build-container.config.ts",
     "preview": "vite preview"
