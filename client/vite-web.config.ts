@@ -1,6 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
 import path from 'node:path'
-import electron from 'vite-plugin-electron/simple'
 import vue from '@vitejs/plugin-vue'
 import eslintPlugin from 'vite-plugin-eslint'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'

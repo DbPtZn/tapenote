@@ -52,5 +52,4 @@ export function initServerProcess() {
 
 export function quitServerProcess() {
   serverProcess?.kill()
-  // serverProcess?.terminate()
 }

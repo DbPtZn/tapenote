@@ -74,11 +74,11 @@ app.on('activate', () => {
 
 app.whenReady().then(() => {
   initServerProcess()
-  // createAsr()
   // createPunctWorker()
   // createAsrWorker()
   // createTtsWorker()
-  createSpeakerIdentWorker()
+  // createSpeakerIdentWorker()
+  // createVadWorker()
   createWindow()
 })
 function createPunctWorker() {
@@ -102,11 +102,17 @@ function createPunctWorker() {
   })
 }
 
-function createSpeakerIdentWorker() {
-  const filepath = path.join(process.cwd(), 'workers', 'speaker_ident-worker.mjs')
+function createVadWorker() {
+  const filepath = path.join(process.cwd(), 'workers', 'vad-worker.mjs')
+  console.log('vad test')
+  // console.log(filepath)
   const worker = new Worker(filepath, {
-    workerData: {}
+    workerData: {
+      info: 'vad'
+    }
   })
+  // const worker = child_process.fork(filepath)
+  // worker.send({ info: 'vad'})
   worker.on('message', (message: any) => {
     console.log('接收到子线程返回的结果：-----------------------------------------')
     if (message.error) {
@@ -115,7 +121,29 @@ function createSpeakerIdentWorker() {
       console.log('说话人识别结果：')
       console.log(message)
     }
-    worker.terminate()
+    // worker.terminate()
+  })
+}
+
+function createSpeakerIdentWorker() {
+  const filepath = path.join(process.cwd(), 'workers', 'speaker_ident-worker.mjs')
+  console.log('speaker ident test')
+  console.log(filepath)
+  // const worker = new Worker(filepath, {
+  //   workerData: {
+  //     info: 'speaker_ident'
+  //   }
+  // })
+  const worker = child_process.fork(filepath)
+  worker.send({ info: 'speaker ident'})
+  worker.on('message', (message: any) => {
+    console.log('接收到子线程返回的结果：-----------------------------------------')
+    if (message.error) {
+      console.log('说话人识别发生错误：' + message.error)
+    } else {
+      console.log('说话人识别结果：')
+      console.log(message)
+    }
   })
 }
 
@@ -167,43 +195,6 @@ function createTtsWorker() {
     worker.terminate()
   })
 }
-
-// function createAsr() {
-//   const audiopath = 'C:/Users/admin/Desktop/tapenote/client/assets/public/5wWbTjc3/KucHgdUy/audio/1ad7fe25-3ea9-44e1-b0dc-b98b4462b35d.wav'
-//   const recognizer = new sherpa_onnx.OfflineRecognizer(asrConfig)
-//   const start = Date.now()
-
-//   let stream
-//   try {
-//     stream = recognizer.createStream()
-//   } catch (error) {
-//     console.log('create stream error')
-//     throw error
-//   }
-//   let wave
-//   try {
-//     wave = sherpa_onnx.readWave(audiopath)
-//   } catch (error) {
-//     console.log('读取失败')
-//     console.log(error)
-//     throw error
-//   }
-//   stream.acceptWaveform({ sampleRate: wave.sampleRate, samples: wave.samples })
-
-//   recognizer.decode(stream)
-//   const result = recognizer.getResult(stream)
-//   const stop = Date.now()
-//   console.log('Done')
-
-//   const elapsed_seconds = (stop - start) / 1000
-//   const duration = wave.samples.length / wave.sampleRate
-//   const real_time_factor = elapsed_seconds / duration
-
-//   console.log('Wave duration', duration.toFixed(3), 'secodns')
-//   console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
-//   console.log(`RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`, real_time_factor.toFixed(3))
-//   console.log('result\n', result)
-// }
 
 const ttsConfig = {
   model: {

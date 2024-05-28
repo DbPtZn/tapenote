@@ -317,7 +317,7 @@ export function useItemListDropDown() {
             projectStore.createBy({
               folderId,
               sourceId: projectId,
-              library: lib,
+              lib: lib,
               account: account.value,
               hostname: hostname.value
             }).then(res => {

@@ -68,6 +68,9 @@ dependencies:
   naive-ui:
     specifier: ^2.38.1
     version: 2.38.1(vue@3.4.26)
+  naudiodon2:
+    specifier: ^2.4.0
+    version: 2.4.0
   pinia:
     specifier: ^2.1.7
     version: 2.1.7(typescript@5.4.5)(vue@3.4.26)
@@ -78,8 +81,8 @@ dependencies:
     specifier: ^0.2.2
     version: 0.2.2
   sherpa-onnx-node:
-    specifier: ^1.0.27
-    version: 1.0.27
+    specifier: ^1.0.28
+    version: 1.0.28
   tslib:
     specifier: ^2.6.2
     version: 2.6.2
@@ -3741,6 +3744,10 @@ packages:
       vueuc: 0.4.58(vue@3.4.26)
     dev: false
 
+  /nan@2.19.0:
+    resolution: {integrity: sha512-nO1xXxfh/RWNxfd/XPfbIfFk5vgLsAxUR9y5O0cHMJu/AW9U95JLXqthYHjEp+8gQ5p96K9jUp8nbVOxCdRbtw==}
+    dev: false
+
   /nanoid@3.3.7:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -3753,6 +3760,14 @@ packages:
   /natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
     dev: true
+
+  /naudiodon2@2.4.0:
+    resolution: {integrity: sha512-i8JBZw3quCslQfAqZwf3uFcmm9eIu1Lihdz2F36pt5ksNbTv2yaeHjn/96ahSEF8MelKQzIbQe6uvXyjTIipUQ==}
+    requiresBuild: true
+    dependencies:
+      bindings: 1.5.0
+      segfault-handler: 1.3.0
+    dev: false
 
   /negotiator@0.6.3:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
@@ -4374,6 +4389,14 @@ packages:
     resolution: {integrity: sha512-MW8Qs6vbzo0pHmDpFSYPna+lwpZ6Zk1ancbajw/7E8TKtHdV+1DfZZD+kKJEhG/cAoB/i+LiT+5msZOqj0DwRA==}
     dev: false
 
+  /segfault-handler@1.3.0:
+    resolution: {integrity: sha512-p7kVHo+4uoYkr0jmIiTBthwV5L2qmWtben/KDunDZ834mbos+tY+iO0//HpAJpOFSQZZ+wxKWuRo4DxV02B7Lg==}
+    requiresBuild: true
+    dependencies:
+      bindings: 1.5.0
+      nan: 2.19.0
+    dev: false
+
   /semver-compare@1.0.0:
     resolution: {integrity: sha512-YM3/ITh2MJ5MtzaM429anh+x2jiLVjqILF4m4oyQB18W7Ggea7BfqdH/wGMK7dDiMghv/6WG7znWMwUDzJiXow==}
     requiresBuild: true
@@ -4429,50 +4452,50 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /sherpa-onnx-darwin-arm64@1.0.27:
-    resolution: {integrity: sha512-NX+6+vdKsR3A57ra/Mu49pUqpXEapAfnzThtEVWHQljvC1jr3uYhApHvdAGwVs2sK2MFIdREAjB7Mbo4nxQGTg==}
+  /sherpa-onnx-darwin-arm64@1.0.28:
+    resolution: {integrity: sha512-avO2QE5IT3ycMPxihDEBLOlMyHxrzaCdOLbz0+0aJJuniVyZV66LfxtLLUJ1ExrWtbJTETtT5gRlOTdJKezfIw==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     dev: false
     optional: true
 
-  /sherpa-onnx-darwin-x64@1.0.27:
-    resolution: {integrity: sha512-f7ouspNmJ+ewD6V0zJknms7m+nV3mLPU+EtoZF5ehKuaY+n/SEvvjCH49OeiPHP85ZBpszDGsEpgsrT/j4wofA==}
+  /sherpa-onnx-darwin-x64@1.0.28:
+    resolution: {integrity: sha512-dKEmZxi2noLQH1CGN+APvg25bO9f13rPjzSDFL/1ZR7kix042Knr+OceqjRT2+AzxkLsuqRFhsfBE7NqvrnqwA==}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
     dev: false
     optional: true
 
-  /sherpa-onnx-linux-arm64@1.0.27:
-    resolution: {integrity: sha512-11nJd+W74YAuZqENrG5UEn2RZYqf2hAasGsneUc3ugLPF0+rpXqZNTKaUvH266WALonFjmNFIvaq5rXnESGrIA==}
+  /sherpa-onnx-linux-arm64@1.9.24:
+    resolution: {integrity: sha512-5RP5uGnNTPYZ2VyJh60hRJKBpowO4I5XO6uHXM97SOnZK9mmYiySbR+TTPB7KaHZLMHILyrIKqp71JZQ1OQOlg==}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     dev: false
     optional: true
 
-  /sherpa-onnx-linux-x64@1.0.27:
-    resolution: {integrity: sha512-RGs9fohKzNE7CUoYMhFiDYfJ2KRQ1VsKP3eDmiN0H3/yFWZoFoN2wEdDTLcsynJiQVMG605xIZhZel8jcPaYOw==}
+  /sherpa-onnx-linux-x64@1.0.28:
+    resolution: {integrity: sha512-dNJZD4pcJPiPWG+oqbc7B5abrDej17+7dcG6Y+DXDI0GiTVczvRmmHzxYPmDmFGhxm44gu7Tsk9rlN4VL4Fm6g==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     dev: false
     optional: true
 
-  /sherpa-onnx-node@1.0.27:
-    resolution: {integrity: sha512-RELXLFlB7Vd+ckOU8NmI2PmFEn2ToiJB0eysaAx7v0X/scGOj791VUsvPyAT4m5JQF/VRLBGBVzwkMTeJw867Q==}
+  /sherpa-onnx-node@1.0.28:
+    resolution: {integrity: sha512-UNnnq84nRge8cX+EhqUgfYwSk0Gdje1J12Y8pF0RC5KfTIfh480QeH6vfTL+6s/WvKHuMrrXBvUipb54JZ5Bcg==}
     optionalDependencies:
-      sherpa-onnx-darwin-arm64: 1.0.27
-      sherpa-onnx-darwin-x64: 1.0.27
-      sherpa-onnx-linux-arm64: 1.0.27
-      sherpa-onnx-linux-x64: 1.0.27
-      sherpa-onnx-win-x64: 1.0.27
+      sherpa-onnx-darwin-arm64: 1.0.28
+      sherpa-onnx-darwin-x64: 1.0.28
+      sherpa-onnx-linux-arm64: 1.9.24
+      sherpa-onnx-linux-x64: 1.0.28
+      sherpa-onnx-win-x64: 1.0.28
     dev: false
 
-  /sherpa-onnx-win-x64@1.0.27:
-    resolution: {integrity: sha512-IXkGn/XNmZ5bJ4Pd1vAa5i1WwlmSTWajkD50Eae75tjii1PbYY/AI15MyHBSfZhcIxc5dHW6sTXcYiceo9KS5Q==}
+  /sherpa-onnx-win-x64@1.0.28:
+    resolution: {integrity: sha512-SNHvCawVlzVS+2SIb/9cCRo/Jnrkg2a19S/vaxbTRB2SB9HwTrRgstfUvSEN08D/6EhWw8ftUoyBr4vKWCR+Gw==}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
