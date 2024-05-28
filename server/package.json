@@ -5,6 +5,7 @@
   "author": "boxin du",
   "license": "GPL-3.0-only",
   "scripts": {
+    "start:prod": "cross-env NODE_ENV=production node dist/main",
     "build": "nest build",
     "build:electron": "cross-env NODE_ENV=electron nest build --webpack --webpackPath=./webpack.config.js",
     "webpack": "nest build",
@@ -15,7 +16,6 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "cross-env NODE_ENV=production node dist/main",
     "start:electron": "cross-env NODE_ENV=electron node process/server.cjs",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
