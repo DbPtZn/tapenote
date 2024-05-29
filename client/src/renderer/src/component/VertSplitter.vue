@@ -1,6 +1,6 @@
 /** 组件宽度控制器 垂直分隔条 */
 <script setup lang="ts">
-import { fromEvent } from '@tanbo/stream'
+import { Subscription, fromEvent } from '@tanbo/stream'
 import { onMounted, onUnmounted, ref } from 'vue'
 import elementResizeDetector from 'element-resize-detector'
 const erd = elementResizeDetector()
@@ -8,6 +8,7 @@ const emits = defineEmits(['onResizeStart', 'onResize', 'onResizeEnd'])
 const controllerRef = ref()
 const parentContainer = ref()
 const containerWidth = ref()
+let subs: Subscription[] = []
 onMounted(() => {
   parentContainer.value = controllerRef.value.parentElement.parentElement
   if (parentContainer.value) {
@@ -24,6 +25,7 @@ onUnmounted(() => {
       console.log(e)
     }
   }
+  subs.forEach(i => i.unsubscribe())
 })
 /** 遮罩层 */
 const maskVisible = ref(false)
@@ -33,19 +35,36 @@ const handleResize = (e: MouseEvent) => {
   document.body.style.cursor = 'e-resize'
   emits('onResizeStart')
   const initial_position = e.clientX // 鼠标初始位置
-  const onMouseMove = fromEvent<MouseEvent>(document, 'mousemove').subscribe((e) => {
-    const end_position = e.clientX // 鼠标移动后的位置
-    const distance = initial_position - end_position // 鼠标移动的距离
-    const distance_pct = (distance / containerWidth.value) * 100
-    emits('onResize', Math.round(distance_pct))
-  })
-  const onMouseUp = fromEvent(document, 'mouseup').subscribe(() => {
-    maskVisible.value = false
-    onMouseMove.unsubscribe()
-    onMouseUp.unsubscribe()
-    document.body.style.cursor = 'default'
-    emits('onResizeEnd')
-  })
+  if(subs.length === 0) {
+    subs.push(
+      fromEvent<MouseEvent>(document, 'mousemove').subscribe(e => {
+        const end_position = e.clientX // 鼠标移动后的位置
+        const distance = initial_position - end_position // 鼠标移动的距离
+        const distance_pct = (distance / containerWidth.value) * 100
+        emits('onResize', Math.round(distance_pct))
+      }),
+      fromEvent(document, 'mouseup').subscribe(() => {
+        maskVisible.value = false
+        subs.forEach(i => i.unsubscribe())
+        subs = []
+        document.body.style.cursor = 'default'
+        emits('onResizeEnd')
+      })
+    )
+  }
+  // const onMouseMove = fromEvent<MouseEvent>(document, 'mousemove').subscribe(e => {
+  //   const end_position = e.clientX // 鼠标移动后的位置
+  //   const distance = initial_position - end_position // 鼠标移动的距离
+  //   const distance_pct = (distance / containerWidth.value) * 100
+  //   emits('onResize', Math.round(distance_pct))
+  // })
+  // const onMouseUp = fromEvent(document, 'mouseup').subscribe(() => {
+  //   maskVisible.value = false
+  //   onMouseMove.unsubscribe()
+  //   onMouseUp.unsubscribe()
+  //   document.body.style.cursor = 'default'
+  //   emits('onResizeEnd')
+  // })
 }
 </script>
 

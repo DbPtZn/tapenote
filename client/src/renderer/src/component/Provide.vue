@@ -1,6 +1,6 @@
 <!-- eslint-disable prettier/prettier -->
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { FractalContainerConfig, ContainerTypeEnum } from '..'
 import { onErrorCaptured } from 'vue';
 const props = defineProps<{
@@ -14,9 +14,9 @@ onMounted(() => {
     if (child.value) {
       child.value = props.node
       // 赋能 child 查询 parent 的能力
-      child.value!.parent = props.parent
+      // child.value!.parent = props.parent
       // 赋能节点查询自身 Dom 的能力
-      child.value!.element = (elementRef.value?.parentElement as HTMLElement) || null
+      child.value!.element = (elementRef.value?.parentElement as HTMLElement) || undefined
       /** 自检测：移除空容器 */
       if (child.value!.type === ContainerTypeEnum.SIMPLE && child.value!.children.length === 0) {
         console.log('移除空容器')
@@ -27,9 +27,19 @@ onMounted(() => {
     console.log(error)
   }
 
+  onUnmounted(() => {
+    // TODO 是否应该消除掉这些引用以释放内存 ？
+    // if(child.value) {
+    //   child.value.parent = undefined
+    //   child.value.element = undefined
+    //   child.value.children.length = 0
+    //   child.value = undefined
+    // }
+  })
+
   onErrorCaptured(error => {
     console.log('provide error')
-    console.log(error)
+    console.error(error)
   })
   /** 
     // 非必要的嵌套节点在数据变化时并没有被重新渲染所以无法在此处触发自检测

@@ -1,5 +1,5 @@
 /**
- * 目标：在前端对笔记/微课数据进行打包（文本、图片、音频），发布到博客管理器中。
+ * 在前端对笔记/微课数据进行打包（文本、图片、音频），发布到博客管理器中
  * 1. 获取目标富文本数据
  * 2. 实例一个新的编辑器（格式、组件等必须保持一致），接收上述数据
  * 3. 通过图片组件将图片转化成 base64，重新导出富文本数据（base64版本）
@@ -62,46 +62,39 @@ interface PackData {
   blog: string // 博客地址
   msg: string // 提交时的备注信息
 }
-// const __rootdirname = process.cwd()
 export class Pack {
-  // editor!: Editor
   constructor() {}
 
-  /** 获取内容数据 */
+  /** 获取内容数据: 将 html 数据中的图片转化成 base64 后重新导出 html 数据以及相关的样式资源 */
   getContent(content: string) {
-    return new Promise<{ content: string, resources: Resources }>((resolve, reject) => {
-      const config = getEditorConfig(content)
-      const editor = createEditor(config)
-      const host = document.createElement('div')
-      editor.mount(host)
+    return new Promise<{ content: string; resources: Resources }>((resolve, reject) => {
+      const config = getEditorConfig(content) // 获取导出模式的编辑器配置
+      const editor = createEditor(config) // 创建编辑器
+      const host = document.createElement('div') // 创建节点
+      editor.mount(host) // 挂载编辑器
 
-      const img2base64 = editor.get(Img2base64Service)
+      const img2base64 = editor.get(Img2base64Service) // 获取 img2base64 依赖注入实例
 
       editor.onReady.subscribe(() => {
-        // 1s 后如果没有图片转换任务，则说明已经转换完成或者不存在需要替换的图片组件
+        // 编辑器实例化 1s 后如果没有图片转换任务，则意味着已经转换完成或者不存在需要替换的图片组件，此时直接导出内容
         setTimeout(() => {
           if (img2base64.tasks === 0) {
-            // console.log('ready')
             resolve({ content: editor.getHTML(), resources: editor.getResources() })
             editor.destroy()
           }
         }, 1000)
       })
 
-      // Promise.all(img2base64.promiseSequence).then(() => {
-      //   console.log('all finish')
-      // })
-
       // 图片转换完成时：
       img2base64.onFinish.subscribe(() => {
-        console.log('base64 img replace finish')
+        console.log('Base64 img replace finish!')
         // 导出富文本数据
         resolve({ content: editor.getHTML(), resources: editor.getResources() })
         editor.destroy()
       })
 
       img2base64.onError.subscribe(error => {
-        console.log(error)
+        console.error(error)
         reject(error)
       })
     })
@@ -109,21 +102,9 @@ export class Pack {
 
   toFiles(data: PackData) {
     const {
-      title,
-      content,
-      audio,
-      duration,
-      promoterSequence,
-      keyframeSequence,
-      subtitleSequence,
-      subtitleKeyframeSequence,
-      type,
-      site,
-      code,
-      penname,
-      email,
-      blog,
-      msg
+      title, content, audio, duration,
+      promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence,
+      type, site, code, penname, email, blog, msg
     } = data
     const promoseArray = [
       new Promise<{ type: string; file: Blob }>((resolve, reject) => {
@@ -177,92 +158,88 @@ export class Pack {
   }
 
   async download(data: PackData) {
-    // try {
-    //   const zip = new jszip()
-    //   const {
-    //     title, content,
-    //     audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence,
-    //     type, penname, email, blog, msg
-    //   } = data
-    //   // 1.导出内容数据
-    //   const { content: contentbase64, resources } = await this.getContent(content)
-    //   // console.log(resources)
-    //   // 2.获取 html 模板并插入数据，导出 html 文件
-    //   await fetch('./template/template.ejs')
-    //   .then(response => response.text())
-    //   .then(template => {
-    //       const productData = { type, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence }
-    //       // 渲染模板
-    //       const renderedHtml = ejs.render(template, {
-    //         type: type === 'note' ? '文章' : '微课',
-    //         title: title || '',
-    //         content: contentbase64,
-    //         penname: penname || '',
-    //         email: email || '',
-    //         blog: blog || '',
-    //         version: '1.0.0',
-    //         wordage: content.replace(/<[^>]+>/g, '').length,
-    //         duration: duration || 0,
-    //         msg: msg || '',
-    //         productData: JSON.stringify(productData),
-    //       })
-    //       // 打包 html文件
-    //       // console.log('renderedHtml', renderedHtml)
-    //       zip.file('index.html', renderedHtml)
-    //   })
-    //   // 3.获取 js 模板
-    //   const jsFiles = ['anime.min.js', 'component.js', 'main.js', 'player.js', 'presets.js', 'stream.js'].map(filename => {
-    //     return fetch(`./template/scripts/${filename}`).then(response => response.blob()).then(blob => { zip.folder('scripts')?.file(`${filename}`, blob) })
-    //   })
-    //   await Promise.all(jsFiles)
-    //   // 4.获取 css 模板
-    //   const cssFiles = ['base.css', 'dark.css', 'edit-dark.css', 'index.css', 'light.css', 'textbus.cmpt.css'].map(filename => {
-    //     return fetch(`./template/styles/${filename}`).then(response => response.blob()).then(blob => { zip.folder('styles')?.file(`${filename}`, blob) })
-    //   })
-    //   await Promise.all(cssFiles)
-    //   zip.folder('styles')?.file('styleSheet.css', resources.styleSheet)
-    //   // 5.获取音频文件
-    //   if (audio) {
-    //     await fetch(audio).then(response => response.blob()).then(blob => {
-    //       zip.file('audio.wav', blob)
-    //     })
-    //   }
-    //   // 6.打包课程所需的元数据
-    //   // const dto = { type, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence }
-    //   // const jsonString = JSON.stringify(dto)
-    //   // zip.file('metadata.json', jsonString)
-
-    //   // 7.打包 favicon 图标
-    //   await fetch(`./template/favicon.ico`).then(response => response.blob()).then(blob => { zip.file(`favicon.ico`, blob) })
-
-    //   // 8.导出默认配置
-    //   // const defaultConfig = { type, penname, email, blog, msg }
-
-    //   // 生成 ZIP 文件
-    //   return zip
-    //     .generateAsync({ type: 'blob' })
-    //     .then(blob => {
-    //       // 创建 URL 对象
-    //       const url = URL.createObjectURL(blob)
-
-    //       // 创建 <a> 标签并设置其属性
-    //       const link = document.createElement('a')
-    //       link.href = url
-    //       link.download = `${title.slice(0, 24)}-${dayjs(Date.now()).format("YYMMDDHHmmss")}.zip` // 设置下载的文件名
-
-    //       // 模拟点击 <a> 标签以触发下载
-    //       link.click()
-
-    //       // 清理 URL 对象
-    //       URL.revokeObjectURL(url)
-    //     })
-    //     .catch(error => {
-    //       console.error('Error generating ZIP:', error)
-    //     })
-    // } catch (error) {
-    //   console.error('Error downloading files:', error)
-    //   throw error
-    // }
+    try {
+      const zip = new jszip()
+      const {
+        title, content,
+        audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence,
+        type, penname, email, blog, msg
+      } = data
+      // 1.导出内容数据
+      const { content: contentbase64, resources } = await this.getContent(content)
+      // console.log(resources)
+      // 2.获取 html 模板并插入数据，导出 html 文件
+      await fetch('./template/template.html')
+      .then(response => response.text())
+      .then(template => {
+          // const productData = { type, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence }
+          // 渲染模板
+          // const renderedHtml = ejs.render(template, {
+          //   type: type === 'note' ? '文章' : '微课',
+          //   title: title || '',
+          //   content: contentbase64,
+          //   penname: penname || '',
+          //   email: email || '',
+          //   blog: blog || '',
+          //   version: '1.0.0',
+          //   wordage: content.replace(/<[^>]+>/g, '').length,
+          //   duration: duration || 0,
+          //   msg: msg || '',
+          //   productData: JSON.stringify(productData),
+          // })
+          // 打包 html文件
+          // console.log('renderedHtml', renderedHtml)
+          zip.file('index.html', template)
+      })
+      // 3.获取 js 模板
+      const jsFiles = ['anime.min.js', 'component.js', 'main.js', 'player.js', 'presets.js', 'stream.js'].map(filename => {
+        return fetch(`./template/scripts/${filename}`).then(response => response.blob()).then(blob => { zip.folder('scripts')?.file(`${filename}`, blob) })
+      })
+      await Promise.all(jsFiles)
+      // 4.获取 css 模板
+      const cssFiles = ['base.css', 'dark.css', 'edit-dark.css', 'index.css', 'light.css', 'textbus.cmpt.css'].map(filename => {
+        return fetch(`./template/styles/${filename}`).then(response => response.blob()).then(blob => { zip.folder('styles')?.file(`${filename}`, blob) })
+      })
+      await Promise.all(cssFiles)
+      zip.folder('styles')?.file('styleSheet.css', resources.styleSheet)
+      // 5.获取音频文件
+      if (audio) {
+        await fetch(audio).then(response => response.blob()).then(blob => {
+          zip.file('audio.wav', blob)
+        })
+      }
+      // 6.打包课程所需的元数据
+      const version = '1.0.0' // 应该从环境变量中读取
+      const wordage = content.replace(/<[^>]+>/g, '').length
+      const dto = { type, title, content: contentbase64, penname, email, blog, version, wordage, duration, msg, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence }
+      const jsonString = JSON.stringify(dto)
+      zip.file('metadata.json', jsonString)
+      // 7.打包 favicon 图标
+      await fetch(`./template/favicon.ico`).then(response => response.blob()).then(blob => { zip.file(`favicon.ico`, blob) })
+      // 8.导出默认配置
+      // const defaultConfig = { type, penname, email, blog, msg }
+      // 生成 ZIP 文件
+      return zip
+        .generateAsync({ type: 'blob' })
+        .then(blob => {
+          // 创建 URL 对象
+          const url = URL.createObjectURL(blob)
+          // 创建 <a> 标签并设置其属性
+          const link = document.createElement('a')
+          link.href = url
+          link.download = `${title.slice(0, 24)}-${dayjs(Date.now()).format("YYMMDDHHmmss")}.zip` // 设置下载的文件名
+          // 模拟点击 <a> 标签以触发下载
+          link.click()
+          // 清理 URL 对象
+          URL.revokeObjectURL(url)
+        })
+        .catch(error => {
+          console.error('Error generating ZIP:', error)
+        })
+    } catch (error) {
+      console.error('Error downloading files:', error)
+      throw error
+    }
   }
 
   submit(data: PackData) {

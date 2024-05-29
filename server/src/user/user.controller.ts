@@ -23,7 +23,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @Get(`${REST.R}/dir`)
   async getUserDir(@Req() req, @Res() res) {
-    const dir = await this.userService.getDirById(req.user._id)
+    const dir = await this.userService.getDirById(req.user.id)
     if (!dir) {
       return res.status(401).send('权限不足，获取用户目录信息失败！')
     }
@@ -34,9 +34,10 @@ export class UserController {
   @Get(`${REST.R}/info`)
   async getUserInfo(@Req() req, @Res() res) {
     try {
-      const info = await this.userService.getInfoById(req.user._id, req.user.dirname)
+      console.log(req.user.account)
+      const info = await this.userService.getInfoById(req.user.id, req.user.dirname)
       info.avatar = info.avatar ? '/public' + info.avatar.split('public')[1] : ''
-      // console.log(info)
+      console.log(info)
       return res.status(200).send(info)
     } catch (error) {
       return res.status(400).send('获取用户信息失败！' + error.message)
@@ -49,7 +50,7 @@ export class UserController {
     console.log('更新用户数据：')
     console.log(updateUserDto)
     try {
-      const updateAt = await this.userService.updateInfo(updateUserDto, req.user._id)
+      const updateAt = await this.userService.updateInfo(updateUserDto, req.user.id)
       res.status(200).send(updateAt)
     } catch (error) {
       res.status(400).send(error.message)
@@ -61,7 +62,7 @@ export class UserController {
   async updatePwd(@Body() updateUserPwdDto: UpdateUserPwdDto, @Req() req, @Res() res) {
     console.log('更新用户密码：' + updateUserPwdDto)
     try {
-      const updateAt = await this.userService.updatePwd(updateUserPwdDto, req.user._id)
+      const updateAt = await this.userService.updatePwd(updateUserPwdDto, req.user.id)
       res.status(200).send(updateAt)
     } catch (error) {
       res.status(400).send(error.message)
@@ -72,7 +73,7 @@ export class UserController {
   @Patch(`${REST.U}/submission/add`)
   async addSubmissionConfig(@Req() req, @Res() res) {
     try {
-      const result = await this.userService.addSubmissionConfig(req.user._id)
+      const result = await this.userService.addSubmissionConfig(req.user.id)
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)
@@ -83,7 +84,7 @@ export class UserController {
   @Patch(`${REST.U}/submission/remove/:id`)
   async removeSubmissionConfig(@Param('id') id: string, @Req() req, @Res() res) {
     try {
-      const result = await this.userService.removeSubmissionConfig(id, req.user._id)
+      const result = await this.userService.removeSubmissionConfig(id, req.user.id)
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)
@@ -94,7 +95,7 @@ export class UserController {
   @Patch(`${REST.U}/submission/modify`)
   async updateSubmissionConfig(@Body() dto: UpdateUserSubmissionConfigDto, @Req() req, @Res() res) {
     try {
-      const result = await this.userService.updateSubmissionConfig(dto, req.user._id)
+      const result = await this.userService.updateSubmissionConfig(dto, req.user.id)
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)
@@ -105,7 +106,7 @@ export class UserController {
   @Patch(`${REST.U}/subscription/add`)
   async addSubscriptionConfig(@Req() req, @Res() res) {
     try {
-      const result = await this.userService.addSubscriptionConfig(req.user._id)
+      const result = await this.userService.addSubscriptionConfig(req.user.id)
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)
@@ -116,7 +117,7 @@ export class UserController {
   @Patch(`${REST.U}/subscription/remove/:id`)
   async removeSubscriptionConfig(@Param('id') id: string, @Req() req, @Res() res) {
     try {
-      const result = await this.userService.removeSubscriptionConfig(id, req.user._id)
+      const result = await this.userService.removeSubscriptionConfig(id, req.user.id)
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)
@@ -127,7 +128,7 @@ export class UserController {
   @Patch(`${REST.U}/subscription/modify`)
   async updateSubscriptionConfig(@Body() dto: UpdateUserSubscriptionConfigDto, @Req() req, @Res() res) {
     try {
-      const result = await this.userService.updateSubscriptionConfig(dto, req.user._id)
+      const result = await this.userService.updateSubscriptionConfig(dto, req.user.id)
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)

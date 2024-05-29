@@ -51,7 +51,6 @@ export class Bridge {
     this.saveStartEvent.next('')
   }
   handleSaveEnd() {
-    // this.saveEndEvent.next('')
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.saveEndEvent.next('')
@@ -70,13 +69,8 @@ export class Bridge {
   handleSidenoteToolbarCollapse(value: boolean) {
     this.toolbarCollapseEvent.next(value)
   }
-  // aniToActive(aniId: string) {
-  //   this.animeState.setActive(aniId)
-  // }
-  // aniToInactive(aniId: string) {
-  //   this.animeState.setInactive(aniId)
-  // }
-  // locateAnimeBlock() {
 
+  // destory() {
+  //   //
   // }
 }

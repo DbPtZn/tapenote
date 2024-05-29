@@ -313,6 +313,7 @@ export function useFragment(id: string, bridge: Bridge) {
     }
     if (aud.played) {
       aud.pause()
+      aud.src = ''
       aud = null
     }
   }
@@ -432,6 +433,10 @@ export function useFragment(id: string, bridge: Bridge) {
       })
     })
   }
+
+  onUnmounted(() => {
+    player?.destory()
+  })
 
   return {
     selectedFragments,

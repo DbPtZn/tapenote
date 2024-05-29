@@ -1,0 +1,63 @@
+[data-theme="dark-theme"] [data-color="#000000"] {
+  color: #ffffff!important;
+}
+
+[data-theme="dark-theme"] [data-color="#FF5A5F"] {
+  color: #FF0000!important;
+}
+
+[data-theme="dark-theme"] [data-color="#FFA500"] {
+  color: #FF8C00!important;
+}
+
+[data-theme="dark-theme"] [data-color="#FFD700"] {
+  color: #FFFF00!important;
+}
+
+[data-theme="dark-theme"] [data-color="#008000"] {
+  color: #008000!important;
+}
+
+[data-theme="dark-theme"] [data-color="#00CED1"] {
+  color: #00FFFF!important;
+}
+
+[data-theme="dark-theme"] [data-color="#007FFF"] {
+  color: #0000FF!important;
+}
+
+[data-theme="dark-theme"] [data-color="#8A2BE2"] {
+  color: #8B008B!important;
+}
+
+[data-theme="dark-theme"] [data-bgcolor="#000000"] {
+  background-color: #ffffff!important;
+}
+
+[data-theme="dark-theme"] [data-bgcolor="#FF5A5F"] {
+  background-color: #FF0000!important;
+}
+
+[data-theme="dark-theme"] [data-bgcolor="#FFA500"] {
+  background-color: #FF8C00!important;
+}
+
+[data-theme="dark-theme"] [data-bgcolor="#FFD700"] {
+  background-color: #FFFF00!important;
+}
+
+[data-theme="dark-theme"] [data-bgcolor="#008000"] {
+  background-color: #008000!important;
+}
+
+[data-theme="dark-theme"] [data-bgcolor="#00CED1"] {
+  background-color: #00FFFF!important;
+}
+
+[data-theme="dark-theme"] [data-bgcolor="#007FFF"] {
+  background-color: #0000FF!important;
+}
+
+[data-theme="dark-theme"] [data-bgcolor="#8A2BE2"] {
+  background-color: #8B008B!important;
+}

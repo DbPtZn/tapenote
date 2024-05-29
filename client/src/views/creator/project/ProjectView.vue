@@ -150,6 +150,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
+  data.children.length = 0
   if (implementRef.value) {
     erd.uninstall(implementRef.value)
   }

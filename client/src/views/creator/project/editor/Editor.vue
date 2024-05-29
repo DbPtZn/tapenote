@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import '@textbus/editor/bundles/textbus.min.css'
-import { useThemeVars, useMessage, useLoadingBar } from 'naive-ui'
+import { useThemeVars, useMessage } from 'naive-ui'
 import { TitleInput } from './private'
 import { useToolbarResize } from '../../_hooks'
 import { computed, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
@@ -12,7 +12,6 @@ import { Editor } from '@textbus/editor'
 import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
 import { Player } from '@/editor'
-import { Input } from '@textbus/platform-browser'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string,
@@ -99,7 +98,7 @@ useEditor({
   }
   bridge.setup(editor, props.lib, editorRef.value, scrollerRef.value)
 }).catch(err => {
-  console.log(err)
+  console.error(err)
   message.error('项目打开失败！')
 })
 
@@ -206,7 +205,9 @@ onUnmounted(() => {
   try {
     // console.log('离开页面')
     editor?.destroy()
+    player?.destory()
     subs.forEach(sub => sub.unsubscribe())
+    subs.length = 0
   } catch (error) {
     message.error('编辑器销毁失败！')
   }

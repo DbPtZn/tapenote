@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { FormInst, FormItemRule, FormRules, UploadFileInfo, useMessage } from 'naive-ui'
-import useStore from '@/store';
+import useStore from '@/store'
 interface ModelType {
   type:  'human' | 'machine'
   avatar: string
@@ -10,7 +10,7 @@ interface ModelType {
   changer?: number
 }
 type Response = ModelType & Record<string, unknown>
-const message = useMessage()
+// const message = useMessage()
 const { speakerStore } = useStore()
 const props = defineProps<{
   account: string
@@ -128,8 +128,6 @@ const isLoading = ref(false)
 function handleTest(role: number) {
   // 如果存在缓存，直接播放缓存信息
   if (audioCache.has(role)) {
-    // console.log('has')
-    // console.log(audioCache.get(role))
     audioCache.get(role)?.play()
     return
   }
@@ -148,6 +146,16 @@ function handleTest(role: number) {
     }
   })
 }
+onUnmounted(() => {
+  audioCache.forEach((audio, role) => {
+    if(audio) {
+      audio.pause()
+      audio.src = ''
+    }
+    // 清除引用
+    audioCache.delete(role)
+  })
+})
 </script>
 
 <template>
