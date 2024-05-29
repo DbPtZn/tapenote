@@ -213,7 +213,8 @@ export class Pack {
       const wordage = content.replace(/<[^>]+>/g, '').length
       const dto = { type, title, content: contentbase64, penname, email, blog, version, wordage, duration, msg, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence }
       const jsonString = JSON.stringify(dto)
-      zip.file('metadata.json', jsonString)
+      // 在同源策略（CORS）下，无法从本地直接读取 json 文件，故需要通过 script 标签导入，并配置 window 全局变量的方式进行获取
+      zip.file('metadata.json', "window['metadata'] = " + jsonString)
       // 7.打包 favicon 图标
       await fetch(`./template/favicon.ico`).then(response => response.blob()).then(blob => { zip.file(`favicon.ico`, blob) })
       // 8.导出默认配置

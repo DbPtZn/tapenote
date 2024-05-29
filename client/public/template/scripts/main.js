@@ -1,40 +1,36 @@
-// const {  fromEvent, Subject, Observable } = stream
-// let data = {
-//   type: 'note',
-//   audio: './audio.wav',
-//   duration: 0,
-//   keyframeSequence: [],
-//   promoterSequence: [],
-//   subtitleKeyframeSequence: [],
-//   subtitleSequence: [],
-// };
-let data = metaData
-data.audio = 'audio.wav'
-// let config = {
-//   penname: '',
-//   blog: '',
-//   email: '',
-//   msg: '',
 
-//   wordage: 0,
-
-//   theme: 'light',
-//   isShowSubtitle: false,
-//   isShowTimer: false,
-// }
-
+function getData() {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'metadata.json'
+    script.type = 'text/javascript'
+    script.onload = function() {
+      // console.log('data load') 
+      // console.log(metadata) // data变量应该在JSON文件中定义
+      resolve(metadata)
+    }
+    document.head.appendChild(script)
+  })
+}
 document.addEventListener("DOMContentLoaded", async function() {
-  //注意： 路径是相对于执行脚本时的路径，对于本项目也就是 html 文件所在的位置
-  // await fetch('metadata.json')
-  //   .then(response => response.json())
-  //   .then(json => {
-  //     data = json
-  //     data.audio = 'audio.wav'
-  //   })
-  //   .catch(error => {
-  //     console.error('There was a problem with the fetch operation:', error);
-  //   })
+
+  const data = await getData()
+  data.audio = 'audio.wav'
   // console.log(data)
+
+  // 填入数据
+  document.querySelector('title').innerHTML = data.title || ''
+  document.getElementById('player_title').innerHTML = data.title || ''
+  document.getElementById('player_content').innerHTML = data.content || ''
+  document.getElementById('info_penname').innerHTML = data.penname || ''
+  document.getElementById('info_blog').innerHTML = data.blog || ''
+  document.getElementById('info_email').innerHTML = data.email || ''
+  document.getElementById('info_version').innerHTML = data.version || ''
+  document.getElementById('info_type').innerHTML = data.type || ''
+  document.getElementById('info_wordage').innerHTML = data.wordage || 0
+  document.getElementById('info_duration').innerHTML = data.duration || 0
+  document.getElementById('info_msg').innerHTML = data.msg || ''
+
   const scroller = document.getElementById('scroller')
   const playerRef = document.getElementById('player')
   const outline = document.getElementById('outline')

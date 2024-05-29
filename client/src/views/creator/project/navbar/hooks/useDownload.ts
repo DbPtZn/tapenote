@@ -21,6 +21,7 @@ export function useDownloadDialog() {
 
         penname: userStore.nickname,
         email: userStore.email,
+        blog: userStore. homepage,
 
         title: data.title,
         content: data.content,
