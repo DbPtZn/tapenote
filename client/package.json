@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "tapenote",
+  "author": "DbPtZn",
   "scripts": {
     "dev": "cross-env NODE_ENV=electron vite",
     "dev:web": "vite --config vite-web.config.ts",
@@ -26,7 +28,6 @@
     "better-sqlite3": "^10.0.0",
     "classnames": "^2.5.1",
     "dayjs": "^1.11.11",
-    "ejs": "^3.1.10",
     "element-resize-detector": "^1.2.4",
     "flatted": "^3.3.1",
     "js-audio-recorder": "^1.0.7",
@@ -34,7 +35,6 @@
     "lodash": "^4.17.21",
     "material-icons": "^1.13.12",
     "naive-ui": "^2.38.1",
-    "naudiodon2": "^2.4.0",
     "pinia": "^2.1.7",
     "prismjs": "^1.29.0",
     "reflect-metadata": "^0.2.2",
@@ -45,8 +45,7 @@
     "vite-plugin-native": "^0.2.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.2",
-    "vuedraggable": "4.1.0",
-    "wav": "^1.0.2"
+    "vuedraggable": "4.1.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",
@@ -61,6 +60,7 @@
     "cross-env": "^7.0.3",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
+    "prebuild-install": "^7.1.2",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "sass": "^1.76.0",
     "typescript": "^5.2.2",

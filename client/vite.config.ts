@@ -21,38 +21,38 @@ export default defineConfig(({ command, mode }) => {
         main: {
           // Shortcut of `build.lib.entry`.
           entry: 'electron/main.ts',
-          onstart({ reload }) {
-            reload()
-          },
-          vite: {
-            plugins: [
-              // native({})
-            ],
-            build: {
-              // polyfillModulePreload: true,
-              minify: false,
-              rollupOptions: {
-                // output: {
-                //   inlineDynamicImports: true
-                // },
-                // external: [
-                //   'sherpa-onnx-node',
-                // ]
-              },
-              commonjsOptions: {
-                ignoreDynamicRequires: true,
-              //   dynamicRequireRoot: path.join(__dirname, 'node_modules/.pnpm/sherpa-onnx-node'),
-              //   dynamicRequireTargets: [
-              //     '../build/Release/sherpa-onnx.node',
-              //     '../build/Debug/sherpa-onnx.node',
-              //     `./node_modules/sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
-              //     `../sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
-              //     './sherpa-onnx.node',
-              //   ],
-              //   include: ["**/*.node"]
-              }
-            }
-          }
+          // onstart({ reload }) {
+          //   reload()
+          // },
+          // vite: {
+          //   plugins: [
+          //     // native({})
+          //   ],
+          //   build: {
+          //     // polyfillModulePreload: true,
+          //     minify: false,
+          //     rollupOptions: {
+          //       // output: {
+          //       //   inlineDynamicImports: true
+          //       // },
+          //       // external: [
+          //       //   'sherpa-onnx-node',
+          //       // ]
+          //     },
+          //     commonjsOptions: {
+          //       // ignoreDynamicRequires: true,
+          //     //   dynamicRequireRoot: path.join(__dirname, 'node_modules/.pnpm/sherpa-onnx-node'),
+          //     //   dynamicRequireTargets: [
+          //     //     '../build/Release/sherpa-onnx.node',
+          //     //     '../build/Debug/sherpa-onnx.node',
+          //     //     `./node_modules/sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
+          //     //     `../sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
+          //     //     './sherpa-onnx.node',
+          //     //   ],
+          //     //   include: ["**/*.node"]
+          //     }
+          //   }
+          // }
         },
         preload: {
           // Shortcut of `build.rollupOptions.input`.
