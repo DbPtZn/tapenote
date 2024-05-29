@@ -1,6 +1,5 @@
 import { ContainerTypeEnum, FractalContainerConfig } from '..'
 import { StateTree, StoreDefinition, _ActionsTree, _GettersTree, defineStore } from 'pinia'
-// import type { StoreDefinition } from 'pinia'
 import { ShellModule } from './shell'
 
 export interface State extends StateTree {
@@ -19,13 +18,6 @@ export interface Actions extends _ActionsTree {
   set<T>(shell: ShellModule): Promise<T>
   setImplementRef(implementRef: HTMLElement): void
   setWrapperRef(wrapperRef: HTMLElement): void
-  // setShell(shell: ShellModule): void
-  // setHeight(height: number | string): void
-  // setWidth(width: number | string): void
-  // setUseAuxLines(useAuxLines: string): void
-  // getData(): FractalContainerConfig
-  // getImplementRef(): HTMLElement | undefined
-  // getWrapperRef(): HTMLElement | undefined
   getShell<T>(): T
 }
 export interface Getters extends _GettersTree<State> {
@@ -39,7 +31,6 @@ export const useRendererStore: RendererStore = defineStore('rendererStore', {
       data: {
         id: 'root-conatiner',
         type: ContainerTypeEnum.ROOT,
-        // url: '',
         cmpt: null,
         isRow: true,
         isSplitterRender: false,
@@ -58,9 +49,7 @@ export const useRendererStore: RendererStore = defineStore('rendererStore', {
   actions: {
     set<T>(shell: ShellModule): Promise<T> {
       return new Promise((resolve, reject) => {
-        // console.log('333')
         try {
-          // console.log('444')
           this.data.children = [shell.setup()!]
           this.shell = shell
           this.height = shell.height

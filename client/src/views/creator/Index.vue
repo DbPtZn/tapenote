@@ -18,10 +18,10 @@ onBeforeMount(() => {
 })
 onMounted(() => {
   implementRef.value && renderer.setImplementRef(implementRef.value) // 注入实现层
-  console.log('!--- ---启动分形容器渲染--- ---!')
+  console.log('--- --- Strat container rendering --- ---')
 })
 onUnmounted(() => {
-  // console.log('destory render page')
+  console.log('--- --- Destory render page --- ---')
 })
 function handleDrop(ev: DragEvent, targetNode: FractalContainerConfig, targetNodeParent: FractalContainerConfig, index: number, insertType: InsertType, isAutoDrop: boolean) {
   if (isAutoDrop) return // 如果内部 drop 逻辑已经处理，就不要再用外部 drop 逻辑处理
@@ -38,9 +38,6 @@ function handleDrop(ev: DragEvent, targetNode: FractalContainerConfig, targetNod
   shell.workbench.insertNode(vnode, targetNode, targetNodeParent, index, insertType)
   shell.workbench.setFocus({ node: vnode })
 }
-// function handleIframeFocus(containerId: string) {
-//   shell.workbench.setFocus({ containerId: containerId })
-// }
 function handleContainerFocus(event, node: FractalContainerConfig) {
   if (node.type === ContainerTypeEnum.CMPT) {
     shell.workbench.setFocus({ node })
