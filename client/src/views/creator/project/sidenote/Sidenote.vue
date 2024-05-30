@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, inject, reactive, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useSidenoteEditor } from './hooks/_index'
 import useStore from '@/store'
 import { useMessage, useThemeVars } from 'naive-ui'
@@ -7,6 +7,7 @@ import { Editor } from '@textbus/editor'
 import { Subscription, debounceTime } from '@tanbo/stream'
 import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
+import _ from 'lodash'
 const props = defineProps<{
   id: string
   lib: LibraryEnum
@@ -46,10 +47,17 @@ useSidenoteEditor({
   editor = edi
   lastContent = content
   subs.push(
+    editor.onChange.subscribe(() => {
+      data.value!.isSidenoteUpdating = true
+    }),
     editor.onChange.pipe(debounceTime(2000)).subscribe(ev => {
       if (props.readonly()) return
       const content = editor.getHTML()
-      if(lastContent === content) return
+      if(lastContent === content) {
+        data.value!.isSidenoteUpdating = false
+        return
+      }
+
       handleContentSave(content, props.id)
       lastContent = content
     }),
@@ -83,6 +91,7 @@ function handleSavingEnd() {
 }
 function handleContentSave(value: string, id: string) {
   projectStore.updateSidenoteContent({ content: value, id: id }, handleSavingStart, props.account, props.hostname).then(res => {
+    data.value!.isSidenoteUpdating = false
     if (res) {
       handleSavingEnd()
     } else {
@@ -91,6 +100,7 @@ function handleContentSave(value: string, id: string) {
         .catch()
     }
   }).catch(err => {
+    data.value!.isSidenoteUpdating = false
     message.error('更新失败:' + err)
   })
 }
@@ -101,6 +111,26 @@ watch(
     editor.readonly = isReadOnly
   }
 )
+
+/** 离开页面前 */
+const debounceB = _.debounce(func => func(), 2000)
+onBeforeUnmount(() => {
+  if(props.lib === LibraryEnum.COURSE) {
+    // 离开页面前立即保存, 设置一定延迟，否则卡片会立即更新，影响体验
+    if (!editor) return
+    const content = editor.getHTML()
+    if (lastContent === content) data.value!.isSidenoteUpdating = false
+    const id = props.id
+    debounceB(() => {
+      if(props.readonly()) return
+      if(lastContent === content) return
+      // console.log('离开前更新')
+      handleContentSave(content, id)
+      lastContent = content
+    })
+    // 有个疑问？通过防抖延迟了保存事务，为什么事务中不会拿到切换后的数据状态？可能因为 const props 是一个具名常量，并不会在切换项目后改变
+  }
+})
 </script>
 
 <template>

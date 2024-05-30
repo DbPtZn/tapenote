@@ -95,7 +95,7 @@ const fileMethods = {
   },
   handleToFile(itemId: string, lib: LibraryEnum) {
     const project = projectStore.get(itemId)
-    if(project && (project.isContentUpdating || project.isTitleUpdating)) {
+    if(project && (project.isContentUpdating || project.isTitleUpdating || project.isSidenoteUpdating)) {
       message.loading('项目正在更新，请更新完成后再打开')
       return
     }

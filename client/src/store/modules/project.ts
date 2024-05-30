@@ -43,6 +43,7 @@ export interface Project {
   hostname: string
   isTitleUpdating: boolean
   isContentUpdating: boolean
+  isSidenoteUpdating: boolean
 
   id: string
   lib: LibraryEnum
@@ -164,6 +165,7 @@ export const useProjectStore = defineStore('projectStore', {
         hostname: hostname || '',
         isTitleUpdating: false,
         isContentUpdating: false,
+        isSidenoteUpdating: false,
         id: data.id || '',
         lib: data.lib || '',
         dirname: data.dirname || '',
