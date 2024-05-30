@@ -21,6 +21,7 @@ database
 assets
 logs
 database.sqlite
+server
 sherpa-onnx-win-x64
 sherpa-onnx.node
 

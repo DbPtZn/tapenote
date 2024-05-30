@@ -43,6 +43,6 @@
       "@/*": ["src/*"]
     },
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "electron", "build-editor.config.ts", "build-container.config.ts", "electron/server/node_modules/sherpa-onnx-win-x64", "dist-electron/sherpa-onnx-win-x64"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "electron", "build-editor.config.ts", "build-container.config.ts", "server/node_modules/sherpa-onnx-win-x64", "dist-electron/sherpa-onnx-win-x64"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

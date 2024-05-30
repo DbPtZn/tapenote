@@ -1,17 +1,19 @@
 {
   "name": "client",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "tapenote",
   "author": "DbPtZn",
   "scripts": {
     "dev": "vite --config vite-web.config.ts",
     "dev:electron": "cross-env NODE_ENV=electron vite",
-    "build:electron": "vue-tsc && vite build && electron-builder --mode electron",
+    "build:electron": "vue-tsc && cross-env NODE_ENV=electron && vite build --mode electron && electron-builder",
     "build:web": "vue-tsc && vite build --config vite-web.config.ts --mode production",
     "build:editor": "vite build --config build-editor.config.ts",
     "build:container": "vite build --config build-container.config.ts",
+    "rebuild": "electron rebuild.cjs",
+    "postinstall": "npm run rebuild",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -50,6 +52,7 @@
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",
     "@types/animejs": "^3.1.12",
+    "@types/better-sqlite3": "^7.6.10",
     "@types/ejs": "^3.1.5",
     "@types/element-resize-detector": "^1.1.6",
     "@types/lodash": "^4.17.0",
@@ -61,7 +64,6 @@
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
     "prebuild-install": "^7.1.2",
-    "rollup-plugin-node-polyfills": "^0.2.1",
     "sass": "^1.76.0",
     "typescript": "^5.2.2",
     "unplugin-vue-components": "^0.27.0",

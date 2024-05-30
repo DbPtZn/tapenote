@@ -1,77 +1,45 @@
-import {  type Plugin, defineConfig,  normalizePath, loadEnv } from 'vite'
+import { type Plugin, defineConfig, normalizePath, loadEnv } from 'vite'
 import path from 'node:path'
 import fs from 'node:fs'
 import electron from 'vite-plugin-electron/simple'
 import vue from '@vitejs/plugin-vue'
-// import eslintPlugin from 'vite-plugin-eslint'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
-import os from 'node:os'
-import nodePolyfills from 'rollup-plugin-node-polyfills'
-import native from 'vite-plugin-native'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  const platform_arch =
-    `${os.platform() == 'win32' ? 'win' : os.platform()}-${os.arch()}`;
+  // const platform_arch = `${os.platform() == 'win32' ? 'win' : os.platform()}-${os.arch()}`
   return {
+    mode,
     plugins: [
       vue(),
       electron({
         main: {
           // Shortcut of `build.lib.entry`.
           entry: 'electron/main.ts',
-          // onstart({ reload }) {
-          //   reload()
-          // },
-          // vite: {
-          //   plugins: [
-          //     // native({})
-          //   ],
-          //   build: {
-          //     // polyfillModulePreload: true,
-          //     minify: false,
-          //     rollupOptions: {
-          //       // output: {
-          //       //   inlineDynamicImports: true
-          //       // },
-          //       // external: [
-          //       //   'sherpa-onnx-node',
-          //       // ]
-          //     },
-          //     commonjsOptions: {
-          //       // ignoreDynamicRequires: true,
-          //     //   dynamicRequireRoot: path.join(__dirname, 'node_modules/.pnpm/sherpa-onnx-node'),
-          //     //   dynamicRequireTargets: [
-          //     //     '../build/Release/sherpa-onnx.node',
-          //     //     '../build/Debug/sherpa-onnx.node',
-          //     //     `./node_modules/sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
-          //     //     `../sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
-          //     //     './sherpa-onnx.node',
-          //     //   ],
-          //     //   include: ["**/*.node"]
-          //     }
-          //   }
-          // }
+          vite: {
+            build: {
+              minify: false,
+              commonjsOptions: {
+                ignoreDynamicRequires: true
+              }
+            }
+          }
         },
         preload: {
           // Shortcut of `build.rollupOptions.input`.
           // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
-          input: path.join(__dirname, 'electron/preload.ts'),
+          input: path.join(__dirname, 'electron/preload.ts')
         },
         // Ployfill the Electron and Node.js API for Renderer process.
         // If you want use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
         // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
-        renderer: process.env.NODE_ENV === 'test'
-          // https://github.com/electron-vite/vite-plugin-electron-renderer/issues/78#issuecomment-2053600808
-          ? undefined
-          : {},
+        renderer:
+          process.env.NODE_ENV === 'test'
+            ? // https://github.com/electron-vite/vite-plugin-electron-renderer/issues/78#issuecomment-2053600808
+              undefined
+            : {}
       }),
-      // eslintPlugin({
-      //   include: ['src/**/*.js', 'src/**/*.vue', 'src/**/*.ts'],
-      //   exclude: ['./node_modules/**'],
-      //   cache: false
-      // }),
       Components({
         extensions: ['vue'],
         resolvers: [NaiveUiResolver()],
@@ -84,16 +52,18 @@ export default defineConfig(({ command, mode }) => {
       alias: {
         '@': path.resolve(__dirname, 'src') // 路径别名
       }
-    },
+    }
     // assetsInclude: ["**/*.node"]
   }
 })
 
-function bindingSqlite3(options: {
-  output?: string;
-  better_sqlite3_node?: string;
-  command?: string;
-} = {}): Plugin {
+function bindingSqlite3(
+  options: {
+    output?: string
+    better_sqlite3_node?: string
+    command?: string
+  } = {}
+): Plugin {
   const TAG = '[vite-plugin-binding-sqlite3]'
   options.output ??= 'dist-native'
   options.better_sqlite3_node ??= 'better_sqlite3.node'
@@ -121,6 +91,6 @@ function bindingSqlite3(options: {
       fs.writeFileSync(path.join(resolvedRoot, '.env'), `VITE_BETTER_SQLITE3_BINDING=${BETTER_SQLITE3_BINDING}`)
 
       console.log(TAG, `binding to ${BETTER_SQLITE3_BINDING}`)
-    },
+    }
   }
 }

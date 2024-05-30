@@ -3,14 +3,17 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "YourAppID",
   "asar": true,
-  "productName": "YourAppName",
+  "productName": "笔记映画",
   "directories": {
     "output": "release/${version}"
   },
   "files": [
     "dist",
     "dist-electron",
-    "dist-native"
+    "dist-native",
+    // "sherpa/",
+    "workers/**/*",
+    "server/**/*"
   ],
   "mac": {
     "target": [

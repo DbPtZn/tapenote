@@ -2,11 +2,8 @@ import { app, BrowserWindow } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import fs from 'node:fs'
 import { initServerProcess, quitServerProcess } from './serverProcess'
-import { type UtilityProcess, utilityProcess } from 'electron'
-import child_process from 'child_process'
-import { Worker } from 'worker_threads'
-// import * as sherpa_onnx from 'sherpa-onnx-node'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -37,7 +34,7 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       // nodeIntegration: true,
-    }
+    },
   })
 
   // Test active push message to Renderer-process.
@@ -72,171 +69,32 @@ app.on('activate', () => {
   }
 })
 
+
 app.whenReady().then(() => {
   initServerProcess()
-  // createPunctWorker()
-  // createAsrWorker()
-  // createTtsWorker()
-  // createSpeakerIdentWorker()
-  // createVadWorker()
   createWindow()
 })
-function createPunctWorker() {
-  const filepath = path.join(process.cwd(), 'workers', 'punct-worker.mjs')
-  const worker = new Worker(filepath, {
-    workerData: {
-      txt: '当你听到这句话的时候我已经消失了请你不要悼念我',
-      config: punctConfig
-    }
-  })
-  worker.on('message', (message: any) => {
-    console.log('接收到子线程返回的结果：-----------------------------------------')
-    if (message.error) {
-      console.log('标点添加发生错误：' + message.error)
-    } else {
-      console.log('标点添加结果：')
-      console.log(message)
-      // message.text = message.text.trim()
-    }
-    worker.terminate()
-  })
-}
-
-function createVadWorker() {
-  const filepath = path.join(process.cwd(), 'workers', 'vad-worker.mjs')
-  console.log('vad test')
-  // console.log(filepath)
-  const worker = new Worker(filepath, {
-    workerData: {
-      info: 'vad'
-    }
-  })
-  // const worker = child_process.fork(filepath)
-  // worker.send({ info: 'vad'})
-  worker.on('message', (message: any) => {
-    console.log('接收到子线程返回的结果：-----------------------------------------')
-    if (message.error) {
-      console.log('说话人识别发生错误：' + message.error)
-    } else {
-      console.log('说话人识别结果：')
-      console.log(message)
-    }
-    // worker.terminate()
-  })
-}
-
-function createSpeakerIdentWorker() {
-  const filepath = path.join(process.cwd(), 'workers', 'speaker_ident-worker.mjs')
-  console.log('speaker ident test')
-  console.log(filepath)
-  // const worker = new Worker(filepath, {
-  //   workerData: {
-  //     info: 'speaker_ident'
-  //   }
-  // })
-  const worker = child_process.fork(filepath)
-  worker.send({ info: 'speaker ident'})
-  worker.on('message', (message: any) => {
-    console.log('接收到子线程返回的结果：-----------------------------------------')
-    if (message.error) {
-      console.log('说话人识别发生错误：' + message.error)
-    } else {
-      console.log('说话人识别结果：')
-      console.log(message)
+// console.log(app.getPath('userData'))
+// console.log(app.getPath('logs'))
+const logPath = path.join(app.getPath('logs'), `main-${new Date().toISOString().slice(0, 10)}.log`)
+const originalConsoleLog = console.log
+// 重写console.log方法
+console.log = function (...args) {
+  // 将信息输出到控制台
+  originalConsoleLog.apply(console, args)
+  // 将信息输出到日志文件
+  fs.appendFile(logPath, `${args.join(' ')}\n`, err => {
+    if (err) {
+      throw err
     }
   })
 }
-
-function createAsrWorker() {
-  const audiopath = 'C:/Users/admin/Desktop/tapenote/client/assets/public/5wWbTjc3/KucHgdUy/audio/1ad7fe25-3ea9-44e1-b0dc-b98b4462b35d.wav'
-  const filepath = path.join(process.cwd(), 'workers', 'asr-worker.mjs')
-  const worker = new Worker(filepath, {
-    workerData: {
-      filepath: audiopath,
-      config: asrConfig
+// 重写console.error方法
+console.error = function (...args) {
+  originalConsoleLog.apply(console, args.map(arg => `ERROR: ${arg}`));
+  fs.appendFile(logPath, `${args.join(' ')}\n`, err => {
+    if (err) {
+      throw err
     }
   })
-  worker.on('message', (message: any) => {
-    console.log('接收到子线程返回的结果：-----------------------------------------')
-    if (message.error) {
-      console.log('语音识别发生错误：' + message.error)
-    } else {
-      console.log('语音识别结果：')
-      console.log(message)
-      message.text = message.text.trim()
-    }
-    worker.terminate()
-  })
-}
-
-function createTtsWorker() {
-  const filepath = path.join(process.cwd(), 'workers', 'tts-worker.mjs')
-  const worker = new Worker(filepath, {
-    workerData: {
-      txt: '当你听到这句话的时候我已经消失了请你不要悼念我',
-      filepath: './test.wav',
-      speakerId: 1,
-      speed: 1.0,
-      config: ttsConfig
-    },
-    stdin: true,
-    stdout: true,
-    stderr: true,
-  })
-  worker.on('message', (message: any) => {
-    console.log('接收到子线程返回的结果：-----------------------------------------')
-    if (message.error) {
-      console.log('语音识别发生错误：' + message.error)
-    } else {
-      console.log('语音识别结果：')
-      console.log(message)
-      message.text = message.text.trim()
-    }
-    worker.terminate()
-  })
-}
-
-const ttsConfig = {
-  model: {
-    vits: {
-      model: 'sherpa/vits-zh-hf-fanchen-C/vits-zh-hf-fanchen-C.onnx',
-      tokens: 'sherpa/vits-zh-hf-fanchen-C/tokens.txt',
-      lexicon: 'sherpa/vits-zh-hf-fanchen-C/lexicon.txt',
-      dictDir: 'sherpa/vits-zh-hf-fanchen-C/dict'
-    },
-    debug: true,
-    numThreads: 2,
-    provider: 'cpu'
-  },
-  maxNumStences: 1,
-  ruleFsts: [
-    'sherpa/vits-zh-hf-fanchen-C/date.fst',
-    'sherpa/vits-zh-hf-fanchen-C/phone.fst',
-    'sherpa/vits-zh-hf-fanchen-C/number.fst',
-    'sherpa/vits-zh-hf-fanchen-C/new_heteronym.fst'
-  ].join(','),
-  ruleFars: ''
-}
-const asrConfig = {
-  featConfig: {
-    sampleRate: 16000,
-    featureDim: 80
-  },
-  modelConfig: {
-    paraformer: {
-      model: 'sherpa/sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx'
-    },
-    tokens: 'sherpa/sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt',
-    numThreads: 2,
-    provider: 'cpu',
-    debug: 1
-  }
-}
-const punctConfig = {
-  model: {
-    ctTransformer: 'sherpa/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/model.onnx',
-    debug: true,
-    numThreads: 1,
-    provider: 'cpu'
-  }
 }
