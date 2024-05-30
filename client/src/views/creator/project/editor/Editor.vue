@@ -68,21 +68,33 @@ useEditor({
   lastContent = content
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
+      editor.onChange.subscribe(() => {
+        data.value!.isContentUpdating = true
+      }),
       editor.onChange.pipe(debounceTime(2000)).subscribe(() => {
         if(props.readonly()) return
         const content = editor.getHTML()
-        if(lastContent === content) return
+        if(lastContent === content) {
+          data.value!.isContentUpdating = false
+          return
+        }
         // console.log('更新 onSave')
         handleContentSave(content, props.id, props.account, props.hostname)
         lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
         // 标题就不管 onSave 了，因为标题没有保存影响也比较小
       }),
       editor.onSave.subscribe(() => {
+        data.value!.isContentUpdating = true
         if(props.readonly()) return
         const content = editor.getHTML()
-        if(lastContent === content) return
+        if(lastContent === content) {
+          data.value!.isContentUpdating = false
+          return
+        }
         // console.log('更新 onSave')
-        handleContentSave(content, props.id, props.account, props.hostname)
+        handleContentSave(content, props.id, props.account, props.hostname).then(() => {
+          message.success('保存成功')
+        })
         lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
         // 标题就不管 onSave 了，因为标题没有保存影响也比较小
       })
@@ -139,11 +151,13 @@ const methods = {
   },
   handleTitleInput(value: string) {
     // 标题输入，加入防抖保存
+    data.value!.isTitleUpdating = true
     debounceA(() => handleTitleSave(value, props.id, props.account, props.hostname))
   },
   handleTitleSave(value: string, id: string, account: string, hostname: string) {
     // console.log('保存标题')
-    projectStore.updateTitle({ title: value, id: id }, handleSavingStart, account, hostname).then(res => {
+    return projectStore.updateTitle({ title: value, id: id }, handleSavingStart, account, hostname).then(res => {
+      data.value!.isTitleUpdating = false
       if (res) {
         handleSavingEnd()
         folderStore.updateCard(value, id, 'title', data.value?.folderId)
@@ -153,12 +167,14 @@ const methods = {
           .catch()
       }
     }).catch(err => {
+      data.value!.isTitleUpdating = false
       message.error('更新失败:' + err)
     })
   },
   handleContentSave(value: string, id: string, account: string, hostname: string) {
     // console.log('保存内容')
-    projectStore.updateContent({ content: value, id: id }, handleSavingStart, account, hostname).then(res => {
+    return projectStore.updateContent({ content: value, id: id }, handleSavingStart, account, hostname).then(res => {
+      data.value!.isContentUpdating = false
       if (res) {
         handleSavingEnd()
         folderStore.updateCard(value, id, 'content', data.value?.folderId)
@@ -168,6 +184,7 @@ const methods = {
           .catch()
       }
     }).catch(err => {
+      data.value!.isContentUpdating = false
       message.error('更新失败:' + err)
     })
   },
@@ -186,6 +203,7 @@ onBeforeUnmount(() => {
     // 离开页面前立即保存, 设置一定延迟，否则卡片会立即更新，影响体验
     if (!editor) return
     const content = editor.getHTML()
+    if (lastContent === content) data.value!.isContentUpdating = false
     const id = props.id
     const account = props.account
     const hostname = props.hostname

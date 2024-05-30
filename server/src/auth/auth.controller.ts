@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Req, Session, U
 import { AuthService } from './auth.service'
 import { UserService } from 'src/user/user.service'
 import { LoginDto } from './dto/login.dto'
-import { Response, Request } from 'express'
 import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
 import { AuthGuard } from '@nestjs/passport'
 import { REST } from 'src/enum'
@@ -14,7 +13,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post(`${REST.W}/register`)
-  register(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
+  register(@Body() createUserDto: CreateUserDto, @Res() res) {
     try {
       // console.log(createUserDto)
       this.authService
@@ -35,7 +34,7 @@ export class AuthController {
   // @UseGuards(AuthGuard('local'))
   @UseGuards(LocalAuthGuard)
   @Post(`${REST.R}/login`)
-  async login(@Body() loginDto: LoginDto, @Req() req, @Res() res: Response) {
+  async login(@Body() loginDto: LoginDto, @Req() req, @Res() res) {
     // console.log(loginDto)
     // console.log('验证码：' + this.authService.validateCode(loginDto.code, loginDto.hashCode))
     // if (!this.authService.validateCode(loginDto.code, loginDto.hashCode)) return res.status(400).send('验证码错误！')

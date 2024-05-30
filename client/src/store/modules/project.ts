@@ -41,6 +41,8 @@ interface Detial {
 export interface Project {
   account: string
   hostname: string
+  isTitleUpdating: boolean
+  isContentUpdating: boolean
 
   id: string
   lib: LibraryEnum
@@ -160,6 +162,8 @@ export const useProjectStore = defineStore('projectStore', {
       const item: Project = {
         account: account || '',
         hostname: hostname || '',
+        isTitleUpdating: false,
+        isContentUpdating: false,
         id: data.id || '',
         lib: data.lib || '',
         dirname: data.dirname || '',

@@ -6,9 +6,9 @@
   "description": "tapenote",
   "author": "DbPtZn",
   "scripts": {
-    "dev": "cross-env NODE_ENV=electron vite",
-    "dev:web": "vite --config vite-web.config.ts",
-    "build": "vue-tsc && vite build && electron-builder",
+    "dev": "vite --config vite-web.config.ts",
+    "dev:electron": "cross-env NODE_ENV=electron vite",
+    "build:electron": "vue-tsc && vite build && electron-builder --mode electron",
     "build:web": "vue-tsc && vite build --config vite-web.config.ts --mode production",
     "build:editor": "vite build --config build-editor.config.ts",
     "build:container": "vite build --config build-container.config.ts",

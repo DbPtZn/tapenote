@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { NButton, useThemeVars } from 'naive-ui'
+import { NButton, useMessage, useThemeVars } from 'naive-ui'
 import { LibraryEnum } from '@/enums'
 import { onMounted, ref, watch } from 'vue'
 import { FileCard, FolderCard } from './private'
@@ -12,9 +12,10 @@ import ItemListContainer from './ItemListContainer.vue'
 import { useItemListDropDown, useDrag } from './hooks/_index'
 import { DropdownOption } from 'naive-ui/es/dropdown/src/interface'
 import { ArrowDropDownRound, ChevronLeftFilled, MoreHorizFilled } from '@vicons/material'
-const { folderStore, folderTreeStore, dragStore, userStore } = useStore()
+const { folderStore, folderTreeStore, dragStore, userStore, projectStore } = useStore()
 const shell = useShell<CreatorShell>()
 const themeVars = useThemeVars()
+const message = useMessage()
 const { dropdownState, options, handleContextmenu, handleMoreAction, handleSelect, handleClickoutside } = useItemListDropDown()
 const value = ref()
 const scrollerRef = ref<HTMLElement>()
@@ -93,6 +94,11 @@ const fileMethods = {
     ev.dataTransfer?.clearData()
   },
   handleToFile(itemId: string, lib: LibraryEnum) {
+    const project = projectStore.get(itemId)
+    if(project && (project.isContentUpdating || project.isTitleUpdating)) {
+      message.loading('项目正在更新，请更新完成后再打开')
+      return
+    }
     shell.useWorkbench()
     shell.workbench.setById({ id: itemId, lib, account: userStore.account, hostname: userStore.hostname })
   },

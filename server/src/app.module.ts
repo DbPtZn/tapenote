@@ -41,10 +41,10 @@ import { SpeakerModule } from './speaker/speaker.module'
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         // FIXME 警告：设置 synchronize: true 不能被用于生产环境，否则您可能会丢失生产环境数据
-        const config = configService.get<ReturnType<typeof databaseConfig>>('database')
-        console.log(config)
+        // const config = configService.get<ReturnType<typeof databaseConfig>>('database')
         console.log('NODE_ENV:' + process.env.NODE_ENV)
         if (process.env.NODE_ENV === 'electron') {
+          console.log('better-sqlite3')
           return {
             type: 'better-sqlite3', // 数据库类型
             database: 'database.sqlite', // 库名
@@ -56,6 +56,7 @@ import { SpeakerModule } from './speaker/speaker.module'
           }
         }
         if (['development', 'production'].includes(process.env.NODE_ENV)) {
+          console.log('mysql')
           return {
             type: 'mysql', // 数据库类型
             username: configService.get('database.username'), // 账号
