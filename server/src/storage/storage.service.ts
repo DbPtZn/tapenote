@@ -17,15 +17,16 @@ export class StorageService {
    * @returns 文件存储目录
    */
   getUserDir(args: { dir: string | string[]; prv?: boolean }) {
+    console.log('getUserDir:' + process.env.NODE_ENV)
     const { dir, prv } = args
     const common = this.configService.get<ReturnType<typeof commonConfig>>('common')
     const dirPath = path.join(
-      __rootdirname,
+      common.appDir ? common.appDir : __rootdirname,
       common.userDir,
       prv === true ? common.privateDir : common.publicDir,
       typeof dir === 'string' ? dir : dir.join('/')
     )
-    // console.log(dirPath)
+    console.log(dirPath)
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true })
     }

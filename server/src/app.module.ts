@@ -18,7 +18,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { UserLoggerModule } from './user-logger/userLogger.module'
 import { LoggerModule } from './logger/logger.module'
-// import saslprep from 'saslprep'
 import { RequestScopedService } from './request-scoped/request-scoped.service'
 import { RequestScopedModule } from './request-scoped/request-scoped.module'
 import { SpeakerModule } from './speaker/speaker.module'
@@ -47,7 +46,7 @@ import { SpeakerModule } from './speaker/speaker.module'
           console.log('better-sqlite3')
           return {
             type: 'better-sqlite3', // 数据库类型
-            database: 'database.sqlite', // 库名
+            database: configService.get('database.database'), // 'database.sqlite', // 库名
             // entities: [__dirname + '/**/*.entity{.ts,.js}'], //实体文件
             retryDelay: 5000, // 重试连接数据库间隔
             retryAttempts: 5, // 重试连接数据库次数

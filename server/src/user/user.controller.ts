@@ -34,10 +34,10 @@ export class UserController {
   @Get(`${REST.R}/info`)
   async getUserInfo(@Req() req, @Res() res) {
     try {
-      console.log(req.user.account)
+      // console.log(req.user.account)
       const info = await this.userService.getInfoById(req.user.id, req.user.dirname)
       info.avatar = info.avatar ? '/public' + info.avatar.split('public')[1] : ''
-      console.log(info)
+      // console.log(info)
       return res.status(200).send(info)
     } catch (error) {
       return res.status(400).send('获取用户信息失败！' + error.message)

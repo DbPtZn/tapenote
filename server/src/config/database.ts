@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config'
 
 export default registerAs('database', () => ({
-  type: process.env.DB_TYPE as 'mysql',
+  // type: process.env.DB_TYPE as 'mysql',
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   host: process.env.DB_HOST,

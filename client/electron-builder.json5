@@ -1,8 +1,9 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "www.tapenote.cn",
   "asar": true,
+  "copyright": "Copyright © 2024 ${author}",
   "productName": "笔记映画",
   "directories": {
     "output": "release/${version}"
@@ -11,9 +12,15 @@
     "dist",
     "dist-electron",
     "dist-native",
+    ".env.electron",
+    ".env.electron.local",
     // "sherpa/",
     "workers/**/*",
-    "server/**/*"
+    // "server/**/*",
+  ],
+  "extraResources": [
+    "server/**/*",
+    "workers/**/*",
   ],
   "mac": {
     "target": [
