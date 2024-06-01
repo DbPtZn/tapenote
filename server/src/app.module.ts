@@ -44,6 +44,14 @@ import { SpeakerModule } from './speaker/speaker.module'
         console.log('NODE_ENV:' + process.env.NODE_ENV)
         if (process.env.NODE_ENV === 'electron') {
           console.log('better-sqlite3')
+          console.log('process.env.SERVER_PORT:' + process.env.SERVER_PORT)
+          console.log('process.env.APP_DIR:' + process.env.APP_DIR)
+          console.log('process.env.DB_DATE_BASE:' + process.env.DB_DATE_BASE)
+          console.log('process.env.NODE_ENV:' + process.env.NODE_ENV)
+          console.log('process.env.SERVER_PORT:' + process.env.SERVER_PORT)
+          console.log('process.env.USER_DIR:' + process.env.USER_DIR)
+          console.log('process.env.PUBLIC_DIR:' + process.env.PUBLIC_DIR)
+          console.log('process.env.JWT_SECRET :' + process.env.JWT_SECRET)
           return {
             type: 'better-sqlite3', // 数据库类型
             database: configService.get('database.database'), // 'database.sqlite', // 库名

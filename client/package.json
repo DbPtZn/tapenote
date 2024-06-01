@@ -1,13 +1,13 @@
 {
-  "name": "client",
+  "name": "tapenote",
   "private": true,
-  "version": "0.0.15",
+  "version": "1.0.0",
   "type": "module",
   "description": "tapenote",
   "author": "DbPtZn",
   "scripts": {
     "dev": "vite --config vite-web.config.ts",
-    "dev:electron": "cross-env NODE_ENV=electron vite",
+    "dev:electron": "vite",
     "build:electron": "vue-tsc && cross-env NODE_ENV=electron && vite build --mode electron && electron-builder",
     "build:web": "vue-tsc && vite build --config vite-web.config.ts --mode production",
     "build:editor": "vite build --config build-editor.config.ts",
@@ -17,7 +17,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@tanbo/bezier": "^1.0.1",
     "@tanbo/stream": "^1.2.3",
     "@textbus/core": "3.7",
@@ -27,7 +26,6 @@
     "animate.css": "^4.1.1",
     "animejs": "^3.2.2",
     "axios": "^1.6.8",
-    "better-sqlite3": "^10.0.0",
     "classnames": "^2.5.1",
     "dayjs": "^1.11.11",
     "element-resize-detector": "^1.2.4",
@@ -39,6 +37,7 @@
     "material-icons": "^1.13.12",
     "naive-ui": "^2.38.1",
     "pinia": "^2.1.7",
+    "portfinder": "^1.0.32",
     "prismjs": "^1.29.0",
     "reflect-metadata": "^0.2.2",
     "sherpa-onnx-node": "^1.0.28",
@@ -53,12 +52,9 @@
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",
     "@types/animejs": "^3.1.12",
-    "@types/better-sqlite3": "^7.6.10",
-    "@types/ejs": "^3.1.5",
     "@types/element-resize-detector": "^1.1.6",
     "@types/lodash": "^4.17.0",
     "@types/node": "^20.12.7",
-    "@types/pouchdb-node": "^6.1.7",
     "@vicons/material": "^0.12.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "cross-env": "^7.0.3",

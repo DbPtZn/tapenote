@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common'
 import ffmpeg from 'fluent-ffmpeg'
-import { tmpdir } from 'os'
-import path from 'path'
 import fs from 'fs'
 import { exec } from 'child_process'
 import { StorageService } from 'src/storage/storage.service'
+import FfmpegModule from '@ffmpeg-installer/ffmpeg'
 
 @Injectable()
 export class FfmpegService {
   constructor(private readonly storageService: StorageService) {
-    // this.test()
+    console.log(FfmpegModule.path)
+    ffmpeg.setFfmpegPath(FfmpegModule.path)
   }
   // async test() {
   //   const audio = 'C:/Users/admin/Desktop/new-project/server/public/uWgrfCru/audio/65fd8c154b2496c352ce9521.wav'
@@ -22,6 +22,7 @@ export class FfmpegService {
   // }
 
   createBlankAudio(duration: number, outputPath: string) {
+    console.log('创建空白音频')
     return new Promise<string>((resolve, reject) => {
       try {
         ffmpeg()
@@ -53,6 +54,7 @@ export class FfmpegService {
           })
           .run() // 执行命令
       } catch (error) {
+        console.error('生成空白音频失败: ' + error.message)
         throw error
       }
     })
@@ -82,6 +84,7 @@ export class FfmpegService {
             reject(err)
           })
       } catch (error) {
+        console.log('格式化音频文件失败：')
         console.log(error)
         reject(error)
       }

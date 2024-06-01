@@ -10,6 +10,16 @@ interface ModelType {
   account: string
   password: string
 }
+
+// electron 环境下向主进程询问本地服务的端口号
+if (window.ipcRenderer) {
+  window.ipcRenderer.invoke('getPort').then(value => {
+    console.log('接收到主线程的消息')
+    console.log(value)
+    model.value.hostname = `http://localhost:${value}`
+  })
+}
+
 const router = useRouter()
 const { userStore, userListStore } = useStore()
 const formRef = ref<FormInst | null>(null)

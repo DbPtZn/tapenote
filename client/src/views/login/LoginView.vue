@@ -11,6 +11,16 @@ interface ModelType {
   account: string
   password: string
 }
+
+// electron 环境下向主进程询问本地服务的端口号
+if (window.ipcRenderer) {
+  window.ipcRenderer.invoke('getPort').then(value => {
+    console.log('接收到主线程的消息')
+    console.log(value)
+    model.value.hostname = `http://localhost:${value}`
+  })
+}
+
 const router = useRouter()
 const { userListStore } = useStore()
 const message = useMessage()
@@ -26,9 +36,10 @@ const tip = import.meta.env.VITE_LOGIN_TIP || ''
 const formRef = ref<FormInst | null>(null)
 const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true' // 是否开放注册入口
 const model = ref<ModelType>({
+  // hostname: import.meta.env.VITE_BASE_URL || '',
   hostname: import.meta.env.VITE_BASE_URL || '',
   account: import.meta.env.VITE_ACCOUNT || '',
-  password: import.meta.env.VITE_PASSWORD || '',
+  password: import.meta.env.VITE_PASSWORD || ''
 })
 const rules: FormRules = {
   hostname: [
@@ -73,15 +84,21 @@ const submit = () => {
       }
       // const isAllow = await validateCode()
       // if (!isAllow) return
-      userListStore.login({
-        account: model.value.account,
-        password: model.value.password,
-      }, model.value.hostname).then((res) => {
-        // shell.useUserPanel()
-        router.push(RoutePathEnum.HOME)
-      }).catch(err => {
-        message.error('登录失败！')
-      })
+      userListStore
+        .login(
+          {
+            account: model.value.account,
+            password: model.value.password
+          },
+          model.value.hostname
+        )
+        .then(res => {
+          // shell.useUserPanel()
+          router.push(RoutePathEnum.HOME)
+        })
+        .catch(err => {
+          message.error('登录失败！')
+        })
     } else {
       message.error('表单校验失败！')
       console.log(errors)
@@ -89,17 +106,17 @@ const submit = () => {
   })
 }
 
-
 function validateCode() {
   return new Promise<boolean>((resolve, reject) => {
     const dia = dialog.create({
       title: '验证码',
-      content: () => h(ValidateCode, {
-        onConfirm: (result) => {
-          dia.destroy()
-          resolve(result)
-        }
-      }),
+      content: () =>
+        h(ValidateCode, {
+          onConfirm: result => {
+            dia.destroy()
+            resolve(result)
+          }
+        }),
       onMaskClick: () => {
         dia.destroy()
         resolve(false)
@@ -116,7 +133,7 @@ function handleToRegister() {
 <template>
   <div class="login-container">
     <div class="tip">
-      {{tip}}
+      {{ tip }}
     </div>
     <n-card class="login">
       <n-space vertical>

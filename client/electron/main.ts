@@ -1,11 +1,11 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, nativeTheme, ipcMain } from 'electron'
 import logger from './logService'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
 import { initServerProcess, quitServerProcess } from './serverProcess'
-
+import portfinder from 'portfinder'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -31,13 +31,20 @@ let win: BrowserWindow | null
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    width: 1200,
+    height: 800,
+    frame: true,  // 可用于自定义 menu, false 可以隐藏顶部菜单栏
+    autoHideMenuBar: true,
+    show: false,
+    icon: path.join(process.env.VITE_PUBLIC, 'logo1.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       // nodeIntegration: true,
-      nodeIntegrationInWorker: true
+      // nodeIntegrationInWorker: true
     },
   })
+
+  nativeTheme.themeSource = 'dark'
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
@@ -45,7 +52,7 @@ function createWindow() {
   })
 
   // 默认打开开发工具
-  win.webContents.openDevTools()
+  // win.webContents.openDevTools()
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
@@ -53,7 +60,14 @@ function createWindow() {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
+
+  // 加载完 html 后再显示就不会白屏
+  win.on('ready-to-show', () => {
+    win?.show()
+  })
 }
+
+
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -73,11 +87,12 @@ app.on('activate', () => {
     createWindow()
   }
 })
-process.env.APP_DIR = `${app.getPath('userData')}`
-process.env.DB_DATE_BASE = `${app.getPath('userData')}/database.sqlite`
+
+
+// console.log(process.env.NODE_ENV)
 process.env.NODE_ENV = 'electron'
-// port
-process.env.SERVER_PORT = '3080'
+process.env.DB_DATE_BASE = `${app.getPath('appData')}/tapenote/database/database.sqlite`
+process.env.APP_DIR = `${app.getPath('appData')}/tapenote/data`
 // database
 // process.env.DB_USERNAME = process.env.DB_USERNAME,
 // process.env.DB_PASSWORD = process.env.DB_PASSWORD,
@@ -88,24 +103,41 @@ process.env.SERVER_PORT = '3080'
 // process.env.DB_RETRY_DELAY = process.env.DB_RETRY_DELAY,
 // process.env.DB_RETRY_ATTEMPTS = process.env.DB_RETRY_ATTEMPTS,
 // process.env.DB_AUTO_LOAD_ENTITIES = process.env.DB_AUTO_LOAD_ENTITIES,
-// commo
+// commom
 process.env.V_CODE_OPEN = 'false' // 是否开启验证码
 process.env.USER_DIR = 'assets' // 用户目录
 process.env.PUBLIC_DIR = '/public' // 公共目录
 process.env.STATIC_RESOURCE_PREFIX = '/public'
 process.env.PRIVATE_DIR = '/private' // 私有目录
 process.env.LOG_DIR = '/logs' // 日志目录
-process.env.LOG_OPEN = 'false' // 是否开启系统日志
+process.env.LOG_OPEN = 'true' // 是否开启系统日志
 // auth
 process.env.JWT_SECRET = 'electronJWT'
 // process.env.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN
+portfinder.basePort = 3080
+// port
+portfinder.getPort((err, availablePort) => {
+  if (err) {
+    console.error(err)
+    logger.error('启动失败，无法获取有效端口：' + err.message)
+    throw err
+  } else {
+    console.log(`----------- 端口 ${availablePort} 可用 --------`)
+    process.env.SERVER_PORT = availablePort.toString()
+    ipcMain.handle('getPort', () => availablePort)
+  }
+})
+
 app.whenReady().then(() => {
+  logger.info('process.cwd:' + process.cwd())
+  logger.info('__dirname:' + __dirname)
   logger.info('process.env.APP_DIR:' + process.env.APP_DIR)
   logger.info('process.env.DB_DATE_BASE:' + process.env.DB_DATE_BASE)
   logger.info('process.env.NODE_ENV:' + process.env.NODE_ENV)
   logger.info('process.env.SERVER_PORT:' + process.env.SERVER_PORT)
   logger.info('process.env.USER_DIR:' + process.env.USER_DIR)
   logger.info('process.env.PUBLIC_DIR:' + process.env.PUBLIC_DIR)
+  logger.info('process.env.JWT_SECRET :' + process.env.JWT_SECRET)
   logger.info('getAppPath:' + app.getAppPath())
   logger.info('home:' + app.getPath('home'))
   logger.info('appData:' + app.getPath('appData'))

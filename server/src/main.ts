@@ -60,11 +60,12 @@ async function bootstrap() {
   // console.log(process.env.NODE_ENV)
   const configService = app.get(ConfigService)
   const __rootdirname = process.cwd()
+  const appDir = configService.get('common.appDir')
   const userDir = configService.get('common.userDir')
   const publicDir = configService.get('common.publicDir')
   const staticPrefix = configService.get('common.staticPrefix')
   console.log(path.join(__rootdirname, userDir, publicDir), staticPrefix)
-  app.useStaticAssets(path.join(__rootdirname, userDir, publicDir), { prefix: staticPrefix })
+  app.useStaticAssets(path.join(appDir ? appDir : __rootdirname, userDir, publicDir), { prefix: staticPrefix })
 
   /** 接口文档(待完善) */
   // const options = new DocumentBuilder()
@@ -85,6 +86,12 @@ async function bootstrap() {
       console.error(err)
     } else {
       console.log(`正在监听 ${availablePort} 端口`)
+      try {
+        console.log('回复 electron 主进程成功！')
+        process.send(`服务端正在监听 ${availablePort} 端口`)
+      } catch (error) {
+        console.log('回复 electron 主进程失败！')
+      }
       await app.listen(availablePort)
     }
   })
