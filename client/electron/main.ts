@@ -6,6 +6,8 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { initServerProcess, quitServerProcess } from './serverProcess'
 import portfinder from 'portfinder'
+import { useProcessEnv } from './useProcessEnv'
+import { useNativeTheme } from './useNativeTheme'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -44,7 +46,8 @@ function createWindow() {
     },
   })
 
-  nativeTheme.themeSource = 'dark'
+  // nativeTheme.themeSource = 'dark'
+  useNativeTheme() // 控制主题
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
@@ -88,67 +91,9 @@ app.on('activate', () => {
   }
 })
 
-
-// console.log(process.env.NODE_ENV)
-process.env.NODE_ENV = 'electron'
-process.env.DB_DATE_BASE = `${app.getPath('appData')}/tapenote/database/database.sqlite`
-process.env.APP_DIR = `${app.getPath('appData')}/tapenote/data`
-// database
-// process.env.DB_USERNAME = process.env.DB_USERNAME,
-// process.env.DB_PASSWORD = process.env.DB_PASSWORD,
-// process.env.DB_HOST = process.env.DB_HOST,
-// process.env.DB_PORT = process.env.DB_PORT,
-// process.env.DB_DATE_BASE = process.env.DB_DATE_BASE, // // host node18+ 的 localhost 默认 ipv6 可能会导致数据库连接出现问题
-// process.env.DB_SYNCHRONIZE = process.env.DB_SYNCHRONIZE,
-// process.env.DB_RETRY_DELAY = process.env.DB_RETRY_DELAY,
-// process.env.DB_RETRY_ATTEMPTS = process.env.DB_RETRY_ATTEMPTS,
-// process.env.DB_AUTO_LOAD_ENTITIES = process.env.DB_AUTO_LOAD_ENTITIES,
-// commom
-process.env.V_CODE_OPEN = 'false' // 是否开启验证码
-process.env.USER_DIR = 'assets' // 用户目录
-process.env.PUBLIC_DIR = '/public' // 公共目录
-process.env.STATIC_RESOURCE_PREFIX = '/public'
-process.env.PRIVATE_DIR = '/private' // 私有目录
-process.env.LOG_DIR = '/logs' // 日志目录
-process.env.LOG_OPEN = 'true' // 是否开启系统日志
-// auth
-process.env.JWT_SECRET = 'electronJWT'
-// process.env.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN
-portfinder.basePort = 3080
-// port
-portfinder.getPort((err, availablePort) => {
-  if (err) {
-    console.error(err)
-    logger.error('启动失败，无法获取有效端口：' + err.message)
-    throw err
-  } else {
-    console.log(`----------- 端口 ${availablePort} 可用 --------`)
-    process.env.SERVER_PORT = availablePort.toString()
-    ipcMain.handle('getPort', () => availablePort)
-  }
-})
+useProcessEnv() // 配置 process.env 环境变量
 
 app.whenReady().then(() => {
-  logger.info('process.cwd:' + process.cwd())
-  logger.info('__dirname:' + __dirname)
-  logger.info('process.env.APP_DIR:' + process.env.APP_DIR)
-  logger.info('process.env.DB_DATE_BASE:' + process.env.DB_DATE_BASE)
-  logger.info('process.env.NODE_ENV:' + process.env.NODE_ENV)
-  logger.info('process.env.SERVER_PORT:' + process.env.SERVER_PORT)
-  logger.info('process.env.USER_DIR:' + process.env.USER_DIR)
-  logger.info('process.env.PUBLIC_DIR:' + process.env.PUBLIC_DIR)
-  logger.info('process.env.JWT_SECRET :' + process.env.JWT_SECRET)
-  logger.info('getAppPath:' + app.getAppPath())
-  logger.info('home:' + app.getPath('home'))
-  logger.info('appData:' + app.getPath('appData'))
-  logger.info('userData:' + app.getPath('userData'))
-  logger.info('sessionData:' + app.getPath('sessionData'))
-  logger.info('temp:' + app.getPath('temp'))
-  logger.info('exe:' + app.getPath('exe'))
-  logger.info('module:' + app.getPath('module'))
-  logger.info('desktop:' + app.getPath('desktop'))
-  logger.info('documents:' + app.getPath('documents'))
-  logger.info('crashDumps:' + app.getPath('crashDumps'))
   logger.info('启动应用')
   initServerProcess()
   createWindow()

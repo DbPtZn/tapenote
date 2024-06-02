@@ -18,19 +18,12 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
   },
-
   getPort(...args: Parameters<typeof ipcRenderer.invoke>) {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
-  }
+  },
+  updateTheme: (value) => ipcRenderer.send('update-theme', value)
+
   // You can expose other APTs you need here.
   // ...
-
-  // getPort: (port: number) => {
-  //   return ipcRenderer.send('port', process.env.SERVER_PORT)
-  // }
 })
-
-// contextBridge.exposeInMainWorld('port', {
-//   get: (value) => ipcRenderer.invoke('', value)
-// })

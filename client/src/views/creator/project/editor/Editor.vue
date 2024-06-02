@@ -202,8 +202,9 @@ onBeforeUnmount(() => {
   if(props.lib !== LibraryEnum.COURSE) {
     // 离开页面前立即保存, 设置一定延迟，否则卡片会立即更新，影响体验
     if (!editor) return
+    if (!data.value) return // 如果是通过缓存窗口关闭项目，这里 data 将为 undefined
     const content = editor.getHTML()
-    if (lastContent === content) data.value!.isContentUpdating = false
+    if (lastContent === content) data.value.isContentUpdating = false
     const id = props.id
     const account = props.account
     const hostname = props.hostname

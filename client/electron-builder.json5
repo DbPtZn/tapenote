@@ -12,16 +12,9 @@
     "dist",
     "dist-electron",
     "dist-native",
-    // ".env.electron",
-    // ".env.electron.local",
-    // "sherpa/",
-    // "workers/**/*",
-    // "server/**/*",
   ],
+  // 包含原生模块的外部执行代码，应该抽离出 asar 包
   "extraResources": [
-    // ".env.electron",
-    // ".env.electron.local",
-    // "server/**/*",
     {
       "from": "server",
       "to": "../server",

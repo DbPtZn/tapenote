@@ -36,8 +36,8 @@ dependencies:
     specifier: ^2.4.3
     version: 2.4.3
   better-sqlite3:
-    specifier: ^9.6.0
-    version: 9.6.0
+    specifier: ^11.0.0
+    version: 11.0.0
   class-transformer:
     specifier: ^0.5.1
     version: 0.5.1
@@ -109,7 +109,7 @@ dependencies:
     version: 1.4.0
   typeorm:
     specifier: ^0.3.20
-    version: 0.3.20(better-sqlite3@9.6.0)(mysql2@3.9.8)(ts-node@10.9.2)
+    version: 0.3.20(better-sqlite3@11.0.0)(mysql2@3.9.8)(ts-node@10.9.2)
   uuid:
     specifier: ^9.0.1
     version: 9.0.1
@@ -1630,7 +1630,7 @@ packages:
       '@nestjs/core': 10.3.8(@nestjs/common@10.3.8)(@nestjs/platform-express@10.3.8)(reflect-metadata@0.2.2)(rxjs@7.8.1)
       reflect-metadata: 0.2.2
       rxjs: 7.8.1
-      typeorm: 0.3.20(better-sqlite3@9.6.0)(mysql2@3.9.8)(ts-node@10.9.2)
+      typeorm: 0.3.20(better-sqlite3@11.0.0)(mysql2@3.9.8)(ts-node@10.9.2)
       uuid: 9.0.1
     dev: false
 
@@ -2511,8 +2511,8 @@ packages:
     resolution: {integrity: sha512-V/Hy/X9Vt7f3BbPJEi8BdVFMByHi+jNXrYkW3huaybV/kQ0KJg0Y6PkEMbn+zeT+i+SiKZ/HMqJGIIt4LZDqNQ==}
     dev: false
 
-  /better-sqlite3@9.6.0:
-    resolution: {integrity: sha512-yR5HATnqeYNVnkaUTf4bOP2dJSnyhP4puJN/QPRyx4YkBEEUxib422n2XzPqDEHjQQqazoYoADdAm5vE15+dAQ==}
+  /better-sqlite3@11.0.0:
+    resolution: {integrity: sha512-1NnNhmT3EZTsKtofJlMox1jkMxdedILury74PwUbQBjWgo4tL4kf7uTAjU55mgQwjdzqakSTjkf+E1imrFwjnA==}
     requiresBuild: true
     dependencies:
       bindings: 1.5.0
@@ -5163,8 +5163,8 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: true
 
-  /node-abi@3.62.0:
-    resolution: {integrity: sha512-CPMcGa+y33xuL1E0TcNIu4YyaZCxnnvkVaEXrsosR3FxN+fV8xvb7Mzpb7IgKler10qeMkE6+Dp8qJhpzdq35g==}
+  /node-abi@3.63.0:
+    resolution: {integrity: sha512-vAszCsOUrUxjGAmdnM/pq7gUgie0IRteCQMX6d4A534fQCR93EJU5qgzBvU6EkFfK27s0T3HEV3BOyJIr7OMYw==}
     engines: {node: '>=10'}
     dependencies:
       semver: 7.6.2
@@ -5528,7 +5528,7 @@ packages:
       minimist: 1.2.8
       mkdirp-classic: 0.5.3
       napi-build-utils: 1.0.2
-      node-abi: 3.62.0
+      node-abi: 3.63.0
       pump: 3.0.0
       rc: 1.2.8
       simple-get: 4.0.1
@@ -6583,7 +6583,7 @@ packages:
   /typedarray@0.0.6:
     resolution: {integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==}
 
-  /typeorm@0.3.20(better-sqlite3@9.6.0)(mysql2@3.9.8)(ts-node@10.9.2):
+  /typeorm@0.3.20(better-sqlite3@11.0.0)(mysql2@3.9.8)(ts-node@10.9.2):
     resolution: {integrity: sha512-sJ0T08dV5eoZroaq9uPKBoNcGslHBR4E4y+EBHs//SiGbblGe7IeduP/IH4ddCcj0qp3PHwDwGnuvqEAnKlq/Q==}
     engines: {node: '>=16.13.0'}
     hasBin: true
@@ -6643,7 +6643,7 @@ packages:
     dependencies:
       '@sqltools/formatter': 1.2.5
       app-root-path: 3.1.0
-      better-sqlite3: 9.6.0
+      better-sqlite3: 11.0.0
       buffer: 6.0.3
       chalk: 4.1.2
       cli-highlight: 2.1.11

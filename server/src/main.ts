@@ -7,6 +7,7 @@ import path from 'path'
 import { LoggerService } from './logger/logger.service'
 import portfinder from 'portfinder'
 import { ConfigService } from '@nestjs/config'
+import { parentPort, workerData } from 'worker_threads'
 async function bootstrap() {
   let dotenvPath = []
   switch (process.env.NODE_ENV) {
@@ -76,9 +77,7 @@ async function bootstrap() {
   //   .build()
   // const document = SwaggerModule.createDocument(app, options)
   // SwaggerModule.setup('/api-docs', app, document)
-
   /** 开放端口（请在环境变量中设置） */
-  // 开放端口（在环境变量中设置）
   const port = parseInt(process.env.SERVER_PORT, 10)
   portfinder.basePort = port
   portfinder.getPort(async (err, availablePort) => {
@@ -86,11 +85,12 @@ async function bootstrap() {
       console.error(err)
     } else {
       console.log(`正在监听 ${availablePort} 端口`)
-      try {
-        console.log('回复 electron 主进程成功！')
-        process.send(`服务端正在监听 ${availablePort} 端口`)
-      } catch (error) {
-        console.log('回复 electron 主进程失败！')
+      if (process.env.NODE_ENV === 'electron') {
+        try {
+          parentPort.postMessage({ msg: `服务端正在监听 ${availablePort} 端口`, port: availablePort })
+        } catch (error) {
+          console.log('无法回复 electron 主进程:' + error.message)
+        }
       }
       await app.listen(availablePort)
     }

@@ -197,6 +197,10 @@ const globalOptions: DropdownMixedOption[] = [
         } else {
           settingStore.useDark()
         }
+        // electron 环境下向主进程询问本地服务的端口号
+        if (window.ipcRenderer) {
+          (window as any).ipcRenderer.updateTheme(settingStore.getCurrentTheme())
+        }
       }
     }
   }
