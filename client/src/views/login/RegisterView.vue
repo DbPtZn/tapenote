@@ -12,13 +12,10 @@ interface ModelType {
 }
 
 // electron 环境下向主进程询问本地服务的端口号
-if (window.ipcRenderer) {
-  window.ipcRenderer.invoke('getPort').then(value => {
-    console.log('接收到主线程的消息')
-    console.log(value)
-    model.value.hostname = `http://localhost:${value}`
-  })
-}
+window.electronAPI && window.electronAPI.getPort().then(port => {
+  console.log('当前本地服务监听的端口：' + port)
+  model.value.hostname = `http://localhost:${port}`
+})
 
 const router = useRouter()
 const { userStore, userListStore } = useStore()

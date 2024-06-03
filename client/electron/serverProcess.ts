@@ -1,5 +1,5 @@
 import { UtilityProcess, app, utilityProcess } from 'electron'
-import logger from './logService'
+import { logger } from './services'
 import path from 'node:path'
 import { Worker } from 'worker_threads'
 let worker: Worker | null = null

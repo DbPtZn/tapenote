@@ -25,5 +25,4 @@ const log = log4js.configure({
 
 // everything: { type: 'file', filename: 'logs/app.log' },
 // console: { type: 'console' }
-const logger = log.getLogger()
-export default logger
+export const logger = log.getLogger()

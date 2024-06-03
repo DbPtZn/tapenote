@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import useStore from '@/store'
 import { FormInst, useMessage, FormRules, FormItemRule, useDialog, NButton } from 'naive-ui'
@@ -13,25 +13,22 @@ interface ModelType {
 }
 
 // electron 环境下向主进程询问本地服务的端口号
-if (window.ipcRenderer) {
-  window.ipcRenderer.invoke('getPort').then(value => {
-    console.log('接收到主线程的消息')
-    console.log(value)
-    model.value.hostname = `http://localhost:${value}`
-  })
-}
+window.electronAPI && window.electronAPI.getPort().then(port => {
+  console.log('当前本地服务监听的端口：' + port)
+  model.value.hostname = `http://localhost:${port}`
+})
 
 const router = useRouter()
 const { userListStore } = useStore()
 const message = useMessage()
 const dialog = useDialog()
-const props = defineProps<{
-  default?: {
-    hostname: string
-    account: string
-    password: string
-  }
-}>()
+// const props = defineProps<{
+//   default?: {
+//     hostname: string
+//     account: string
+//     password: string
+//   }
+// }>()
 const tip = import.meta.env.VITE_LOGIN_TIP || ''
 const formRef = ref<FormInst | null>(null)
 const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true' // 是否开放注册入口
@@ -41,6 +38,19 @@ const model = ref<ModelType>({
   account: import.meta.env.VITE_ACCOUNT || '',
   password: import.meta.env.VITE_PASSWORD || ''
 })
+
+/** 自动补全邮箱地址 */
+// const autoCompleteOptions = computed(() => {
+//   // 可能还需要清理空格（空字符），防止用户输入的时候多了空字符
+//   return ['@qq.com', '@gmail.com', '@163.com', '@139.com'].map(suffix => {
+//     const prefix = model.value.account!.split('@')[0]
+//     return {
+//       label: prefix + suffix,
+//       value: prefix + suffix
+//     }
+//   })
+// })
+
 const rules: FormRules = {
   hostname: [
     {
@@ -78,7 +88,6 @@ const submit = () => {
       const result = userListStore.get(model.value.account, model.value.hostname)
       if (result) {
         message.info('该用户已登录')
-        // shell.useUserPanel()
         // router.push(RoutePathEnum.HOME)
         return
       }
@@ -93,7 +102,6 @@ const submit = () => {
           model.value.hostname
         )
         .then(res => {
-          // shell.useUserPanel()
           router.push(RoutePathEnum.HOME)
         })
         .catch(err => {
@@ -128,6 +136,25 @@ function validateCode() {
 function handleToRegister() {
   router.push(RoutePathEnum.REGISTER)
 }
+const rememberAccount = ref(false)
+const rememberPassword = ref(false)
+
+function rememberLoginState() {
+  if(rememberAccount.value) {
+    localStorage.setItem(`Remember:${model.value.account}&${model.value.hostname}`, rememberPassword.value ? model.value.password : '')
+  }
+}
+
+function handleRememberAccount(value) {
+  rememberAccount.value = value
+  if(rememberPassword.value) rememberPassword.value = false
+}
+function handleRememberPassword(value) {
+  rememberPassword.value = value
+  if(!rememberAccount.value) rememberAccount.value = true
+}
+
+
 </script>
 
 <template>
@@ -148,6 +175,14 @@ function handleToRegister() {
           <n-form-item path="password" label="密码">
             <n-input class="form-input" v-model:value="model.password" type="password" placeholder="密码" />
           </n-form-item>
+          <n-flex justify="space-between">
+            <n-checkbox v-model:checked="rememberAccount" :on-update:checked="handleRememberAccount">
+              记住账号
+            </n-checkbox>
+            <n-checkbox v-model:checked="rememberPassword" :on-update:checked="handleRememberPassword">
+              记住密码
+            </n-checkbox>
+          </n-flex>
         </n-form>
         <n-button class="confirm" @click="handleLogin">登录</n-button>
         <div class="footer">
@@ -223,6 +258,7 @@ function handleToRegister() {
     font-weight: bold;
     letter-spacing: 8px;
     border-radius: 10px;
+    margin-top: 6px;
     cursor: pointer;
   }
 }

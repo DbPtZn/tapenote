@@ -1,13 +1,12 @@
 import { app, BrowserWindow, nativeTheme, ipcMain } from 'electron'
-import logger from './logService'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
 import { initServerProcess, quitServerProcess } from './serverProcess'
 import portfinder from 'portfinder'
-import { useProcessEnv } from './useProcessEnv'
-import { useNativeTheme } from './useNativeTheme'
+import { useProcessEnv, useNativeTheme } from './hooks'
+import { logger } from './services'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -35,9 +34,9 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1200,
     height: 800,
-    frame: true,  // 可用于自定义 menu, false 可以隐藏顶部菜单栏
-    autoHideMenuBar: true,
-    show: false,
+    // frame: true,  // 可用于自定义 menu, false 可以隐藏顶部菜单栏
+    // autoHideMenuBar: true,
+    // show: false,
     icon: path.join(process.env.VITE_PUBLIC, 'logo1.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
@@ -55,7 +54,7 @@ function createWindow() {
   })
 
   // 默认打开开发工具
-  // win.webContents.openDevTools()
+  win.webContents.openDevTools()
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)

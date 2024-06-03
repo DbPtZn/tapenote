@@ -192,15 +192,19 @@ const globalOptions: DropdownMixedOption[] = [
     label: '主题切换',
     props: {
       onClick: () => {
-        if (settingStore.theme) {
-          settingStore.useLight()
-        } else {
-          settingStore.useDark()
-        }
+        settingStore.theme ? settingStore.useLight() : settingStore.useDark()
         // electron 环境下向主进程询问本地服务的端口号
-        if (window.ipcRenderer) {
-          (window as any).ipcRenderer.updateTheme(settingStore.getCurrentTheme())
-        }
+        window.electronAPI && window.electronAPI.updateTheme(settingStore.getCurrentTheme())
+      }
+    }
+  },
+  {
+    key: 'remember',
+    label: '快捷登录',
+    show: !!window.electronAPI,
+    props: {
+      onClick: () => {
+        
       }
     }
   }

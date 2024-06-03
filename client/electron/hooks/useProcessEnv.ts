@@ -1,6 +1,6 @@
 import { app, ipcMain } from 'electron'
 import portfinder from 'portfinder'
-import logger from './logService'
+import { logger } from '../services'
 export function useProcessEnv() {
   // NODE_ENV
   process.env.NODE_ENV = 'electron'
@@ -29,7 +29,7 @@ export function useProcessEnv() {
     } else {
       console.log(`----------- 端口 ${availablePort} 可用 --------`)
       process.env.SERVER_PORT = availablePort.toString()
-      ipcMain.handle('getPort', () => availablePort)
+      ipcMain.handle('get-port', () => availablePort)
     }
   })
   
