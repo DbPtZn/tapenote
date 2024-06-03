@@ -5,7 +5,7 @@
   "author": "boxin du",
   "license": "GPL-3.0-only",
   "scripts": {
-    "start:prod": "cross-env NODE_ENV=production node dist/main",
+    "start:prod": "cross-env NODE_ENV=production nest start",
     "build": "nest build",
     "build:electron": "cross-env NODE_ENV=electron nest build --webpack --webpackPath=./webpack.config.js",
     "webpack": "nest build",
