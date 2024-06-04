@@ -31,7 +31,9 @@ const state = reactive({
   managerOption: import.meta.env.VITE_VIEW_MANAGER === 'true'
 })
 // 移除 sessionStorage 以外的所有缓存（刷新页面等意外退出时，无法及时保存缓存，会导致缓存与实际数据不一致）
-localStorage.clear()
+// FIXME  不建议在这里清理所有 localStorage ，这会导致刷新以后的所有 localStorage 都被清理掉。
+// localStorage.clear()
+
 onMounted(() => {
   // 1.初始化时，先根据 sessionStorage 填充用户信息
   userListStore.fillInfo().then(() => {
