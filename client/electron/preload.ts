@@ -18,22 +18,22 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
   },
-  // getPort(...args: Parameters<typeof ipcRenderer.invoke>) {
-  //   const [channel, ...omit] = args
-  //   return ipcRenderer.invoke(channel, ...omit)
-  // },
-  // updateTheme: (value) => ipcRenderer.send('update-theme', value)
-
   // You can expose other APTs you need here.
   // ...
 })
-
+export interface LoginInfo { key: string, value: { pwd: string, avatar: string }  }
 export interface IElectronAPI {
   getPort: () => Promise<any>
   updateTheme: (value: 'dark' | 'light') => void
+  setLoginInfo: (key: string, value: { pwd: string, avatar: string }) => void
+  getLoginInfo: () => Promise<LoginInfo[]>
+  removeLoginInfo: (key: string) => Promise<boolean>
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
   getPort: () => ipcRenderer.invoke('get-port'),
   updateTheme: (value: 'dark' | 'light') => ipcRenderer.send('update-theme', value),
+  setLoginInfo: (key: string, value: string) => ipcRenderer.send('set-login-info', { key, value }),
+  getLoginInfo: ()  => ipcRenderer.invoke('get-login-info'),
+  removeLoginInfo: (key: string) => ipcRenderer.invoke('remove-login-info', key),
 })

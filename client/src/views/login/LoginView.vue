@@ -1,21 +1,35 @@
 <script lang="ts" setup>
-import { VNode, computed, onMounted, ref } from 'vue'
+import { RendererElement, RendererNode, VNode, computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import useStore from '@/store'
-import { FormInst, useMessage, FormRules, FormItemRule, useDialog, NButton, SelectOption, SelectGroupOption, NText, NFlex, NAvatar } from 'naive-ui'
+import {
+  FormInst,
+  useMessage,
+  FormRules,
+  FormItemRule,
+  useDialog,
+  NButton,
+  SelectOption,
+  SelectGroupOption,
+  NText,
+  NFlex,
+  NAvatar,
+  DropdownOption,
+  DropdownGroupOption
+} from 'naive-ui'
 import { RoutePathEnum } from '@/enums'
 import { h } from 'vue'
 import { KeyboardArrowDownRound, KeyboardArrowUpRound } from '@vicons/material'
 import ValidateCode from './ValidateCode.vue'
-import LoginInfoCard from './private/LoginInfoCard.vue' 
+import LoginInfoCard from './private/LoginInfoCard.vue'
 interface ModelType {
   hostname: string
   account: string
   password: string
 }
-
+const inElectron = !!window.electronAPI
 // electron 环境下向主进程询问本地服务的端口号
-window.electronAPI &&
+inElectron &&
   window.electronAPI.getPort().then(port => {
     console.log('当前本地服务监听的端口：' + port)
     model.value.hostname = `http://localhost:${port}`
@@ -36,7 +50,6 @@ const tip = import.meta.env.VITE_LOGIN_TIP || ''
 const formRef = ref<FormInst | null>(null)
 const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true' // 是否开放注册入口
 const model = ref<ModelType>({
-  // hostname: import.meta.env.VITE_BASE_URL || '',
   hostname: import.meta.env.VITE_BASE_URL || '',
   account: import.meta.env.VITE_ACCOUNT || '',
   password: import.meta.env.VITE_PASSWORD || ''
@@ -77,7 +90,6 @@ const submit = () => {
     if (!errors) {
       // 先判断是否已经登录
       // const result = userStore.queryCache(model.value.account, model.value.hostname)
-      setLoginStorage()
       const result = userListStore.get(model.value.account, model.value.hostname)
       if (result) {
         message.info('该用户已登录')
@@ -94,7 +106,9 @@ const submit = () => {
           },
           model.value.hostname
         )
-        .then(res => {
+        .then(avatar => {
+          /** In Electron */
+          window.electronAPI && setLoginStorage(avatar)
           router.push(RoutePathEnum.HOME)
         })
         .catch(err => {
@@ -102,7 +116,7 @@ const submit = () => {
         })
     } else {
       message.error('表单校验失败！')
-      console.log(errors)
+      // console.log(errors)
     }
   })
 }
@@ -129,27 +143,22 @@ function validateCode() {
 function handleToRegister() {
   router.push(RoutePathEnum.REGISTER)
 }
-const rememberAccount = ref(false)
-const rememberPassword = ref(false)
+const recordAccount = ref(false)
+const recordPassword = ref(false)
 
-function setLoginStorage() {
-  console.log(rememberAccount.value)
-  if (rememberAccount.value) {
-    localStorage.setItem(`Remember:${model.value.account}&${model.value.hostname}`, rememberPassword.value ? model.value.password : '')
+function setLoginStorage(avatar?: string) {
+  if (recordAccount.value) {
+    window.electronAPI.setLoginInfo(`Record:${model.value.account}&${model.value.hostname}`, { pwd: recordPassword.value ? model.value.password : '', avatar: avatar || '' })
   }
 }
 
-function handleRememberAccount(value) {
-  rememberAccount.value = value
-  if (rememberPassword.value) rememberPassword.value = false
+function handleRecordAccount(value) {
+  recordAccount.value = value
+  if (recordPassword.value) recordPassword.value = false
 }
-function handleRememberPassword(value) {
-  rememberPassword.value = value
-  if (!rememberAccount.value) rememberAccount.value = true
-}
-function handleSelectUpdate(value) {
-  console.log(value)
-  model.value.account = value
+function handleRecordPassword(value) {
+  recordPassword.value = value
+  if (!recordAccount.value) recordAccount.value = true
 }
 
 const isMenuShow = ref(false)
@@ -157,85 +166,91 @@ function handleMenuShow() {
   isMenuShow.value = !isMenuShow.value
 }
 
-let searchValue = ''
-function handleSearch(value) {
-  console.log(value)
-  searchValue = value
-}
-function handleBlur() {
-  model.value.account = searchValue
-}
-function handleFocus() {
-  model.value.account = searchValue
-}
-
-const options = computed(() => {
-  return getLoginInfoData().map(item => {
-    return {
-      key: item.key,
-      label: item.account,
-      value: item.account,
-      hostname: item.hostname,
-      pwd: item.pwd
-    }
-  })
+let loginInfoData: Awaited<ReturnType<typeof getLoginInfoData>> = []
+const options = ref<(DropdownOption | DropdownGroupOption)[]>([])
+onMounted(async () => {
+  /** In Electron */
+  if (inElectron) {
+    loginInfoData = await getLoginInfoData()
+    options.value = loginInfoData.map(item => {
+      return {
+        key: item.key,
+        label: item.account,
+        value: item.account,
+        avatar: item.avatar,
+        hostname: item.hostname,
+        pwd: item.pwd
+      }
+    })
+  }
 })
 
-function getLoginInfoData() {
-  const option = {
-    key: '',
-    // label: '',
-    account: '',
-    hostname: '',
-    pwd: ''
-  }
-  const options: Array<typeof option> = []
-  // 获取localStorage中的所有键名
-  const keys = Object.keys(localStorage)
+async function getLoginInfoData() {
+  const options: Array<{
+    key: string
+    avatar: string
+    account: string
+    hostname: string
+    pwd: string
+  }> = []
 
+  const data = await window.electronAPI.getLoginInfo()
   // 遍历键名，获取对应的值
-  keys.forEach(function (key) {
-    // console.log(key + ': ' + localStorage.getItem(key))
-    option.key = key
-    const prefix = key.substring(0, 9)
-    const suffix = key.substring(9)
-    // option.label = suffix
-    console.log(prefix)
-    console.log(prefix === 'Remember:')
-    if (prefix === 'Remember:') {
+  data.forEach((item, index, arr) => {
+    const option = {
+      key: '',
+      avatar: '',
+      account: '',
+      hostname: '',
+      pwd: ''
+    }
+    option.key = item.key
+    const prefix = item.key.substring(0, 7)
+    const suffix = item.key.substring(7)
+    if (prefix === 'Record:') {
       const arr = suffix.split('&')
       const account = arr[0]
       const hostname = arr[1]
       option.account = account
       option.hostname = hostname
-      option.pwd = localStorage.getItem(key) || ''
+      if(item.value) {
+        option.pwd = item.value.pwd || ''
+        option.avatar = item.value.avatar || ''
+      }
       options.push(option)
     }
   })
-  console.log(options)
+  // console.log(options)
   return options
 }
-function handleFallback(value: string | number) {
-  console.log(value)
-}
 
-function renderOption(info: { node: VNode; option: SelectOption | SelectGroupOption; selected: boolean }) {
-  const { node, option, selected } = info
-  console.log(option)
-  return h(LoginInfoCard, { 
-    avatar: 'avatar03.png', 
+function renderOption(props: { node: VNode; option: DropdownOption | DropdownGroupOption }) {
+  const { option } = props
+  return h(LoginInfoCard, {
+    avatar: option.avatar as string || './avatar03.png',
     account: option.value as string,
     hostname: option.hostname as string,
     onSelected: (account, hostname) => {
-      console.log('sed')
-      console.log(account, hostname)
       model.value.account = account
       model.value.hostname = hostname
-      console.log(model.value)
+      model.value.password = option.pwd as string
+      recordAccount.value = true
+      recordPassword.value = !!option.pwd
       isMenuShow.value = false
     },
     onClose: (account, hostname) => {
-      console.log('close')
+      const key = `Record:${account}&${hostname}`
+      console.log(window.electronAPI.removeLoginInfo)
+      window.electronAPI.removeLoginInfo(key).then(result => {
+        if(result) {
+          options.value.some((item, index, arr) => {
+            if(item.key === key) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+        }
+      })
     }
   })
 }
@@ -251,44 +266,36 @@ function renderOption(info: { node: VNode; option: SelectOption | SelectGroupOpt
         <div class="title">登录</div>
         <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
           <n-form-item path="hostname" label="服务器地址">
-            <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" />
+            <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" clearable />
           </n-form-item>
           <n-form-item path="account" label="账号">
             <n-input class="form-input" v-model:value="model.account" placeholder="帐号">
               <template #suffix>
-                <div class="input-suffix" @click="handleMenuShow">
-                  <n-icon :component="KeyboardArrowUpRound" v-if="isMenuShow" size="18" />
-                  <n-icon :component="KeyboardArrowDownRound" v-else size="18" />
-                </div>
+                <n-dropdown
+                  v-if="inElectron"
+                  trigger="click"
+                  :show="isMenuShow && options.length > 0"
+                  :options="options"
+                  :render-option="renderOption"
+                  :animated="false"
+                  :placement="'bottom-end'"
+                  :style="{ marginRight: '-12px', marginTop: '9px' }"
+                  :width="280"
+                >
+                  <div class="input-suffix" @click="handleMenuShow">
+                    <n-icon :component="KeyboardArrowUpRound" v-if="isMenuShow" size="18" />
+                    <n-icon :component="KeyboardArrowDownRound" v-else size="18" />
+                  </div>
+                </n-dropdown>
               </template>
             </n-input>
-            <!-- <n-select
-              :value="model.account"
-              :show="isMenuShow"
-              @update:value="handleSelectUpdate"
-              :options="options"
-              filterable
-              :render-option="renderOption"
-              @search="handleSearch"
-              @blur="handleBlur"
-              @focus="handleFocus"
-            >
-              <template #arrow>
-                <div @click="handleMenuShow">
-                  <transition name="slide-left">
-                    <KeyboardArrowUpRound v-if="isMenuShow" />
-                    <KeyboardArrowDownRound v-else />
-                  </transition>
-                </div>
-              </template>
-            </n-select> -->
           </n-form-item>
           <n-form-item path="password" label="密码">
-            <n-input class="form-input" v-model:value="model.password" type="password" placeholder="密码" />
+            <n-input class="form-input" v-model:value="model.password" type="password" placeholder="密码" clearable/>
           </n-form-item>
-          <n-flex justify="space-between">
-            <n-checkbox v-model:checked="rememberAccount" :on-update:checked="handleRememberAccount"> 记住账号 </n-checkbox>
-            <n-checkbox v-model:checked="rememberPassword" :on-update:checked="handleRememberPassword"> 记住密码 </n-checkbox>
+          <n-flex v-if="inElectron" justify="space-between">
+            <n-checkbox v-model:checked="recordAccount" :on-update:checked="handleRecordAccount"> 记住账号 </n-checkbox>
+            <n-checkbox :disabled="!inElectron" v-model:checked="recordPassword" :on-update:checked="handleRecordPassword"> 记住密码 </n-checkbox>
           </n-flex>
         </n-form>
         <n-button class="confirm" @click="handleLogin">登录</n-button>
@@ -360,6 +367,10 @@ function renderOption(info: { node: VNode; option: SelectOption | SelectGroupOpt
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      opacity: 0.6;
+      &:hover {
+        opacity: 1;
+      }
     }
   }
   .confirm {

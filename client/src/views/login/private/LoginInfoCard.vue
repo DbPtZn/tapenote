@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui'
 import { CloseRound } from '@vicons/material'
+import { onMounted, ref } from 'vue';
 const props = defineProps<{
   avatar: string,
   account: string,
@@ -11,8 +12,9 @@ const emits = defineEmits<{
   close: [ account: string, hostname: string ]
 }>()
 const themeVars = useThemeVars()
+const imgurl = ref(props.avatar)
 function handleError() {
-  return 'avatar03.png'
+  imgurl.value = './avatar03.png'
 }
 function handleSelected() {
   emits('selected', props.account, props.hostname)
@@ -24,7 +26,7 @@ function handleClose() {
 
 <template>
   <div class="login-info-card" @click="handleSelected">
-    <n-avatar class="avatar" :src="avatar" @fallbackSrc="handleError" />
+    <n-avatar class="avatar" :src="imgurl" @error="handleError" />
     <n-flex :vertical="true">
       <n-text class="account">{{ account }}</n-text>
       <n-text class="hostname">{{ hostname }}</n-text>

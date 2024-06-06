@@ -5,7 +5,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { initServerProcess, quitServerProcess } from './serverProcess'
 import portfinder from 'portfinder'
-import { useProcessEnv, useNativeTheme } from './hooks'
+import { useProcessEnv, useNativeTheme, useRecordLogin } from './hooks'
 import { logger } from './services'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -47,6 +47,7 @@ function createWindow() {
 
   // nativeTheme.themeSource = 'dark'
   useNativeTheme() // 控制主题
+  useRecordLogin() // 记录登录
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {

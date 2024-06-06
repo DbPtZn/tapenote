@@ -67,7 +67,7 @@ export const useUserListStore = defineStore('userListStore', {
     /** 登录业务系统 */
     login(params: Parameters<typeof auth.login>[0], hostname: string) {
       const { userStore, folderStore, folderTreeStore } = useStore()
-      return new Promise((resolve, reject) => {
+      return new Promise<string | undefined>((resolve, reject) => {
         auth
           .login(params, hostname)
           .then(res => {
@@ -84,7 +84,7 @@ export const useUserListStore = defineStore('userListStore', {
                 folderTreeStore.$reset() // 新登录用户时重置文件夹目录
                 folderStore.$reset() // 新登录用户时重置文件夹
               }
-              resolve('')
+              resolve(state?.avatar)
               loginStateChangeEvent.next({ type: 'login', account: params.account, hostname })
             })
           })
