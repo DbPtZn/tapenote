@@ -225,6 +225,7 @@ onUnmounted(() => {
     // console.log('离开页面')
     editor?.destroy()
     player?.destory()
+    console.log('编辑器是否已经销毁：' + editor.destroyed)
     subs.forEach(sub => sub.unsubscribe())
     subs.length = 0
   } catch (error) {

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { RendererElement, RendererNode, VNode, computed, onMounted, ref } from 'vue'
+import { RendererElement, RendererNode, VNode, computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import useStore from '@/store'
 import {
@@ -22,6 +22,7 @@ import { h } from 'vue'
 import { KeyboardArrowDownRound, KeyboardArrowUpRound } from '@vicons/material'
 import ValidateCode from './ValidateCode.vue'
 import LoginInfoCard from './private/LoginInfoCard.vue'
+import { Subscription, fromEvent } from '@tanbo/stream'
 interface ModelType {
   hostname: string
   account: string
@@ -120,6 +121,19 @@ const submit = () => {
     }
   })
 }
+const loginRef = ref()
+let sub: Subscription
+onMounted(() => {
+  sub = fromEvent<KeyboardEvent>(loginRef.value, 'keypress').subscribe(ev => {
+    console.log(ev)
+    if(ev.key === "Enter") {
+      submit()
+    }
+  })
+})
+onUnmounted(() => {
+  sub.unsubscribe()
+})
 
 function validateCode() {
   return new Promise<boolean>((resolve, reject) => {
@@ -143,6 +157,8 @@ function validateCode() {
 function handleToRegister() {
   router.push(RoutePathEnum.REGISTER)
 }
+
+
 const recordAccount = ref(false)
 const recordPassword = ref(false)
 
@@ -257,7 +273,7 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
 </script>
 
 <template>
-  <div class="login-container">
+  <div ref="loginRef" class="login-container">
     <div class="tip">
       {{ tip }}
     </div>

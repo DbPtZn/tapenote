@@ -45,7 +45,6 @@ export function createTextEditor(args: {
             const themeProvider = editor?.get(ThemeProvider)
             themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme()) 
           })
-          
           resolve({ editor, content: project.content })
         } catch (error) {
           console.log(error)
