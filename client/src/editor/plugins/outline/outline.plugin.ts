@@ -8,7 +8,7 @@ import { UIConfig } from '../../common'
 import { Structurer } from '../..'
 
 export class OutlinePlugin implements Plugin {
-  private app!: App | null
+  private app: App | null = null
   private workbench!: HTMLElement
   private host!: HTMLElement
   private subs: Subscription[] = []
@@ -123,6 +123,8 @@ export class OutlinePlugin implements Plugin {
   }
   onDestroy?(): void {
     this.subs.forEach(i => i.unsubscribe())
+    this.outlineData.value = []
+    this.app?.unmount()
   }
 }
 

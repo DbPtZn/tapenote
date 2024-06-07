@@ -110,7 +110,7 @@ export class AnimeUtilsProvider {
   }
 
   // 可选，编辑器销毁时调用
-  onDestroy() {
+  destory() {
     //
   }
 }

@@ -22,8 +22,8 @@ export class AnimeContextmenuPlugin implements Plugin {
   private selection!: Selection
   private renderer!: Renderer
   private animeService!: AnimeService
-  private subs!: Subscription[]
-  private contextmenu!: App<Element>
+  private subs: Subscription[]
+  private contextmenu: App<Element> | null = null
   private anime!: AnimeProvider
   private animeOptions: ReturnType<typeof this.anime.getOptions> = []
   constructor() {
@@ -81,7 +81,7 @@ export class AnimeContextmenuPlugin implements Plugin {
                     options: this.animeOptions,
                     onSelect: (name, value) => {
                       this.updataAnimeFormatter(vdom, { name, value })
-                      this.contextmenu.unmount()
+                      this.contextmenu?.unmount()
                     }
                   })
                 }
@@ -138,7 +138,7 @@ export class AnimeContextmenuPlugin implements Plugin {
                     options: this.animeOptions,
                     onSelect: (name, value) => {
                       this.updataAnimeComponent(component, { name, value })
-                      this.contextmenu.unmount()
+                      this.contextmenu?.unmount()
                     }
                   })
                 }
@@ -167,10 +167,10 @@ export class AnimeContextmenuPlugin implements Plugin {
           options: menus,
           show: true,
           onClickoutside: () => {
-            this.contextmenu.unmount()
+            this.contextmenu?.unmount()
           },
           onSelect: () => {
-            this.contextmenu.unmount()
+            this.contextmenu?.unmount()
           }
         })
         this.contextmenu = createApp(h(UIConfig, null, {
@@ -254,6 +254,7 @@ export class AnimeContextmenuPlugin implements Plugin {
   onDestroy() {
     this.subs.forEach((sub) => sub.unsubscribe())
     this.contextmenu?.unmount()
+    this.animeOptions = []
   }
 }
 

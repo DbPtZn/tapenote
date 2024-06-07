@@ -1,9 +1,7 @@
-import { ImgToUrlService, ThemeProvider } from '@/editor'
+import { ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
 import { Ref, onMounted, watch } from 'vue'
-import { useShell } from '@/renderer'
-import { CreatorShell } from '../../../shell'
 import { getSidenoteConfig } from './sidenote.config'
 import { Bridge } from '../../bridge'
 
@@ -20,7 +18,6 @@ export function useSidenoteEditor(args: {
 }) {
   const { id, account, hostname, rootRef, editorRef, scrollerRef, controllerRef, toolbarRef, bridge } = args
   const { projectStore, settingStore } = useStore()
-  const shell = useShell<CreatorShell>()
   let editor: Editor
   watch(
     () => settingStore.theme,

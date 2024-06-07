@@ -37,6 +37,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
+  controllerData.value = []
 })
 </script>
 

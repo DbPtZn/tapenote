@@ -1,5 +1,5 @@
 import { InlineToolbarPlugin,
-  Toolbar, boldTool, ConfigProvider, 
+  Toolbar, boldTool, 
   historyBackTool, historyForwardTool, headingTool, 
   italicTool, strikeThroughTool, underlineTool, olTool, ulTool, 
   fontSizeTool, textIndentTool, colorTool, textBackgroundTool, 

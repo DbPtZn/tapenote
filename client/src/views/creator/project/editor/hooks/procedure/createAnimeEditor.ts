@@ -1,11 +1,10 @@
-import { AxiosProvider, ImgToUrlService, ThemeProvider } from '@/editor'
+import { ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
 import { Ref, onMounted, watch } from 'vue'
 import { getProcedureConfig } from './procedure.config'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../../../../shell'
-import { Commander, Controller, RootComponentRef } from '@textbus/core'
 
 export function createAnimeEditor(args: {
   id: string,

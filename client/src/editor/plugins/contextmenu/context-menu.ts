@@ -33,8 +33,8 @@ export class ContextMenu implements Plugin {
   private menuSubscriptions: Subscription[] = []
   private submenuSubscriptions: Subscription[] = []
 
-  private menu!: HTMLElement
-  private submenu!: HTMLElement
+  private menu: HTMLElement | null = null
+  private submenu: HTMLElement | null = null
 
   setup(injector: Injector) {
     const container = injector.get(VIEW_CONTAINER)

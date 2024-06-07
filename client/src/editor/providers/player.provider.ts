@@ -53,8 +53,8 @@ export class Player {
 
   private injector!: Injector
   private anime!: AnimeProvider
-  private data!: ParseData[] // 数据
-  sourceData!: CourseData[] // 源数据
+  private data: ParseData[] = [] // 数据
+  sourceData: CourseData[]  = []// 源数据
   private scrollerRef!: HTMLElement // 滚动条
   private rootRef!: HTMLElement // 课程最外层容器
   private containerRef!: HTMLElement
@@ -670,43 +670,41 @@ export class Player {
     this.init()
     this.subs.forEach(sub => sub.unsubscribe())
     // 销毁，确保垃圾回收
-    if (this.audio) 
+    if (this.audio) {
       this.audio.src = ''
       this.audio = null
-
-    if (this.data) {
-      this.data.forEach(item => {
-        if (item.audio) {
-          item.audio.src = ''
-        }
-      })
-      this.data.length = 0
-      this.data = null as any
     }
       
-    if (this.sourceData)
-      this.sourceData.length = 0
-      this.sourceData = null as any
+    this.data.forEach(item => {
+      if (item.audio) {
+        item.audio.src = ''
+      }
+    })
+    this.data.length = 0
+    this.data = null as any
+      
+    this.sourceData.length = 0
+    this.sourceData = null as any
+      
     
-    if (this.keyframeHistory)
-      this.keyframeHistory.length = 0
-      this.keyframeHistory = null  as any
+    this.keyframeHistory.length = 0
+    this.keyframeHistory = null  as any
+   
 
-    if(this.keyframeSequence)
-      this.keyframeSequence.length = 0
-      this.keyframeSequence = null  as any
+    this.keyframeSequence.length = 0
+    this.keyframeSequence = null  as any
+   
 
-    if(this.subtitleSequence)
-      this.subtitleSequence.length = 0
-      this.subtitleSequence = null  as any
+    this.subtitleSequence.length = 0
+    this.subtitleSequence = null  as any
+     
 
-    if(this.subtitleKeyframeSequence)
-      this.subtitleKeyframeSequence.length = 0
-      this.subtitleKeyframeSequence = null  as any
+    this.subtitleKeyframeSequence.length = 0
+    this.subtitleKeyframeSequence = null  as any
+   
 
-    if(this.animeElementSequence)
-      this.animeElementSequence.length = 0
-      this.animeElementSequence = null  as any
+    this.animeElementSequence.length = 0
+    this.animeElementSequence = null  as any
   }
 }
 /**

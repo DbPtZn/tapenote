@@ -1,6 +1,6 @@
 import { Observable, Subject, Subscription, Injector, useContext, Injectable } from '@textbus/core'
 import { VIEW_CONTAINER } from '@textbus/platform-browser'
-import { VNode, createApp } from 'vue'
+import { App, VNode, createApp } from 'vue'
 import { TempDialog } from './_utils'
 interface DialogConfig {
   /** 临时对话框要挂载的节点（默认会挂载在body下的临时节点上） */
@@ -25,15 +25,10 @@ interface DialogConfig {
 
 @Injectable()
 export class DialogProvider {
-  // private injector: Textbus
-  // private subs!: Subscription[]
   private container!: HTMLElement
   private wrapper!: HTMLElement
-  constructor() {
-    // this.injector = useContext()
-    // this.container = this.injector.get(VIEW_CONTAINER)
-    // this.wrapper = this.container.parentNode as HTMLElement
-  }
+  private dialog: App | null = null
+  constructor() {}
 
   create(config: DialogConfig, injector: Injector) {
     this.container = injector.get(VIEW_CONTAINER)
@@ -41,19 +36,23 @@ export class DialogProvider {
     const hanger = document.createElement('div')
     this.wrapper.appendChild(hanger)
     return new Promise((resolve, reject) => {
-      const dialog = createApp(TempDialog, {
+      this.dialog = createApp(TempDialog, {
         ...config
       })
-      dialog.provide('destory', () => {
-        dialog.unmount()
+      this.dialog.provide('destory', () => {
+        this.dialog?.unmount()
         // 销毁时移除 body 下的挂载节点
         if (this.wrapper && this.wrapper.contains(hanger)) {
           this.wrapper.removeChild(hanger)
         }
         resolve('')
       })
-      dialog.provide('injector', injector)
-      dialog.mount(hanger)
+      this.dialog.provide('injector', injector)
+      this.dialog.mount(hanger)
     })
+  }
+
+  destory() {
+    this.dialog?.unmount()
   }
 }

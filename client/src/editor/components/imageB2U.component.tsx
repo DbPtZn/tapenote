@@ -5,7 +5,7 @@ import {
   defineComponent,
   VElement,
   useRef,
-  useState, onContextMenu, useContext, Injector,
+  useState, onContextMenu, useContext, Injector, onDestroy,
 } from '@textbus/core'
 import { ComponentLoader, createElement, createTextNode } from '@textbus/platform-browser'
 import { Subscription } from '@tanbo/stream'
@@ -202,7 +202,7 @@ export const imageB2UComponent = defineComponent({
     }
     const stateController = useState(state)
 
-    stateController.onChange.subscribe(v => {
+    const subscription = stateController.onChange.subscribe(v => {
       state = v
     })
 
@@ -304,6 +304,10 @@ export const imageB2UComponent = defineComponent({
           }))
         }
       }])
+    })
+
+    onDestroy(() => {
+      subscription.unsubscribe()
     })
 
     return {

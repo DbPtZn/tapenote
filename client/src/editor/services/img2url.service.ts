@@ -199,4 +199,9 @@ export class ImgToUrlService {
       type: mime
     })
   }
+
+  destory() {
+    this.axios = null
+    this.promiseSequence = []
+  }
 }

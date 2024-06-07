@@ -11,7 +11,7 @@ import {
 import { Editor, Layout } from '@textbus/editor'
 import { auditTime, fromEvent } from '@tanbo/stream'
 import { createElement, SelectionBridge, VIEW_CONTAINER } from '@textbus/platform-browser'
-import { VNode, createApp, h } from 'vue'
+import { App, VNode, createApp, h } from 'vue'
 import InlineToolbarView from './InlineToolbarView.vue'
 import { Tool } from '../toolbar/types'
 import { UIConfig } from '../../common'
@@ -30,6 +30,8 @@ export class InlineToolbarPlugin implements Plugin {
   private tools: Array<any>
   private toolbarWidth: number
   private toolbarHeight: number
+  private components: VNode[] = []
+  private toolbarView: App | null = null
 
   constructor(private toolFactories: Array<ToolFactory | ToolFactory[]> = [], private scroller: HTMLElement) {
     this.tools = toolFactories.map((i) => {
@@ -61,24 +63,23 @@ export class InlineToolbarPlugin implements Plugin {
         }))
       ]
     })
-    const components: VNode[] = []
     this.tools.forEach((tool) => {
       if (Array.isArray(tool)) {
         const groupWrapper: VNode[] = []
         tool.forEach((t) => {
           groupWrapper.push(t.setup(injector, this.toolWrapper))
         })
-        components.push(h('div', { class: 'group-wrapper' }, groupWrapper))
+        this.components.push(h('div', { class: 'group-wrapper' }, groupWrapper))
         return
       }
-      components.push(tool.setup(injector, this.toolWrapper))
+      this.components.push(tool.setup(injector, this.toolWrapper))
     })
     // 工具条主框架
-    const toolbarView = createApp(h(UIConfig, null, {
-      default: () => h(InlineToolbarView, { cmpts: components })
+    this.toolbarView = createApp(h(UIConfig, null, {
+      default: () => h(InlineToolbarView, { cmpts: this.components })
     }))
-    toolbarView.provide('injector', injector)
-    toolbarView.mount(this.toolWrapper)
+    this.toolbarView.provide('injector', injector)
+    this.toolbarView.mount(this.toolWrapper)
     this.subsA.push(
       selection.onChange.pipe(auditTime(300)).subscribe(() => {
         // 阻止创建多个事件监听器
@@ -120,6 +121,14 @@ export class InlineToolbarPlugin implements Plugin {
     // console.log('销毁行内工具条')
     this.subsA.forEach((i: any) => i.unsubscribe())
     this.subsB.forEach((i: any) => i.unsubscribe())
+
+    this.components.length = 0
+    this.components = []
+    
+    this.toolbarView?.unmount()
+
+    this.tools.length = 0
+    this.tools = []
   }
 
   private onSelectionChange(

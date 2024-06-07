@@ -1,15 +1,7 @@
-import {
-  Commander,
-  Injector,
-  Plugin,
-  Selection,
-  Renderer,
-  VElement,
-  Subscription
-} from '@textbus/core'
-import { App, createApp } from 'vue';
-import AddAnimeTool from './AddAnimeTool.vue';
-import { VIEW_DOCUMENT } from '@textbus/platform-browser';
+import { Commander, Injector, Plugin, Selection, Renderer, VElement, Subscription } from '@textbus/core'
+import { App, createApp } from 'vue'
+import AddAnimeTool from './AddAnimeTool.vue'
+import { VIEW_DOCUMENT } from '@textbus/platform-browser'
 
 export class AnimeComponentSupport implements Plugin {
   // private commander!: Commander;
@@ -33,9 +25,10 @@ export class AnimeComponentSupport implements Plugin {
   }
 
   onDestroy(): void {
-      this.app?.unmount()
-      if (this.viewDocument && this.host) {
-        this.viewDocument.removeChild(this.host)
-      }
+    // this.host && this.viewDocument?.removeChild(this.host)
+    this.app?.unmount()
+    if (this.viewDocument && this.host) {
+      this.viewDocument.removeChild(this.host)
+    }
   }
 }

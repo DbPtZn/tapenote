@@ -43,6 +43,10 @@ export class AxiosProvider {
       }
     })
   }
+
+  destory() {
+    this.axios = null
+  }
 }
 
 const base64ImgtoFile = (baseUrl: any, filename = 'file') => {

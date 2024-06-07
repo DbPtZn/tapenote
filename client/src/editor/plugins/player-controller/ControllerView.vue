@@ -35,7 +35,7 @@ const { x, y, style } = useDraggable(controllerRef, {
   preventDefault: true, // 阻止默认事件 (阻止拖拽时选中文本)
   stopPropagation: true // 阻止冒泡
 })
-window.onresize = () => {
+window.onresize = function() {
   // console.log('窗口大小改变')
   if (x.value > rect.width) {
     x.value = rect.width - 100
@@ -74,7 +74,9 @@ function handleHideController() {
 }
 
 onUnmounted(() => {
-  console.log('控制器销毁')
+  subs.forEach(sub => sub.unsubscribe())
+  controllerData.value = []
+  window.onresize = function() {}
 })
 </script>
 

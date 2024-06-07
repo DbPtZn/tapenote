@@ -1,4 +1,4 @@
-import { ComponentInitData, ContentType, defineComponent, Injector, Observable, onViewChecked, Subject, useContext, useState, VElement } from '@textbus/core'
+import { ComponentInitData, ContentType, defineComponent, Injector, Observable, onDestroy, onViewChecked, Subject, Subscription, useContext, useState, VElement } from '@textbus/core'
 import { ComponentLoader } from '@textbus/platform-browser'
 import { Img2base64Service } from '../services'
 
@@ -9,6 +9,7 @@ export const imageU2BComponent = defineComponent({
   setup(data: ComponentInitData<any, unknown>) {
     const injector = useContext()
     const img2base64 = injector.get(Img2base64Service)
+    let sub: Subscription
     let state = {
       src: data.state.src
     }
@@ -18,7 +19,7 @@ export const imageU2BComponent = defineComponent({
       /** 使用状态管理 */
       const stateController = useState(state)
       /** 状态更新 */
-      stateController.onChange.subscribe(newState => {
+      sub = stateController.onChange.subscribe(newState => {
         state = newState
       })
       /** 图片转换进程 */
@@ -32,6 +33,10 @@ export const imageU2BComponent = defineComponent({
       onViewChecked(() => {
         console.log('check')
         img2base64.checkProcess()
+      })
+      
+      onDestroy(() => {
+        sub.unsubscribe()
       })
     }
     return {
@@ -51,6 +56,8 @@ export const imageU2BComponent = defineComponent({
       }
     }
   }
+
+  
 })
 
 /** 组件加载器 */

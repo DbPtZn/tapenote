@@ -175,6 +175,7 @@ export class ContextMenu implements Plugin {
 
   destroy() {
     // this.hide()
+    this.menu?.unmount()
     this.subs.forEach(i => i.unsubscribe())
     this.subs = []
   }

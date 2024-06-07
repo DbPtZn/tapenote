@@ -6,7 +6,6 @@ import { Controller, Injector, Keymap, Subscription, fromEvent } from '@textbus/
 import _ from 'lodash'
 import * as UUID from 'uuid'
 import elementResizeDetector from 'element-resize-detector'
-import { Editor } from '@textbus/editor'
 import { useGetKeymapHandler, useKeymap } from './hooks'
 const erd = elementResizeDetector()
 const themeVars = useThemeVars()

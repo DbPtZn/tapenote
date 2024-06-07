@@ -1,8 +1,8 @@
-import { Subscription, fromEvent } from '@tanbo/stream'
+import { Subscription } from '@tanbo/stream'
 import { VIEW_DOCUMENT, VIEW_CONTAINER } from '@textbus/platform-browser'
 import { Plugin, Injector, Commander } from '@textbus/core'
 import _ from 'lodash'
-import { ConfigProvider, Structurer } from '@/editor'
+import { Structurer } from '@/editor'
 import { Layout } from '@textbus/editor'
 /**
  * 主题控制器（插件）
@@ -17,9 +17,9 @@ export class Clipboard implements Plugin {
   setup(injector: Injector): void {
     this.layout = injector.get(Layout)
     this.editorHost = this.layout.container
-    const vDocument = injector.get(VIEW_DOCUMENT)
-    const vContainer = injector.get(VIEW_CONTAINER)
-    const commander = injector.get(Commander)
+    // const vDocument = injector.get(VIEW_DOCUMENT)
+    // const vContainer = injector.get(VIEW_CONTAINER)
+    // const commander = injector.get(Commander)
     // const configProvider = injector.get(ConfigProvider)
     const structurer = injector.get(Structurer)
     this.toolbarHost = structurer.toolbarRef

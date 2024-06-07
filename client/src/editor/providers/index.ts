@@ -1,5 +1,4 @@
 // common
-export * from './config.provider'
 export * from './dialog.provider'
 export * from './axios.provider'
 export * from './color.provider'

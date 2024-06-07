@@ -1,4 +1,4 @@
-import { AxiosProvider, ConfigProvider, ImgToUrlService, ThemeProvider } from "@/editor"
+import { ThemeProvider } from "@/editor"
 import useStore from "@/store"
 import { Editor, createEditor } from "@textbus/editor"
 import { Ref, onMounted, watch } from 'vue'
@@ -6,7 +6,6 @@ import { getNoteConfig } from "./note.config"
 import { useShell } from "@/renderer"
 import '@textbus/editor/bundles/textbus.min.css'
 import { CreatorShell } from '../../../../shell'
-import { Commander, RootComponentRef } from "@textbus/core"
 export function createTextEditor(args: {
   id: string, 
   account: string, 
@@ -31,9 +30,6 @@ export function createTextEditor(args: {
     onMounted(() => {
       projectStore.fetchAndSet(id, account, hostname).then(project => {
         try {
-          // editor = createEditor({
-          //   content: project.content
-          // })
           editor = createEditor(getNoteConfig({
             account,
             hostname,

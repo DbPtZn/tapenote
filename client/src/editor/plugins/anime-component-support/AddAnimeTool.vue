@@ -4,7 +4,7 @@ import { computed, inject, onUnmounted, reactive, ref } from 'vue'
 import { AddAnimeService } from '../../services'
 import { Editor, Layout } from '@textbus/editor'
 import { UIIcon, UIConfig } from '../../common'
-import { ANIME_COMPONENT_NAME, AnimeProvider, AnimeUtilsProvider, ConfigProvider, Structurer, animeComponent } from '@/editor'
+import { ANIME_COMPONENT_NAME, AnimeProvider, AnimeUtilsProvider, Structurer, animeComponent } from '@/editor'
 type AnimeOption = ReturnType<AnimeProvider['getOptions']>[0]
 const injector = inject('injector') as Injector
 const anime = injector.get(AnimeProvider)

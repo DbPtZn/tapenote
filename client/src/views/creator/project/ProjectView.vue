@@ -13,7 +13,7 @@ import { CreatorShell } from '../shell'
 import { useThemeVars } from 'naive-ui'
 import elementResizeDetector from 'element-resize-detector'
 
-const { projectStore, userStore, speakerStore } = useStore()
+const { projectStore, userStore } = useStore()
 const shell = useShell<CreatorShell>()
 // watch(() => shell.workbench.itemId, (newVal, oldVal) => {
 //   console.log(newVal)
@@ -151,6 +151,7 @@ onMounted(() => {
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
   data.children.length = 0
+  data.children = []
   if (implementRef.value) {
     erd.uninstall(implementRef.value)
   }

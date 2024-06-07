@@ -3,7 +3,7 @@ import { makeError, Selection, Plugin, Injector } from '@textbus/core'
 import _ from 'lodash'
 import { Tool } from './types'
 import ToolbarView from './ToolbarView.vue'
-import { createApp, h, VNode } from 'vue'
+import { App, createApp, h, VNode } from 'vue'
 import { UIConfig } from '../../common'
 
 const toolbarErrorFn = makeError('Toolbar')
@@ -18,6 +18,8 @@ export class Toolbar implements Plugin {
   private toolWrapper!: HTMLElement
   private subs: Subscription[] = []
   public tools: Array<Tool | Tool[]>
+  private components: VNode[] = []
+  private toolbarView: App | null = null
 
   constructor(
     private toolFactories: Array<ToolFactory | ToolFactory[]> = [],
@@ -30,7 +32,7 @@ export class Toolbar implements Plugin {
   }
   setup(injector: Injector): void {
     const selection = injector.get(Selection)
-    const components: VNode[] = []
+    this.components = []
     this.tools.forEach((tool) => {
       // 如果是工具组
       if (Array.isArray(tool)) {
@@ -38,18 +40,17 @@ export class Toolbar implements Plugin {
         tool.forEach((t) => {
           groupWrapper.push(t.setup(injector, this.toolWrapper))
         })
-        components.push(h('div', { class: 'group-wrapper' }, groupWrapper))
+        this.components.push(h('div', { class: 'group-wrapper' }, groupWrapper))
         return
       }
-        components.push(tool.setup(injector, this.toolWrapper))
+        this.components.push(tool.setup(injector, this.toolWrapper))
     })
     // 工具条主框架
-    const toolbarView = createApp(h(UIConfig, null, {
-      default: () => h(ToolbarView, { cmpts: components })
+    this.toolbarView = createApp(h(UIConfig, null, {
+      default: () => h(ToolbarView, { cmpts: this.components })
     }))
-    toolbarView.provide('injector', injector) // 向 vue 工具条注入编辑器依赖
-    toolbarView.mount(this.host!)
-
+    this.toolbarView.provide('injector', injector) // 向 vue 工具条注入编辑器依赖
+    this.toolbarView.mount(this.host!)
     const tools = this.tools.flat()
     this.subs.push(
       merge(
@@ -64,7 +65,15 @@ export class Toolbar implements Plugin {
   }
 
   onDestroy() {
+    this.components.length = 0
+    this.components = []
+    
+    this.toolbarView?.unmount()
+
     this.subs.forEach((i) => i.unsubscribe())
+
+    this.tools.length = 0
+    this.tools = []
   }
 
 }

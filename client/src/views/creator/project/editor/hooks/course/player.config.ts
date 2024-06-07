@@ -1,5 +1,4 @@
 import {
-  ConfigProvider,
   colorFormatLoader,
   colorFormatter,
   textBackgroundColorFormatter,
@@ -70,8 +69,7 @@ export function getCourseConfig(args: {
     formatLoaders: [animePlayerFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     styleSheets: [],
     providers: [
-      Player, 
-      ConfigProvider, 
+      Player,
       AnimeProvider, 
       DialogProvider, 
       OutlineService, 

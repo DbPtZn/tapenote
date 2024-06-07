@@ -1,8 +1,7 @@
 import { Observable, Subject, Subscription } from '@tanbo/stream'
-import { VIEW_DOCUMENT } from '@textbus/platform-browser'
-import { Plugin, Injector, Injectable } from '@textbus/core'
+import { Injector, Injectable } from '@textbus/core'
 import _ from 'lodash'
-import { ConfigProvider, Structurer } from '@/editor'
+import { Structurer } from '@/editor'
 import { Layout } from '@textbus/editor'
 type ThemeState = 'light' | 'dark'
 /**
@@ -53,7 +52,9 @@ export class ThemeProvider {
     this.editorHost?.setAttribute(attrName, themeName)
   }
 
-  onDestroy() {
+  destory() {
+    this.toolbarHost = null
+    this.editorHost = null
     this.subs.forEach(i => i.unsubscribe())
   }
 }

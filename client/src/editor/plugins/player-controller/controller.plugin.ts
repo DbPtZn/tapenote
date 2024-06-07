@@ -3,7 +3,7 @@ import { makeError, Selection, Plugin, Injector } from '@textbus/core'
 import _ from 'lodash'
 import { Tool } from './types'
 import ControllerView from './ControllerView.vue'
-import { createApp, h, VNode } from 'vue'
+import { App, createApp, h, VNode } from 'vue'
 import { UIConfig } from '@/editor'
 import { Player } from '../..'
 
@@ -17,7 +17,9 @@ interface ToolFactory {
  */
 export class Controller implements Plugin {
   private subs: Subscription[] = []
-  tools: (Tool | Tool[])[]
+  private tools: (Tool | Tool[])[]
+  private components: VNode[] = []
+  private app: App | null = null
 
 
   constructor(
@@ -31,7 +33,6 @@ export class Controller implements Plugin {
   }
   setup(injector: Injector): void {
     const player = injector.get(Player)
-    const components: VNode[] = []
     this.tools.forEach((tool) => {
       // 如果是工具组
       if (Array.isArray(tool)) {
@@ -39,17 +40,17 @@ export class Controller implements Plugin {
         tool.forEach((t) => {
           groupWrapper.push(t.setup(injector, this.host))
         })
-        components.push(h('div', { class: 'group-wrapper' }, groupWrapper))
+        this.components.push(h('div', { class: 'group-wrapper' }, groupWrapper))
         return
       }
-        components.push(tool.setup(injector, this.host))
+      this.components.push(tool.setup(injector, this.host))
     })
     // 工具条主框架
-    const app = createApp(h(UIConfig, null, {
-      default: () => h(ControllerView, { cmpts: components })
+    this.app = createApp(h(UIConfig, null, {
+      default: () => h(ControllerView, { cmpts: this.components })
     }))
-    app.provide('injector', injector) // 向 vue 工具条注入编辑器依赖
-    app.mount(this.host!)
+    this.app.provide('injector', injector) // 向 vue 工具条注入编辑器依赖
+    this.app.mount(this.host!)
     const tools = this.tools.flat()
     this.subs.push(
       player.onStateUpdate.subscribe(() => {
@@ -61,6 +62,11 @@ export class Controller implements Plugin {
   }
 
   onDestroy() {
+    this.tools.length = 0
+    this.tools = []
+    this.components.length = 0
+    this.components = []
+    this.app?.unmount()
     this.subs.forEach((i) => i.unsubscribe())
   }
 

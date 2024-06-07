@@ -1,11 +1,10 @@
-import { ConfigProvider, CourseData, Player, ThemeProvider } from '@/editor'
+import { CourseData, Player, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
 import { Ref, onMounted, watch } from 'vue'
 import { getCourseConfig } from './player.config'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../../../../shell'
-import { Commander, RootComponentRef } from '@textbus/core'
 
 export function createPlayer(args: {
   id: string

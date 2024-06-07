@@ -111,4 +111,8 @@ export class Img2base64Service {
       }
     })
   }
+
+  destory() {
+    this.promiseSequence = []
+  }
 }

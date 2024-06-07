@@ -1,4 +1,4 @@
-import { Injectable, retry } from '@textbus/core'
+import { Injectable, Provider, retry } from '@textbus/core'
 import { Observable, Subject } from '@textbus/core'
 import anime from 'animejs'
 
@@ -186,5 +186,9 @@ export class AnimeProvider {
       })
     })
     return animeOptions
+  }
+
+  destory() {
+    this.effectsMap.clear()
   }
 }

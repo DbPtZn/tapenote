@@ -33,10 +33,10 @@ export const rootPlayerComponent = defineComponent({
     const docContainer = injector.get(VIEW_DOCUMENT)
     const history = injector.get(History)
     const self = useSelf()
-
-    self.onStateChange.subscribe(ev => {
+    const subs: Subscription[] = []
+    subs.push(self.onStateChange.subscribe(ev => {
       console.log(ev)
-    })
+    }))
 
     const slots = useSlots(data?.slots || [new Slot([
       ContentType.Text,
@@ -68,8 +68,7 @@ export const rootPlayerComponent = defineComponent({
     })
 
     const rootNode = useRef<HTMLElement>()
-    const subscription = new Subscription()
-    const subs: Subscription[] = []
+    // const subscription = new Subscription()
 
     onViewInit(() => {
       // subscription.add(fromEvent<MouseEvent>(docContainer, 'click').subscribe(ev => {
@@ -125,7 +124,7 @@ export const rootPlayerComponent = defineComponent({
     })
 
     onDestroy(() => {
-      subscription.unsubscribe()
+      // subscription.unsubscribe()
       subs.forEach(sub => sub.unsubscribe())
     })
 
