@@ -9,17 +9,17 @@ dependencies:
     specifier: ^1.0.1
     version: 1.0.1
   '@tanbo/stream':
-    specifier: ^1.2.3
-    version: 1.2.3
+    specifier: ^1.2.5
+    version: 1.2.5
   '@textbus/core':
-    specifier: '3.7'
-    version: 3.7.1
+    specifier: 3.7.8
+    version: 3.7.8
   '@textbus/editor':
-    specifier: 3.7.5
-    version: 3.7.5
+    specifier: 3.7.8
+    version: 3.7.8
   '@textbus/platform-browser':
-    specifier: 3.7.5
-    version: 3.7.5
+    specifier: 3.7.8
+    version: 3.7.8
   '@vueuse/core':
     specifier: ^10.9.0
     version: 10.9.0(vue@3.4.26)
@@ -967,7 +967,7 @@ packages:
     dependencies:
       '@tanbo/color': 0.1.1
       '@tanbo/css-themes': 0.0.1
-      '@tanbo/stream': 1.2.3
+      '@tanbo/stream': 1.2.5
     dev: false
 
   /@tanbo/color@0.1.1:
@@ -984,40 +984,40 @@ packages:
       reflect-metadata: 0.1.14
     dev: false
 
-  /@tanbo/stream@1.2.3:
-    resolution: {integrity: sha512-nfs8otS2qWVLCDB6LTOGyrl8sKN0Uz98+/beWBUaK4BSCy5S4F9QE7hvRS23MboUOSW03D8YjS1DLuobcfZHqg==}
+  /@tanbo/stream@1.2.5:
+    resolution: {integrity: sha512-mBqj2voqjB00NgThE/YEdv2zIHKFVS8o5oc001OVX7UMT+u6DEVkI6XHF0dpx5uzIzNTjHWReIBFWIqQY5/r1g==}
     dev: false
 
-  /@textbus/core@3.7.1:
-    resolution: {integrity: sha512-/QVpbzrK8xJwQhOy/ZsDHLQjeFy9tVzSor2is2M1LlmpBqCtE8ZH2UEBVEUcF7RP8YVu3ze0bGDcLg/bBu601Q==}
+  /@textbus/core@3.7.8:
+    resolution: {integrity: sha512-sw4m98zBCjNvXvpQPuO9D6YyqYd0ZDC4E0grrEg9D7hZiN+51qdLTYSKWxa8c8rkjBAlHYKp6k5PXWIE40DiMA==}
     dependencies:
       '@tanbo/di': 1.1.8
-      '@tanbo/stream': 1.2.3
+      '@tanbo/stream': 1.2.5
       immer: 9.0.21
     dev: false
 
-  /@textbus/editor@3.7.5:
-    resolution: {integrity: sha512-SbxlXv2gMuEFAtisxNghMAPFZExzHvvVA+jP9aZfqzJ1g8mFjgdV0CA1B9philbfiiTLfsMNgIjrTPTJPhGDbg==}
+  /@textbus/editor@3.7.8:
+    resolution: {integrity: sha512-QwLfqfzR0IaKEfVLxzNvYoIHGzEzYlte33BHTH2BRZmZCaEfPFIuotawwK4cTO7vE33h3UKYS3t91h6LPtP88Q==}
     dependencies:
       '@tanbo/bezier': 1.0.1
       '@tanbo/color': 0.1.1
       '@tanbo/color-picker': 1.0.3
       '@tanbo/css-themes': 0.0.1
       '@tanbo/di': 1.1.8
-      '@tanbo/stream': 1.2.3
-      '@textbus/core': 3.7.1
-      '@textbus/platform-browser': 3.7.5
+      '@tanbo/stream': 1.2.5
+      '@textbus/core': 3.7.8
+      '@textbus/platform-browser': 3.7.8
       classnames: 2.5.1
       katex: 0.16.10
       prismjs: 1.29.0
     dev: false
 
-  /@textbus/platform-browser@3.7.5:
-    resolution: {integrity: sha512-fh43ZY6GOUN2ea6A7tSNdpgGxGWXNwCjvaWOTzGamLSduVXtXW37LN7M4yNBiaut7GCl9mpwWXHTof942/78LQ==}
+  /@textbus/platform-browser@3.7.8:
+    resolution: {integrity: sha512-Up1zBnVWGU7/kT/jI74vDC8iRIFmDDN7pXNicIjxkH9SvcBlywtF049plIp0LE0nxl/lylUrN1TwadkOjQxxNw==}
     dependencies:
       '@tanbo/di': 1.1.8
-      '@tanbo/stream': 1.2.3
-      '@textbus/core': 3.7.1
+      '@tanbo/stream': 1.2.5
+      '@textbus/core': 3.7.8
       reflect-metadata: 0.1.14
     dev: false
 

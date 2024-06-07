@@ -31,6 +31,9 @@ export function createTextEditor(args: {
     onMounted(() => {
       projectStore.fetchAndSet(id, account, hostname).then(project => {
         try {
+          // editor = createEditor({
+          //   content: project.content
+          // })
           editor = createEditor(getNoteConfig({
             account,
             hostname,

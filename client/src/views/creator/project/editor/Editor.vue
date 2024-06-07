@@ -7,11 +7,12 @@ import { computed, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounte
 import { useEditor } from './hooks/_index'
 import _ from 'lodash'
 import useStore from '@/store'
-import { debounceTime, Subscription } from '@tanbo/stream'
+// import { debounceTime, Subscription } from '@tanbo/stream'
 import { Editor } from '@textbus/editor'
 import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
 import { Player } from '@/editor'
+import { Subscription, debounceTime } from '@textbus/core'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string,

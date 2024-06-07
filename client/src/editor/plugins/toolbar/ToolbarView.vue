@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { VNode, h, inject, nextTick, onBeforeMount, onMounted, onUnmounted, ref } from 'vue'
 import { NButton, useThemeVars } from 'naive-ui'
-import { Controller, Injector, Keymap, fromEvent } from '@textbus/core'
+import { Controller, Injector, Keymap, Subscription, fromEvent } from '@textbus/core'
 // import { useGetKeymapHandler, useKeymap } from './hooks/_api'
 import _ from 'lodash'
 import * as UUID from 'uuid'
@@ -13,9 +13,7 @@ const themeVars = useThemeVars()
 const injector = inject<Injector>('injector')!
 const controller = injector.get(Controller)
 const isReadOnly = ref(false)
-const sub = controller.onReadonlyStateChange.subscribe(v => {
-  isReadOnly.value = v
-})
+const subs: Subscription[] = []
 const props = defineProps<{
   cmpts: VNode[]
 }>()
@@ -63,19 +61,24 @@ onMounted(() => {
   erd.listenTo(toolbarRef.value!, async () => {
     await useToolbarCollapse()
   })
-  fromEvent(toolbarRef.value!, 'mouseover').subscribe((ev) => {
-    const keymap = useGetKeymapHandler(ev.target as HTMLElement, toolbarRef.value!)
-    if (keymap) {
-      try {
-        const config: Keymap = JSON.parse(keymap)
-        keymapStr.value = useKeymap(config).join('+')
-        return
-      } catch (e) {
-        console.log(e)
+  subs.push(
+    fromEvent(toolbarRef.value!, 'mouseover').subscribe((ev) => {
+      const keymap = useGetKeymapHandler(ev.target as HTMLElement, toolbarRef.value!)
+      if (keymap) {
+        try {
+          const config: Keymap = JSON.parse(keymap)
+          keymapStr.value = useKeymap(config).join('+')
+          return
+        } catch (e) {
+          console.log(e)
+        }
       }
-    }
-    keymapStr.value = ''
-  })
+      keymapStr.value = ''
+    }),
+    controller.onReadonlyStateChange.subscribe(v => {
+      isReadOnly.value = v
+    })
+  )
 })
 /** 工具条折叠的逻辑 */
 async function useToolbarCollapse() {
@@ -105,10 +108,14 @@ async function useToolbarCollapse() {
 
 onUnmounted(() => {
   // console.log('工具条销毁')
-  if (toolbarRef.value) {
-    erd.uninstall(toolbarRef.value)
+  try {
+    if (toolbarRef.value) {
+      erd.uninstall(toolbarRef.value)
+    }
+    subs.forEach(i => i.unsubscribe())
+  } catch (error) {
+    console.error('工具条监听器销毁失败！')
   }
-  sub.unsubscribe()
 })
 
 </script>

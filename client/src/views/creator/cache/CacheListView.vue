@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { DropdownOption, useThemeVars } from 'naive-ui'
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import useStore from '@/store'
 import { useDraggable } from '@vueuse/core'
 import CacheCard from './private/CacheCard.vue'
@@ -102,6 +102,14 @@ function handleSelect() {
   dropdownState.isShow = false
 }
 
+onMounted(() => {
+  setInterval(() => {
+    const memoryInfo = performance['memory']
+    cacheState.limitSize = +(memoryInfo.jsHeapSizeLimit / (1024 * 1024)).toFixed(2)
+    cacheState.usedSize = +(memoryInfo.usedJSHeapSize / (1024 * 1024)).toFixed(2)
+    cacheState.totalSize = +(memoryInfo.totalJSHeapSize / (1024 * 1024)).toFixed(2)
+  }, 500)
+})
 
 </script>
 
@@ -146,6 +154,11 @@ function handleSelect() {
           @on-remove="handleRemove(item)"
         />
         <!-- 上下文菜单：跳转至文件夹、移除该缓存 -->
+      </div>
+      <div class="cache-test">
+        <li>{{ '总内存限制:' +  cacheState.limitSize + 'MB'  }}</li>
+        <li>{{ '已使用内存:' + cacheState.usedSize + 'MB'  }}</li>
+        <li>{{ '内存占用峰值:' + cacheState.totalSize + 'MB' }}</li>
       </div>
     </div>
   </div>
