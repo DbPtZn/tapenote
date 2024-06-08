@@ -59,22 +59,20 @@ export function imageToolConfigFactory(injector: Injector): PopoverToolConfig {
         value: null
       }
     },
-    views: [
-      h(ImageForm, {
-        onConfirm: res => {
-          if (!res.src) {
-            return
-          }
-          commander.insert(
-            imageComponent.createInstance(injector, {
-              state: {
-                src: res.src
-              }
-            })
-          )
+    view: h(ImageForm, {
+      onConfirm: res => {
+        if (!res.src) {
+          return
         }
-      })
-    ],
+        commander.insert(
+          imageComponent.createInstance(injector, {
+            state: {
+              src: res.src
+            }
+          })
+        )
+      }
+    }),
     useValue(value: any) {
       // if (!value) {
       //   return

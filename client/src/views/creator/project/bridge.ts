@@ -5,15 +5,15 @@ import { Habit } from "./habit"
 import { LibraryEnum } from "@/enums"
 
 export class Bridge {
-  habit: Habit
-  editor!: Editor
-  editorRef!: HTMLElement
-  studioRef!: HTMLElement
-  scrollerRef!: HTMLElement
-  projectRef!: HTMLElement
-  animeState!: AnimeStateProvider
-  animeService!: AnimeService
-  animeUtils!: AnimeUtilsProvider
+  habit: Habit | null = null
+  editor: Editor | null = null
+  editorRef: HTMLElement | null = null
+  studioRef: HTMLElement | null = null
+  scrollerRef: HTMLElement | null = null
+  projectRef: HTMLElement | null = null
+  animeState: AnimeStateProvider | null = null
+  animeService: AnimeService | null = null
+  animeUtils: AnimeUtilsProvider | null = null
   private editorReadyEvent: Subject<any> = new Subject()
   onEditorReady: Observable<Editor> = this.editorReadyEvent.asObservable()
   private toolbarCollapseEvent: Subject<any> = new Subject()
@@ -70,7 +70,15 @@ export class Bridge {
     this.toolbarCollapseEvent.next(value)
   }
 
-  // destory() {
-  //   //
-  // }
+  destory() {
+    this.habit = null
+    this.editor = null
+    this.editorRef = null
+    this.studioRef = null
+    this.scrollerRef = null
+    this.projectRef = null
+    this.animeState = null
+    this.animeService = null
+    this.animeUtils = null
+  }
 }

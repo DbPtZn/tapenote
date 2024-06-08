@@ -9,13 +9,13 @@ import { Structurer } from '../..'
 
 export class OutlinePlugin implements Plugin {
   private app: App | null = null
-  private workbench!: HTMLElement
-  private host!: HTMLElement
+  private workbench: HTMLElement | null = null
+  private host: HTMLElement | null = null
   private subs: Subscription[] = []
   private renderer!: Renderer
   private rootComponentRef!: RootComponentRef
   private outlineService!: OutlineService
-  private scrollerRef!: HTMLElement
+  private scrollerRef: HTMLElement | null = null
   private outlineData: Ref<OutlineItem[]> = ref([])
   private activeIndex: Ref<number> = ref(0)
   private scrollTop: Ref<number> = ref(0)
@@ -30,7 +30,7 @@ export class OutlinePlugin implements Plugin {
     this.rootComponentRef = injector.get(RootComponentRef) // 获取根组件
     this.renderer = injector.get(Renderer)
     this.outlineService = injector.get(OutlineService)
-    this.scrollerRef = structurer.scrollerRef!
+    this.scrollerRef = structurer.scrollerRef
     this.outlineData = ref<OutlineItem[]>([]) // 大纲视图数据
     this.activeIndex = ref<number>(0)
     this.scrollTop = ref<number>(0)
@@ -61,9 +61,9 @@ export class OutlinePlugin implements Plugin {
           }
         })
       }),
-      fromEvent(this.scrollerRef, 'scroll').pipe(debounceTime(20)).subscribe(() => {
-        this.activeIndex.value = this.outlineData.value.findIndex(item => item.offsetTop >= this.scrollerRef.scrollTop)
-        this.scrollTop.value = this.scrollerRef.scrollTop
+      fromEvent(this.scrollerRef!, 'scroll').pipe(debounceTime(20)).subscribe(() => {
+        this.activeIndex.value = this.outlineData.value.findIndex(item => item.offsetTop >= this.scrollerRef!.scrollTop)
+        this.scrollTop.value = this.scrollerRef!.scrollTop
       }),
       this.outlineService.onExpand.subscribe(() => {
         this.outlineService.isExpanded ? this.expand() : this.collapse()
@@ -74,11 +74,11 @@ export class OutlinePlugin implements Plugin {
   // 展开视图
   private expand() {
     /** 处理 workbench 的结构，让大纲视图可以在编辑器的右侧显示 */
-    this.workbench.style.display = 'flex'
-    this.workbench.style.flexDirection = 'row'
-    this.host.style.width = '200px'
-    this.host.style.opacity = '1'
-    this.host.style.zIndex = '1'
+    this.workbench!.style.display = 'flex'
+    this.workbench!.style.flexDirection = 'row'
+    this.host!.style.width = '200px'
+    this.host!.style.opacity = '1'
+    this.host!.style.zIndex = '1'
     this.app = createApp(h(UIConfig, null, {
       default: () => h(OutlineView, { 
         data: () => this.outlineData.value,
@@ -91,11 +91,11 @@ export class OutlinePlugin implements Plugin {
   }
   // 折叠视图
   private collapse() {
-    this.workbench.style.display = 'unset'
-    this.workbench.style.flexDirection = 'unset'
-    this.host.style.width = '0px'
-    this.host.style.opacity = '0'
-    this.host.style.zIndex = '-1'
+    this.workbench!.style.display = 'unset'
+    this.workbench!.style.flexDirection = 'unset'
+    this.host!.style.width = '0px'
+    this.host!.style.opacity = '0'
+    this.host!.style.zIndex = '-1'
     this.app?.unmount()
   }
   private scrollerToCallback(offsetTop: number) { // 点击条目时回调函数，控制滚动条滚动
@@ -125,6 +125,9 @@ export class OutlinePlugin implements Plugin {
     this.subs.forEach(i => i.unsubscribe())
     this.outlineData.value = []
     this.app?.unmount()
+    this.host = null
+    this.workbench = null
+    this.scrollerRef = null
   }
 }
 

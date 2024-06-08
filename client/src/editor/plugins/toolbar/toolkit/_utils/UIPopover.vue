@@ -17,7 +17,7 @@ const props = defineProps<{
   /** 设置控件显示的文字 */
   label?: string
   /** 弹出的内容 */
-  views: Component[]
+  view: Component
   highlight?: () => boolean
   disabled?: () => boolean
 }>()
@@ -64,7 +64,7 @@ function handleClose() {
       </div>
     </template>
     <div class="wrapper">
-      <component class="popover-item" v-for="(node, index) in views" :is="node" :key="index" />
+      <component class="popover-item" :is="view" />
     </div>
   </n-popover>
 </template>

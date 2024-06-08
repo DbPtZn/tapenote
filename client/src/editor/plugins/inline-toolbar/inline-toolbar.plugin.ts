@@ -34,10 +34,9 @@ export class InlineToolbarPlugin implements Plugin {
   private toolbarView: App | null = null
 
   constructor(private toolFactories: Array<ToolFactory | ToolFactory[]> = [], private scroller: HTMLElement) {
-    this.tools = toolFactories.map((i) => {
+    this.tools = this.toolFactories.map((i) => {
       return Array.isArray(i) ? i.map((j) => j()) : i()
     })
-    this.scroller = scroller
     // 初始值作用于行内工具条首次挂载时，在行内工具条首次挂载后会自动更新为工具条实际宽度
     this.toolbarWidth = 300
     // 工具条高度，用于计算行内工具条显示时的位置（无法在渲染前获取工具条高度，只能手动设置）
@@ -126,6 +125,9 @@ export class InlineToolbarPlugin implements Plugin {
     this.components = []
     
     this.toolbarView?.unmount()
+
+    this.toolFactories.length = 0
+    this.toolFactories = []
 
     this.tools.length = 0
     this.tools = []

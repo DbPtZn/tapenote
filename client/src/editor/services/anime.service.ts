@@ -1,4 +1,4 @@
-import { ComponentInstance, Injectable, VElement } from '@textbus/core'
+import { ComponentInstance, Injectable, Subscription, VElement } from '@textbus/core'
 import { Observable, Subject } from '@textbus/core'
 import { onAnimeFormatterClick, onAnimeFormatterContextmenu } from '../formatters/anime.formatter'
 /** 基本动画信息 */
@@ -19,15 +19,18 @@ export class AnimeService {
   onAnimeClick: Observable<AnimeInfo>
   private animeContextmenuEvent: Subject<any> = new Subject()
   onAnimeContextmenu: Observable<ContextmenuInfo>
+  private subs: Subscription[] = []
   constructor() {
     this.onAnimeClick = this.animeClickEvent.asObservable()
     this.onAnimeContextmenu = this.animeContextmenuEvent.asObservable()
-    onAnimeFormatterClick.subscribe(animeInfo => {
-      this.handleSelectAnime(animeInfo)
-    })
-    onAnimeFormatterContextmenu.subscribe(({ vdom, event }) => {
-      this.handleAnimeContextmenu({vdom, event})
-    })
+    this.subs.push(
+      onAnimeFormatterClick.subscribe(animeInfo => {
+        this.handleSelectAnime(animeInfo)
+      }),
+      onAnimeFormatterContextmenu.subscribe(({ vdom, event }) => {
+        this.handleAnimeContextmenu({vdom, event})
+      })
+    )
   }
 
   handleSelectAnime(animeInfo: AnimeInfo) {
@@ -39,5 +42,7 @@ export class AnimeService {
     this.animeContextmenuEvent.next(args)
   }
 
-  destory(){}
+  destory(){
+    this.subs.forEach(s => s.unsubscribe())
+  }
 }

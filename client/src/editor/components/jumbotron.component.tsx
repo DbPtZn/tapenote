@@ -60,12 +60,10 @@ export const jumbotronComponent = defineComponent({
       backgroundSize: 'cover'
     }
     const stateController = useState(state)
-    const sub = stateController.onChange.subscribe(newState => {
+    stateController.onChange.subscribe(newState => {
       state = newState
     })
-    onDestroy(() => {
-      sub.unsubscribe()
-    })
+
     const componentI18n = i18n.getContext('components.jumbotronComponent')
     const childI18n = componentI18n.getContext('setting.form')
 

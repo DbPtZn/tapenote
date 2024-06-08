@@ -23,9 +23,9 @@ export class Toolbar implements Plugin {
 
   constructor(
     private toolFactories: Array<ToolFactory | ToolFactory[]> = [],
-    private host: HTMLElement
+    host: HTMLElement
   ) {
-    this.tools = toolFactories.map((i) => {
+    this.tools = this.toolFactories.map((i) => {
       return Array.isArray(i) ? i.map((j) => j()) : i()
     })
     this.toolWrapper = host
@@ -49,7 +49,7 @@ export class Toolbar implements Plugin {
       default: () => h(ToolbarView, { cmpts: this.components })
     }))
     this.toolbarView.provide('injector', injector) // 向 vue 工具条注入编辑器依赖
-    this.toolbarView.mount(this.host!)
+    this.toolbarView.mount(this.toolWrapper!)
     // const tools = this.tools.flat()
     this.subs.push(
       merge(
@@ -72,6 +72,9 @@ export class Toolbar implements Plugin {
     this.toolbarView?.unmount()
 
     this.subs.forEach((i) => i.unsubscribe())
+
+    this.toolFactories.length = 0
+    this.toolFactories = []
 
     this.tools.length = 0
     this.tools = []

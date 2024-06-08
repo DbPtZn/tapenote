@@ -14,28 +14,26 @@ export function linkToolConfigFactory(injector: Injector): PopoverToolConfig {
   return {
     iconClasses: ['textbus-icon-link'],
     tooltip: i18n.get('plugins.toolbar.linkTool.tooltip'),
-    views: [
-      h(LinkForm, {
-        url: () => hrefRef.value,
-        onConfirm: res => {
-          const { url, target } = res
-          const value = {
-            href: url,
-            target
-          }
-          if (selection.isCollapsed) {
-            const slot = selection.startSlot!
-            slot.getFormatRangesByFormatter(linkFormatter, 0, slot.length).filter(f => {
-              return f.startIndex < selection.startOffset! && f.endIndex >= selection.endOffset!
-            }).forEach(f => {
-              slot.retain(f.startIndex)
-              slot.retain(f.endIndex - f.startIndex, linkFormatter, value)
-            })
-          }
-          commander.applyFormat(linkFormatter, value)
+    view: h(LinkForm, {
+      url: () => hrefRef.value,
+      onConfirm: res => {
+        const { url, target } = res
+        const value = {
+          href: url,
+          target
         }
-      })
-    ], 
+        if (selection.isCollapsed) {
+          const slot = selection.startSlot!
+          slot.getFormatRangesByFormatter(linkFormatter, 0, slot.length).filter(f => {
+            return f.startIndex < selection.startOffset! && f.endIndex >= selection.endOffset!
+          }).forEach(f => {
+            slot.retain(f.startIndex)
+            slot.retain(f.endIndex - f.startIndex, linkFormatter, value)
+          })
+        }
+        commander.applyFormat(linkFormatter, value)
+      }
+    }), 
     queryState(): QueryState<any> {
       const result = query.queryFormat(linkFormatter)
       const { value } = result

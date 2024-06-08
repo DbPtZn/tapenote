@@ -202,7 +202,7 @@ export const imageB2UComponent = defineComponent({
     }
     const stateController = useState(state)
 
-    const subscription = stateController.onChange.subscribe(v => {
+    stateController.onChange.subscribe(v => {
       state = v
     })
 
@@ -304,10 +304,6 @@ export const imageB2UComponent = defineComponent({
           }))
         }
       }])
-    })
-
-    onDestroy(() => {
-      subscription.unsubscribe()
     })
 
     return {

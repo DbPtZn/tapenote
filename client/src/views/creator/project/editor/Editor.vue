@@ -38,7 +38,7 @@ const state = reactive({
   isDrawShow: false,
   isSaving: false,
   toolbarHeight: 50, // 基于顶部固定工具条的高度调整滚动区的高度
-  editorWidth: computed(() => bridge.habit.state.platform.width),
+  editorWidth: computed(() => bridge.habit!.state.platform.width),
   isSubtitleShow: true, //computed(() => bridge.habit.state.subtitle.isShow),
   subtitle: ''
 })
@@ -225,6 +225,11 @@ onUnmounted(() => {
   try {
     subs.forEach(sub => sub.unsubscribe())
     subs.length = 0
+
+    console.log('bridge destory')
+    bridge.destory()
+    console.log('editor destory')
+    editor?.destroy()
   } catch (error) {
     message.error('编辑器销毁失败！')
   }

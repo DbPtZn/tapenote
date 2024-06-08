@@ -1,13 +1,10 @@
 <script lang="ts" setup>
-import { Injector, Renderer, debounceTime } from '@textbus/core'
-import { inject } from 'vue';
+import { inject } from 'vue'
 const useClose = inject('useClose') as () => void
-const props = defineProps<{
+defineProps<{
   content: string | HTMLElement
   name: string
 }>()
-
-
 </script>
 <template>
   <div ref="cardRef" class="card" @click="useClose">
@@ -19,7 +16,6 @@ const props = defineProps<{
 <style lang="scss" scoped>
 .card {
   display: inline-block;
-  // padding: 3px;
   margin: 5px 10px;
 }
 .content {

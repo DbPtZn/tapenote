@@ -1,7 +1,7 @@
-import { ThemeProvider } from '@/editor'
+import { ColorProvider, DialogProvider, ImgToUrlService, OutlineService, ResizeService, Structurer, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
-import { Ref, onMounted, watch } from 'vue'
+import { Ref, onMounted, onUnmounted, watch } from 'vue'
 import { getSidenoteConfig } from './sidenote.config'
 import { Bridge } from '../../bridge'
 
@@ -26,6 +26,25 @@ export function useSidenoteEditor(args: {
       themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
     }
   )
+
+  onUnmounted(() => {
+    try {
+      console.log('销毁依赖')
+      editor.get(OutlineService).destory()
+      editor.get(DialogProvider).destory()
+      editor.get(ColorProvider).destory()
+      editor.get(Structurer).destory()
+      editor.get(ThemeProvider).destory()
+      editor.get(ImgToUrlService).destory()
+
+      editor?.destroy()
+      console.log('编辑器是否已经销毁：' + editor.destroyed)
+    } catch (error) {
+      console.log(error)
+      console.error('编辑器销毁失败！')
+    }
+  })
+
   // console.log([id, editorRef, scrollerRef, toolbarRef])
   return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {
     onMounted(() => {

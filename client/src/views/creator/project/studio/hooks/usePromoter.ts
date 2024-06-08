@@ -4,6 +4,7 @@ import { Subscription, fromEvent, auditTime } from '@tanbo/stream'
 import { VIEW_DOCUMENT } from '@textbus/platform-browser'
 import { ANIME, ANIME_COMPONENT } from '@/editor'
 import { useMessage } from 'naive-ui'
+import { onUnmounted } from 'vue'
 export function usePromoter(procedureId: string, bridge: Bridge) {
   const { projectStore } = useStore()
   const message = useMessage()
@@ -23,14 +24,14 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
   /** 定位启动子 */
   function handleAnimeLocate(aniId: string | null) {
     if(!aniId) return
-    bridge.animeUtils.locateAnimeBlock(aniId)
+    bridge.animeUtils?.locateAnimeBlock(aniId)
   }
   /** 开启预设进程 */
   function makePresetStart(fragmentId: string, subscript: number, oldAniId: string | null) {
     // 每次开启预设启动子进程时，取消之前的订阅并清空 subs, 确保有且只有一个订阅生效 （使得每次点击 character 时都能获得一个新的监听）
     makePresetEnd() // 结束上一个订阅
     subs.push(
-      bridge.animeService.onAnimeClick.subscribe(animeInfo => {
+      bridge.animeService!.onAnimeClick.subscribe(animeInfo => {
         const { id, serial } = animeInfo
         addPromoter(fragmentId, subscript, serial, id)
         if (oldAniId) { // 更新操作时的判定
@@ -76,10 +77,10 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     const isExist = projectStore.fragment(procedureId).getBySort().some((item) => {
       return item.promoters.includes(aniId)
     })
-    if (!isExist) bridge.animeState.setInactive(aniId)
+    if (!isExist) bridge.animeState?.setInactive(aniId)
   }
   function setAnimeToActive(aniId: string) {
-    bridge.animeState.setActive(aniId)
+    bridge.animeState?.setActive(aniId)
   }
   // 校验启动子的唯一性
   function checkPromoterUnique(aniId: string) {
@@ -94,7 +95,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
    * -当发现启动子关联的动画块已经被移除时，相应的启动子也会被移除
    */
   function checkPromoter() {
-    const container = bridge.editor.get(VIEW_DOCUMENT)
+    const container = bridge.editor!.get(VIEW_DOCUMENT)
     projectStore.fragment(procedureId).getBySort().forEach((fragment, index, arr) => {
       fragment.promoters.forEach((promoter, subscript) => {
         // console.log(typeof promoter)
@@ -112,7 +113,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
               // 启动子编号不匹配的情况
               if (elem.dataset.serial !== serial.toString()) {
                 // 策略一： 更新动画块编号（内容发生变化自动触发更新）
-                bridge.animeState.updateSerial(promoter, Number(serial))
+                bridge.animeState!.updateSerial(promoter, Number(serial))
                 // 策略二： 更新启动子编号
                 // fragment.tags[subscript] = elem.dataset.serial
                 // ...更新至数据库操作
@@ -132,7 +133,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
    * - 所有动画块（不区分formatter和component）的状态校验: 用于校验已激活的动画块是否有正确绑定启动子，如果绑定的启动子不存在，取消动画块激活状态
    */
   function checkAnimeState() {
-    const container = bridge.editor.get(VIEW_DOCUMENT)
+    const container = bridge.editor!.get(VIEW_DOCUMENT)
     const elements = container.querySelectorAll(ANIME + ',' + ANIME_COMPONENT) as NodeListOf<HTMLElement>
     elements.forEach((element) => {
       // 找到激活态的 AnimeComponent
@@ -150,7 +151,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
 
   /** 动画格式状态校验 */
   function checkAnimeFormatter() {
-    const container = bridge.editor.get(VIEW_DOCUMENT)
+    const container = bridge.editor!.get(VIEW_DOCUMENT)
     // 找到所有 Anime 标签块
     const elements = container.querySelectorAll(ANIME) as NodeListOf<HTMLElement>
     // 遍历动画 Anime 标签块
@@ -169,7 +170,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
   }
   /** 动画组件状态校验 */
   function checkAnimeComponent() {
-    const container = bridge.editor.get(VIEW_DOCUMENT)
+    const container = bridge.editor!.get(VIEW_DOCUMENT)
     const elements = container.querySelectorAll(ANIME_COMPONENT) as NodeListOf<HTMLElement>
     elements.forEach((element) => {
       // 找到激活态的 AnimeComponent
@@ -187,8 +188,8 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
   /** 动画与启动子重新排序 */
   function handleReorder() {
     /** 动画标记重排序 */
-    const animeState = bridge.animeState
-    const container = bridge.editorRef
+    const animeState = bridge.animeState!
+    const container = bridge.editorRef!
     // 查询所有动画元素（通过 dom 查询得到的结果一般就是自上而下的顺序）
     const elements = container.querySelectorAll(ANIME + ',' + ANIME_COMPONENT) as NodeListOf<HTMLElement> 
     const sequence: string[] = []
@@ -226,6 +227,10 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
       })
     }, 5)
   }
+
+  onUnmounted(() => {
+    subs.forEach(s => s.unsubscribe())
+  })
 
   return {
     handlePromoterSelect,

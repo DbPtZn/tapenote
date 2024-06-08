@@ -63,7 +63,7 @@ interface ToolItem {
 }
 
 export class DropdownTool implements Tool {
-  private menus: ToolItem[] = []
+  private menus = []
   private isHighlight: Ref<boolean>
   private isDisabled: Ref<boolean>
   private controller!: Controller
@@ -81,7 +81,7 @@ export class DropdownTool implements Tool {
     // console.log(config)
     // this.config = config
     // eslint-disable-next-line array-callback-return
-    const menus = config.options.map(option => {
+    this.menus = config.options.map(option => {
       switch (option.type) {
         case ToolType.Button:
           return option
@@ -104,7 +104,7 @@ export class DropdownTool implements Tool {
       iconClasses: config.iconClasses,
       tooltip: config.tooltip,
       label: config.label,
-      options: menus,
+      options: this.menus,
       highlight: () => this.isHighlight.value,
       disabled: () => this.isDisabled.value,
     })
@@ -130,12 +130,17 @@ export class DropdownTool implements Tool {
   }
 
   refreshState() {
-    this.menus.forEach(i => i.refreshState())
+    // this.menus.forEach(i => i.refreshState())
   }
 
   disabled() {
     //
   }
+
+  onDestroy(): void {
+    this.menus = [] 
+  }
+
   private createDialog(config: DialogMenu, dialog: DialogProvider, injector: Injector, keyboard: Keyboard) {
     
     return {
@@ -156,7 +161,7 @@ export class DropdownTool implements Tool {
       label: config.label,
       classes: config.classes?.join(' '),
       type: config.type,
-      render: config.views[0]
+      render: config.view
     }
   }
   private createSelect(config: SelectToolMenu, keyboard: Keyboard) {

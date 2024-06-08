@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { inject } from 'vue'
+import { inject, onUnmounted } from 'vue'
 const useClose = inject('useClose') as () => void | undefined
 const props = defineProps<{
   onConfirm?: (value: string) => void

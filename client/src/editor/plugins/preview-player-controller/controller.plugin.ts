@@ -21,10 +21,10 @@ export class PreviewPlayerController implements Plugin {
   private app: App | null = null
 
   constructor(
-    private toolFactories: Array<ToolFactory | ToolFactory[]> = [],
-    private host: HTMLElement
+    toolFactories: Array<ToolFactory | ToolFactory[]> = [],
+    private host: HTMLElement | null
   ) {
-    this.tools = this.toolFactories.map((i) => {
+    this.tools = toolFactories.map((i) => {
       return Array.isArray(i) ? i.map((j) => j()) : i()
     })
   }
@@ -35,12 +35,12 @@ export class PreviewPlayerController implements Plugin {
       if (Array.isArray(tool)) {
         const groupWrapper: VNode[] = []
         tool.forEach((t) => {
-          groupWrapper.push(t.setup(injector, this.host))
+          groupWrapper.push(t.setup(injector, this.host!))
         })
         this.components.push(h('div', { class: 'group-wrapper' }, groupWrapper))
         return
       }
-      this.components.push(tool.setup(injector, this.host))
+      this.components.push(tool.setup(injector, this.host!))
     })
     // 工具条主框架
     this.app = createApp(h(UIConfig, null, {
@@ -65,5 +65,6 @@ export class PreviewPlayerController implements Plugin {
     this.components = []
     this.app?.unmount()
     this.subs.forEach((i) => i.unsubscribe())
+    this.host = null
   }
 }

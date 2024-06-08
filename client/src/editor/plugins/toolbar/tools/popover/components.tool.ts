@@ -173,7 +173,7 @@ export function componentsToolConfigFactory(injector: Injector): PopoverToolConf
   return {
     iconClasses: ['textbus-icon-components'],
     tooltip: i18n.get('plugins.toolbar.componentsTool.tooltip'),
-    views: [view],
+    view: view,
     queryState() {
       return {
         state: QueryStateType.Normal,

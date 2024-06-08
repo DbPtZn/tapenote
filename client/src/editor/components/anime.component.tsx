@@ -51,12 +51,10 @@ export const animeComponent = defineComponent({
       dataState: 'inactive'
     }
     const animeController = useState(state)
-    const sub = animeController.onChange.subscribe((newData) => {
+    animeController.onChange.subscribe((newData) => {
       state = newData
     })
-    onDestroy(() => {
-      sub.unsubscribe()
-    })
+
     return {
       render(slotRender: SlotRender): VElement {
         return (

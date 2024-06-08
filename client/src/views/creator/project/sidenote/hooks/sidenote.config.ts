@@ -36,8 +36,7 @@ export function getSidenoteConfig(args: {
     formatters: [colorFormatter, textBackgroundColorFormatter,...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     styleSheets: [],
-    providers: [
-      OutlineService, 
+    providers: [ 
       DialogProvider, 
       OutlineService, 
       ColorProvider, 

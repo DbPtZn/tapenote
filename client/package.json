@@ -12,8 +12,6 @@
     "build:web": "vue-tsc && vite build --config vite-web.config.ts --mode production",
     "build:editor": "vite build --config build-editor.config.ts",
     "build:container": "vite build --config build-container.config.ts",
-    "rebuild": "electron rebuild.cjs",
-    "postinstall": "npm run rebuild",
     "preview": "vite preview"
   },
   "dependencies": {

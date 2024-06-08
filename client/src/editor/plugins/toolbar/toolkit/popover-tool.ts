@@ -15,7 +15,7 @@ export interface PopoverToolConfig {
   /** 设置控件显示的文字 */
   label?: string;
 
-  views: Component[],
+  view: Component,
 
   queryState(): QueryState<any>
 

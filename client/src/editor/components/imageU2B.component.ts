@@ -9,7 +9,6 @@ export const imageU2BComponent = defineComponent({
   setup(data: ComponentInitData<any, unknown>) {
     const injector = useContext()
     const img2base64 = injector.get(Img2base64Service)
-    let sub: Subscription
     let state = {
       src: data.state.src
     }
@@ -19,7 +18,7 @@ export const imageU2BComponent = defineComponent({
       /** 使用状态管理 */
       const stateController = useState(state)
       /** 状态更新 */
-      sub = stateController.onChange.subscribe(newState => {
+      stateController.onChange.subscribe(newState => {
         state = newState
       })
       /** 图片转换进程 */
@@ -31,13 +30,10 @@ export const imageU2BComponent = defineComponent({
 
       /** 视图更新完成后检查进程 */
       onViewChecked(() => {
-        console.log('check')
+        // console.log('check')
         img2base64.checkProcess()
       })
       
-      onDestroy(() => {
-        sub.unsubscribe()
-      })
     }
     return {
       render(): VElement {

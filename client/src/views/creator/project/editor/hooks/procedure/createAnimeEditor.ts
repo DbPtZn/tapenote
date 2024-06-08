@@ -32,7 +32,6 @@ export function createAnimeEditor(args: {
 
   onUnmounted(() => {
     try {
-      console.log('销毁依赖')
       // editor.get(Commander).destory()
       editor.get(AnimeService).destory()
       editor.get(AnimeProvider).destory()
@@ -46,9 +45,8 @@ export function createAnimeEditor(args: {
       editor.get(ThemeProvider).destory()
       editor.get(Player).destory()
       editor.get(ImgToUrlService).destory()
-
-      editor?.destroy()
-      console.log('编辑器是否已经销毁：' + editor.destroyed)
+      // console.log('销毁依赖')
+      // console.log('编辑器是否已经销毁：' + editor.destroyed)
     } catch (error) {
       console.error('编辑器销毁失败！')
     }
@@ -75,36 +73,6 @@ export function createAnimeEditor(args: {
             editor.mount(editorRef.value).then(() => {
               const themeProvider = editor?.get(ThemeProvider)
               themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
-              // console.log('change axx')
-              // const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
-              // const imgToUrlService = editor?.get(ImgToUrlService)
-              // imgToUrlService.setup({
-              //   hostname: hostname,
-              //   accessToken: accessToken || '',
-              //   uploadImgUrl: '/upload/img'
-              // }) 
-
-              // 测试
-              // const root = editor?.get(RootComponentRef)
-              // const commander = editor?.get(Commander)
-              // const controller = editor?.get(Controller)
-              // controller.onReadonlyStateChange.subscribe(v => {
-              //   console.log('readonly:' + v)
-              // })
-              // root.component.slots.toArray().forEach((slot) => {
-              //   slot.sliceContent().forEach((content) => {
-              //     if (typeof content !== 'string') {
-              //       console.log(content)
-              //       const b = commander.removeComponent(content)
-              //       console.log(b)
-              //     }
-              //   })
-              // })
-              // const root = editor?.get(RootComponentRef)
-              // console.log(root.component)
-              // root.component.onStateChange.subscribe(state => {
-              //   console.log(state)
-              // })
             })
             resolve({ editor, content: project.content })
           } catch (error) {

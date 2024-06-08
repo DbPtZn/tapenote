@@ -37,8 +37,6 @@ export function createPlayer(args: {
       editor.get(ThemeProvider).destory()
       editor.get(RootEventService).destory()
       editor.get(AnimeEventService).destory()
-
-      editor?.destroy()
       console.log('编辑器是否已经销毁：' + editor.destroyed)
     } catch (error) {
       console.error('编辑器销毁失败！')

@@ -54,12 +54,8 @@ export const imageCardComponent = defineComponent({
       slots.push(slot)
     }
 
-    const sub = stateController.onChange.subscribe(newState => {
+    stateController.onChange.subscribe(newState => {
       state = newState
-    })
-
-    onDestroy(() => {
-      sub.unsubscribe()
     })
 
     const self = useSelf()

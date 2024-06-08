@@ -2,7 +2,7 @@
 import utils from '@/utils'
 import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
 import { useThemeVars } from 'naive-ui'
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import useStore from '@/store'
 type FragmentSpeaker = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]['speaker']
 const props = defineProps<{
@@ -70,6 +70,9 @@ function useClickoutside() {
     })
   )
 }
+onUnmounted(() => {
+  subs.forEach(sub => sub.unsubscribe())
+})
 </script>
 
 <template>

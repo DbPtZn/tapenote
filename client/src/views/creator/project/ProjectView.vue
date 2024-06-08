@@ -86,17 +86,17 @@ const data = reactive<FractalContainerConfig>({
           min: 20,
           children: []
         } : undefined,
-        props.lib === LibraryEnum.COURSE ? (sidenote.value = {
-          id: containerId.sidenote,
-          type: 'component',
-          name: `course-sidenote-${containerId.sidenote}`,
-          cmpt: markRaw(h(Sidenote, { id: props.id, lib: props.lib, account: props.account, hostname: props.hostname, readonly: () => isReadonly.value })),
-          isSplitterRender: true,
-          isRow: true,
-          ratio: 0,
-          min: 0,
-          children: []
-        }) : undefined
+        // props.lib === LibraryEnum.COURSE ? (sidenote.value = {
+        //   id: containerId.sidenote,
+        //   type: 'component',
+        //   name: `course-sidenote-${containerId.sidenote}`,
+        //   cmpt: markRaw(h(Sidenote, { id: props.id, lib: props.lib, account: props.account, hostname: props.hostname, readonly: () => isReadonly.value })),
+        //   isSplitterRender: true,
+        //   isRow: true,
+        //   ratio: 0,
+        //   min: 0,
+        //   children: []
+        // }) : undefined
       ].filter(item => item) as FractalContainerConfig[]
     }
   ]

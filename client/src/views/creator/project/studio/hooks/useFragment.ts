@@ -14,7 +14,7 @@ export function useFragment(id: string, bridge: Bridge) {
   const isShowName = ref(false)
   const dialog = useDialog()
   const message = useMessage()
-  let player: Player | null = null
+  let player: Player | undefined = undefined
   const subs: Subscription[] = []
   const { checkAnimeState, handleReorder } = usePromoter(id, bridge)
   const selectedFragments = ref<Fragment[]>([])
@@ -48,7 +48,7 @@ export function useFragment(id: string, bridge: Bridge) {
   }
   /** 右键菜单 */
   function handleContextmenu(e: MouseEvent, fragment?: Fragment) {
-    player = bridge.editor.get(Player)
+    player = bridge.editor?.get(Player)
     const project = projectStore.get(id)
     if (!project) return
     const sequence = project.sequence
@@ -244,7 +244,7 @@ export function useFragment(id: string, bridge: Bridge) {
       props: {
         onClick: () => {
           message.warning('注意：预览模式与作品成品的播放效果不完全一致')
-          player = bridge.editor.get(Player)
+          player = bridge.editor?.get(Player)
           const fragments = projectStore.fragment(id).getBySort()
           applyPlay(fragments, true)
         }
@@ -436,6 +436,7 @@ export function useFragment(id: string, bridge: Bridge) {
 
   onUnmounted(() => {
     player?.destory()
+    subs.forEach(s => s.unsubscribe())
   })
 
   return {

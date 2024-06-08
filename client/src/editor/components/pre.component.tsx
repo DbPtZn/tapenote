@@ -384,7 +384,6 @@ export const preComponent = defineComponent({
   }) {
     let languageGrammar = getLanguageGrammar(data.state!.lang)
     let [blockCommentStartString, blockCommentEndString] = getLanguageBlockCommentStart(data.state!.lang)
-    const subs: Subscription[] = [] 
     const stateController = useState({
       lang: data.state!.lang,
       theme: data.state?.theme || 'auto'
@@ -395,7 +394,7 @@ export const preComponent = defineComponent({
 
     const selection = injector.get(Selection)
 
-    subs.push(stateController.onChange.subscribe(newState => {
+    stateController.onChange.subscribe(newState => {
       data.state!.lang = newState.lang
       data.state!.theme = newState.theme
       languageGrammar = getLanguageGrammar(newState.lang);
@@ -417,7 +416,7 @@ export const preComponent = defineComponent({
         reformat(slots, slots.get(0)!, languageGrammar!, blockCommentStartString, blockCommentEndString, true)
       }
       isStop = false
-    }))
+    })
 
     const codeConfig = (data.slots || [createCodeSlot()]).map(i => {
       return {
@@ -436,7 +435,7 @@ export const preComponent = defineComponent({
 
     let isStop = false
 
-    subs.push(slots.onChildSlotChange.subscribe(slot => {
+    slots.onChildSlotChange.subscribe(slot => {
       if (languageGrammar && !isStop) {
         isStop = true
         const index = slot.index
@@ -444,7 +443,7 @@ export const preComponent = defineComponent({
         slot.retain(index)
         isStop = false
       }
-    }))
+    })
 
     useDynamicShortcut({
       keymap: {
@@ -698,10 +697,6 @@ export const preComponent = defineComponent({
       stateController.update(draft => {
         draft.theme = current.value
       })
-    })
-
-    onDestroy(() => {
-      subs.forEach(s => s.unsubscribe())
     })
 
     return {
