@@ -14,4 +14,6 @@ export class OutlineService {
     this.isExpanded = !this.isExpanded
     this.expandEvent.next(this.isExpanded)
   }
+
+  destory(){}
 }

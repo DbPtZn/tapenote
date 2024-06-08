@@ -33,7 +33,7 @@ export class ContextMenu implements Plugin {
   private menuSubscriptions: Subscription[] = []
   private submenuSubscriptions: Subscription[] = []
 
-  private menu!: App<Element>
+  private menu: App<Element> | null = null
   private submenu!: HTMLElement
 
   setup(injector: Injector) {

@@ -12,4 +12,6 @@ export class AnimeEventService {
       this.AnimeContextmenuEvent.next({ vdom, event })
     })
   }
+
+  destory(){}
 }

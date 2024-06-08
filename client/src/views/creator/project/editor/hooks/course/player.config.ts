@@ -70,23 +70,23 @@ export function getCourseConfig(args: {
     styleSheets: [],
     providers: [
       Player,
-      AnimeProvider, 
-      DialogProvider, 
-      OutlineService, 
-      RootEventService, 
+      OutlineService,
+      DialogProvider,
+      AnimeProvider,
+      RootEventService,
       AnimeEventService,
       Structurer,
       ThemeProvider
     ],
     plugins: [
-      () =>
-        new Controller(
-          [speedDownTool, rewindTool, startTool, forwardTool, speedUpTool, replayTool, stopTool, volumeUpTool, volumeDownTool],
-          controllerRef!
-        ),
-      () => new PlayerContextMenuPlugin(),
-      () => new OutlinePlugin(),
-      () => new LinkJumpTipPlugin()
+      // () =>
+      //   new Controller(
+      //     [speedDownTool, rewindTool, startTool, forwardTool, speedUpTool, replayTool, stopTool, volumeUpTool, volumeDownTool],
+      //     controllerRef!
+      //   ),
+      // () => new PlayerContextMenuPlugin(),
+      // () => new OutlinePlugin(),
+      // () => new LinkJumpTipPlugin()
     ],
     setup(injector: Injector) {
       const input = injector.get(Input)

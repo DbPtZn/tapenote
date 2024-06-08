@@ -13,4 +13,6 @@ export class RootEventService {
   handleContextmenu(ev: MouseEvent) {
     this.componentContextmenuEvent.next(ev)
   }
+
+  destory(){}
 }

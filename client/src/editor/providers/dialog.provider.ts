@@ -28,13 +28,14 @@ export class DialogProvider {
   private container!: HTMLElement
   private wrapper!: HTMLElement
   private dialog: App | null = null
+  private hanger!: HTMLDivElement
   constructor() {}
 
   create(config: DialogConfig, injector: Injector) {
     this.container = injector.get(VIEW_CONTAINER)
     this.wrapper = this.container.parentNode as HTMLElement
-    const hanger = document.createElement('div')
-    this.wrapper.appendChild(hanger)
+    this.hanger = document.createElement('div')
+    this.wrapper.appendChild(this.hanger)
     return new Promise((resolve, reject) => {
       this.dialog = createApp(TempDialog, {
         ...config
@@ -42,17 +43,18 @@ export class DialogProvider {
       this.dialog.provide('destory', () => {
         this.dialog?.unmount()
         // 销毁时移除 body 下的挂载节点
-        if (this.wrapper && this.wrapper.contains(hanger)) {
-          this.wrapper.removeChild(hanger)
+        if (this.wrapper && this.wrapper.contains(this.hanger)) {
+          this.wrapper.removeChild(this.hanger)
         }
         resolve('')
       })
       this.dialog.provide('injector', injector)
-      this.dialog.mount(hanger)
+      this.dialog.mount(this.hanger)
     })
   }
 
   destory() {
     this.dialog?.unmount()
+    this.wrapper?.removeChild(this.hanger)
   }
 }

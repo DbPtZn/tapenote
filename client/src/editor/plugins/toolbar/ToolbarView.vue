@@ -20,20 +20,9 @@ const keymapStr = ref('')
 const toolbarData = ref<VNode[]>([])
 const collapseData = ref<VNode[]>([])
 const boundarySequence = ref<number[]>([])
-// const expandBtnLabel = ref('展开')
 const collapseState = ref(false)
-// const ExpandBtn = h(
-//   NButton,
-//   {
-//     text: true,
-//     block: true,
-//     size: 'large'
-//   },
-//   { default: () => expandBtnLabel.value }
-// )
 function handleExpandBtnClick() {
   collapseState.value = !collapseState.value
-  // expandBtnLabel.value = collapseState.value ? '折叠' : '展开'
 }
 const toolbarRef = ref<HTMLElement>()
 const collapseRef = ref<HTMLElement>()

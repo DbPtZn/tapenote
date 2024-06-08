@@ -11,4 +11,6 @@ export class ResizeService {
   handleResize(value: any) {
     this.resizeEvent.next(value)
   }
+  
+  destory(){}
 }

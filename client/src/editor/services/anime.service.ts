@@ -39,4 +39,5 @@ export class AnimeService {
     this.animeContextmenuEvent.next(args)
   }
 
+  destory(){}
 }

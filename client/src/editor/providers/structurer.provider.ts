@@ -20,4 +20,12 @@ export class Structurer {
     this.controllerRef = controllerRef || null
     this.toolbarRef = toolbarRef || null
   }
+
+  destory(){
+    this.rootRef = null
+    this.editorRef = null
+    this.scrollerRef = null
+    this.controllerRef = null
+    this.toolbarRef = null
+  }
 }

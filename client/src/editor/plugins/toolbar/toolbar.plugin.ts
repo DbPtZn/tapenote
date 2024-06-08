@@ -15,7 +15,7 @@ interface ToolFactory {
  * 编辑器工具条
  */
 export class Toolbar implements Plugin {
-  private toolWrapper!: HTMLElement
+  private toolWrapper: HTMLElement | null = null
   private subs: Subscription[] = []
   public tools: Array<Tool | Tool[]>
   private components: VNode[] = []
@@ -32,18 +32,17 @@ export class Toolbar implements Plugin {
   }
   setup(injector: Injector): void {
     const selection = injector.get(Selection)
-    this.components = []
     this.tools.forEach((tool) => {
       // 如果是工具组
       if (Array.isArray(tool)) {
         const groupWrapper: VNode[] = []
         tool.forEach((t) => {
-          groupWrapper.push(t.setup(injector, this.toolWrapper))
+          groupWrapper.push(t.setup(injector, this.toolWrapper!))
         })
         this.components.push(h('div', { class: 'group-wrapper' }, groupWrapper))
         return
       }
-        this.components.push(tool.setup(injector, this.toolWrapper))
+        this.components.push(tool.setup(injector, this.toolWrapper!))
     })
     // 工具条主框架
     this.toolbarView = createApp(h(UIConfig, null, {
@@ -51,13 +50,13 @@ export class Toolbar implements Plugin {
     }))
     this.toolbarView.provide('injector', injector) // 向 vue 工具条注入编辑器依赖
     this.toolbarView.mount(this.host!)
-    const tools = this.tools.flat()
+    // const tools = this.tools.flat()
     this.subs.push(
       merge(
         selection.onChange,
         // refreshService.onRefresh,
       ).pipe(auditTime(100)).subscribe(() => {
-        tools.forEach(tool => {
+        this.tools.flat().forEach(tool => {
           tool.refreshState()
         })
       })
@@ -65,6 +64,8 @@ export class Toolbar implements Plugin {
   }
 
   onDestroy() {
+    this.toolWrapper = null
+
     this.components.length = 0
     this.components = []
     

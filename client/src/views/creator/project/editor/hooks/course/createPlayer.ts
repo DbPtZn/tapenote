@@ -1,7 +1,7 @@
-import { CourseData, Player, ThemeProvider } from '@/editor'
+import { AnimeEventService, AnimeProvider, ColorProvider, CourseData, DialogProvider, ImgToUrlService, OutlineService, Player, ResizeService, RootEventService, Structurer, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
-import { Ref, onMounted, watch } from 'vue'
+import { Ref, onMounted, onUnmounted, watch } from 'vue'
 import { getCourseConfig } from './player.config'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../../../../shell'
@@ -26,6 +26,24 @@ export function createPlayer(args: {
       themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
     }
   )
+  onUnmounted(() => {
+    try {
+      console.log('销毁依赖')
+      editor.get(Player).destory()
+      editor.get(OutlineService).destory()
+      editor.get(DialogProvider).destory()
+      editor.get(AnimeProvider).destory()
+      editor.get(Structurer).destory()
+      editor.get(ThemeProvider).destory()
+      editor.get(RootEventService).destory()
+      editor.get(AnimeEventService).destory()
+
+      editor?.destroy()
+      console.log('编辑器是否已经销毁：' + editor.destroyed)
+    } catch (error) {
+      console.error('编辑器销毁失败！')
+    }
+  })
   // console.log([id, editorRef, scrollerRef, controllerRef])
   return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {
     onMounted(() => {
