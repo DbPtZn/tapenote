@@ -7,198 +7,216 @@ import {
   VElement,
   Subscription,
   ComponentInstance,
-  fromEvent
+  fromEvent,
 } from '@textbus/core'
 import { AnimeProvider, AnimeService, Structurer, animeFormatter } from '@/editor'
-import { App, createApp, h } from 'vue'
+import { App, Ref, createApp, h, ref } from 'vue'
 import { NDropdown } from 'naive-ui'
 import { VIEW_CONTAINER, createElement } from '@textbus/platform-browser'
-import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
+import { DropdownOption } from 'naive-ui'
 import { UIConfig } from '@/editor'
 import AnimeEffectOptions from './AnimeEffectOptions.vue'
 import { Editor } from '@textbus/editor'
+import Dropdown from './Dropdown.vue'
 export class AnimeContextmenuPlugin implements Plugin {
   private commander!: Commander
   private selection!: Selection
   private renderer!: Renderer
   private animeService!: AnimeService
-  private sub: Subscription | null = null
+  private subs: Subscription[] = []
   private contextmenu: App<Element> | null = null
   private anime!: AnimeProvider
   private animeOptions: ReturnType<typeof this.anime.getOptions> = []
   private scrollSubscription: Subscription | null = null
+  private injector!: Injector
+  private container: HTMLElement | null = null
+  private scrollerRef: HTMLElement | null = null
+  private showRef: Ref<boolean> = ref(false)
+  private xRef: Ref<number> = ref(0)
+  private yRef: Ref<number> = ref(0)
+  private Options: Ref<DropdownOption[]> = ref([])
+  private host: HTMLElement | null = null
   constructor() {}
   setup(injector: Injector) {
+    this.injector = injector
     this.commander = injector.get(Commander)
     this.selection = injector.get(Selection)
     this.renderer = injector.get(Renderer)
     this.animeService = injector.get(AnimeService)
     this.anime = injector.get(AnimeProvider)
     this.animeOptions = this.anime.getOptions()
-    const editor = injector.get(Editor)
-    const structurer = injector.get(Structurer)
-    const scrollerRef = structurer.scrollerRef
-    const container = injector.get(VIEW_CONTAINER)
-    const host = createElement('div')
-    container.appendChild(host)
-    this.sub = this.animeService.onAnimeContextmenu.subscribe(info => {
-      console.log('onAnimeContextmenu')
-      if (editor.readonly) return
-      const { event, vdom, component } = info
-      const target = event.target as HTMLElement
-      let menus: DropdownMixedOption[] = []
-      let position = {
-        x: 0,
-        y: 0
+    // const editor = injector.get(Editor)
+    const structurer = this.injector.get(Structurer)
+    this.container = this.injector.get(VIEW_CONTAINER)
+    this.scrollerRef = structurer.scrollerRef
+
+    this.host = createElement('div')
+    this.contextmenu = createApp(Dropdown, {
+      show: () => this.showRef.value,
+      x: () => this.xRef.value,
+      y: () => this.yRef.value,
+      options: () => this.Options.value,
+      to: this.scrollerRef!,
+      onSelect: () => {
+        // console.log('select')
+        this.hide()
+      },
+      onClickoutside: () => {
+        // console.log('clickoutside')
+        this.hide()
       }
-      if (vdom) {
-        const { x, y } = getTextNodeEndPosition(target)
-        position = {
-          x: x + 10,
-          y
-        }
-        menus = [
-          {
-            key: 'remove',
-            // icon: () => h(UIIcon, { icon: 'material-icons-filled-' }),
-            label: '移除',
-            props: {
-              onClick: () => {
-                this.removeAnimeFormatter(vdom)
-                this.contextmenu?.unmount()
-                this.scrollSubscription?.unsubscribe()
-              }
-            }
-          },
-          {
-            key: 'update',
-            // icon: () => h(UIIcon, { icon: 'material-icons-filled-' }),
-            label: '修改',
-            children: [
-              {
-                key: 'options',
-                type: 'render',
-                render: () => h(AnimeEffectOptions, {
-                  options: this.animeOptions,
-                  onSelect: (name, value) => {
-                    this.updataAnimeFormatter(vdom, { name, value })
-                    this.contextmenu?.unmount()
-                    this.scrollSubscription?.unsubscribe()
-                  }
-                })
-              }
-            ]
-          },
-          {
-            key: 'test',
-            label: '动画效果预览',
-            props: {
-              onClick: () => {
-                const dataEffect = vdom.attrs.get('data-effect')
-                const nativeNode = this.renderer.getNativeNodeByVNode(vdom)
-                this.playAnime(nativeNode, dataEffect)
-                this.contextmenu?.unmount()
-                this.scrollSubscription?.unsubscribe()
-              }
-            }
-          }
-        ]
-      }
-      if (component) {
-        const rect = target.getBoundingClientRect()
-        position = {
-          x: rect.x + rect.width,
-          y: rect.y
-        }
-        // console.log('component')
-        menus = [
-          {
-            key: 'remove',
-            // icon: () => h(UIIcon, { icon: 'material-icons-filled-' }),
-            label: '移除',
-            props: {
-              onClick: () => {
-                this.removeAnimeComponent(component)
-                this.contextmenu?.unmount()
-                this.scrollSubscription?.unsubscribe()
-                // component.slots.toArray().forEach((slot) => {
-                //   slot.sliceContent().forEach((content) => {
-                //     if (typeof content !== 'string') {
-                //       console.log('移除动画组件')
-                //       this.commander.replaceComponent(component, content)
-                //     }
-                //   })
-                // })
-              }
-            }
-          },
-          {
-            key: 'update',
-            // icon: () => h(UIIcon, { icon: 'material-icons-filled-' }),
-            label: '修改',
-            children: [
-              {
-                key: 'options',
-                type: 'render',
-                render: () => h(AnimeEffectOptions, {
-                  options: this.animeOptions,
-                  onSelect: (name, value) => {
-                    this.updataAnimeComponent(component, { name, value })
-                    this.contextmenu?.unmount()
-                    this.scrollSubscription?.unsubscribe()
-                  }
-                })
-              }
-            ]
-          },
-          {
-            key: 'test',
-            label: '动画效果预览',
-            props: {
-              onClick: () => {
-                const dataEffect = component.state.dataEffect
-                const vnode = this.renderer.getVNodeByComponent(component)
-                const nativeNode = this.renderer.getNativeNodeByVNode(vnode)
-                this.playAnime(nativeNode, dataEffect)
-                this.contextmenu?.unmount()
-                this.scrollSubscription?.unsubscribe()
-              }
-            }
-          }
-        ]
-      }
-      const dropdown = h(NDropdown, {
-        placement: 'bottom-start',
-        trigger: 'manual',
-        to: scrollerRef!, // 确保不会被遮挡
-        x: position.x,
-        y: position.y,
-        options: menus,
-        show: true,
-        onClickoutside: () => {
-          menus = []
-          this.contextmenu?.unmount()
-          this.scrollSubscription?.unsubscribe()
-        },
-        onSelect: () => {
-          menus = []
-          this.contextmenu?.unmount()
-          this.scrollSubscription?.unsubscribe()
-        }
-      })
-      this.contextmenu = createApp(h(UIConfig, null, {
-        default: () => h(dropdown, { flip: true })
-      }))
-      this.contextmenu.provide('injector', injector)
-      this.contextmenu.mount(host)
-      // 滚动时销毁菜单
-      this.scrollSubscription = fromEvent(scrollerRef!, 'scroll').subscribe(() => {
-        menus = []
-        this.contextmenu?.unmount()
-        this.scrollSubscription?.unsubscribe()
-      })
     })
+    this.contextmenu.provide('injector', injector)
+    this.contextmenu.mount(this.host)
+
+    this.subs.push(
+      this.animeService.onAnimeContextmenu.subscribe(info => {
+        console.log('onAnimeContextmenu')
+        // if (editor.readonly) return
+        const { event, vdom, component } = info
+        const target = event.target as HTMLElement
+        if (vdom) {
+          const { x, y, options } = this.createVDomMenu(target, vdom)
+          this.xRef.value = x
+          this.yRef.value = y
+          this.Options.value = options
+          this.show()
+        }
+        if (component) {
+          const { x, y, options } = this.createComponentMenu(target, component)
+          this.xRef.value = x
+          this.yRef.value = y
+          this.Options.value = options
+          this.show()
+        }
+      }),
+      // 滚动时隐藏菜单
+      fromEvent(this.scrollerRef!, 'scroll').subscribe(() => {
+        this.hide()
+      })
+    )
   }
+
+  show() {
+    this.showRef.value = true
+    this.host && this.container?.appendChild(this.host)
+  }
+
+  hide() {
+    this.showRef.value = false
+    this.host?.parentNode?.removeChild(this.host)
+  }
+  
+
+  createVDomMenu(target: HTMLElement, vdom: VElement) {
+    const { x, y } = getTextNodeEndPosition(target)
+    const position = {
+      x: x + 10,
+      y
+    }
+    const menus = [
+      {
+        key: 'remove',
+        // icon: () => h(UIIcon, { icon: 'material-icons-filled-' }),
+        label: '移除',
+        props: {
+          onClick: () => {
+            this.removeAnimeFormatter(vdom)
+          }
+        }
+      },
+      {
+        key: 'update',
+        // icon: () => h(UIIcon, { icon: 'material-icons-filled-' }),
+        label: '修改',
+        children: [
+          {
+            key: 'options',
+            type: 'render',
+            render: () => h(AnimeEffectOptions, {
+              options: this.animeOptions,
+              onSelect: (name, value) => {
+                this.updataAnimeFormatter(vdom, { name, value })
+                this.hide()
+              }
+            })
+          }
+        ]
+      },
+      {
+        key: 'test',
+        label: '动画效果预览',
+        props: {
+          onClick: () => {
+            const dataEffect = vdom.attrs.get('data-effect')
+            const nativeNode = this.renderer.getNativeNodeByVNode(vdom)
+            this.playAnime(nativeNode, dataEffect)
+          }
+        }
+      }
+    ]
+    return { x: position.x, y: position.y, options: menus }
+  }
+
+  createComponentMenu(target: HTMLElement, component: ComponentInstance) {
+    const rect = target.getBoundingClientRect()
+    const position = {
+      x: rect.x + rect.width,
+      y: rect.y
+    }
+    const menus = [
+      {
+        key: 'remove',
+        // icon: () => h(UIIcon, { icon: 'material-icons-filled-' }),
+        label: '移除',
+        props: {
+          onClick: () => {
+            this.removeAnimeComponent(component)
+            // component.slots.toArray().forEach((slot) => {
+            //   slot.sliceContent().forEach((content) => {
+            //     if (typeof content !== 'string') {
+            //       console.log('移除动画组件')
+            //       this.commander.replaceComponent(component, content)
+            //     }
+            //   })
+            // })
+          }
+        }
+      },
+      {
+        key: 'update',
+        // icon: () => h(UIIcon, { icon: 'material-icons-filled-' }),
+        label: '修改',
+        children: [
+          {
+            key: 'options',
+            type: 'render',
+            render: () => h(AnimeEffectOptions, {
+              options: this.animeOptions,
+              onSelect: (name, value) => {
+                this.updataAnimeComponent(component, { name, value })
+                this.hide()
+              }
+            })
+          }
+        ]
+      },
+      {
+        key: 'test',
+        label: '动画效果预览',
+        props: {
+          onClick: () => {
+            const dataEffect = component.state.dataEffect
+            const vnode = this.renderer.getVNodeByComponent(component)
+            const nativeNode = this.renderer.getNativeNodeByVNode(vnode)
+            this.playAnime(nativeNode, dataEffect)
+          }
+        }
+      }
+    ]
+    return { x: position.x, y: position.y, options: menus }
+  }
+
   /** 更新动画特效 */
   updataAnimeFormatter(vdom: VElement, option: { name: string, value: string }) {
     /** 根据虚拟dom获取对应文档中的位置 */
@@ -266,11 +284,11 @@ export class AnimeContextmenuPlugin implements Plugin {
   // 可选，编辑器销毁时调用
   onDestroy() {
     console.log('anime contextmenu 销毁')
-    this.sub?.unsubscribe()
-    this.sub = null
+    this.subs.forEach(sub => sub.unsubscribe())
     this.contextmenu?.unmount()
-    this.scrollSubscription?.unsubscribe()
     this.animeOptions = []
+    this.hide()
+    this.host = null
   }
 }
 
@@ -300,3 +318,45 @@ function getTextNodeEndPosition(element: HTMLElement | ChildNode) {
     return getTextNodeEndPosition(lastChild)
   }
 }
+
+// createMenu(args: {
+//   x: number
+//   y: number
+//   menus: DropdownOption[]
+// }) {
+//   const { x, y, menus } = args
+//   const host = createElement('div')
+//   this.container?.appendChild(host)
+//   const dropdown = h(NDropdown, {
+//     placement: 'bottom-start',
+//     trigger: 'manual',
+//     to: this.scrollerRef!, // 确保不会被遮挡
+//     x: x,
+//     y: y,
+//     options: menus,
+//     show: true,
+//     onClickoutside: () => {
+//       destory()
+//     },
+//     onSelect: () => {
+//       console.log('select')
+//       destory()
+//     }
+//   })
+//   this.contextmenu = createApp(h(UIConfig, null, {
+//     default: () => h(dropdown, { flip: true })
+//   }))
+//   this.contextmenu.provide('injector', this.injector)
+//   this.contextmenu.mount(host)
+//   // 滚动时销毁菜单
+//   this.scrollSubscription = fromEvent(this.scrollerRef!, 'scroll').subscribe(() => {
+//     destory()
+//   })
+
+//   const destory = () => {
+//     this.contextmenu?.unmount()
+//     this.scrollSubscription?.unsubscribe()
+//   }
+
+//   return destory
+// }

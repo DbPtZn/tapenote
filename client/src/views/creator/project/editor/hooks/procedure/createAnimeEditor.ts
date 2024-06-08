@@ -48,7 +48,8 @@ export function createAnimeEditor(args: {
       // console.log('销毁依赖')
       // console.log('编辑器是否已经销毁：' + editor.destroyed)
     } catch (error) {
-      console.error('编辑器销毁失败！')
+      console.error(error)
+      console.error('依赖销毁失败！')
     }
   })
   

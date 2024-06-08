@@ -231,6 +231,7 @@ onUnmounted(() => {
     console.log('editor destory')
     editor?.destroy()
   } catch (error) {
+    console.error(error)
     message.error('编辑器销毁失败！')
   }
 })

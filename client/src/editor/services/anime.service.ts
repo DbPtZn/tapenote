@@ -29,9 +29,17 @@ export class AnimeService {
       }),
       onAnimeFormatterContextmenu.subscribe(({ vdom, event }) => {
         this.handleAnimeContextmenu({vdom, event})
-      })
+      }),
+      // this.onAnimeContextmenu.subscribe(args => {
+      //   // console.log('onAnimeContextmenu', args)
+      //   this.getContextmenuCallback()
+      // })
     )
   }
+
+  // getContextmenuCallback(callback: (args: ContextmenuInfo) => void) {
+  //   callback(args)
+  // }
 
   handleSelectAnime(animeInfo: AnimeInfo) {
     // console.log('animeInfo', animeInfo)
