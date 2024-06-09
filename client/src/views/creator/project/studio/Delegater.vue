@@ -1,0 +1,118 @@
+<script lang="ts" setup>
+import { Subscription, fromEvent } from '@tanbo/stream'
+import { inject, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { usePromoter } from './hooks'
+import { Bridge } from '../bridge'
+const bridge = inject('bridge') as Bridge
+const props = defineProps<{
+  id: string
+}>()
+// TODO 想办法拿到片段的 id
+const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, checkAnimeState, checkPromoter } = usePromoter(props.id, bridge)
+const delegaterRef = ref<HTMLElement>()
+const updateRef = ref<HTMLElement>()
+const subs1: Subscription[] = []
+onMounted(() => {
+  const scroller = delegaterRef.value?.parentElement
+  // console.log(updateRef.value)
+  if(scroller)
+  subs1.push(
+    fromEvent(scroller, 'scroll').subscribe(e => {
+      popoverState.showPopover = false
+    })
+  )
+})
+onUnmounted(() => {
+  subs1.forEach(s => s.unsubscribe())
+  subs1.length = 0
+  subs2.forEach(s => s.unsubscribe())
+  subs2.length = 0
+})
+
+const handleClick = (e: MouseEvent) => {
+  // console.log(e)
+  const target = e.target as HTMLElement
+  if(target.classList.contains('character')) {
+    characterMethods.setFocus(target)
+    if(target.classList.contains('marked')) {
+      const rect = target.getBoundingClientRect()
+      // console.log('character')
+      // console.log(rect)
+      popoverState.showPopover = true
+      popoverState.x = rect.x + rect.width / 2
+      popoverState.y = rect.y
+      return
+    }
+  }
+}
+
+const subs2: Subscription[] = []
+const characterMethods = {
+  setFocus(target: HTMLElement) {
+    if (!target.classList.contains('focus')) {
+      target.classList.add('focus', 'animate__animated', 'animate__pulse', 'animate__infinite')
+      if (subs2.length > 0) {
+        subs2.forEach(s => s.unsubscribe())
+        subs2.length = 0
+      }
+      subs2.push(
+        fromEvent(document, 'click', true).subscribe(event => {
+          // 如果不是更新操作，则要监听是否点击元素自身
+          // console.log(event.target)
+          // console.log(updateRef.value)
+          // console.log(event.target === updateRef.value)
+          if (event.target === updateRef.value) return
+          target.classList.remove('focus', 'animate__animated', 'animate__pulse', 'animate__infinite')
+          subs2.forEach(s => s.unsubscribe())
+          subs2.length = 0
+        })
+      )
+    }
+  }
+}
+
+const popoverState = reactive({
+  showPopover: false,
+  x: 0,
+  y: 0,
+})
+
+const popoverMethods = {
+  handleUpdate() {
+    console.log('update')
+    popoverState.showPopover = false
+  },
+  handleRemove() {
+    console.log('remove')
+    popoverState.showPopover = false
+  },
+  handleLocate() {
+    console.log('locate')
+    popoverState.showPopover = false
+  },
+  handleClickoutside() {
+    popoverState.showPopover = false
+  }
+}
+
+
+</script>
+
+<template>
+  <div ref="delegaterRef" class="delegater" @click="handleClick">
+    <slot />
+  </div>
+  <n-popover :show="popoverState.showPopover" :x="popoverState.x" :y="popoverState.y" trigger="manual" @clickoutside="popoverMethods.handleClickoutside">
+    <n-button text @click="popoverMethods.handleUpdate">
+      <span ref="updateRef">更新</span>
+    </n-button>
+    |
+    <n-button text @click="popoverMethods.handleRemove">移除</n-button>
+    |
+    <n-button text @click="popoverMethods.handleLocate">定位</n-button>
+  </n-popover>
+</template>
+
+<style lang="scss" scoped>
+
+</style>

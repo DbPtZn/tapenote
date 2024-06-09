@@ -12,71 +12,73 @@ const emits = defineEmits<{
   onLocate: []
 }>()
 const themeVars = useThemeVars()
-const targetRef = ref(null)
-const popoverRef = ref()
-const subs: Subscription[] = []
-const isFocus = ref(false)
+// const targetRef = ref(null)
+// const popoverRef = ref()
+// const subs: Subscription[] = []
+// const isFocus = ref(false)
 
-const onSelect = (ev: MouseEvent) => {
-  if (props.isMarked) return
-  isFocus.value = true
-  emits('onSelect')
-  listenClickOutside()
-}
+// const onSelect = (ev: MouseEvent) => {
+//   if (props.isMarked) return
+//   // isFocus.value = true
+//   emits('onSelect')
+//   listenClickOutside()
+// }
 
-function handleUpdate() {
-  isFocus.value = true
-  emits('onUpdate')
-  popoverRef.value.setShow(false)
-  listenClickOutside(true)
-}
+// function handleUpdate() {
+//   // isFocus.value = true
+//   emits('onUpdate')
+//   popoverRef.value.setShow(false)
+//   listenClickOutside(true)
+// }
 /** 删除 */
-function handleRemove() {
-  emits('onRemove')
-}
+// function handleRemove() {
+//   emits('onRemove')
+// }
 /** 定位 */
-function handleLocate() {
-  emits('onLocate')
-  popoverRef.value.setShow(false)
-}
+// function handleLocate() {
+//   emits('onLocate')
+//   popoverRef.value.setShow(false)
+// }
 /** 监听点击元素外部的事件 */
-function listenClickOutside(isUpdate = false) {
-  if (subs.length > 0) {
-    subs.forEach(sub => sub.unsubscribe())
-    subs.length = 0
-  }
-  subs.push(
-    fromEvent(document, 'click', true).subscribe(event => {
-      // 如果不是更新操作，则要监听是否点击元素自身
-      if (!isUpdate) {
-        if (event.target === targetRef.value) return
-      }
-      isFocus.value = false
-      subs.forEach(sub => sub.unsubscribe())
-      subs.length = 0
-    })
-  )
-}
+// function listenClickOutside(isUpdate = false) {
+//   if (subs.length > 0) {
+//     subs.forEach(sub => sub.unsubscribe())
+//     subs.length = 0
+//   }
+//   subs.push(
+//     fromEvent(document, 'click', true).subscribe(event => {
+//       // 如果不是更新操作，则要监听是否点击元素自身
+//       if (!isUpdate) {
+//         if (event.target === targetRef.value) return
+//       }
+//       isFocus.value = false
+//       subs.forEach(sub => sub.unsubscribe())
+//       subs.length = 0
+//     })
+//   )
+// }
 </script>
 <!-- n-popover :to="false" 该配置会出现溢出隐藏问题 -->
 <template>
-  <n-popover ref="popoverRef" trigger="click" :disabled="!isMarked">
-    <template #trigger>   
+  <!-- <n-popover ref="popoverRef" trigger="click" :disabled="!isMarked">
+    <template #trigger>    -->
       <span
-        ref="targetRef"
-        class="animation-layer"
-        :class="isFocus ? 'character focus animate__animated animate__pulse animate__infinite' : 'character'"
-        @click="onSelect"
+        :class="[
+          'character', 
+          'animation-layer',
+          // isFocus && 'focus animate__animated animate__pulse animate__infinite', 
+          isMarked ? 'marked' : ''
+          ]"
       >
         <slot />
       </span>
-    </template>
+    <!-- </template>
     <n-button text @click="handleUpdate">更新</n-button>
     |
     <n-button text @click="handleRemove">移除</n-button>
     |
     <n-button text @click="handleLocate">定位</n-button>
-  </n-popover>
+  </n-popover> -->
 </template>
 
 <style lang="scss" scoped>

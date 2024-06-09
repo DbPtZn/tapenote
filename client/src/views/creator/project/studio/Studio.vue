@@ -7,11 +7,12 @@ import { NIcon, NMessageProvider, useDialog, useMessage, useThemeVars } from 'na
 import { Bridge } from '../bridge'
 import _ from 'lodash'
 import utils from '@/utils'
-import { useFragment, usePromoter } from './hooks/_index'
+import { useFragment, usePromoter } from './hooks'
 import { auditTime } from '@tanbo/stream'
 import { LibraryEnum } from '@/enums'
 import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
 import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp } from '@vicons/material'
+import Delegater from './Delegater.vue'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 const bridge = inject('bridge') as Bridge
@@ -211,7 +212,7 @@ const totalDuration = computed(() => {
 <template>
   <div class="studio" ref="studioRef">
     <!-- 顶部 -->
-    <Header class="header" :height="47">
+    <div class="header" :height="47">
       <!-- 占位 -->
       <div style="width: 24px;" />
       <strong :class="[state.isReadonly ? 'disabled' : '']" style="white-space: nowrap; user-select: none;" @click="isTotalDurationShow = !isTotalDurationShow">
@@ -227,70 +228,72 @@ const totalDuration = computed(() => {
           </template>
         </n-button>
       </n-dropdown>
-    </Header>
+    </div>
     <!-- 主展示区 -->
     <div ref="scrollerRef" class="main" @contextmenu="handleContextmenu">
-      <!-- 拖拽组件 -->
-      <Draggable class="draggable" v-model="fragments" :itemKey="'id'" @change="handleMove">
-        <template #item="{ element }">
-          <AudioFragment
-            :key="element.id"
-            :speaker="element.speaker"
-            :is-loading="!!element.key"
-            :is-show-name="isShowName"
-            :is-cut="clipboardStore.fragment.length > 0 && clipboardStore.fragment[0].fragmentId === element.id && clipboardStore.fragment[0].type === 'cut'"
-            :multiple="selectedFragments.length > 1"
-            :duration="Number(element.duration)"
-            :readonly="state.isReadonly"
-            @on-contextmenu="handleContextmenu($event, element)"
-            @on-select="handleSelect($event, element)"
-          >
-            <template #txt>
-              <Character
-                v-for="(item, index) in element.transcript"
-                :key="index"
-                :is-marked="element.tags[index] === null ? false : true"
-                @on-select="handlePromoterSelect(element.id, index)"
-                @on-update="handlePromoterUpdate(element.id, index, (element as Fragment).promoters[index])"
-                @on-remove="handlePromoterRemove(element.id, index)"
-                @on-locate="handleAnimeLocate((element as Fragment).promoters[index])"
-              >
-                <n-badge
-                  color="#1989fa"
-                  :value="element.tags[index] === null ? '' : element.tags[index]"
-                  :max="9999"
-                  :style="{ pointerEvents: 'none' }"
+      <Delegater :id="id">
+        <!-- 拖拽组件 -->
+        <Draggable class="draggable" v-model="fragments" :itemKey="'id'" @change="handleMove">
+          <template #item="{ element }">
+            <AudioFragment
+              :key="element.id"
+              :speaker="element.speaker"
+              :is-loading="!!element.key"
+              :is-show-name="isShowName"
+              :is-cut="clipboardStore.fragment.length > 0 && clipboardStore.fragment[0].fragmentId === element.id && clipboardStore.fragment[0].type === 'cut'"
+              :multiple="selectedFragments.length > 1"
+              :duration="Number(element.duration)"
+              :readonly="state.isReadonly"
+              @on-contextmenu="handleContextmenu($event, element)"
+              @on-select="handleSelect($event, element)"
+            >
+              <template #txt>
+                <Character
+                  v-for="(item, index) in element.transcript"
+                  :key="index"
+                  :is-marked="element.tags[index] === null ? false : true"
+                  @on-select="handlePromoterSelect(element.id, index)"
+                  @on-update="handlePromoterUpdate(element.id, index, (element as Fragment).promoters[index])"
+                  @on-remove="handlePromoterRemove(element.id, index)"
+                  @on-locate="handleAnimeLocate((element as Fragment).promoters[index])"
                 >
-                  <span class="character">{{ item }}</span>
-                </n-badge>
-              </Character>
-            </template>
-            <template #loading>
-              <n-spin v-if="element.key" size="small" />
-            </template>
-            <!-- 播放音频 -->
-            <template #play>
-              <n-icon v-if="!element.key" :component="HeadsetOutlined" :size="18" @click="handlePlay(element)" />
-            </template>
-            <!-- 编辑文字 -->
-            <template #edit>
-              <n-icon :component="EditOutlined" :size="18" @click="handleEdit(element)" />
-            </template>
-            <!-- 移除片段 -->
-            <template #delete>
-              <n-popconfirm positive-text="确认" negative-text="取消"  @positive-click="handleRemove(element)">
-                <template #trigger>
-                  <n-icon :component="DeleteOutlined" :size="18" />
-                </template>
-                是否移除该片段 ?
-              </n-popconfirm>
-            </template>
-          </AudioFragment>
-        </template>
-      </Draggable>
+                  <n-badge
+                    color="#1989fa"
+                    :value="element.tags[index] === null ? '' : element.tags[index]"
+                    :max="9999"
+                    :style="{ pointerEvents: 'none' }"
+                  >
+                    <span class="character">{{ item }}</span>
+                  </n-badge>
+                </Character>
+              </template>
+              <template #loading>
+                <n-spin v-if="element.key" size="small" />
+              </template>
+              <!-- 播放音频 -->
+              <template #play>
+                <n-icon v-if="!element.key" :component="HeadsetOutlined" :size="18" @click="handlePlay(element)" />
+              </template>
+              <!-- 编辑文字 -->
+              <template #edit>
+                <n-icon :component="EditOutlined" :size="18" @click="handleEdit(element)" />
+              </template>
+              <!-- 移除片段 -->
+              <template #delete>
+                <n-popconfirm positive-text="确认" negative-text="取消"  @positive-click="handleRemove(element)">
+                  <template #trigger>
+                    <n-icon :component="DeleteOutlined" :size="18" />
+                  </template>
+                  是否移除该片段 ?
+                </n-popconfirm>
+              </template>
+            </AudioFragment>
+          </template>
+        </Draggable>
+      </Delegater>
     </div>
     <!-- 底部 -->
-    <Footer :height="200" :overflow-x="'unset'">
+    <div class="footer" :style="{ height: '200px' }" :overflow-x="'unset'">
       <!-- 工具栏 -->
       <StudioToolbar>
         <template #left>
@@ -352,7 +355,7 @@ const totalDuration = computed(() => {
       <!-- 输入区 -->
       <TTS v-if="state.recorderMode === 'TTS'" :readonly="state.isReadonly" @on-text-output="handleTextOutput"  />
       <ASR v-if="state.recorderMode === 'ASR'" :readonly="state.isReadonly" :shortcut="state.isFocus" @on-audio-output="handleAudioOutput" />
-    </Footer>
+    </div>
     <!-- 下拉列表 -->
     <n-dropdown
       placement="bottom-start"
