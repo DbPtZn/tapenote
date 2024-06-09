@@ -30,7 +30,7 @@ const state = reactive({
   isDrawShow: ref(false),
   isSaving: ref(false),
   toolbarHeight: ref<number>(50), // 基于顶部固定工具条的高度调整滚动区的高度
-  editorWidth: computed(() => bridge.habit.state.platform.width),
+  editorWidth: computed(() => bridge.habit?.state.platform.width),
   isReadonly: computed(() => props.readonly())
 })
 let editor: Editor
