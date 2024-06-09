@@ -1,22 +1,11 @@
 import {
   VElement,
   Formatter,
-  Subject,
-  Observable,
-  Injectable,
   VTextNode,
-  RenderMode
+  RenderMode,
 } from '@textbus/core'
 import { ANIME, ANIME_FORMATTER_NAME } from '../anime.constant'
 import { FormatLoader } from '@textbus/platform-browser'
-import { AnimeInfo } from '..'
-
-
-const animeFormatterClickEvent: Subject<any> = new Subject()
-export const onAnimeFormatterClick: Observable<AnimeInfo> = animeFormatterClickEvent.asObservable()
-
-const animeFormatterContextmenuEvent: Subject<any> = new Subject()
-export const onAnimeFormatterContextmenu: Observable<{ vdom: VElement; event: PointerEvent }> = animeFormatterContextmenuEvent.asObservable()
 
 export class AnimeFormatter implements Formatter<any> {
   name = ANIME_FORMATTER_NAME
@@ -41,23 +30,24 @@ export class AnimeFormatter implements Formatter<any> {
       },
       children
     )
-    vdom.listeners.click = (ev: Event) => {
-      ev.preventDefault()
-      ev.stopPropagation()
-      const element = ev.target as HTMLElement
-      animeFormatterClickEvent.next({
-        id: element.dataset.id,
-        effect: element.dataset.effect,
-        serial: element.dataset.serial
-      })
-    }
-    vdom.listeners.contextmenu = (event: Event) => {
-      // console.log('右击')
-      // console.log(event)
-      event.preventDefault() // 阻止默认事件
-      event.stopPropagation() // 阻止事件冒泡
-      animeFormatterContextmenuEvent.next({ vdom, event })
-    }
+    /** ----------------- 弃用 （ 改用事件委托 ）  -------------------- */
+    // vdom.listeners.click = (ev: Event) => {
+    //   // console.log('anime formatter click ------>')
+    //   // ev.preventDefault()
+    //   // ev.stopPropagation()
+    //   // const element = ev.target as HTMLElement
+    //   // animeFormatterService.handleSelectAnime({
+    //   //   id: element.dataset.id!,
+    //   //   effect: element.dataset.effect!,
+    //   //   serial: element.dataset.serial!
+    //   // })
+    // }
+    // vdom.listeners.contextmenu = (event: Event) => {
+    //   // console.log('anime formatter contextmenu ------>')
+    //   // event.preventDefault() // 阻止默认事件
+    //   // event.stopPropagation() // 阻止事件冒泡
+    //   // animeFormatterService.handleAnimeContextmenu({ vdom, event })
+    // }
     return vdom
   }
 }

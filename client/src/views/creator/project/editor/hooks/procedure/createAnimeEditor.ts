@@ -1,4 +1,4 @@
-import { AddAnimeService, AnimeProvider, AnimeService, AnimeStateProvider, AnimeUtilsProvider, ColorProvider, DialogProvider, ImgToUrlService, OutlineService, Player, Structurer, ThemeProvider } from '@/editor'
+import { AddAnimeService, AnimeProvider, AnimeStateProvider, AnimeUtilsProvider, ColorProvider, DialogProvider, ImgToUrlService, OutlineService, Player, Structurer, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
 import { Ref, onMounted, onUnmounted, watch } from 'vue'
@@ -33,7 +33,6 @@ export function createAnimeEditor(args: {
   onUnmounted(() => {
     try {
       // editor.get(Commander).destory()
-      editor.get(AnimeService).destory()
       editor.get(AnimeProvider).destory()
       editor.get(AddAnimeService).destory()
       editor.get(AnimeUtilsProvider).destory()

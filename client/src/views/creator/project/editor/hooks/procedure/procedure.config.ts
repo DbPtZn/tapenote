@@ -8,7 +8,7 @@ import { InlineToolbarPlugin,
   formatPainterTool, tableAddTool, cleanTool,
   colorFormatLoader, colorFormatter, textBackgroundColorFormatter, 
   textBackgroundColorFormatLoader, animeFormatter, animeFormatLoader, 
-  animeTool, AnimeUtilsProvider, AnimeService, 
+  animeTool, AnimeUtilsProvider,
   AnimeStateProvider, animeRootComponentLoader, 
   animeRootComponent, AddAnimeService, AnimeComponentSupport, 
   defaultGroupTool, DialogProvider, componentsTool, 
@@ -16,7 +16,7 @@ import { InlineToolbarPlugin,
   OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
   preview_startTool, preview_stopTool, animeBadgeVisibleTool, animeElementVisibleTool, 
   AxiosProvider, imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
-  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService 
+  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin 
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
@@ -69,7 +69,7 @@ export function getProcedureConfig(args: {
     ],
     providers: [
       { provide: Commander, useClass: CustomCommander },
-      AnimeService, AnimeProvider, AddAnimeService, 
+      AnimeProvider, AddAnimeService, 
       AnimeUtilsProvider, AnimeStateProvider, DialogProvider, 
       OutlineService, ColorProvider,
       Structurer, ThemeProvider, Player, ImgToUrlService
@@ -106,10 +106,9 @@ export function getProcedureConfig(args: {
           [animeBadgeVisibleTool, animeElementVisibleTool],
           [cleanTool]
         ], scrollerRef),
-      // () => new ContextMenu(),
-      () => new AnimeContextmenuPlugin(),
       () => new OutlinePlugin(),
       () => new LinkJumpTipPlugin(),
+      () => new AnimeContextmenuPlugin(),
       () => new AnimeComponentSupport(),
       () => new PreviewPlayerController([
         preview_startTool,

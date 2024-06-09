@@ -5,6 +5,7 @@ import { VIEW_DOCUMENT } from '@textbus/platform-browser'
 import { ANIME, ANIME_COMPONENT } from '@/editor'
 import { useMessage } from 'naive-ui'
 import { onUnmounted } from 'vue'
+import { Renderer } from '@textbus/core'
 export function usePromoter(procedureId: string, bridge: Bridge) {
   const { projectStore } = useStore()
   const message = useMessage()
@@ -30,9 +31,52 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
   function makePresetStart(fragmentId: string, subscript: number, oldAniId: string | null) {
     // 每次开启预设启动子进程时，取消之前的订阅并清空 subs, 确保有且只有一个订阅生效 （使得每次点击 character 时都能获得一个新的监听）
     makePresetEnd() // 结束上一个订阅
+    const container = bridge.container
+    const renderer = bridge.renderer
+    if (!container || !renderer) return
     subs.push(
-      bridge.animeService!.onAnimeClick.subscribe(animeInfo => {
-        const { id, serial } = animeInfo
+      // ----------------- 弃用 ( 改用事件委托 ) ------------------
+      // bridge.animeService!.onAnimeClick.subscribe(animeInfo => {
+      //   const { id, serial } = animeInfo
+      //   addPromoter(fragmentId, subscript, serial, id)
+      //   if (oldAniId) { // 更新操作时的判定
+      //     const isUnique = checkPromoterUnique(oldAniId)
+      //     // aniId 是唯一绑定，其被替换后，应该取消其对应动画块的激活状态
+      //     if (isUnique) setAnimeToInactive(oldAniId)
+      //   }
+      //   makePresetEnd()
+      // }),
+      fromEvent<PointerEvent>(container, 'click').subscribe(ev => {
+        // console.log(ev)
+        let id = ''
+        let serial = ''
+        const target = ev.target as HTMLElement
+        if (target.tagName.toLocaleLowerCase() === 'anime') {
+            ev.preventDefault() // 阻止默认事件
+            ev.stopPropagation() // 阻止事件冒泡
+            // console.log('anime')
+            if (target.dataset.id && target.dataset.serial) {
+              id = target.dataset.id
+              serial = target.dataset.serial
+            }
+        }
+        if (target.classList.contains('anime-component-tab')) {
+          const node = target.parentElement
+          if(node?.tagName.toLocaleLowerCase() === 'anime-component') {
+            ev.preventDefault() // 阻止默认事件
+            ev.stopPropagation() // 阻止事件冒泡
+            // console.log(node)
+            const component = renderer.getComponentByNativeNode(node)
+            if(component) {
+              console.log(component.state)
+              const state = component.state
+              if (state && state.dataId && state.dataSerial) {
+                id = state.dataId
+                serial = state.dataSerial
+              }
+            }
+          }
+        }
         addPromoter(fragmentId, subscript, serial, id)
         if (oldAniId) { // 更新操作时的判定
           const isUnique = checkPromoterUnique(oldAniId)

@@ -675,7 +675,7 @@ export class Player {
       this.audio = null
     }
       
-    this.data.forEach(item => {
+    this.data?.forEach(item => {
       if (item.audio) {
         item.audio.src = ''
       }

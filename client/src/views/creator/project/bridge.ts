@@ -1,8 +1,10 @@
-import { AnimeService, AnimeStateProvider, AnimeUtilsProvider } from "@/editor"
+import { AnimeStateProvider, AnimeUtilsProvider } from "@/editor"
 import { Observable, Subject } from "@tanbo/stream"
 import { Editor } from "@textbus/editor"
 import { Habit } from "./habit"
 import { LibraryEnum } from "@/enums"
+import { VIEW_DOCUMENT } from "@textbus/platform-browser"
+import { Renderer } from "@textbus/core"
 
 export class Bridge {
   habit: Habit | null = null
@@ -11,8 +13,9 @@ export class Bridge {
   studioRef: HTMLElement | null = null
   scrollerRef: HTMLElement | null = null
   projectRef: HTMLElement | null = null
+  renderer: Renderer | null = null
+  container: HTMLElement | null = null
   animeState: AnimeStateProvider | null = null
-  animeService: AnimeService | null = null
   animeUtils: AnimeUtilsProvider | null = null
   private editorReadyEvent: Subject<any> = new Subject()
   onEditorReady: Observable<Editor> = this.editorReadyEvent.asObservable()
@@ -28,6 +31,7 @@ export class Bridge {
   private sidenoteReadyEvent: Subject<any> = new Subject()
   onSidenoteReady: Observable<Editor> = this.sidenoteReadyEvent.asObservable()
 
+
   constructor() {
     this.habit = new Habit()
   }
@@ -35,9 +39,10 @@ export class Bridge {
     this.editor = editor
     this.editorRef = editorRef
     this.scrollerRef = scrollerRef
+    this.container = editor.get(VIEW_DOCUMENT)
+    this.renderer = editor.get(Renderer)
     if (lib === LibraryEnum.PROCEDURE) {
       this.animeState = editor.get(AnimeStateProvider)
-      this.animeService = editor.get(AnimeService)
       this.animeUtils = editor.get(AnimeUtilsProvider)
     }
     this.editorReadyEvent.next(editor)
@@ -78,7 +83,6 @@ export class Bridge {
     this.scrollerRef = null
     this.projectRef = null
     this.animeState = null
-    this.animeService = null
     this.animeUtils = null
   }
 }

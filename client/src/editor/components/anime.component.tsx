@@ -19,8 +19,6 @@ import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import {
   ANIME_COMPONENT,
   ANIME_COMPONENT_NAME,
-  AnimeInfo,
-  AnimeService,
 } from '@/editor'
 
 export const animeComponent = defineComponent({
@@ -29,7 +27,6 @@ export const animeComponent = defineComponent({
   setup(initData?: ComponentInitData<any, any>) {
     const injector = useContext()
     const commander = injector.get(Commander)
-    const animeService = injector.get(AnimeService)
     const componentInstance = useSelf()
     /** 插槽 */
     const slots = useSlots(initData!.slots!)
@@ -70,23 +67,24 @@ export const animeComponent = defineComponent({
               title={state.dataTitle}
               data-serial={state.dataSerial}
               data-state={state.dataState}
-              onClick={() => {
-                const info: AnimeInfo = {
-                  id: state.dataId || '',
-                  effect: state.dataEffect || '',
-                  serial: state.dataSerial || ''
-                }
-                // 点击选中动画
-                animeService.handleSelectAnime(info)
-              }}
-              onContextmenu={(event) => {
-                event.preventDefault() // 阻止默认事件
-                event.stopPropagation() // 阻止事件冒泡
-                animeService.handleAnimeContextmenu({
-                  component: componentInstance,
-                  event
-                })
-              }}
+              // ----------------- 弃用 （ 改用事件委托 ）  --------------------
+              // onClick={() => {
+              //   const info: AnimeInfo = {
+              //     id: state.dataId || '',
+              //     effect: state.dataEffect || '',
+              //     serial: state.dataSerial || ''
+              //   }
+              //   // 点击选中动画
+              //   animeService.handleSelectAnime(info)
+              // }}
+              // onContextmenu={(event) => {
+              //   event.preventDefault() // 阻止默认事件
+              //   event.stopPropagation() // 阻止事件冒泡
+              //   animeService.handleAnimeContextmenu({
+              //     component: componentInstance,
+              //     event
+              //   })
+              // }}
               onMouseenter={(ev) => {
                 const target = ev.target as HTMLElement
                 target.parentElement?.classList.add('anime-component-evoke')
