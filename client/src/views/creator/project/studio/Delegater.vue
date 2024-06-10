@@ -3,11 +3,13 @@ import { Subscription, fromEvent } from '@tanbo/stream'
 import { inject, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { usePromoter } from './hooks'
 import { Bridge } from '../bridge'
+import useStore from '@/store';
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
 }>()
-// TODO 想办法拿到片段的 id
+
+const { projectStore } = useStore()
 const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, checkAnimeState, checkPromoter } = usePromoter(props.id, bridge)
 const delegaterRef = ref<HTMLElement>()
 const updateRef = ref<HTMLElement>()
@@ -30,20 +32,46 @@ onUnmounted(() => {
 })
 
 const handleClick = (e: MouseEvent) => {
-  // console.log(e)
+  console.log(e)
   const target = e.target as HTMLElement
   if(target.classList.contains('character')) {
-    characterMethods.setFocus(target)
-    if(target.classList.contains('marked')) {
-      const rect = target.getBoundingClientRect()
-      // console.log('character')
-      // console.log(rect)
-      popoverState.showPopover = true
-      popoverState.x = rect.x + rect.width / 2
-      popoverState.y = rect.y
-      return
+    const fragment = getAncestorNodeByClassname(target, 'fragment')
+    if (fragment) {
+      // console.log(fragment.id)
+      const indexStr = target.dataset.index
+      if (indexStr !== undefined) {
+        const index = parseInt(indexStr)
+        characterMethods.setFocus(target) // 激活启动子预设状态聚焦动画
+        if(!target.classList.contains('marked')) {
+          handlePromoterSelect(fragment.id, index)
+        } else {
+          const rect = target.getBoundingClientRect()
+          // console.log('character')
+          // console.log(rect)
+          popoverState.showPopover = true
+          popoverState.x = rect.x + rect.width / 2
+          popoverState.y = rect.y
+          popoverState.currentFragmentId = fragment.id
+          popoverState.currentPromoterIndex = index
+          return
+        }
+      }
     }
   }
+}
+
+function getAncestorNodeByClassname(node: HTMLElement, className: string) {
+  let parent = node.parentElement
+  while (parent) {
+    if(parent.classList.contains('studio')) return null
+    if (parent.classList.contains(className)) return parent
+    parent = parent.parentElement
+  }
+  return null
+}
+
+function getFragment(fragmentId: string) {
+  return projectStore.fragment(props.id).findOne(fragmentId)
 }
 
 const subs2: Subscription[] = []
@@ -75,6 +103,8 @@ const popoverState = reactive({
   showPopover: false,
   x: 0,
   y: 0,
+  currentPromoterIndex: 0,
+  currentFragmentId: '',
 })
 
 const popoverMethods = {

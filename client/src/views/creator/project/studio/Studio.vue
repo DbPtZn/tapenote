@@ -237,6 +237,7 @@ const totalDuration = computed(() => {
           <template #item="{ element }">
             <AudioFragment
               :key="element.id"
+              :id="element.id"
               :speaker="element.speaker"
               :is-loading="!!element.key"
               :is-show-name="isShowName"
@@ -251,6 +252,7 @@ const totalDuration = computed(() => {
                 <Character
                   v-for="(item, index) in element.transcript"
                   :key="index"
+                  :data-index="index"
                   :is-marked="element.tags[index] === null ? false : true"
                   @on-select="handlePromoterSelect(element.id, index)"
                   @on-update="handlePromoterUpdate(element.id, index, (element as Fragment).promoters[index])"

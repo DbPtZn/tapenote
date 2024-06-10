@@ -471,6 +471,15 @@ export const useProjectStore = defineStore('projectStore', {
       const get = () => {
         return this.data.find(i => i.id === procedureId && i.account === account && i.hostname === hostname)?.fragments || []
       }
+
+      const findOne = (fragmentId: string) => {
+        const index = get()?.findIndex(i => i.id === fragmentId)
+        if (index === -1) {
+          return get()[index]
+        }
+      }
+
+
       /** 获取正常片段（排序） */
       const getBySort = () => {
         return (
@@ -777,6 +786,7 @@ export const useProjectStore = defineStore('projectStore', {
       return {
         set,
         get,
+        findOne,
         getBySort,
         getRemovedBySort,
         createByText,
