@@ -93,7 +93,7 @@ export function getProcedureConfig(args: {
         [tableAddTool, tableRemoveTool],
         [formatPainterTool],
         [cleanTool],
-        [outlineTool],
+        // [outlineTool],
         [animeBadgeVisibleTool, animeElementVisibleTool]
       ], toolbarRef!),
       () =>

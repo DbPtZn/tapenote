@@ -239,7 +239,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="rootRef" :class="['editor-wrapper', lib === LibraryEnum.COURSE && 'player-wrapper']">
+  <div ref="rootRef" :class="['editor-wrapper', bridge.habit?.state.platform.isScrollbarShow && 'scrollbar-visible', lib === LibraryEnum.COURSE && 'player-wrapper']">
     <div class="main" :style="{ height: '100%', flexDirection: lib === LibraryEnum.COURSE ? 'row' : 'column' }">
       <!-- 工具条 -->
       <div v-if="lib !== LibraryEnum.COURSE" ref="toolbarWrapperRef">
@@ -308,6 +308,15 @@ onUnmounted(() => {
   width: 100%;
   // border-right: 1px solid v-bind('themeVars.dividerColor');
   // border-bottom: 1px solid v-bind('themeVars.dividerColor');
+  // &:hover {
+  //   /*定义滑块 内阴影+圆角*/
+  //   ::-webkit-scrollbar-thumb {
+  //     border-radius: 10px;
+  //     background-color: v-bind('themeVars.scrollbarColor');
+  //   }
+  // }
+}
+.scrollbar-visible {
   &:hover {
     /*定义滑块 内阴影+圆角*/
     ::-webkit-scrollbar-thumb {

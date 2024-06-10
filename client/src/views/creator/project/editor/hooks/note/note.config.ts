@@ -64,7 +64,7 @@ export function getNoteConfig(args: {
         [tableAddTool, tableRemoveTool],
         [formatPainterTool],
         [cleanTool],
-        [outlineTool]
+        // [outlineTool]
       ], toolbarRef!),
       () =>
         new InlineToolbarPlugin([

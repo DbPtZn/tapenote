@@ -110,7 +110,7 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
       title: '自动分配动画预设',
       content: '该功能会覆盖现有的动画预设，谨慎使用！',
       positiveText: '确定',
-      negativeText: '不确定',
+      negativeText: '取消',
       onPositiveClick: () => {
         bridge.handleAutoAnime()
       }
@@ -180,12 +180,13 @@ onUnmounted(() => {
             </n-space>
             <n-space :justify="'space-between'" :align="'center'">
               <span>大纲视图</span>
-              <n-switch v-model:value="bridge.habit.state.platform.isOutlineShow" />
+              <n-switch v-model:value="bridge.habit.state.platform.isOutlineShow" @update:value="bridge.handleOutlineShow()" />
             </n-space>
             <n-space :justify="'space-between'" :align="'center'">
               <span>滚动条</span>
               <n-switch v-model:value="bridge.habit.state.platform.isScrollbarShow" />
             </n-space>
+            <n-divider />
             <n-space :justify="'center'" :align="'center'">
               <n-button @click="handleAutoAnime">自动分配动画</n-button>
             </n-space>

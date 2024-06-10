@@ -10,6 +10,11 @@ export class OutlineService {
     this.isExpanded = false
     this.onExpand = this.expandEvent.asObservable()
   }
+
+  setup(initExpanded: boolean) {
+    this.isExpanded = initExpanded
+  }
+
   handleExpand() {
     this.isExpanded = !this.isExpanded
     this.expandEvent.next(this.isExpanded)
