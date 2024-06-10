@@ -198,7 +198,7 @@ export class AnimeProvider {
   }
 }
 
-function getRandomEntryFromMap(map): { key: string; value: { name: string; applyEffect: (target: Element) => anime.AnimeInstance } } | undefined {
+function getRandomEntryFromMap(map): { key: string; value: { name: string; applyEffect?: (target: Element) => anime.AnimeInstance } } | undefined {
   const size = map.size
   const randomIndex = Math.floor(Math.random() * size) // 生成随机索引
   let currentIndex = 0

@@ -27,7 +27,11 @@ export class AnimeAutoProvider {
     this.structurer = injector.get(Structurer)
   }
 
-  autoAdd() {
+  /**
+   * 自动添加动画预设
+   * @param selectAnimeOption 指定一种动画，如果提供该选项，则所有自动添加的预设都会采用该动画
+   */
+  autoAdd(selectAnimeOption?: { key: string; value: { name: string } }) {
     // console.log('add anime auto')
     const slots = this.rootComponent.component.slots.toArray()
     const group = slots.map(slot => slot.sliceContent())
@@ -45,7 +49,7 @@ export class AnimeAutoProvider {
             console.log('formatter anime')
             component.slots.toArray().forEach(slot => {
               setTimeout(() => {
-                this.addFormatterAnime(slot)
+                this.addFormatterAnime(slot, selectAnimeOption)
               }, 0)
             })
             continue
@@ -69,7 +73,7 @@ export class AnimeAutoProvider {
             console.log('行内组件或文本组件')
             component.slots.toArray().forEach(slot => {
               setTimeout(() => {
-                this.addFormatterAnime(slot)
+                this.addFormatterAnime(slot, selectAnimeOption)
               }, 0)
             })
             continue
@@ -78,14 +82,14 @@ export class AnimeAutoProvider {
           // console.log('c')
           // 将函数的执行推迟到当前执行栈清空之后, 确保DOM更新完成 (会先完成循环，在执行内部函数)
           setTimeout(() => {
-            this.addComponentAnime(component)
+            this.addComponentAnime(component, selectAnimeOption)
           }, 0)
 
           // 要同时采用 component 和 formatter 设置动画的组件
           if (['ListComponent'].includes(component.name)) {
             component.slots.toArray().forEach(slot => {
               setTimeout(() => {
-                this.addFormatterAnime(slot)
+                this.addFormatterAnime(slot, selectAnimeOption)
               }, 0)
             })
           }
@@ -98,15 +102,17 @@ export class AnimeAutoProvider {
     // })
   }
 
-  /** 添加动画 */
-  addComponentAnime(componentInstance: ComponentInstance | null) {
+  /**
+   * 添加组件动画
+   * @param componentInstance 组件
+   * @param selectAnimeOption 指定一种动画，不传的时候会在动画列表中随机选择
+   */
+  addComponentAnime(componentInstance: ComponentInstance | null, selectAnimeOption?: { key: string; value: { name: string } }) {
     if (!componentInstance) return
     const id = this.animeUtilsProvider.generateAnimeId()
-    // console.log('id:' + id)
     const serial = this.animeUtilsProvider.generateAnimeSerial().toString()
-    // console.log('serial' + serial)
+    const animeOption = selectAnimeOption || this.anime.getRandomAnime()
     try {
-      const animeOption = this.anime.getRandomAnime()
       const slot = new Slot([ContentType.BlockComponent])
       const anime = animeComponent.createInstance(this.injector, {
         slots: [slot],
@@ -126,22 +132,31 @@ export class AnimeAutoProvider {
     }
   }
 
-  addFormatterAnime(slot: Slot) {
-    if(slot.sliceContent()[0] !== '\n') {
-      const id = this.animeUtilsProvider.generateAnimeId()
-      const serial = this.animeUtilsProvider.generateAnimeSerial().toString()
-      const animeOption = this.anime.getRandomAnime()
-      slot.applyFormat(animeFormatter, {
-        startIndex: 0,
-        endIndex: slot.length,
-        value: {
-          dataId: id,
-          dataSerial: serial,
-          dataEffect: animeOption.key,
-          dataState: '',
-          dataTitle: animeOption.value.name
-        }
-      })
+  /**
+   * 添加格式动画
+   * @param slot 插槽
+   * @param selectAnimeOption 指定一种动画，不传的时候会在动画列表中随机选择
+   */
+  addFormatterAnime(slot: Slot, selectAnimeOption?: { key: string; value: { name: string } }) {
+    try {
+      if(slot.sliceContent()[0] !== '\n') {
+        const id = this.animeUtilsProvider.generateAnimeId()
+        const serial = this.animeUtilsProvider.generateAnimeSerial().toString()
+        const animeOption = this.anime.getRandomAnime()
+        slot.applyFormat(animeFormatter, {
+          startIndex: 0,
+          endIndex: slot.length,
+          value: {
+            dataId: id,
+            dataSerial: serial,
+            dataEffect: animeOption.key,
+            dataState: '',
+            dataTitle: animeOption.value.name
+          }
+        })
+      }
+    } catch (error) {
+      console.log(error)
     }
   }
 

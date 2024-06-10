@@ -91,4 +91,24 @@ function containsEnglish(text: string) {
     }
   }
 }
+/** 定制滚动条 */
+/*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/
+::-webkit-scrollbar {
+  width: 4px;
+  height: 16px;
+  background-color: unset;
+}
+
+/*定义滚动条轨道 内阴影+圆角*/
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: unset;
+}
+
+// /*定义滑块 内阴影+圆角*/
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  box-shadow: unset;
+  background-color: unset;
+}
 </style>

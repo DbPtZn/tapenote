@@ -13,6 +13,7 @@ import { LibraryEnum } from '@/enums'
 import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
 import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp } from '@vicons/material'
 import Delegater from './Delegater.vue'
+import { splitText } from './_utils'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 const bridge = inject('bridge') as Bridge
@@ -58,6 +59,26 @@ const {
 } = {
   handleTextOutput(text: string) {
     if (text.length === 0) return
+    // TODO 对过长的文本进行分片
+    // if (text.length > 32) {
+    //   const chunks = splitText(text)
+    //   const promiseArr: Promise<any>[] = []
+    //   for(let chunk of chunks) {
+    //     promiseArr.push(
+    //       projectStore.fragment(props.id).createByText({
+    //         txt: chunk,
+    //         speakerId: speakerId.value || '',
+    //         speed: state.ttsSpeed
+    //       })
+    //     )
+    //   }
+    //   // TODO 这里涉及并发问题，无法确定并发数量，如果中间有失败，则需要对失败片段重新上传，再次失败则放弃并提示用户
+    //   // 理论上我们可以限制最大 6 个并发，这样用户一次输入的文本长度不应该超过 32 * 6 个字符（中文），当超过时提示用户手动分片
+    //   Promise.all(promiseArr).catch(e => {
+    //     message.error('创建片段失败！')
+    //   })
+    //   return
+    // }
     projectStore.fragment(props.id).createByText({
       txt: text,
       speakerId: speakerId.value || '',
