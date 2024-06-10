@@ -16,7 +16,6 @@ const updateRef = ref<HTMLElement>()
 const subs1: Subscription[] = []
 onMounted(() => {
   const scroller = delegaterRef.value?.parentElement
-  // console.log(updateRef.value)
   if(scroller)
   subs1.push(
     fromEvent(scroller, 'scroll').subscribe(e => {
@@ -32,12 +31,11 @@ onUnmounted(() => {
 })
 
 const handleClick = (e: MouseEvent) => {
-  console.log(e)
+  // console.log(e)
   const target = e.target as HTMLElement
   if(target.classList.contains('character')) {
     const fragment = getAncestorNodeByClassname(target, 'fragment')
     if (fragment) {
-      // console.log(fragment.id)
       const indexStr = target.dataset.index
       if (indexStr !== undefined) {
         const index = parseInt(indexStr)
@@ -46,8 +44,6 @@ const handleClick = (e: MouseEvent) => {
           handlePromoterSelect(fragment.id, index)
         } else {
           const rect = target.getBoundingClientRect()
-          // console.log('character')
-          // console.log(rect)
           popoverState.showPopover = true
           popoverState.x = rect.x + rect.width / 2
           popoverState.y = rect.y
@@ -71,7 +67,7 @@ function getAncestorNodeByClassname(node: HTMLElement, className: string) {
 }
 
 function getFragment(fragmentId: string) {
-  return projectStore.fragment(props.id).findOne(fragmentId)
+  return projectStore.findFragment(props.id, fragmentId)
 }
 
 const subs2: Subscription[] = []
@@ -86,9 +82,6 @@ const characterMethods = {
       subs2.push(
         fromEvent(document, 'click', true).subscribe(event => {
           // 如果不是更新操作，则要监听是否点击元素自身
-          // console.log(event.target)
-          // console.log(updateRef.value)
-          // console.log(event.target === updateRef.value)
           if (event.target === updateRef.value) return
           target.classList.remove('focus', 'animate__animated', 'animate__pulse', 'animate__infinite')
           subs2.forEach(s => s.unsubscribe())
@@ -109,15 +102,32 @@ const popoverState = reactive({
 
 const popoverMethods = {
   handleUpdate() {
-    console.log('update')
+    // console.log('update')
+    const fragmentId = popoverState.currentFragmentId
+    const fragment = getFragment(fragmentId)
+    // console.log(fragment)
+    const index = popoverState.currentPromoterIndex
+    // console.log([fragmentId, index, fragment?.promoters[index]])
+    fragment && handlePromoterUpdate(
+      fragmentId,
+      index, 
+      fragment.promoters[index]
+    )
     popoverState.showPopover = false
   },
   handleRemove() {
-    console.log('remove')
+    // console.log('remove')
+    const fragmentId = popoverState.currentFragmentId
+    const index = popoverState.currentPromoterIndex
+    handlePromoterRemove(fragmentId, index)
     popoverState.showPopover = false
   },
   handleLocate() {
-    console.log('locate')
+    // console.log('locate')
+    const fragmentId = popoverState.currentFragmentId
+    const fragment = getFragment(fragmentId)
+    const index = popoverState.currentPromoterIndex
+    fragment && handleAnimeLocate(fragment.promoters[index])
     popoverState.showPopover = false
   },
   handleClickoutside() {

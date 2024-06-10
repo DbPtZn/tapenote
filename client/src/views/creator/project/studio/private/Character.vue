@@ -5,12 +5,12 @@ import { Subscription, fromEvent } from '@tanbo/stream'
 const props = defineProps<{
   isMarked: boolean
 }>()
-const emits = defineEmits<{
-  onSelect: [],
-  onUpdate: [],
-  onRemove: [],
-  onLocate: []
-}>()
+// const emits = defineEmits<{
+//   onSelect: [],
+//   onUpdate: [],
+//   onRemove: [],
+//   onLocate: []
+// }>()
 const themeVars = useThemeVars()
 // const targetRef = ref(null)
 // const popoverRef = ref()

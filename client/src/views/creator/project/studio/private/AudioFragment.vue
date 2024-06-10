@@ -72,6 +72,7 @@ function useClickoutside() {
 }
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
+  subs.length = 0
 })
 </script>
 

@@ -460,26 +460,25 @@ export const useProjectStore = defineStore('projectStore', {
     },
     // 批量导出
     // 批量导入
-
+    findFragment(projectId: string, fragmentId: string) {
+      const project = this.get(projectId)
+      if (project) {
+        const index = project.fragments.findIndex(i => i.id === fragmentId)
+        if (index !== -1) {
+          return project.fragments[index]
+        }
+      }
+    },
     /** ------------------------------- fragment ------------------------------------------- */
     fragment(procedureId: string) {
       const sequence = this.get(procedureId)?.sequence
       const removedSequence = this.get(procedureId)?.removedSequence
       const account = this.get(procedureId)?.account
       const hostname = this.get(procedureId)?.hostname
-      /** 获取片段 */
+      /** 获取项目中的所有片段 */
       const get = () => {
         return this.data.find(i => i.id === procedureId && i.account === account && i.hostname === hostname)?.fragments || []
       }
-
-      const findOne = (fragmentId: string) => {
-        const index = get()?.findIndex(i => i.id === fragmentId)
-        if (index === -1) {
-          return get()[index]
-        }
-      }
-
-
       /** 获取正常片段（排序） */
       const getBySort = () => {
         return (
@@ -786,7 +785,6 @@ export const useProjectStore = defineStore('projectStore', {
       return {
         set,
         get,
-        findOne,
         getBySort,
         getRemovedBySort,
         createByText,
