@@ -36,7 +36,7 @@ export class ColorProvider {
   }
 
   destory() {
-    console.log('color provider destory')
+    // console.log('color provider destory')
     this.colorOptions.clear()
   }
 }

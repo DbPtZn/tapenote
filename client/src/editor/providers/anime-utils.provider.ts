@@ -1,7 +1,7 @@
 import { Injector, ClassProvider, Injectable, Selection, Renderer } from '@textbus/core'
 import { Layout } from '@textbus/editor'
 import { ANIME, ANIME_COMPONENT } from '../anime.constant'
-// import { AnimeProvider } from '.'
+import { VIEW_CONTAINER, VIEW_DOCUMENT } from '@textbus/platform-browser'
 
 @Injectable()
 export class AnimeUtilsProvider {
@@ -9,11 +9,13 @@ export class AnimeUtilsProvider {
   private renderer!: Renderer
   private selection!: Selection
   private scrollerRef!: HTMLElement
+  private injector!: Injector
   // private anime!: AnimeProvider
   constructor() {}
   setup(injector: Injector, scrollerRef: HTMLElement) {
-    const layout = injector.get(Layout)
-    this.containerRef = layout.container
+    this.injector = injector
+    // const layout = injector.get(Layout)
+    this.containerRef = injector.get(VIEW_DOCUMENT)
     this.scrollerRef = scrollerRef
     this.renderer = injector.get(Renderer)
     this.selection = injector.get(Selection)
@@ -43,10 +45,16 @@ export class AnimeUtilsProvider {
   /** 计算并返回新建动画标记的编号 */
   generateAnimeSerial() {
     if (!this.containerRef) return 1
+    // console.log('generateAnimeSerial')
     const serialArr: number[] = []
     const animeFormatsArr = this.containerRef.getElementsByTagName(ANIME) as HTMLCollectionOf<HTMLElement>
-    const animeComponentsArr = this.containerRef.getElementsByTagName('anime-component') as HTMLCollectionOf<HTMLElement>
+    const animeComponentsArr = this.containerRef.getElementsByTagName(ANIME_COMPONENT) as HTMLCollectionOf<HTMLElement>
+    // console.log('animeFormatsArr:')
+    // console.log(animeFormatsArr.length)
+    // console.log('animeComponentsArr:')
+    // console.log(animeComponentsArr.length)
     const anime_amount = animeFormatsArr.length + animeComponentsArr.length
+    // console.log('anime_amount:' + anime_amount)
     if (!anime_amount) {
       return 1
     }
@@ -59,6 +67,7 @@ export class AnimeUtilsProvider {
       serial && serialArr.push(Number(serial))
     }
     let maxSerial = 1
+    // console.log('serialArr:' + serialArr)
     if (serialArr.length !== 0) {
       maxSerial = Math.max(...serialArr)
       return maxSerial + 1

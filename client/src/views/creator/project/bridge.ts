@@ -1,10 +1,11 @@
-import { AnimeStateProvider, AnimeUtilsProvider } from "@/editor"
+import { AnimeAutoProvider, AnimeStateProvider, AnimeUtilsProvider } from "@/editor"
 import { Observable, Subject } from "@tanbo/stream"
 import { Editor } from "@textbus/editor"
 import { Habit } from "./habit"
 import { LibraryEnum } from "@/enums"
 import { VIEW_DOCUMENT } from "@textbus/platform-browser"
 import { Renderer } from "@textbus/core"
+import { useDialog } from "naive-ui"
 
 export class Bridge {
   habit: Habit | null = null
@@ -73,6 +74,11 @@ export class Bridge {
   }
   handleSidenoteToolbarCollapse(value: boolean) {
     this.toolbarCollapseEvent.next(value)
+  }
+
+  handleAutoAnime() {
+    const animeAutoProvider = this.editor?.get(AnimeAutoProvider)
+    animeAutoProvider?.autoAdd()
   }
 
   destory() {

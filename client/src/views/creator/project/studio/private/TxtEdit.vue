@@ -1,6 +1,5 @@
-/** Txt Edit Dialog */
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, reactive } from 'vue'
+import { onUnmounted, ref, reactive } from 'vue'
 import { useThemeVars } from 'naive-ui'
 const props = defineProps<{
   transcript: string[]
@@ -14,7 +13,6 @@ props.transcript.forEach(item => {
 })
 
 const focus = ref(-1)
-onMounted(() => {})
 function handleConfirm() {
   props.onConfirm(inputs)
 }

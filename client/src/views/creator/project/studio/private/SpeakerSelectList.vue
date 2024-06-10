@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { NMessageProvider, useDialog, useThemeVars } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import { VpnKeyOffOutlined, AddRound, VpnKeyOutlined, CloseRound, RemoveRound } from '@vicons/material'
 import AddSpeaker from './AddSpeaker.vue'
 import useStore from '@/store'

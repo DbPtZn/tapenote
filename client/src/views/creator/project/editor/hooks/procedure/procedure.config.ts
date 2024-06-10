@@ -16,7 +16,7 @@ import { InlineToolbarPlugin,
   OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
   preview_startTool, preview_stopTool, animeBadgeVisibleTool, animeElementVisibleTool, 
   AxiosProvider, imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
-  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin 
+  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider 
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
@@ -69,7 +69,7 @@ export function getProcedureConfig(args: {
     ],
     providers: [
       { provide: Commander, useClass: CustomCommander },
-      AnimeProvider, AddAnimeService, 
+      AnimeProvider, AddAnimeService, AnimeAutoProvider,
       AnimeUtilsProvider, AnimeStateProvider, DialogProvider, 
       OutlineService, ColorProvider,
       Structurer, ThemeProvider, Player, ImgToUrlService
@@ -137,6 +137,9 @@ export function getProcedureConfig(args: {
       // 动画工具依赖
       const animeUtilsProvider = injector.get(AnimeUtilsProvider)
       animeUtilsProvider.setup(injector, scrollerRef)
+      // 自动动画依赖
+      const animeAutoProvider = injector.get(AnimeAutoProvider)
+      animeAutoProvider.setup(injector)
       // 组成元素
       const structurer = injector.get(Structurer)
       structurer.setup({

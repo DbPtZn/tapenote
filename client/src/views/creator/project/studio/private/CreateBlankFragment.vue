@@ -1,8 +1,6 @@
-/** Txt Edit Dialog */
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Header, Main, Footer } from '@/components'
-import { useMessage } from 'naive-ui';
+import { useMessage } from 'naive-ui'
 const props = defineProps<{
   onConfirm: (args: { duration: number; txtLength: number }) => void
   onCancel: () => void

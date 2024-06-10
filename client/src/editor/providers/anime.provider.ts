@@ -157,19 +157,19 @@ export class AnimeProvider {
   effectsMap: Map<string, { name: string; applyEffect: (target: Element) => anime.AnimeInstance }>
   constructor() {
     this.effectsMap = new Map([
-      ['bounceIn', { name: '弹入',  applyEffect: bounce.bounceIn }],
-      ['bounceInDown', { name: '向下弹入',  applyEffect: bounce.bounceInDown }],
-      ['bounceInLeft', { name: '自左弹入',  applyEffect: bounce.bounceInLeft }],
-      ['bounceInRight', { name: '自右弹入',  applyEffect: bounce.bounceInRight }],
-      ['bounceInUp', { name: '向上弹入',  applyEffect: bounce.bounceInUp }],
-      ['fideIn', { name: '渐入',  applyEffect: fide.fideIn }],
-      ['fideInDown', { name: '向下渐入',  applyEffect: fide.fideInDown }],
-      ['fideInUp', { name: '向上渐入',  applyEffect: fide.fideInUp }],
-      ['fideInLeft', { name: '自左渐入',  applyEffect: fide.fideInLeft }],
+      ['bounceIn', { name: '弹入', applyEffect: bounce.bounceIn }],
+      ['bounceInDown', { name: '向下弹入', applyEffect: bounce.bounceInDown }],
+      ['bounceInLeft', { name: '自左弹入', applyEffect: bounce.bounceInLeft }],
+      ['bounceInRight', { name: '自右弹入', applyEffect: bounce.bounceInRight }],
+      ['bounceInUp', { name: '向上弹入', applyEffect: bounce.bounceInUp }],
+      ['fideIn', { name: '渐入', applyEffect: fide.fideIn }],
+      ['fideInDown', { name: '向下渐入', applyEffect: fide.fideInDown }],
+      ['fideInUp', { name: '向上渐入', applyEffect: fide.fideInUp }],
+      ['fideInLeft', { name: '自左渐入', applyEffect: fide.fideInLeft }],
       ['fideInRight', { name: '自右渐入', applyEffect: fide.fideInRight }],
-      ['filpInX', { name: '沿X轴翻转进入',  applyEffect: filp.filpInX }],
-      ['filpInY', { name: '沿Y轴翻转进入',  applyEffect: filp.filpInY }]
-    ]) 
+      ['filpInX', { name: '沿X轴翻转进入', applyEffect: filp.filpInX }],
+      ['filpInY', { name: '沿Y轴翻转进入', applyEffect: filp.filpInY }]
+    ])
   }
   getAnime(key: string) {
     return this.effectsMap.get(key)
@@ -188,7 +188,24 @@ export class AnimeProvider {
     return animeOptions
   }
 
+  getRandomAnime() {
+    const randomEntry = getRandomEntryFromMap(this.effectsMap)
+    return randomEntry ?? { key: 'fideIn', value : { name: '渐入', applyEffect: fide.fideIn } }
+  }
+
   destory() {
     this.effectsMap.clear()
+  }
+}
+
+function getRandomEntryFromMap(map): { key: string; value: { name: string; applyEffect: (target: Element) => anime.AnimeInstance } } | undefined {
+  const size = map.size
+  const randomIndex = Math.floor(Math.random() * size) // 生成随机索引
+  let currentIndex = 0
+  for (const [key, value] of map) {
+    if (currentIndex === randomIndex) {
+      return { key, value } // 返回随机键值对
+    }
+    currentIndex++
   }
 }

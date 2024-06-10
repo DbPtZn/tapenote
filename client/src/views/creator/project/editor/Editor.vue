@@ -365,6 +365,7 @@ onUnmounted(() => {
     flex-direction: column;
     width: 100%;
     overflow-y: auto;
+    overflow-x: hidden;
     // background-color: v-bind('themeVars.cardColor');
     background-color:  v-bind('themeVars.bodyColor');
   }

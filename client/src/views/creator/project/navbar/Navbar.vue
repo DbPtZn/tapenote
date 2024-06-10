@@ -71,7 +71,7 @@ subs.push(
 const configure = reactive({
   folderId: ''
 })
-const { handleCreate, handleDirSelected, handleDownload } = {
+const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
   handleDirSelected(folderId: string) {
     console.log(folderId)
     configure.folderId = folderId
@@ -104,6 +104,17 @@ const { handleCreate, handleDirSelected, handleDownload } = {
   },
   handleDownload() {
     //
+  },
+  handleAutoAnime() {
+    dialog.create({
+      title: '自动分配动画预设',
+      content: '该功能会覆盖现有的动画预设，谨慎使用！',
+      positiveText: '确定',
+      negativeText: '不确定',
+      onPositiveClick: () => {
+        bridge.handleAutoAnime()
+      }
+    })
   }
 }
 const { handleExpandShareDialog  } = useShareDialog()
@@ -149,7 +160,7 @@ onUnmounted(() => {
     </div>
   </div>
   <!-- 设置 -->
-  <n-drawer v-model:show="state.isDrawShow" :width="320" placement="right"  :to="bridge.projectRef" :disabled="state.isReadonly">
+  <n-drawer v-if="bridge.habit" v-model:show="state.isDrawShow" :width="320" placement="right"  :to="bridge.projectRef!" :disabled="state.isReadonly">
     <n-drawer-content :style="{ zIndex: '1000' }">
       <n-tabs type="line" animated justify-content="space-evenly">
         <n-tab-pane name="setting" tab="页面设置">
@@ -163,9 +174,20 @@ onUnmounted(() => {
                 :consistent-menu-width="false"
               />
             </n-space>
+            <n-space v-if="lib === LibraryEnum.COURSE" :justify="'space-between'" :align="'center'">
+              <span>字幕</span>
+              <n-switch v-model:value="bridge.habit.state.subtitle.show" />
+            </n-space>
             <n-space :justify="'space-between'" :align="'center'">
               <span>大纲视图</span>
-              <n-switch v-model:value="bridge.habit.state.subtitle.isShow" />
+              <n-switch v-model:value="bridge.habit.state.platform.isOutlineShow" />
+            </n-space>
+            <n-space :justify="'space-between'" :align="'center'">
+              <span>滚动条</span>
+              <n-switch v-model:value="bridge.habit.state.platform.isScrollbarShow" />
+            </n-space>
+            <n-space :justify="'center'" :align="'center'">
+              <n-button @click="handleAutoAnime">自动分配动画</n-button>
             </n-space>
             <!-- <n-space :justify="'space-between'" :align="'center'">
               <span>页面主题</span>

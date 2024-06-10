@@ -68,7 +68,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
             // console.log(node)
             const component = renderer.getComponentByNativeNode(node)
             if(component) {
-              console.log(component.state)
+              // console.log(component.state)
               const state = component.state
               if (state && state.dataId && state.dataSerial) {
                 id = state.dataId

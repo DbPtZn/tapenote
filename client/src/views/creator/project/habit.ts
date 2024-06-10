@@ -2,12 +2,12 @@ import { reactive } from "vue"
 
 type PlatformWidth = '880px' | '1080px' |'100%'
 interface PlatformState {
-  // isScrollbarHide: boolean
-  // isOutlineHide: boolean
+  isScrollbarShow: boolean
+  isOutlineShow: boolean
   width: PlatformWidth
 }
 interface SubtitleState {
-  isShow: boolean
+  show: boolean
 }
 interface HabitState {
   platform: PlatformState
@@ -20,12 +20,12 @@ export class Habit {
   constructor() {
     this.state = reactive({
       platform: {
-        // isScrollbarHide: false,
-        // isOutlineHide: false,
+        isScrollbarShow: true,
+        isOutlineShow: false,
         width: '880px'
       },
       subtitle: {
-        isShow: false
+        show: false
       }
     })
     this.platformWidthOptions = [
@@ -43,5 +43,4 @@ export class Habit {
       }
     ]
   }
-
 }
