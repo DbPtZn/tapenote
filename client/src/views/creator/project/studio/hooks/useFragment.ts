@@ -8,15 +8,16 @@ import { TxtEdit } from '../private'
 import { usePromoter } from './usePromoter'
 import { Player } from '@/editor'
 import { Subscription } from '@tanbo/stream'
+import { SortableEvent } from 'vue-draggable-plus'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
-export function useFragment(id: string, bridge: Bridge) {
+export function useFragment(projectId: string, bridge: Bridge) {
   const { projectStore, clipboardStore } = useStore()
   const isShowName = ref(false)
   const dialog = useDialog()
   const message = useMessage()
   let player: Player | undefined = undefined
   const subs: Subscription[] = []
-  const { checkAnimeState, handleReorder } = usePromoter(id, bridge)
+  const { checkAnimeState, handleReorder } = usePromoter(projectId, bridge)
   const selectedFragments = ref<Fragment[]>([])
   const dropdownState = reactive({
     x: 0,
@@ -49,7 +50,7 @@ export function useFragment(id: string, bridge: Bridge) {
   /** 右键菜单 */
   function handleContextmenu(e: MouseEvent, fragment?: Fragment) {
     player = bridge.editor?.get(Player)
-    const project = projectStore.get(id)
+    const project = projectStore.get(projectId)
     if (!project) return
     const sequence = project.sequence
     const fragments = selectedFragments.value.sort((a, b) => {
@@ -78,7 +79,7 @@ export function useFragment(id: string, bridge: Bridge) {
         show: fragments.length === 1,
         props: {
           onClick: () => {
-            const allFragments = projectStore.fragment(id).getBySort()
+            const allFragments = projectStore.fragment(projectId).getBySort()
             const targetIndex = allFragments.indexOf(fragment!)
             if (targetIndex === -1) return
             const includeFragments = allFragments.slice(targetIndex)
@@ -116,7 +117,7 @@ export function useFragment(id: string, bridge: Bridge) {
           onClick: () => {
             clipboardStore.copyFragment({
               fragmentId: fragment!.id,
-              projectId: id,
+              projectId: projectId,
               type: 'copy',
               account: project.account,
               hostname: project.hostname,
@@ -136,7 +137,7 @@ export function useFragment(id: string, bridge: Bridge) {
           onClick: () => {
             clipboardStore.copyFragment({
               fragmentId: fragment!.id,
-              projectId: id,
+              projectId: projectId,
               type: 'cut',
               account: project.account,
               hostname: project.hostname,
@@ -158,7 +159,7 @@ export function useFragment(id: string, bridge: Bridge) {
           onClick: () => {
             clipboardStore.pasteFragment({
               fragmentId: fragment!.id,
-              projectId: id,
+              projectId: projectId,
               position: 'before',
               account: project.account,
               hostname: project.hostname
@@ -183,7 +184,7 @@ export function useFragment(id: string, bridge: Bridge) {
           onClick: () => {
             clipboardStore.pasteFragment({
               fragmentId: fragment!.id,
-              projectId: id,
+              projectId: projectId,
               position: 'after',
               account: project.account,
               hostname: project.hostname
@@ -208,7 +209,7 @@ export function useFragment(id: string, bridge: Bridge) {
           onClick: () => {
             clipboardStore.pasteFragment({
               fragmentId: '',
-              projectId: id,
+              projectId: projectId,
               position: 'insert',
               account: project.account,
               hostname: project.hostname
@@ -245,7 +246,7 @@ export function useFragment(id: string, bridge: Bridge) {
         onClick: () => {
           message.warning('注意：预览模式与作品成品的播放效果不完全一致')
           player = bridge.editor?.get(Player)
-          const fragments = projectStore.fragment(id).getBySort()
+          const fragments = projectStore.fragment(projectId).getBySort()
           applyPlay(fragments, true)
         }
       }
@@ -332,7 +333,7 @@ export function useFragment(id: string, bridge: Bridge) {
               return
             }
             projectStore
-              .fragment(id)
+              .fragment(projectId)
               .updateTranscript({ fragmentId: fragment.id, newTranscript })
               .then(() => {
                 message.success('更新成功')
@@ -351,10 +352,16 @@ export function useFragment(id: string, bridge: Bridge) {
     applyRemove(fragment.id).then(() => checkAnimeState()) // 移除片段之后，进行动画状态校验
   }
   /** 移动片段 */
-  function handleMove(args: any) {
-    const { element, oldIndex, newIndex } = args.moved
-    projectStore.fragment(id).updateSequence({
-      fragmentId: element.id,
+  function handleMove(event: SortableEvent) {
+    console.log(event)
+    const oldIndex = event.oldIndex
+    const newIndex = event.newIndex
+    const fragmentId = event.item.id
+    if(oldIndex === undefined || newIndex === undefined || fragmentId === undefined) return
+    // const { element, oldIndex, newIndex } = args.moved
+    // console.log([fragmentId, oldIndex, newIndex])
+    projectStore.fragment(projectId).updateSequence({
+      fragmentId: fragmentId,
       oldIndex,
       newIndex
     })
@@ -363,7 +370,7 @@ export function useFragment(id: string, bridge: Bridge) {
   function applyRemove(fragmentId: string) {
     return new Promise((resolve, reject) => {
       projectStore
-        .fragment(id)
+        .fragment(projectId)
         .remove({ fragmentId: fragmentId })
         .then(() => {
           resolve('')

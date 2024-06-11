@@ -255,9 +255,9 @@ const totalDuration = computed(() => {
     <div ref="scrollerRef" class="main" @contextmenu="handleContextmenu">
       <Delegater :id="id">
         <!-- 拖拽组件 -->
-        <Draggable class="draggable" v-model="fragments" :itemKey="'id'" @change="handleMove">
-          <template #item="{ element }">
+        <VueDraggable class="draggable" v-model="fragments" :itemKey="'id'" @end="handleMove($event)">
             <AudioFragment
+              v-for="element in fragments"
               :key="element.id"
               :id="element.id"
               :speaker="element.speaker"
@@ -283,7 +283,7 @@ const totalDuration = computed(() => {
                 >
                   <n-badge
                     color="#1989fa"
-                    :value="element.tags[index] === null ? '' : element.tags[index]"
+                    :value="element.tags[index] === null ? '' : element.tags[index]!"
                     :max="9999"
                     :style="{ pointerEvents: 'none' }"
                   >
@@ -312,8 +312,7 @@ const totalDuration = computed(() => {
                 </n-popconfirm>
               </template>
             </AudioFragment>
-          </template>
-        </Draggable>
+        </VueDraggable>
       </Delegater>
     </div>
     <!-- 底部 -->
