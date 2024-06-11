@@ -1,84 +1,18 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
 import { useThemeVars } from 'naive-ui'
-import { Subscription, fromEvent } from '@tanbo/stream'
-const props = defineProps<{
+import { ref } from 'vue'
+defineProps<{
   isMarked: boolean
+  serial: string | number | null
 }>()
-// const emits = defineEmits<{
-//   onSelect: [],
-//   onUpdate: [],
-//   onRemove: [],
-//   onLocate: []
-// }>()
 const themeVars = useThemeVars()
-// const targetRef = ref(null)
-// const popoverRef = ref()
-// const subs: Subscription[] = []
-// const isFocus = ref(false)
-
-// const onSelect = (ev: MouseEvent) => {
-//   if (props.isMarked) return
-//   // isFocus.value = true
-//   emits('onSelect')
-//   listenClickOutside()
-// }
-
-// function handleUpdate() {
-//   // isFocus.value = true
-//   emits('onUpdate')
-//   popoverRef.value.setShow(false)
-//   listenClickOutside(true)
-// }
-/** 删除 */
-// function handleRemove() {
-//   emits('onRemove')
-// }
-/** 定位 */
-// function handleLocate() {
-//   emits('onLocate')
-//   popoverRef.value.setShow(false)
-// }
-/** 监听点击元素外部的事件 */
-// function listenClickOutside(isUpdate = false) {
-//   if (subs.length > 0) {
-//     subs.forEach(sub => sub.unsubscribe())
-//     subs.length = 0
-//   }
-//   subs.push(
-//     fromEvent(document, 'click', true).subscribe(event => {
-//       // 如果不是更新操作，则要监听是否点击元素自身
-//       if (!isUpdate) {
-//         if (event.target === targetRef.value) return
-//       }
-//       isFocus.value = false
-//       subs.forEach(sub => sub.unsubscribe())
-//       subs.length = 0
-//     })
-//   )
-// }
+const badgeRef = ref<HTMLElement>()
+// TODO 考虑根据 serial 调整 badge 的宽度，暂不实现
 </script>
-<!-- n-popover :to="false" 该配置会出现溢出隐藏问题 -->
 <template>
-  <!-- <n-popover ref="popoverRef" trigger="click" :disabled="!isMarked">
-    <template #trigger>    -->
-      <span
-        :class="[
-          'character', 
-          'animation-layer',
-          // isFocus && 'focus animate__animated animate__pulse animate__infinite', 
-          isMarked ? 'marked' : ''
-          ]"
-      >
-        <slot />
-      </span>
-    <!-- </template>
-    <n-button text @click="handleUpdate">更新</n-button>
-    |
-    <n-button text @click="handleRemove">移除</n-button>
-    |
-    <n-button text @click="handleLocate">定位</n-button>
-  </n-popover> -->
+  <span ref="badgeRef" :class="['character', 'animation-layer', isMarked ? 'marked' : '', isMarked ? 'badge' : '']">
+    <slot />
+  </span>
 </template>
 
 <style lang="scss" scoped>
@@ -87,7 +21,8 @@ const themeVars = useThemeVars()
   margin: 2px 5px;
 }
 .character {
-  color: v-bind('themeVars.textColor2')!important;
+  position: relative;
+  color: v-bind('themeVars.textColor2') !important;
   user-select: none;
   cursor: pointer;
   &:hover {
@@ -97,10 +32,27 @@ const themeVars = useThemeVars()
     text-shadow: 1px 0px rgb(131, 131, 131);
   }
 }
-// .focus {
-//   color: v-bind('themeVars.primaryColor')!important;
-//   border-radius: 3px;
-//   box-sizing: border-box;
-//   outline: 1px solid v-bind('themeVars.tagColor');
-// }
+.badge {
+  &:after {
+    content: attr(data-serial);
+    top: -8px;
+    left: 8px;
+    position: absolute;
+    padding: 0 4px;
+    vertical-align: super;
+    color: white;
+    background-color:#1989fa9c;
+    border-radius: 24px;
+    display: inline-block;
+    min-width: 10px;
+    height: 18px;
+    font-size: 12px;
+    line-height: 18px;
+    -webkit-border-radius: 90px;
+    border-radius: 45px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+    pointer-events: auto;
+  }
+}
 </style>

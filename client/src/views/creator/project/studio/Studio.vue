@@ -275,20 +275,11 @@ const totalDuration = computed(() => {
                   v-for="(item, index) in element.transcript"
                   :key="index"
                   :data-index="index"
+                  :data-serial="element.tags[index] === null ? '' : element.tags[index]!"
+                  :serial="element.tags[index]"
                   :is-marked="element.tags[index] === null ? false : true"
-                  @on-select="handlePromoterSelect(element.id, index)"
-                  @on-update="handlePromoterUpdate(element.id, index, (element as Fragment).promoters[index])"
-                  @on-remove="handlePromoterRemove(element.id, index)"
-                  @on-locate="handleAnimeLocate((element as Fragment).promoters[index])"
                 >
-                  <n-badge
-                    color="#1989fa"
-                    :value="element.tags[index] === null ? '' : element.tags[index]!"
-                    :max="9999"
-                    :style="{ pointerEvents: 'none' }"
-                  >
-                    <span class="character">{{ item }}</span>
-                  </n-badge>
+                  {{ item }}
                 </Character>
               </template>
               <template #loading>
@@ -461,7 +452,8 @@ const totalDuration = computed(() => {
   .draggable {
     width: 100%;
   }
-  .character {
+  .char {
+    pointer-events: none;
     color: v-bind('themeVars.textColor2');
   }
 }

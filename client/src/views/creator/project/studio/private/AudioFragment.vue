@@ -264,9 +264,9 @@ onUnmounted(() => {
   border-radius: 12px 0px 12px 12px;
 }
 .collapse {
-  // white-space: nowrap;
-  // overflow: hidden;
-  // text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .loading {
