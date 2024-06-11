@@ -31,6 +31,7 @@ interface Fragment {
   projectId: string
   // role: number
   speaker: FragmentSpeaker
+  collapse: boolean
   removed: 'never' | 'active' | 'passive'
 }
 
@@ -526,13 +527,13 @@ export const useProjectStore = defineStore('projectStore', {
           promoters: new Array(txt.length),
           timestamps: [],
           projectId: procedureId,
-          // role: params.role,
           speaker: {
             type: 'machine',
             name: speaker.name,
             avatar: speaker.avatar,
             role: speaker.role
           },
+          collapse: false,
           removed: 'never'
         }
         get()?.push(fragment) // 不完全片段
@@ -609,6 +610,7 @@ export const useProjectStore = defineStore('projectStore', {
             avatar: speaker.avatar,
             role: speaker.role
           },
+          collapse: false,
           removed: 'never'
         }
         get()?.push(fragment) // 不完全片段

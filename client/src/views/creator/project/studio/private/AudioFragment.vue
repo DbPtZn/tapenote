@@ -11,6 +11,8 @@ const props = defineProps<{
   multiple: boolean
   // 时长
   duration: number
+  // 是否折叠
+  collapse: boolean
   // 是否显示名称
   isShowName: boolean
   // 是否被剪切
@@ -22,6 +24,7 @@ const props = defineProps<{
 }>()
 const emits = defineEmits<{
   onContextmenu: [MouseEvent]
+  onExpand: []
   onSelect: [boolean]
 }>()
 const subs: Subscription[] = []
@@ -98,8 +101,9 @@ onUnmounted(() => {
           <div class="name" v-if="isShowName">
             {{ speaker.name }}
           </div>
-          <div class="msg msg-left collapse">
+          <div :class="['msg', 'msg-left', collapse && 'collapse']">
             <slot name="txt" />
+            <span v-if="collapse" class="collapse-btn" @click="emits('onExpand')">展开</span>
           </div>
         </div>
         <div v-if="isLoading" class="loading">
@@ -154,8 +158,9 @@ onUnmounted(() => {
           <div class="name name-right" v-if="isShowName">
             {{ speaker.name }}
           </div>
-          <div class="msg msg-right">
+          <div :class="['msg', 'msg-right', collapse && 'collapse']">
             <slot name="txt" />
+            <span v-if="collapse" class="collapse-btn" @click="emits('onExpand')">展开</span>
           </div>
         </div>
       </div>
@@ -170,6 +175,23 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.collapse {
+  pointer-events: none;
+}
+.collapse-btn {
+  pointer-events: auto;
+  cursor: pointer;
+  margin-left: 6px;
+  opacity: 0.5;
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
 .left-side {
   display: flex;
   box-sizing: border-box;
@@ -206,10 +228,6 @@ onUnmounted(() => {
 }
 .focus {
   border-color: #aaaaaa30 !important;
-}
-.disabled {
-  opacity: 0.5;
-  pointer-events: none;
 }
 .cut {
   opacity: 0.5;
@@ -262,11 +280,6 @@ onUnmounted(() => {
 }
 .msg-right {
   border-radius: 12px 0px 12px 12px;
-}
-.collapse {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .loading {

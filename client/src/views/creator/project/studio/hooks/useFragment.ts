@@ -47,6 +47,10 @@ export function useFragment(projectId: string, bridge: Bridge) {
     }
     // console.log(selectedFragments.value)
   }
+
+  function handleExpand(fragment: Fragment) {
+    fragment.collapse = false
+  }
   /** 右键菜单 */
   function handleContextmenu(e: MouseEvent, fragment?: Fragment) {
     player = bridge.editor?.get(Player)
@@ -62,6 +66,17 @@ export function useFragment(projectId: string, bridge: Bridge) {
     dropdownState.y = e.clientY
     dropdownState.isShow = true
     dropdownState.options = [
+      {
+        key: 'collapse',
+        label: () => `${ fragment?.collapse ? '展开' : '折叠' }`,
+        show: !!fragment && fragment.transcript.length > 16,  // 长度大于 16 才显示折叠按钮
+        props: {
+          onClick: () => {
+            if(fragment) fragment.collapse = !fragment.collapse
+            dropdownState.isShow = false
+          }
+        }
+      },
       {
         key: 'preview',
         label: '播放预览',
@@ -453,6 +468,7 @@ export function useFragment(projectId: string, bridge: Bridge) {
     studioOptions,
     isShowName,
     handleContextmenu,
+    handleExpand,
     handleSelect,
     handlePlay,
     handleEdit,

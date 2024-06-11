@@ -83,6 +83,12 @@ export class Fragment {
   speaker: FragmentSpeaker
 
   @Column({
+    type: 'boolean',
+    default: false
+  })
+  collapse: boolean
+
+  @Column({
     type: 'varchar',
     default: RemovedEnum.NEVER
     // type: 'enum',

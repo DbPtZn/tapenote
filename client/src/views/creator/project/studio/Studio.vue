@@ -177,7 +177,7 @@ const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
   }
 }
 
-const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, handleContextmenu, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge)
+const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, handleContextmenu, handleExpand, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge)
 const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, checkAnimeState, checkPromoter } = usePromoter(props.id, bridge)
 const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort())
 const fragmentsLength = computed(() => fragments.value.length)
@@ -230,6 +230,13 @@ const totalDuration = computed(() => {
         return total + Number(fragment.duration)
       }, 0)
   })
+
+/** 折叠转写文本的函数 */
+function collapseText(transcript: string[]) {
+  const head = transcript.slice(0, 6)
+  const tail = transcript.slice(-4)
+  return [...head, '...', ...tail]
+}
 </script>
 <template>
   <div class="studio" ref="studioRef">
@@ -261,18 +268,20 @@ const totalDuration = computed(() => {
               :key="element.id"
               :id="element.id"
               :speaker="element.speaker"
+              :collapse="element.collapse"
               :is-loading="!!element.key"
               :is-show-name="isShowName"
               :is-cut="clipboardStore.fragment.length > 0 && clipboardStore.fragment[0].fragmentId === element.id && clipboardStore.fragment[0].type === 'cut'"
               :multiple="selectedFragments.length > 1"
               :duration="Number(element.duration)"
               :readonly="state.isReadonly"
+              @on-expand="handleExpand(element)"
               @on-contextmenu="handleContextmenu($event, element)"
               @on-select="handleSelect($event, element)"
             >
               <template #txt>
                 <Character
-                  v-for="(item, index) in element.transcript"
+                  v-for="(item, index) in element.collapse ? collapseText(element.transcript) : element.transcript"
                   :key="index"
                   :data-index="index"
                   :data-serial="element.tags[index] === null ? '' : element.tags[index]!"

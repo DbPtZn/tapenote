@@ -52,7 +52,8 @@ const badgeRef = ref<HTMLElement>()
     border-radius: 45px;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
-    pointer-events: auto;
+    // pointer-events: auto;
+    pointer-events: none;
   }
 }
 </style>
