@@ -98,7 +98,7 @@ onUnmounted(() => {
           <div class="name" v-if="isShowName">
             {{ speaker.name }}
           </div>
-          <div class="msg msg-left">
+          <div class="msg msg-left collapse">
             <slot name="txt" />
           </div>
         </div>
@@ -262,6 +262,11 @@ onUnmounted(() => {
 }
 .msg-right {
   border-radius: 12px 0px 12px 12px;
+}
+.collapse {
+  // white-space: nowrap;
+  // overflow: hidden;
+  // text-overflow: ellipsis;
 }
 
 .loading {

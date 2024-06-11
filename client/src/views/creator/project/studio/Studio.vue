@@ -14,6 +14,7 @@ import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, Text
 import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp } from '@vicons/material'
 import Delegater from './Delegater.vue'
 import { splitText } from './_utils'
+import { VueDraggable } from 'vue-draggable-plus'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 const bridge = inject('bridge') as Bridge
