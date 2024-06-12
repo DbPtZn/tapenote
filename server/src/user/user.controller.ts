@@ -47,8 +47,8 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @Patch(`${REST.U}/info`)
   async updateInfo(@Body() updateUserDto: UpdateUserDto, @Req() req, @Res() res) {
-    console.log('更新用户数据：')
-    console.log(updateUserDto)
+    // console.log('更新用户数据：')
+    // console.log(updateUserDto)
     try {
       const updateAt = await this.userService.updateInfo(updateUserDto, req.user.id)
       res.status(200).send(updateAt)
@@ -60,7 +60,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @Patch(`${REST.U}/pwd`)
   async updatePwd(@Body() updateUserPwdDto: UpdateUserPwdDto, @Req() req, @Res() res) {
-    console.log('更新用户密码：' + updateUserPwdDto)
+    // console.log('更新用户密码：' + updateUserPwdDto)
     try {
       const updateAt = await this.userService.updatePwd(updateUserPwdDto, req.user.id)
       res.status(200).send(updateAt)

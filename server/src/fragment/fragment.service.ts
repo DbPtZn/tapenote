@@ -294,7 +294,7 @@ export class FragmentService {
         .then(async result => {
           if (result) {
             const punText = await this.sherpaService.addPunct(result.text)
-            console.log(punText)
+            // console.log(punText)
             const data = this.sherpaService.align(punText, result)
             this.userlogger.log(`语音识别成功，转写文本为: ${result.text}`)
 

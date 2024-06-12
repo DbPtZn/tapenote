@@ -16,7 +16,7 @@ export class UploadService {
   ) {}
   async uploadImage(args: { sourcePath: string; extname: string; dirname: string; userId: string }) {
     const { sourcePath, extname, dirname, userId } = args
-    console.log(sourcePath, extname, dirname, userId)
+    // console.log(sourcePath, extname, dirname, userId)
     return new Promise((resolve, reject) => {
       this.calculateFileStats(sourcePath)
         .then(async stats => {
@@ -30,7 +30,7 @@ export class UploadService {
           this.storageService
             .saveImage({ sourcePath, extname, dirname })
             .then(async ({ filename, filepath }) => {
-              console.log('图片保存成功，开始计算图片信息')
+              // console.log('图片保存成功，开始计算图片信息')
               console.log([filename, filepath])
               const image = new UploadFile()
               // image.id = UUID.v4()
