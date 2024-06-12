@@ -11,8 +11,12 @@ const props = defineProps<{
   multiple: boolean
   // 时长
   duration: number
+  // order
+  order: number
+  // 是否显示 order
+  isShowOrder: boolean
   // 是否折叠
-  collapse: boolean
+  collapsed: boolean
   // 是否显示名称
   isShowName: boolean
   // 是否被剪切
@@ -93,6 +97,7 @@ onUnmounted(() => {
       <div class="left-side">
         <div class="avator">
           <img :src="speaker.avatar || './empty.png'" @error="handleError" />
+          <div v-if="isShowOrder" class="order">{{ order }}</div>
         </div>
       </div>
       <!-- 中间 -->
@@ -101,9 +106,9 @@ onUnmounted(() => {
           <div class="name" v-if="isShowName">
             {{ speaker.name }}
           </div>
-          <div :class="['msg', 'msg-left', collapse && 'collapse']">
+          <div :class="['msg', 'msg-left', collapsed && 'collapse']">
             <slot name="txt" />
-            <span v-if="collapse" class="collapse-btn" @click="emits('onExpand')">展开</span>
+            <span v-if="collapsed" class="collapse-btn" @click="emits('onExpand')">展开</span>
           </div>
         </div>
         <div v-if="isLoading" class="loading">
@@ -158,9 +163,9 @@ onUnmounted(() => {
           <div class="name name-right" v-if="isShowName">
             {{ speaker.name }}
           </div>
-          <div :class="['msg', 'msg-right', collapse && 'collapse']">
+          <div :class="['msg', 'msg-right', collapsed && 'collapse']">
             <slot name="txt" />
-            <span v-if="collapse" class="collapse-btn" @click="emits('onExpand')">展开</span>
+            <span v-if="collapsed" class="collapse-btn" @click="emits('onExpand')">展开</span>
           </div>
         </div>
       </div>
@@ -168,6 +173,7 @@ onUnmounted(() => {
       <div class="right-side">
         <div class="avator">
           <img :src="speaker.avatar || './default.png'" @error="handleError" />
+          <div v-if="isShowOrder" class="order">{{ order }}</div>
         </div>
       </div>
     </div>
@@ -225,6 +231,26 @@ onUnmounted(() => {
   margin: 5px;
   border: 1px dashed #ffffff00;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+}
+// .order {
+//   writing-mode: vertical-lr;
+//   text-orientation: mixed;
+//   padding: 0 2px;
+//   border-radius: 5px 0px 0px 5px;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   background-color: v-bind('themeVars.cardColor');
+// }
+.order {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  opacity: 0.8;
+  background-color: v-bind('themeVars.cardColor');
 }
 .focus {
   border-color: #aaaaaa30 !important;

@@ -61,25 +61,25 @@ const {
   handleTextOutput(text: string) {
     if (text.length === 0) return
     // TODO 对过长的文本进行分片
-    // if (text.length > 32) {
-    //   const chunks = splitText(text)
-    //   const promiseArr: Promise<any>[] = []
-    //   for(let chunk of chunks) {
-    //     promiseArr.push(
-    //       projectStore.fragment(props.id).createByText({
-    //         txt: chunk,
-    //         speakerId: speakerId.value || '',
-    //         speed: state.ttsSpeed
-    //       })
-    //     )
-    //   }
-    //   // TODO 这里涉及并发问题，无法确定并发数量，如果中间有失败，则需要对失败片段重新上传，再次失败则放弃并提示用户
-    //   // 理论上我们可以限制最大 6 个并发，这样用户一次输入的文本长度不应该超过 32 * 6 个字符（中文），当超过时提示用户手动分片
-    //   Promise.all(promiseArr).catch(e => {
-    //     message.error('创建片段失败！')
-    //   })
-    //   return
-    // }
+    if (text.length > 32) {
+      const chunks = splitText(text)
+      const promiseArr: Promise<any>[] = []
+      for(let chunk of chunks) {
+        promiseArr.push(
+          projectStore.fragment(props.id).createByText({
+            txt: chunk,
+            speakerId: speakerId.value || '',
+            speed: state.ttsSpeed
+          })
+        )
+      }
+      // TODO 这里涉及并发问题，无法确定并发数量，如果中间有失败，则需要对失败片段重新上传，再次失败则放弃并提示用户
+      // 理论上我们可以限制最大 6 个并发，这样用户一次输入的文本长度不应该超过 32 * 6 个字符（中文），当超过时提示用户手动分片
+      Promise.all(promiseArr).catch(e => {
+        message.error('创建片段失败！')
+      })
+      return
+    }
     projectStore.fragment(props.id).createByText({
       txt: text,
       speakerId: speakerId.value || '',
@@ -177,7 +177,7 @@ const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
   }
 }
 
-const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, handleContextmenu, handleExpand, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge)
+const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, isShowOrder, handleContextmenu, handleExpand, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge)
 const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, checkAnimeState, checkPromoter } = usePromoter(props.id, bridge)
 const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort())
 const fragmentsLength = computed(() => fragments.value.length)
@@ -264,11 +264,13 @@ function collapseText(transcript: string[]) {
         <!-- 拖拽组件 -->
         <VueDraggable class="draggable" v-model="fragments" :itemKey="'id'" @end="handleMove($event)">
             <AudioFragment
-              v-for="element in fragments"
+              v-for="(element, index) in fragments"
               :key="element.id"
               :id="element.id"
+              :order="index + 1"
+              :isShowOrder="isShowOrder"
               :speaker="element.speaker"
-              :collapse="element.collapsed"
+              :collapsed="element.collapsed"
               :is-loading="!!element.key"
               :is-show-name="isShowName"
               :is-cut="clipboardStore.fragment.length > 0 && clipboardStore.fragment[0].fragmentId === element.id && clipboardStore.fragment[0].type === 'cut'"
@@ -284,9 +286,9 @@ function collapseText(transcript: string[]) {
                   v-for="(item, index) in element.collapsed ? collapseText(element.transcript) : element.transcript"
                   :key="index"
                   :data-index="index"
-                  :data-serial="element.tags[index] === null ? '' : element.tags[index]!"
-                  :serial="element.tags[index]"
-                  :is-marked="element.tags[index] === null ? false : true"
+                  :data-serial="!element.tags[index] ? '' : element.tags[index]!"
+                  :serial="element.tags[index] || null"
+                  :is-marked="!element.tags[index] ? false : true"
                 >
                   {{ item }}
                 </Character>

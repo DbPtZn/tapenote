@@ -13,6 +13,7 @@ type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragment
 export function useFragment(projectId: string, bridge: Bridge) {
   const { projectStore, clipboardStore } = useStore()
   const isShowName = ref(false)
+  const isShowOrder = ref(false)
   const dialog = useDialog()
   const message = useMessage()
   let player: Player | undefined = undefined
@@ -28,10 +29,6 @@ export function useFragment(projectId: string, bridge: Bridge) {
   const playerState = reactive({
     isPlaying: false,
     currentTime: 0,
-  })
-
-  onUnmounted(() => {
-    player?.destory()
   })
 
   /** 选择片段 */
@@ -83,6 +80,17 @@ export function useFragment(projectId: string, bridge: Bridge) {
                 message.warning('服务端更新折叠状态操作失败!')
               })
             }
+            dropdownState.isShow = false
+          }
+        }
+      },
+      {
+        key: 'order',
+        label: () => `${ isShowOrder.value ? '隐藏排序' : '显示排序' }`,
+        show: !!fragment, // 长度大于 16 才显示折叠按钮
+        props: {
+          onClick: () => {
+            isShowOrder.value = !isShowOrder.value
             dropdownState.isShow = false
           }
         }
@@ -305,6 +313,16 @@ export function useFragment(projectId: string, bridge: Bridge) {
       }
     },
     {
+      key: 'showorder',
+      label: () => `${ isShowOrder.value ? '隐藏' : '显示' }排序`,
+      props: {
+        onClick: () => {
+          isShowOrder.value = !isShowOrder.value
+          dropdownState.isShow = false
+        }
+      }
+    },
+    {
       key: 'language',
       disabled: true,
       label: '语言',
@@ -442,6 +460,7 @@ export function useFragment(projectId: string, bridge: Bridge) {
         }, 300)
         subs.push(
           player!.onPlayOver.subscribe(() => {
+            console.log(parsedata)
             playerState.isPlaying = false
             playerState.currentTime = 0
             clearInterval(timer)
@@ -467,7 +486,6 @@ export function useFragment(projectId: string, bridge: Bridge) {
   }
 
   onUnmounted(() => {
-    player?.destory()
     subs.forEach(s => s.unsubscribe())
   })
 
@@ -477,6 +495,7 @@ export function useFragment(projectId: string, bridge: Bridge) {
     playerState,
     studioOptions,
     isShowName,
+    isShowOrder,
     handleContextmenu,
     handleExpand,
     handleSelect,

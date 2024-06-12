@@ -680,31 +680,35 @@ export class Player {
         item.audio.src = ''
       }
     })
-    this.data.length = 0
-    this.data = null as any
+    try {
+      this.data.length = 0
+      this.data = null as any
+        
+      this.sourceData.length = 0
+      this.sourceData = null as any
+        
       
-    this.sourceData.length = 0
-    this.sourceData = null as any
-      
+      this.keyframeHistory.length = 0
+      this.keyframeHistory = null  as any
     
-    this.keyframeHistory.length = 0
-    this.keyframeHistory = null  as any
-   
 
-    this.keyframeSequence.length = 0
-    this.keyframeSequence = null  as any
-   
+      this.keyframeSequence.length = 0
+      this.keyframeSequence = null  as any
+    
 
-    this.subtitleSequence.length = 0
-    this.subtitleSequence = null  as any
-     
+      this.subtitleSequence.length = 0
+      this.subtitleSequence = null  as any
+      
 
-    this.subtitleKeyframeSequence.length = 0
-    this.subtitleKeyframeSequence = null  as any
-   
+      this.subtitleKeyframeSequence.length = 0
+      this.subtitleKeyframeSequence = null  as any
+    
 
-    this.animeElementSequence.length = 0
-    this.animeElementSequence = null  as any
+      this.animeElementSequence.length = 0
+      this.animeElementSequence = null  as any
+    } catch (error) {
+      console.error(error)
+    }
   }
 }
 /**
