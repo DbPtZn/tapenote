@@ -139,7 +139,7 @@ const popoverMethods = {
 </script>
 
 <template>
-  <div ref="delegaterRef" class="delegater" @click="handleClick">
+  <div ref="delegaterRef" class="delegater" :style="{ width: '100%' }" @click="handleClick">
     <slot />
   </div>
   <n-popover :show="popoverState.showPopover" :x="popoverState.x" :y="popoverState.y" trigger="manual" @clickoutside="popoverMethods.handleClickoutside">

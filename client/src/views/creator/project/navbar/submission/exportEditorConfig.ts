@@ -1,5 +1,5 @@
 /** 导出编辑器配置 */
-import { OutlineService, ConfigProvider, colorFormatter, textBackgroundColorFormatLoader, colorFormatLoader, textBackgroundColorFormatter, DialogProvider, AxiosProvider, rootComponent, rootComponentLoader, imageU2BComponent, imageU2BComponentLoader, Img2base64Service, animePlayerFormatLoader, animePlayerFormatter, animePlayerComponentLoader, animePlayerComponent, animeIgnoreComponent, animeIgnoreComponentLoader, RootEventService, AnimeEventService } from '@/editor'
+import { OutlineService, colorFormatter, textBackgroundColorFormatLoader, colorFormatLoader, textBackgroundColorFormatter, DialogProvider, AxiosProvider, rootComponent, rootComponentLoader, imageU2BComponent, imageU2BComponentLoader, Img2base64Service, animePlayerFormatLoader, animePlayerFormatter, animePlayerComponentLoader, animePlayerComponent, animeIgnoreComponent, animeIgnoreComponentLoader, RootEventService, AnimeEventService } from '@/editor'
 import { Injector } from '@textbus/core'
 import {
   defaultComponentLoaders,

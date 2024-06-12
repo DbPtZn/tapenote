@@ -453,6 +453,7 @@ function collapseText(transcript: string[]) {
 }
 .main {
   position: relative;
+  width: 100%;
   display: flex;
   flex: 1;
   box-sizing: border-box;
