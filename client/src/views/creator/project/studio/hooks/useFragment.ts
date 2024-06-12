@@ -45,12 +45,16 @@ export function useFragment(projectId: string, bridge: Bridge) {
         1
       )
     }
-    // console.log(selectedFragments.value)
   }
 
   function handleExpand(fragment: Fragment) {
-    fragment.collapse = false
+    fragment.collapsed = false
+    projectStore.fragment(projectId).updateCollapsed(fragment.id, false).catch(error => {
+      console.error(error)
+      message.warning('服务端更新折叠状态操作失败!')
+    })
   }
+
   /** 右键菜单 */
   function handleContextmenu(e: MouseEvent, fragment?: Fragment) {
     player = bridge.editor?.get(Player)
@@ -68,11 +72,17 @@ export function useFragment(projectId: string, bridge: Bridge) {
     dropdownState.options = [
       {
         key: 'collapse',
-        label: () => `${ fragment?.collapse ? '展开' : '折叠' }`,
+        label: () => `${ fragment?.collapsed ? '展开' : '折叠' }`,
         show: !!fragment && fragment.transcript.length > 16,  // 长度大于 16 才显示折叠按钮
         props: {
           onClick: () => {
-            if(fragment) fragment.collapse = !fragment.collapse
+            if(fragment) {
+              fragment.collapsed = !fragment.collapsed
+              projectStore.fragment(projectId).updateCollapsed(fragment.id, fragment.collapsed).catch(error => {
+                console.error(error)
+                message.warning('服务端更新折叠状态操作失败!')
+              })
+            }
             dropdownState.isShow = false
           }
         }

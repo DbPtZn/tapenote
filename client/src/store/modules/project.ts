@@ -31,7 +31,7 @@ interface Fragment {
   projectId: string
   // role: number
   speaker: FragmentSpeaker
-  collapse: boolean
+  collapsed: boolean
   removed: 'never' | 'active' | 'passive'
 }
 
@@ -533,7 +533,7 @@ export const useProjectStore = defineStore('projectStore', {
             avatar: speaker.avatar,
             role: speaker.role
           },
-          collapse: false,
+          collapsed: false,
           removed: 'never'
         }
         get()?.push(fragment) // 不完全片段
@@ -610,7 +610,7 @@ export const useProjectStore = defineStore('projectStore', {
             avatar: speaker.avatar,
             role: speaker.role
           },
-          collapse: false,
+          collapsed: false,
           removed: 'never'
         }
         get()?.push(fragment) // 不完全片段
@@ -746,6 +746,12 @@ export const useProjectStore = defineStore('projectStore', {
           this.setUpdateAt(procedureId, res.data.updateAt) // 更新时间
         })
       }
+
+      const updateCollapsed = (fragmentId: string, collapsed: boolean) => {
+        // 折叠状态并不是一项重要的数据信息，所以不需要遵循严格的数据一致性，发生改变时通知服务端更新对应状态即可
+        return this.creatorApi(account!, hostname!).fragment.updateCollapsed<{ updateAt: string }>(fragmentId, collapsed)
+      }
+
       const updateSequence = (params: Parameters<typeof CreatorApi.prototype.fragment.updateSequence>[0]) => {
         params.procedureId = procedureId
         return this.creatorApi(account!, hostname!).fragment.updateSequence<{ updateAt: string }>(params).then(res => {
@@ -799,7 +805,8 @@ export const useProjectStore = defineStore('projectStore', {
         updateFragmentsTags,
         addPromoter,
         removePromoter,
-        updateSequence
+        updateSequence,
+        updateCollapsed
       }
     }
   },

@@ -176,6 +176,18 @@ export class FragmentController {
     }
   }
 
+  @Patch(`${REST.U}/collapsed/:data`)
+  async updateFragmentCollapse(@Param('data') data: string, @Req() req, @Res() res) {
+    try {
+      const [id, collapse] = data.split('&')
+      const isCollapse = collapse === 'true'
+      const result = await this.fragmentService.updateCollapse(id, isCollapse, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error.message)
+    }
+  }
+
   @Patch(`${REST.U}/remove`)
   async remove(@Body() removeFragmentDto: RemoveFragmentDto, @Req() req, @Res() res) {
     try {

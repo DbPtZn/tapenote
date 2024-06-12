@@ -268,7 +268,7 @@ function collapseText(transcript: string[]) {
               :key="element.id"
               :id="element.id"
               :speaker="element.speaker"
-              :collapse="element.collapse"
+              :collapse="element.collapsed"
               :is-loading="!!element.key"
               :is-show-name="isShowName"
               :is-cut="clipboardStore.fragment.length > 0 && clipboardStore.fragment[0].fragmentId === element.id && clipboardStore.fragment[0].type === 'cut'"
@@ -281,7 +281,7 @@ function collapseText(transcript: string[]) {
             >
               <template #txt>
                 <Character
-                  v-for="(item, index) in element.collapse ? collapseText(element.transcript) : element.transcript"
+                  v-for="(item, index) in element.collapsed ? collapseText(element.transcript) : element.transcript"
                   :key="index"
                   :data-index="index"
                   :data-serial="element.tags[index] === null ? '' : element.tags[index]!"

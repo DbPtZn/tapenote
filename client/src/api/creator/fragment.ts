@@ -112,6 +112,9 @@ export const fragment = (axios: AxiosInstance) => {
     updateFragmentsTags<T>(dto: UpdateFragmentsTagsDto[], procedureId: string) {
       return axios.patch<T>('/fragment/update/tags', { newData: dto, procedureId })
     },
+    updateCollapsed<T>(fragmentId: string, collapsed: boolean) {
+      return axios.patch<T>(`/fragment/update/collapsed/${fragmentId}&${collapsed}`)
+    },
     updateSequence<T>(dto: UpdateSequenceDto) {
       return axios.patch<T>('/fragment/update/sequence', dto)
     },

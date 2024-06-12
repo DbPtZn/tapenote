@@ -467,6 +467,18 @@ export class FragmentService {
     }
   }
 
+  async updateCollapse(id: string, collapse: boolean, userId: string) {
+    try {
+      const fragment = await this.fragmentsRepository.findOneBy({ id, userId })
+      fragment.collapsed = collapse
+      const result = await this.fragmentsRepository.save(fragment)
+      return { updateAt: result.updateAt }
+    } catch (error) {
+      console.log(error)
+      throw error
+    }
+  }
+
   async remove(removeFragmentDto: RemoveFragmentDto, userId: string) {
     const { procedureId, fragmentId } = removeFragmentDto
     try {

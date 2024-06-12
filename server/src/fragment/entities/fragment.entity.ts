@@ -86,7 +86,7 @@ export class Fragment {
     type: 'boolean',
     default: false
   })
-  collapse: boolean
+  collapsed: boolean
 
   @Column({
     type: 'varchar',
