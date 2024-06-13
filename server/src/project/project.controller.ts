@@ -37,6 +37,7 @@ export class ProjectController {
   @Get(`${REST.R}/:id`)
   async findOne(@Param('id') id: string, @Req() req, @Res() res) {
     try {
+      console.log(id)
       await this.projectService.checkAndCorrectFragmentSquence(id) // 确保片段顺序正确
       const project = await this.projectService.findOne(id, req.user.id, req.user.dirname)
       switch (project.lib) {
@@ -63,7 +64,7 @@ export class ProjectController {
       res.status(200).send(project)
     } catch (error) {
       // TODO 错误处理的问题， 未处理的错误会阻塞程序运行
-      // console.log(error)
+      console.log(error)
       res.status(400).send(error)
     }
   }

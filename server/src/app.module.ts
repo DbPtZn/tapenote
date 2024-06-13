@@ -57,7 +57,7 @@ import { parentPort } from 'worker_threads'
           return {
             type: 'better-sqlite3', // 数据库类型
             database: configService.get('database.database'), // 'database.sqlite',
-            // synchronize: true, // synchronize字段代表是否自动将实体类同步到数据库
+            synchronize: configService.get('database.synchronize'), // synchronize字段代表是否自动将实体类同步到数据库
             autoLoadEntities: true, // 如果为true,将自动加载实体 forFeature() 方法注册的每个实体都将自动添加到配置对象的实体数组中
             toRetry: err => {
               console.log('连接失败：' + err.message)
