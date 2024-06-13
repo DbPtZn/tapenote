@@ -233,6 +233,7 @@ onUnmounted(() => {
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
+  pointer-events: none;
 }
 // .order {
 //   writing-mode: vertical-lr;
@@ -294,6 +295,7 @@ onUnmounted(() => {
   }
 }
 .msg {
+  pointer-events: auto;
   margin: 6px;
   padding: 9px 18px 9px 18px;
   word-wrap: break-word;
