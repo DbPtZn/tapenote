@@ -34,9 +34,9 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1200,
     height: 800,
-    // frame: true,  // 可用于自定义 menu, false 可以隐藏顶部菜单栏
-    // autoHideMenuBar: true,
-    // show: false,
+    frame: true,  // 可用于自定义 menu, false 可以隐藏顶部菜单栏
+    autoHideMenuBar: true,
+    show: false,
     icon: path.join(process.env.VITE_PUBLIC, 'logo1.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
@@ -55,7 +55,7 @@ function createWindow() {
   })
 
   // 默认打开开发工具
-  win.webContents.openDevTools()
+  // win.webContents.openDevTools()
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)

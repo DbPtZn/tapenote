@@ -7,6 +7,7 @@ export function useProcessEnv() {
 
   // database
   process.env.DB_DATE_BASE = `${app.getPath('appData')}/tapenote/database/database.sqlite`
+  // process.env.DB_SYNCHRONIZE = 'true'
   // commom
   process.env.V_CODE_OPEN = 'false' // 是否开启验证码
   process.env.LOG_DIR = '/logs' // 日志目录

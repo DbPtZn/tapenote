@@ -18,6 +18,7 @@ const elementRef = ref()
 const dragRef = ref()
 const rootRef = document.body
 const rect = rootRef.getBoundingClientRect()
+const isDev = import.meta.env.MODE === 'development'
 const state = reactive({
   isCollapse: false,
 })
@@ -33,20 +34,16 @@ const { x, y, style } = useDraggable(elementRef, {
   preventDefault: true, // 阻止默认事件 (阻止拖拽时选中文本)
   stopPropagation: true // 阻止冒泡
 })
-watch(() => projectStore.data.length, () => {
-  const memoryInfo = performance['memory']
-  // console.log("总内存限制 (JS Heap Total):", memoryInfo.jsHeapSizeLimit / (1024 * 1024), "MB");
-  // console.log("已使用内存 (JS Heap Used):", memoryInfo.usedJSHeapSize / (1024 * 1024), "MB");
-  // console.log("内存占用峰值 (JS Heap Peak):", memoryInfo.totalJSHeapSize / (1024 * 1024), "MB");
-  cacheState.limitSize = +(memoryInfo.jsHeapSizeLimit / (1024 * 1024)).toFixed(2)
-  cacheState.usedSize = +(memoryInfo.usedJSHeapSize / (1024 * 1024)).toFixed(2)
-  cacheState.totalSize = +(memoryInfo.totalJSHeapSize / (1024 * 1024)).toFixed(2)
-})
-function handleUpdateCacheState() {
-  const memoryInfo = performance['memory']
-  cacheState.limitSize = +(memoryInfo.jsHeapSizeLimit / (1024 * 1024)).toFixed(2)
-  cacheState.usedSize = +(memoryInfo.usedJSHeapSize / (1024 * 1024)).toFixed(2)
-  cacheState.totalSize = +(memoryInfo.totalJSHeapSize / (1024 * 1024)).toFixed(2)
+if(isDev) {
+  watch(() => projectStore.data.length, () => {
+    const memoryInfo = performance['memory']
+    // console.log("总内存限制 (JS Heap Total):", memoryInfo.jsHeapSizeLimit / (1024 * 1024), "MB");
+    // console.log("已使用内存 (JS Heap Used):", memoryInfo.usedJSHeapSize / (1024 * 1024), "MB");
+    // console.log("内存占用峰值 (JS Heap Peak):", memoryInfo.totalJSHeapSize / (1024 * 1024), "MB");
+    cacheState.limitSize = +(memoryInfo.jsHeapSizeLimit / (1024 * 1024)).toFixed(2)
+    cacheState.usedSize = +(memoryInfo.usedJSHeapSize / (1024 * 1024)).toFixed(2)
+    cacheState.totalSize = +(memoryInfo.totalJSHeapSize / (1024 * 1024)).toFixed(2)
+  })
 }
 const data = computed(() => {
   return projectStore.data.slice().reverse()
@@ -118,16 +115,7 @@ onMounted(() => {
     <div ref="warpperRef" :class="['wrapper', state.isCollapse && 'collapse']">
       <div ref="dragRef" class="cache-header" @click="dropdownState.isShow = false">
         <div class="cache-header-title">
-          <n-popover trigger="click">
-            <template #trigger>
-              <div @click="handleUpdateCacheState">缓存列表</div>
-            </template>
-            <n-list>
-              <n-list-item>{{ '总内存限制:' +  cacheState.limitSize + 'MB'  }}</n-list-item>
-              <n-list-item>{{ '已使用内存:' + cacheState.usedSize + 'MB'  }}</n-list-item>
-              <n-list-item>{{ '内存占用峰值:' + cacheState.totalSize + 'MB' }}</n-list-item>
-            </n-list>
-          </n-popover>
+          <div>缓存列表</div>
         </div>
         <div class="cache-header-icon" @dblclick="handleIconDbclick" @contextmenu.prevent="dropdownState.isShow = true">
           <n-dropdown trigger="manual" :show="dropdownState.isShow" :options="options" @clickoutside="dropdownState.isShow = false" @select="handleSelect">
@@ -155,7 +143,7 @@ onMounted(() => {
         />
         <!-- 上下文菜单：跳转至文件夹、移除该缓存 -->
       </div>
-      <div class="cache-test">
+      <div v-if="isDev" class="cache-test">
         <li>{{ '总内存限制:' +  cacheState.limitSize + 'MB'  }}</li>
         <li>{{ '已使用内存:' + cacheState.usedSize + 'MB'  }}</li>
         <li>{{ '内存占用峰值:' + cacheState.totalSize + 'MB' }}</li>
