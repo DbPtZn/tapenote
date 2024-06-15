@@ -17,7 +17,7 @@ export function initServerProcess() {
   })
   worker.on('message', message => {
     // console.log(`server message: ${message}`)
-    logger.info(`server message: ${message}`)
+    logger.info(`server message: ${JSON.stringify(message)}`)
   })
   worker.on('error', error => {
     // console.log(`server error: ${error}`)

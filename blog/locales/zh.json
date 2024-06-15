@@ -1,0 +1,10 @@
+{
+  "hello": "你好, {name}!",
+  "language": "语言",
+  "home": "首页",
+  "column": "专栏",
+  "products": "产品",
+  "tag": "标签",
+  "contact": "联系我们",
+  "about": "关于"
+}

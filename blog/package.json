@@ -10,8 +10,28 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@vicons/material": "^0.12.0",
+    "naive-ui": "^2.38.2",
     "nuxt": "^3.10.3",
+    "nuxtjs-naive-ui": "^1.0.2",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@intlify/unplugin-vue-i18n": "^4.0.0",
+    "@types/node": "^20.14.2",
+    "@unocss/core": "^0.61.0",
+    "@unocss/nuxt": "^0.61.0",
+    "@unocss/reset": "^0.61.0",
+    "sass": "^1.77.5",
+    "source-map-js": "^1.2.0",
+    "unocss": "^0.61.0",
+    "unplugin-auto-import": "^0.17.6",
+    "unplugin-vue-components": "^0.27.0",
+    "vue-i18n": "^9.13.1"
+  },
+  "stackblitz": {
+    "installDependencies": false,
+    "startCommand": "node .stackblitz.mjs && npm install && npm run dev"
   }
 }
