@@ -29,13 +29,8 @@ const appConfig = useAppConfig()
 .n-layout {
   height: 100%;
 }
-
 #default {
   background-color: v-bind('themeVars.bodyColor');
-}
-
-a {
-  text-decoration: none;
 }
 
 /** 定制滚动条 */

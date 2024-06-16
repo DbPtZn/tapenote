@@ -1,4 +1,11 @@
 {
   "hello": "Hello, {name}!",
-  "language": "Language"
+  "title": "Tapenote",
+  "language": "Language",
+  "home": "Home",
+  "column": "Column",
+  "products": "Products",
+  "tag": "Tag",
+  "contact": "Contact",
+  "about": "About"
 }

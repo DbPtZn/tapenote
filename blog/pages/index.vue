@@ -15,25 +15,34 @@ definePageMeta({
   }
 })
 const themeVars = useThemeVars()
+function handleClick() {
+  console.log('click')
+}
 </script>
 
 <template>
-  <div class="bg">
-    123
+  <div class="home">
+    <ItemCard v-for="item in 10" :key="10" @click="handleClick" />
   </div>
-  <!-- <div>Index</div>
-  <nuxt-link to="/test">test</nuxt-link>
-  <div>
-    <nuxt-link to="/micro/abc">to micro</nuxt-link>
-  </div>
-  <div>
-    <h1>{{ $t('hello', { name: 'vue-i18n' }) }}</h1>
-  </div> -->
 </template>
 <style scoped lang="postcss">
-.bg {
-  /* color: v-bind('themeVars.textColor1'); */
+.home {
+  width: 100%;
+  margin: 0 auto;
   background-color: v-bind('themeVars.bodyColor');
+}
+@media (min-width: 1024px) {
+  .home {
+    max-width: 1024px;
+  }
+}
+@include Desktop {
+  .home {
+    max-width: 1024px;
+  }
+}
+@include Mobile {
+  
 }
 </style>
 
