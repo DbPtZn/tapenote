@@ -9,7 +9,7 @@ if (route.params.group === 'admins' && !route.params.id) {
 
 <template>
   <div>
-    micro + {{ $route.params.id }}
+    <Article />
   </div>
 </template>
 

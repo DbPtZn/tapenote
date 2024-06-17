@@ -11,17 +11,21 @@ import VueI18nVitePlugin from '@intlify/unplugin-vue-i18n/vite'
 export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
-    "nuxtjs-naive-ui",
-    '@unocss/nuxt'
+    'nuxtjs-naive-ui', 
+    '@unocss/nuxt', 
+    'nuxt-mongoose', 
+    'nuxt-icon', 
+    'nuxt-icons',
+    'nuxt-viewport'
   ],
   // app: {
   //   // 配置页面切换过渡效果
   //   // pageTransition: { name: 'page', mode: 'out-in' }
   // },
-  css: ["~/assets/styles/main.scss"],
-  build: { 
-    transpile: ['/vue-i18n/'] 
-  }, 
+  css: ['~/assets/styles/main.scss'],
+  build: {
+    transpile: ['/vue-i18n/']
+  },
   vite: {
     resolve: {
       alias: {
@@ -32,13 +36,7 @@ export default defineNuxtConfig({
       AutoImport({
         imports: [
           {
-            'naive-ui': [
-              'useThemeVars',
-              'useDialog',
-              'useMessage',
-              'useNotification',
-              'useLoadingBar'
-            ]
+            'naive-ui': ['useThemeVars', 'useDialog', 'useMessage', 'useNotification', 'useLoadingBar']
           }
         ]
       }),
@@ -46,10 +44,8 @@ export default defineNuxtConfig({
         resolvers: [NaiveUiResolver()]
       }),
       // 针对 i18n 插件的性能优化 https://vue-i18n.intlify.dev/guide/integrations/nuxt3.html
-      VueI18nVitePlugin({ 
-        include: [ 
-          resolve(dirname(fileURLToPath(import.meta.url)), './locales/*.json') 
-        ] 
+      VueI18nVitePlugin({
+        include: [resolve(dirname(fileURLToPath(import.meta.url)), './locales/*.json')]
       })
     ],
     css: {
@@ -58,8 +54,32 @@ export default defineNuxtConfig({
           additionalData: "@import '~/assets/styles/var.scss';"
         }
       }
-    },
+    }
   },
+  mongoose: {
+    uri: process.env.MONGODB_URI,
+    options: {},
+    modelsDir: 'models',
+    devtools: true
+  },
+  icon: {
+    customCollections: [
+      {
+        prefix: 'custiom-icon',
+        dir: './assets/icons'
+      }
+    ]
+  },
+  // nitro: {
+  //   experimental: {
+  //     database: true
+  //   },
+  //   database: {
+  //     default: {
+  //       connector: 'sqlite'
+  //     }
+  //   }
+  // },
   $development: {
     //
   },

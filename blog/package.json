@@ -10,10 +10,15 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@prisma/client": "^5.15.0",
     "@vicons/material": "^0.12.0",
     "dayjs": "^1.11.11",
+    "mongoose": "^8.4.1",
     "naive-ui": "^2.38.2",
     "nuxt": "^3.10.3",
+    "nuxt-icon": "^0.6.10",
+    "nuxt-icons": "^3.2.1",
+    "nuxt-mongoose": "^1.0.6",
     "nuxtjs-naive-ui": "^1.0.2",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
@@ -24,6 +29,7 @@
     "@unocss/core": "^0.61.0",
     "@unocss/nuxt": "^0.61.0",
     "@unocss/reset": "^0.61.0",
+    "nuxt-viewport": "^2.1.5",
     "sass": "^1.77.5",
     "source-map-js": "^1.2.0",
     "unocss": "^0.61.0",

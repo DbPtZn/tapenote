@@ -15,14 +15,15 @@ definePageMeta({
   }
 })
 const themeVars = useThemeVars()
-function handleClick() {
+function handleClick(id: number) {
   console.log('click')
+  navigateTo(`/articles/${id}`)
 }
 </script>
 
 <template>
   <div class="home">
-    <ItemCard v-for="item in 10" :key="10" @click="handleClick" />
+    <ItemCard v-for="item in 10" :key="10" @click="handleClick(item)" />
   </div>
 </template>
 <style scoped lang="postcss">
@@ -40,9 +41,6 @@ function handleClick() {
   .home {
     max-width: 1024px;
   }
-}
-@include Mobile {
-  
 }
 </style>
 

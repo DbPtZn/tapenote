@@ -114,6 +114,7 @@ function handleThemeUpdate(value: boolean) {
   height: 64px;
   min-height: 64px;
   // padding: 0 32px;
+  border: 1px solid v-bind('themeVars.dividerColor');
   background-color: v-bind('themeVars.bodyColor');
   box-shadow: v-bind('themeVars.boxShadow1');
   .nav-container {
