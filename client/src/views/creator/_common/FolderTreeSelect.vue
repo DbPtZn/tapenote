@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { TreeSelectOption } from 'naive-ui'
 import useStore, { TreeNode } from '@/store'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { LibraryEnum } from '@/enums'
 const { folderTreeStore, userStore, userListStore } = useStore()
 // const isIframe = self != top // 判断是否是 iframe 模式
@@ -24,10 +24,11 @@ function handleUpdateValue(value: string) {
   emits('onUpdateValue', value)
   // props.onUpdate && props.onUpdate(value)
 }
-function getTreeData(): TreeSelectOption[] {
-  return folderTreeStore.get(props.lib).map(o => treeSelectOptionFormatter(o))
-}
-const options = ref<TreeSelectOption[]>([])
+const options = computed(() => folderTreeStore.get(props.lib).map(o => treeSelectOptionFormatter(o)))
+// function getTreeData(): TreeSelectOption[] {
+//   return folderTreeStore.get(props.lib).map(o => treeSelectOptionFormatter(o))
+// }
+// const options = ref<TreeSelectOption[]>([])
 function handleLoad(node: TreeSelectOption) {
   // console.log('load')
   return new Promise<void>((resolve, reject) => {
@@ -43,13 +44,14 @@ function handleLoad(node: TreeSelectOption) {
   })
 }
 onMounted(() => {
-  if (folderTreeStore.getTreeByLib(props.lib).length !== 0) {
-    options.value = getTreeData()
-  } else {
-    folderTreeStore.setFirstLevel(userStore.getDirByLib(props.lib), props.lib)?.then(() => {
-      options.value = getTreeData()
-    })
-  }
+  if(folderTreeStore.getTreeByLib(props.lib).length === 0) folderTreeStore.setFirstLevel(userStore.getDirByLib(props.lib), props.lib)
+  // if (folderTreeStore.getTreeByLib(props.lib).length !== 0) {
+  //   options.value = getTreeData()
+  // } else {
+  //   folderTreeStore.setFirstLevel(userStore.getDirByLib(props.lib), props.lib)?.then(() => {
+  //     options.value = getTreeData()
+  //   })
+  // }
   // if (folderTreeStore.procedureTree.length !== 0) {
   //   options.value = getTreeData()
   // } else {

@@ -56,12 +56,12 @@ export default defineNuxtConfig({
       }
     }
   },
-  mongoose: {
-    uri: process.env.MONGODB_URI,
-    options: {},
-    modelsDir: 'models',
-    devtools: true
-  },
+  // mongoose: {
+  //   uri: process.env.MONGODB_URI,
+  //   options: {},
+  //   modelsDir: 'models',
+  //   devtools: true
+  // },
   icon: {
     customCollections: [
       {
