@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { TreeSelectOption } from 'naive-ui'
 import useStore, { TreeNode } from '@/store'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { LibraryEnum } from '@/enums'
 const { folderTreeStore, userStore, userListStore } = useStore()
 // const isIframe = self != top // 判断是否是 iframe 模式
@@ -22,13 +22,12 @@ const emits = defineEmits<{
 }>()
 function handleUpdateValue(value: string) {
   emits('onUpdateValue', value)
-  // props.onUpdate && props.onUpdate(value)
 }
-const options = computed(() => folderTreeStore.get(props.lib).map(o => treeSelectOptionFormatter(o)))
-// function getTreeData(): TreeSelectOption[] {
-//   return folderTreeStore.get(props.lib).map(o => treeSelectOptionFormatter(o))
-// }
-// const options = ref<TreeSelectOption[]>([])
+function getTreeData(): TreeSelectOption[] {
+  return folderTreeStore.get(props.lib).map(o => treeSelectOptionFormatter(o))
+}
+/** 只应该用 ref 而不能用 computed, 因为 TreeSelect 内是有副作用的 */
+const options = ref<TreeSelectOption[]>([])
 function handleLoad(node: TreeSelectOption) {
   // console.log('load')
   return new Promise<void>((resolve, reject) => {
@@ -43,15 +42,20 @@ function handleLoad(node: TreeSelectOption) {
       })
   })
 }
+/** 监听目录变化，更新 tree */
+watch(() => folderTreeStore.get(props.lib), () => {
+  options.value = getTreeData()
+}, {
+  deep: true
+})
 onMounted(() => {
-  if(folderTreeStore.getTreeByLib(props.lib).length === 0) folderTreeStore.setFirstLevel(userStore.getDirByLib(props.lib), props.lib)
-  // if (folderTreeStore.getTreeByLib(props.lib).length !== 0) {
-  //   options.value = getTreeData()
-  // } else {
-  //   folderTreeStore.setFirstLevel(userStore.getDirByLib(props.lib), props.lib)?.then(() => {
-  //     options.value = getTreeData()
-  //   })
-  // }
+  if (folderTreeStore.getTreeByLib(props.lib).length !== 0) {
+    options.value = getTreeData()
+  } else {
+    folderTreeStore.setFirstLevel(userStore.getDirByLib(props.lib), props.lib)?.then(() => {
+      options.value = getTreeData()
+    })
+  }
   // if (folderTreeStore.procedureTree.length !== 0) {
   //   options.value = getTreeData()
   // } else {

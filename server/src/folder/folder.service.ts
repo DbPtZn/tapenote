@@ -90,10 +90,13 @@ export class FolderService {
   /** 查询指定文件夹的子节点 */
   async findChildrenById(id: string, userId: string) {
     try {
+      console.log(id)
       const parent = await this.foldersRepository.findOne({
         where: { id, userId, removed: RemovedEnum.NEVER },
         relations: { children: true }
       })
+      // console.log(parent)
+      if (!parent) throw new Error(`查询失败,找不到目标文件夹,项目id:${id}`)
       const children = parent.children
       const folders = []
       if (children && children.length > 0) {
@@ -103,7 +106,7 @@ export class FolderService {
             userId,
             removed: RemovedEnum.NEVER
           })
-          folders.push({
+          folder.removed === RemovedEnum.NEVER && folders.push({
             id: folder.id,
             name: folder.name,
             parentId: folder.parentId,
@@ -277,6 +280,7 @@ export class FolderService {
   }
 
   async remove(id: string, userId: string) {
+    console.log('remove', id)
     const folder = await this.foldersRepository.findOne({ where: { id, userId } })
     // { $set: { removed: RemovedEnum.ACTIVE, updateAt: new Date() } }
     folder.removed = RemovedEnum.ACTIVE
