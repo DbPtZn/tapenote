@@ -23,5 +23,5 @@ export default defineAppConfig({
     aliases: {
       'nuxt': 'logos:nuxt-icon',
     }
-  }
+  },
 })

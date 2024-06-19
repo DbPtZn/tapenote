@@ -1,26 +1,42 @@
-// import { ModuleOptions } from 'nuxt-mongoose'
-import { Types } from 'mongoose'
+import { Types, model } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
+import type { ArticleType } from '~/types'
+import { RemovedEnum } from '~/enums'
 console.log(defineMongooseModel)
-export const ArticleSchema = defineMongooseModel({
+export const Article = defineMongooseModel<ArticleType>({
   name: 'article',
   schema: {
-    user: {
+    userId: {
       type: Types.ObjectId,
       required: true,
-      ref: 'User',
+      ref: 'User'
     },
-    name: {
+    title: {
       type: 'string',
-      required: true,
+      required: true
     },
-    slug: {
+    content: {
       type: 'string',
-      required: true,
-      unique: true,
+      default: ''
     },
+    removed: {
+      type: String,
+      require: true,
+      default: RemovedEnum.NEVER
+    },
+    // 创建时间
+    createAt: {
+      type: Date,
+      default: Date.now()
+    },
+    // 修改时间
+    updateAt: {
+      type: Date,
+      default: Date.now()
+    }
   },
   options: {
-    timestamps: true,
+    timestamps: true
   }
 })
+

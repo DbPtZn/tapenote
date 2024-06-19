@@ -10,6 +10,11 @@ import VueI18nVitePlugin from '@intlify/unplugin-vue-i18n/vite'
 
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  imports: {
+    dirs: [
+      'composables'
+    ]
+  },
   modules: [
     'nuxtjs-naive-ui', 
     '@unocss/nuxt', 

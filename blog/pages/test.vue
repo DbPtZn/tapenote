@@ -1,10 +1,12 @@
 <template>
   <div>test</div>
+  <div>{{ data }}</div>
   <nuxt-link to="/">index</nuxt-link>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: 'custom'
-})
+const { data } = await useFetch('/api/hello')
+// definePageMeta({
+//   layout: 'custom'
+// })
 </script>
