@@ -1,4 +1,4 @@
-import { Types, model } from 'mongoose'
+import { Types } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
 import type { ArticleType } from '~/types'
 import { RemovedEnum } from '~/enums'
@@ -31,6 +31,7 @@ export const Article = defineMongooseModel<ArticleType>({
     /** 是否完成解析 */
     isParsed: {
       type: Boolean,
+      required: true,
       default: false
     },
     /** 编辑器版本号 */
@@ -63,34 +64,29 @@ export const Article = defineMongooseModel<ArticleType>({
       type: String,
       default: ''
     },
-    /** 时长 */
-    duration: {
-      type: Number,
-      default: 0
-    },
     /** 启动子序列 */
     promoterSequence: {
-      type: Array<String>,
+      type: [String],
       default: []
     },
     /** 关键帧序列 */
     keyframeSequence: {
-      type: Array<String>,
+      type: [String],
       default: []
     },
     /** 字幕序列 */
     subtitleSequence: {
-      type: Array<String>,
+      type: [String],
       default: []
     },
     /** 字幕关键帧序列 */
     subtitleKeyframeSequence: {
-      type: Array<String>,
+      type: [String],
       default: []
     },
     /** 标签 */
     tags: {
-      type: Array<String>,
+      type: [String],
       default: []
     },
     /** 发布状态 */
@@ -105,29 +101,56 @@ export const Article = defineMongooseModel<ArticleType>({
       default: RemovedEnum.NEVER
     },
     /** 作者信息 */
-    /** 笔名 */
-    penname: {
-      type: String,
-      require: false,
-      default: ''
-    },
-    /** 邮箱 */
-    email: {
-      type: String,
-      require: false,
-      default: ''
-    },
-    /** 个人主页 */
-    website: {
-      type: String,
-      require: false,
-      default: ''
+    author: {
+      /** 笔名 */
+      penname: {
+        type: String,
+        require: false,
+        default: ''
+      },
+      /** 邮箱 */
+      email: {
+        type: String,
+        require: false,
+        default: ''
+      },
+      /** 个人主页 */
+      website: {
+        type: String,
+        require: false,
+        default: ''
+      }
     },
     /** 作品详情 */
-    wordage: {
-      type: String,
-      require: false,
-      default: ''
+    detail: {
+      /** 时长 */
+      duration: {
+        type: Number,
+        require: false,
+        default: 0
+      },
+      /** 字数 */
+      wordage: {
+        type: Number,
+        require: false,
+        default: 0
+      },
+      /** 文件大小（主要是项目中包含的音频文件和富文本数据（含图片）的大小） */
+      filesize: {
+        type: Number,
+        require: false,
+        default: 0
+      }
+    },
+    meta: {
+      // 看过数量
+      views: { type: Number, default: 0 },
+      // 喜欢数量
+      likes: { type: Number, default: 0 },
+      // 收藏数量
+      collections: { type: Number, default: 0 },
+      // 评论数量
+      comments: { type: Number, default: 0 }
     },
     // 创建时间
     createAt: {
@@ -144,4 +167,3 @@ export const Article = defineMongooseModel<ArticleType>({
     timestamps: true
   }
 })
-

@@ -7,9 +7,26 @@ class ArticleService {
     this.articlesRepository = Article
   }
 
-  async get(id: ObjectId) {
+  create() {
+    
+  }
+
+  async get(UID: string) {
     try {
-      const article = await this.articlesRepository.findById(id)
+      const article = await this.articlesRepository
+        .findOne({ UID: UID })
+        .select([
+          '_id', 
+          'columnId', 
+          'cover', 
+          'title', 
+          'content', 
+          'abbrev', 
+          'tags', 
+          'createdAt', 
+          'updatedAt'
+        ])
+      console.log(article)
       return article
     } catch (error) {
       throw error

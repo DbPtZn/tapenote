@@ -1,16 +1,20 @@
 <template>
   <n-config-provider :theme="appConfig.theme.dark ? darkTheme : null">
-    <n-layout>
-      <n-layout-header>
-        <AppHeader />
-      </n-layout-header>
-      <n-layout-content class="flex-auto" content-style="padding: 24px;">
-        <slot />
-      </n-layout-content>
-      <n-layout-footer>
-        <AppFooter />
-      </n-layout-footer>
-    </n-layout>
+    <n-dialog-provider>
+      <n-message-provider>
+        <n-layout content-style="display: flex; flex-direction: column;">
+          <div class="header">
+            <AppHeader />
+          </div>
+          <div class="content">
+            <slot />
+          </div>
+          <div class="footer">
+            <AppFooter />
+          </div>
+        </n-layout>
+      </n-message-provider>
+    </n-dialog-provider>
   </n-config-provider>
 </template>
 
@@ -21,14 +25,31 @@ const themeVars = useThemeVars()
 const appConfig = useAppConfig()
 </script>
 
-
-<style lang="scss">
+<style lang="scss" scoped>
 .n-config-provider {
   height: 100%;
 }
 .n-layout {
-  height: 100%;
+  height: 100vh;
 }
+.layout-container {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.header {
+  position: sticky;
+  top: 0;
+  height: 64px;
+}
+.content {
+  flex: 1;
+}
+.footer {
+  // height: 64px;
+}
+
 #default {
   background-color: v-bind('themeVars.bodyColor');
 }

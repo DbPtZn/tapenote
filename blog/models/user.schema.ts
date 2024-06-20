@@ -58,6 +58,13 @@ export const User = defineMongooseModel<UserType>({
   },
   options: {
     timestamps: true
-  }
+  },
+  hooks(schema) {
+    // 可以在这里进行保存时的处理，比如校验、加密等
+    schema.pre('save', function (this, next) {
+      this.updateAt = new Date()
+      next()
+    })
+  },
 })
 

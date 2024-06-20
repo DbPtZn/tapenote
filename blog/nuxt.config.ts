@@ -16,12 +16,12 @@ export default defineNuxtConfig({
     ]
   },
   modules: [
-    'nuxtjs-naive-ui', 
-    '@unocss/nuxt', 
-    'nuxt-mongoose', 
-    'nuxt-icon', 
+    'nuxtjs-naive-ui',
+    '@unocss/nuxt',
+    'nuxt-mongoose',
+    'nuxt-icon',
     'nuxt-icons',
-    'nuxt-viewport'
+    'nuxt-viewport',
   ],
   // app: {
   //   // 配置页面切换过渡效果
@@ -75,6 +75,9 @@ export default defineNuxtConfig({
       }
     ]
   },
+  // colorMode: {
+  //   preference: 'dark'
+  // },
   // nitro: {
   //   experimental: {
   //     database: true

@@ -46,6 +46,10 @@ const menuOptions = [
 function handleThemeUpdate(value: boolean) {
   theme.dark = value
 }
+function handleDblClick() {
+  console.log('dbclick')
+  router.push({ path: `/manage` })
+}
 </script>
 
 <template>
@@ -54,7 +58,7 @@ function handleThemeUpdate(value: boolean) {
       <div class="left">
         <div class="title">
           <!-- <n-icon class="tapenote-icon" :component="HomeFilled" :size="24" />-->
-          <img class="tapenote-icon logo" src="/logo.png" alt="" />
+          <img class="tapenote-icon logo" src="/logo.png" alt="" @dblclick="handleDblClick" />
           <span class="tapenote-name">{{ $t('title') }}</span>
         </div>
       </div>
@@ -109,6 +113,7 @@ function handleThemeUpdate(value: boolean) {
 
 <style scoped lang="scss">
 .nav {
+  position: relative;
   display: flex;
   width: 100%;
   height: 64px;
@@ -120,6 +125,7 @@ function handleThemeUpdate(value: boolean) {
   .nav-container {
     display: flex;
     flex-direction: row;
+    align-items: center;
     justify-content: space-between;
     margin: 0px auto;
     width: 100%;
