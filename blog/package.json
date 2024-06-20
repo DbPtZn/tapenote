@@ -13,6 +13,7 @@
     "@prisma/client": "^5.15.1",
     "@vicons/material": "^0.12.0",
     "dayjs": "^1.11.11",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.1",
     "naive-ui": "^2.38.2",
     "nuxt": "^3.10.3",
