@@ -4,10 +4,12 @@
 </template>
 
 <script setup lang="ts">
+import Cookies from 'js-cookie'
 const router = useRouter()
-console.log(localStorage)
-const token = localStorage?.getItem('token')
-console.log(router)
+// console.log(localStorage)
+// const token = localStorage?.getItem('accessToken')
+const token = Cookies.get('accessToken')
+// console.log(token)
 if (!token) {
   router.push('/auth/login')
 }

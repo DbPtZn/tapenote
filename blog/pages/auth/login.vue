@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 // import { FormRules, FormItemRule } from 'naive-ui'
@@ -37,11 +38,31 @@ function handleLogin() {
 }
 
 const submit = () => {
-  formRef.value?.validate(errors => {
+  formRef.value?.validate(async (errors: any) => {
     if (!errors) {
       // 先判断是否已经登录
-      const { data, error, status } = useFetch('/api/auth/login')
-      console.log(data, error, status)
+      try {
+        const accessToken = await $fetch('/api/auth/login', {
+          method: 'post',
+          body: {
+            account: model.value.account,
+            password: model.value.password
+          }
+        })
+        if (!accessToken) {
+          message.error('账号或密码错误！')
+          return
+        }
+        console.log(accessToken)
+        const accessTokenCookie = useCookie('accessToken',{ maxAge: 60*60*24 })
+        accessTokenCookie.value = accessToken
+        localStorage.setItem('accessToken', accessToken)
+        router.push('/manage')
+      } catch (error) {
+        console.log(error)
+        message.error('登录失败！')
+      }
+   
       // userStore.login({
       //   account: model.value.account,
       //   password: model.value.password,

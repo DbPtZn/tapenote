@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 // import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui'
@@ -27,7 +28,7 @@ const rules = {
     {
       message: '姓名长度不能超过18个字符',
       trigger: 'blur',
-      validator: (rule, value: string) => {
+      validator: (rule: any, value: string) => {
         return value.length < 18
       }
     }
@@ -48,7 +49,7 @@ const rules = {
     {
       message: '密码长度应该在8~24个字符之间',
       trigger: 'blur',
-      validator: (rule, value: string) => {
+      validator: (rule: any, value: string) => {
         return value.length >= 8 && value.length <= 24 
       }
     }
@@ -68,9 +69,9 @@ const autoCompleteOptions = computed(() => {
 /** 提交注册 */
 function handleRegister(e: MouseEvent) {
   e.preventDefault()
-  formRef.value?.validate(errors => {
+  formRef.value?.validate((errors: any) => {
     if (!errors) {
-      useFetch('/api/auth/register', {
+      $fetch('/api/auth/register', {
           method: 'post',
           body: {
             account: model.value.account,
@@ -79,12 +80,16 @@ function handleRegister(e: MouseEvent) {
           }
         })
         .then(res => {
-          if(res.status?.value !== 'error') {
+          console.log(res)
+          if(res.msg) {
             router.push('./login')
-          } else {
-            console.log(res.error?.value)
-            message.error('注册失败！')
           }
+          // if(res.status?.value !== 'error') {
+          //   router.push('./login')
+          // } else {
+          //   console.log(res.error?.value)
+          //   message.error('注册失败！')
+          // }
         })
         .catch(err => {
           console.log(err)

@@ -17,7 +17,7 @@ export const User = defineMongooseModel<UserType>({
       maxlength: 32,
       require: true
     },
-    password: {
+    encryptedPassword: {
       type: String,
       maxlength: 64,
       require: true
@@ -44,11 +44,13 @@ export const User = defineMongooseModel<UserType>({
       email: {
         type: String,
         maxlength: 100,
+        default: '',
         require: false
       },
       phone: {
         type: String,
         maxlength: 13,
+        default: '',
         require: false
       },
     },
@@ -58,9 +60,9 @@ export const User = defineMongooseModel<UserType>({
      * 2 - 禁止任何投稿
      */
     receiverConfig: {
-      status: { type:  0 | 1 | 2, default: 0 },
-      autoParse: { type: Boolean, default: false }, // 接收投稿时是否自动解析
-      sizeLimit: { type: Number, default: 0 } // 接收文件大小的限制，0 表示无限制
+      status: { type:  Number, default: 0, require: false, }, // 0 | 1 | 2
+      autoParse: { type: Boolean, default: false, require: false, }, // 接收投稿时是否自动解析
+      sizeLimit: { type: Number, default: 0, require: false, } // 接收文件大小的限制，0 表示无限制
     },
     // 创建时间
     createAt: {

@@ -13,6 +13,8 @@
     "@prisma/client": "^5.15.1",
     "@vicons/material": "^0.12.0",
     "dayjs": "^1.11.11",
+    "joi": "^17.13.3",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.1",
     "naive-ui": "^2.38.2",
@@ -27,6 +29,8 @@
   "devDependencies": {
     "@intlify/unplugin-vue-i18n": "^4.0.0",
     "@types/bcryptjs": "^2.4.6",
+    "@types/js-cookie": "^3.0.6",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.2",
     "@unocss/core": "^0.61.0",
     "@unocss/nuxt": "^0.61.0",

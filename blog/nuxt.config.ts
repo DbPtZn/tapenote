@@ -104,6 +104,7 @@ export default defineNuxtConfig({
    * 非原始js类型 ×
    */
   runtimeConfig: {
+    jwtSecret: 'DbPtZn',
     // 只在服务器端可用的私有键
     apiSecret: 'DbPtZn',
     // public中的键也可以在客户端使用
