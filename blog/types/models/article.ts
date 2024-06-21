@@ -1,7 +1,7 @@
 import type { ObjectId } from 'mongoose'
 import type { RemovedEnum } from '~/enums'
 
-export interface ArticleType {
+export interface Article {
   _id: ObjectId
   UID: string
   userId: ObjectId
