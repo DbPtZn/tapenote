@@ -1,10 +1,13 @@
 <template>
-  <NuxtLayout :name="'default'">
+  <NuxtLayout> 
     <NuxtPage />
-  </NuxtLayout>
+  </NuxtLayout> 
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  layout: 'default'
+})
 const appConfig = useAppConfig()
 useSeoMeta({
   titleTemplate: 'Tapenote Blog',

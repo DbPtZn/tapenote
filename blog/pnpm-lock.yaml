@@ -23,6 +23,9 @@ dependencies:
   jsonwebtoken:
     specifier: ^9.0.2
     version: 9.0.2
+  lodash:
+    specifier: ^4.17.21
+    version: 4.17.21
   mongoose:
     specifier: ^8.4.1
     version: 8.4.3
@@ -64,6 +67,9 @@ devDependencies:
   '@types/jsonwebtoken':
     specifier: ^9.0.6
     version: 9.0.6
+  '@types/lodash':
+    specifier: ^4.17.5
+    version: 4.17.5
   '@types/node':
     specifier: ^20.14.2
     version: 20.14.6
@@ -2434,7 +2440,6 @@ packages:
 
   /@types/lodash@4.17.5:
     resolution: {integrity: sha512-MBIOHVZqVqgfro1euRDWX7OO0fBVUUMrN6Pwm8LQsz8cWhEpihlvR70ENj3f40j58TNxZaWv2ndSkInykNBBJw==}
-    dev: false
 
   /@types/node@20.14.6:
     resolution: {integrity: sha512-JbA0XIJPL1IiNnU7PFxDXyfAwcwVVrOoqyzzyQTyMeVhBzkJVMSkC1LlVsRQ2lpqiY4n6Bb9oCS6lzDKVQxbZw==}

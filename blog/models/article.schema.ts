@@ -1,9 +1,9 @@
 import { Types } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
-import type { ArticleType } from '~/types'
+import type { ArticleSchema } from '~/types'
 import { RemovedEnum } from '~/enums'
 console.log(defineMongooseModel)
-export const Article = defineMongooseModel<ArticleType>({
+export const Article = defineMongooseModel<ArticleSchema>({
   name: 'article',
   schema: {
     /** 一个较为简短的 ID，用来有限制地查询作品文章 (仅为普通访客查询展示必要的文章信息) */

@@ -1,5 +1,5 @@
 <template>
-  <MArticle />
+  <div>auth</div>
 </template>
 
 <script setup lang="ts">
@@ -7,6 +7,3 @@
 //   layout: 'manage',
 // })
 </script>
-
-<style scoped lang="scss">
-</style>

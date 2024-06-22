@@ -1,6 +1,6 @@
 import type { ObjectId } from "mongoose"
 
-export interface UserType {
+export interface UserSchema {
   _id: ObjectId
   UID: string
   account: string
@@ -19,4 +19,17 @@ export interface UserType {
   }
   createAt: Date
   updateAt: Date
+}
+
+
+export type UserType = Omit<
+  UserSchema,
+ '_id' | 'removed' | 'encryptedPassword' | 'createAt' | 'updateAt'
+> & { 
+  _id: string
+  userId: string
+  authorizeId: string
+  columnId: string,
+  createAt: string
+  updateAt: string
 }

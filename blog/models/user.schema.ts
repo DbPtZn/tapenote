@@ -1,9 +1,9 @@
 import { Types, model } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
-import type { UserType } from '~/types'
+import type { UserSchema, UserType } from '~/types'
 import { RemovedEnum } from '~/enums'
 // console.log(defineMongooseModel)
-export const User = defineMongooseModel<UserType>({
+export const User = defineMongooseModel<UserSchema>({
   name: 'user',
   schema: {
     UID: {
