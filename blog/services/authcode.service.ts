@@ -1,4 +1,5 @@
-import type { ObjectId } from 'mongoose'
+import type { ObjectId, Types } from 'mongoose'
+import type { UpdateAuthcodeDto } from '~/dto'
 import { Authcode } from '~/models'
 
 class AuthcodeService {
@@ -36,15 +37,20 @@ class AuthcodeService {
     }
   }
 
-  update(_id: ObjectId, data: any) {
+  update(dto: UpdateAuthcodeDto, userId: ObjectId) {
     try {
-      return this.authcodesRepository.updateOne({ _id }, data)
+      const { _id, ...data } = dto
+      return this.authcodesRepository.findOneAndUpdate(
+        { _id, userId }, 
+        data, 
+        { new: true }
+      )
     } catch (error) {
       throw error
     }
   }
 
-  delete(_id: ObjectId, userId: ObjectId) {
+  delete(_id: Types.ObjectId, userId: ObjectId) {
     try {
       return this.authcodesRepository.deleteOne({ _id, userId })
     } catch (error) {

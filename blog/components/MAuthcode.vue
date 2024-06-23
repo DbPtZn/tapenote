@@ -38,11 +38,9 @@ const user = reactive<UserType>({
   updateAt: ''
 })
 const data = ref<AuthCodeType[]>([])
-// useFetch('/api/authcode/getAll').then(res => {
-//   console.log(res)
-// })
-onMounted(() => {
-  // authcodeStore.fetchAndSet()
+useFetch<AuthCodeType[]>('/api/authcode/getAll').then(res => {
+  // console.log(res)
+  data.value = res.data.value
 })
 
 let editData = ref<Model | null>(null)
@@ -59,12 +57,33 @@ const handleEdit = (row: Model) => {
     return
   }
   if (!editData.value || editData.value._id !== row._id) {
+    console.log(editData)
     editData.value = Object.assign({}, row)
   } else {
     if (_.isEqual(editData, row)) {
       editData.value = null
       return
     }
+    $fetch('/api/authcode/update', {
+      method: 'POST',
+      body: editData.value
+    }).then(res => {
+      // console.log(res)
+      data.value.some((item, index, arr) => {
+        if (item._id === res._id) {
+          arr[index].name = res.name
+          arr[index].code = res.code
+          arr[index].desc = res.desc
+          arr[index].disabled = res.disabled
+          arr[index].updateAt = res.updateAt
+          return true
+        }
+      })
+      editData.value = null
+    }).catch(err => {
+      message.error('保存失败,可能该授权码已存在!')
+      if (editData.value) editData.value = null
+    })
     // authcodeStore.update(editData.value!).then(() => {
     //   editData.value = null
     // })
@@ -202,25 +221,6 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                   size: 'small',
                   onClick: () => {
                     handleEdit(row)
-                    // if (editData.value && editData.value._id !== row._id ) {
-                    //   message.error('请先保存上一个编辑项')
-                    //   return
-                    // }
-                    // if (!editData.value || editData.value._id !== row._id) {
-                    //   editData.value = Object.assign({}, row)
-                    // } else {
-                    //   if (_.isEqual(editData, row)) {
-                    //     editData.value = null
-                    //     return
-                    //   }
-                    //   authcodeStore.update(editData.value!).then(() => {
-                    //     editData.value = null
-                    //   })
-                    //   .catch(err => {
-                    //     message.error('保存失败,可能该授权码已存在!')
-                    //     if (editData.value) editData.value = null
-                    //   })
-                    // }
                   }
                 },
                 {
@@ -249,6 +249,12 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                       negativeText: '取消',
                       onPositiveClick: () => {
                         // authcodeStore.delete(row._id)
+                        $fetch(`/api/authcode/delete/${row._id}`, {
+                          method: 'delete'
+                        }).then(() => {
+                          const index = data.value.findIndex(item => item._id === row._id)
+                          data.value.splice(index, 1)
+                        })
                       },
                       onNegativeClick: () => {
                         message.error('取消')
@@ -376,7 +382,12 @@ const options = ref<DropdownOption[]>([
           positiveText: '确定',
           negativeText: '取消',
           onPositiveClick: () => {
-            // targetRow.value && authcodeStore.delete(targetRow.value._id)
+            targetRow.value && $fetch(`/api/authcode/delete/${targetRow.value?._id}`, {
+              method: 'delete'
+            }).then(() => {
+              const index = data.value.findIndex(row => row._id === targetRow.value?._id)
+              data.value.splice(index, 1)
+            })
           },
           onNegativeClick: () => {
             message.error('取消')
