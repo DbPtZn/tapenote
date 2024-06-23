@@ -155,15 +155,22 @@ export const Article = defineMongooseModel<ArticleSchema>({
     // 创建时间
     createAt: {
       type: Date,
-      default: Date.now()
+      default: new Date()
     },
     // 修改时间
     updateAt: {
       type: Date,
-      default: Date.now()
+      default: new Date()
     }
   },
   options: {
     timestamps: true
+  },
+  hooks(schema) {
+    // 可以在这里进行保存时的处理，比如校验、加密等
+    schema.pre('save', function (this, next) {
+      this.updateAt = new Date()
+      next()
+    })
   }
 })

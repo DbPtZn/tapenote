@@ -1,5 +1,5 @@
 <template>
-  <div>auth</div>
+  <MAuthcode />
 </template>
 
 <script setup lang="ts">

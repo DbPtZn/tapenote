@@ -19,7 +19,6 @@ if (!token) {
       <MItemlist />
     </div>
     <div class="workbench-wrapper">
-      <!-- <MWorkbench /> -->
       <NuxtPage />
     </div>
   </div>

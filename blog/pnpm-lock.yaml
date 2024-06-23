@@ -55,6 +55,9 @@ dependencies:
     version: 4.3.3(vue@3.4.29)
 
 devDependencies:
+  '@iconify-json/uil':
+    specifier: ^1.1.8
+    version: 1.1.8
   '@intlify/unplugin-vue-i18n':
     specifier: ^4.0.0
     version: 4.0.0(vue-i18n@9.13.1)
@@ -962,6 +965,12 @@ packages:
     dependencies:
       '@iconify/types': 2.0.0
     dev: false
+
+  /@iconify-json/uil@1.1.8:
+    resolution: {integrity: sha512-zkWB8XImzb1gfi5kN9xAfDXF5OqzxbKvtZq9xRUplEWEJYOoDB1RpbbQpCwJQ41j8Nf0ag0LFJr++qhYmvxftQ==}
+    dependencies:
+      '@iconify/types': 2.0.0
+    dev: true
 
   /@iconify/collections@1.0.432:
     resolution: {integrity: sha512-YP3l4wIGicEa4pNCbEWi88pMHCc+5kAsS70xlYb4llmNKmmNP7RnaVscoULBxiv6J1/SnlYF2Xf5HlrrrRvsLQ==}

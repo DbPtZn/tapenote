@@ -1,7 +1,7 @@
 
 <script lang="ts" setup>
 import { NInput } from 'naive-ui'
-import { watch } from 'vue';
+import { watch, type ComponentInstance } from 'vue'
 const props = defineProps<{
   hightlight: boolean
   isEdit: boolean

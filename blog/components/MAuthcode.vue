@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { NButton, NIcon, NSpace, useDialog, useMessage } from 'naive-ui'
+import { NButton, NIcon, NSpace, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import type { DataTableColumns, DropdownOption } from 'naive-ui'
 import ShowOrEdit from './MAuth/ShowOrEdit.vue'
 import ShowOrSelect from './MAuth/ShowOrSelect.vue'
@@ -10,10 +10,11 @@ import _ from 'lodash'
 import { onMounted } from 'vue'
 import { computed } from 'vue'
 import type { AuthCodeType, UserType } from '~/types'
-import { Icon } from '#build/components'
+// import { Icon } from '#import'
 type Model = AuthCodeType
 const message = useMessage()
 const dialog = useDialog()
+const themeVars = useThemeVars()
 const user = reactive<UserType>({
   UID: '',
   account: '',
@@ -36,16 +37,10 @@ const user = reactive<UserType>({
   createAt: '',
   updateAt: ''
 })
-const data = reactive<AuthCodeType>({
-  _id: '',
-  name: '',
-  code: '',
-  desc: '',
-  disabled: false,
-
-  createAt: '',
-  updateAt: ''
-})
+const data = ref<AuthCodeType[]>([])
+// useFetch('/api/authcode/getAll').then(res => {
+//   console.log(res)
+// })
 onMounted(() => {
   // authcodeStore.fetchAndSet()
 })
@@ -54,7 +49,7 @@ let editData = ref<Model | null>(null)
 
 const renderIcon = (component: Component | string) => {
   if (typeof component === 'string') {
-    return h(Icon, { name: 'uil:github' })
+    return h('Icon', { name: 'uil:github' })
   }
   return h(NIcon, { component: component, size: 24 })
 }
@@ -292,6 +287,10 @@ const paginationReactive = reactive({
 
 /** 添加 */
 function handleAdd() {
+  $fetch<AuthCodeType>('/api/authcode/add').then(res => {
+    // console.log(res)
+    data.value.push(res)
+  })
   // authcodeStore.add().catch(err => {
   //   if (err.response.data.code === 11000) {
   //     message.error('存在未设置授权码的项目！')
@@ -418,8 +417,7 @@ const options = ref<DropdownOption[]>([
       </div>
       <div class="group">
         <n-button secondary @click="handleAdd">
-          <!-- <n-icon :component="Add" /> -->
-          <Icon name="uil:github" />
+          <Icon name="material-symbols:add-rounded" />
         </n-button>
       </div>
     </div>
@@ -451,6 +449,7 @@ const options = ref<DropdownOption[]>([
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  background-color: v-bind('themeVars.cardColor');
   .header {
     height: 60px;
     min-height: 60px;

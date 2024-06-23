@@ -28,6 +28,7 @@
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@iconify-json/uil": "^1.1.8",
     "@intlify/unplugin-vue-i18n": "^4.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/js-cookie": "^3.0.6",

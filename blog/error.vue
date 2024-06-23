@@ -8,7 +8,7 @@ const handleError = () => clearError({ redirect: '/' })
 
 <template>
   <n-result
-    :status="+error?.statusCode || 'error'"
+    :status="(error?.statusCode + '') || 'error'"
     :title="error?.title"
     :description="error?.message"
   >

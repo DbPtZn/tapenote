@@ -15,12 +15,17 @@ export default defineEventHandler((event) => {
         const secret = runtime.jwtSecret
         try {
             // jwt验证
-            var decoded = jwt.verify(token, secret);
-            console.log('decoded:')
-            console.log(decoded) 
+            var decoded = jwt.verify(token, secret)
+            // console.log('decoded:')
+            // console.log(typeof decoded)
             // 通过上下文判断是否有uid
-            // event.context.auth = {}
-
+            if (typeof decoded === 'object') {
+              event.context.auth = {
+                id: decoded.id,
+                account: decoded.account,
+                UID: decoded.UID
+              }
+            }
         } catch (err) {
             // err
             console.log("jwt decode error", err)
