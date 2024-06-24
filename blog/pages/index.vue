@@ -7,13 +7,13 @@ const appConfig = useAppConfig()
 // console.log(appConfig)
 // console.log(appConfig.title)
 /** 定义页面元数据 */
-definePageMeta({
-  middleware: (from) => {
-    if (from.path === '/') {
-      // return navigateTo(`/${validFeeds[0]}/1`)
-    }
-  }
-})
+// definePageMeta({
+//   middleware: (from) => {
+//     if (from.path === '/') {
+//       // return navigateTo(`/${validFeeds[0]}/1`)
+//     }
+//   }
+// })
 const themeVars = useThemeVars()
 function handleClick(id: number) {
   console.log('click')

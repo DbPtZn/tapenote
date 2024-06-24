@@ -4,9 +4,20 @@ definePageMeta({
   layout: 'manage'
 })
 const router = useRouter()
-const token = Cookies.get('accessToken')
+const token = Cookies.get('Authorization')
 if (!token) {
   router.push('/auth/login')
+}
+const userinfo = Cookies.get('userinfo')
+if (!userinfo) {
+  const { data, error } = await useFetch('/api/user/info')
+  // console.log(data)
+  if(error.value?.statusCode === 401) {
+    Cookies.remove('Authorization')
+    router.push('/auth/login')
+  } else {
+    useLocalStorage('userInfo', JSON.stringify(data.value))
+  }
 }
 </script>
 

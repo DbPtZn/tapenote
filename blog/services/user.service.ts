@@ -55,9 +55,21 @@ class UserService {
     }
   }
 
-  async findOneById(id: ObjectId) {
+  async findOneById(_id: ObjectId) {
     try {
-      const user = await this.usersRepository.findById(id)
+      const user = await this.usersRepository.findById(_id)
+      return user
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async findUserInfo(_id: ObjectId) {
+    try {
+      const user = await this.usersRepository.findOne(
+        { _id },
+        { encryptedPassword: 0 } // 需要排除的字段
+      )
       return user
     } catch (error) {
       throw error
@@ -97,6 +109,20 @@ class UserService {
       throw error
     }
   }
+
+  /** 更新接收器状态 */
+  updateReceiverConfig(status: 0 | 1 | 2, _id: ObjectId) {
+    try {
+      return this.usersRepository.updateOne(
+        { _id },
+        { $set: { 'receiverConfig.status': status } }
+      )
+    } catch (error) {
+      throw error
+    }
+  }
+
+
 
 }
 

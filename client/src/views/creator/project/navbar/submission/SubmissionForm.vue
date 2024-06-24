@@ -34,7 +34,7 @@ const props = defineProps<{
   subtitleKeyframeSequence?: number[]
   email?: string
   blog?: string
-  onResponse: (result: { msg: string }) => void
+  onResponse: (result: { error: boolean, msg: string }) => void
   onSubmit: () => void
 }>()
 const formRef = ref<FormInst | null>(null)
@@ -139,15 +139,19 @@ function handleSubmit(e: MouseEvent) {
           blog: model.value.blog,
           msg: model.value.msg
         })
-        .then(() => {
-          // message.error('投稿成功')
+        .then(res => {
+          console.error(res)
           props.onResponse({
+            error: false,
             msg: '投稿成功'
           })
         })
         .catch(err => {
           console.log(err)
-          props.onResponse({ msg: '投稿失败' })
+          props.onResponse({ 
+            error: true,
+            msg: '投稿失败'
+          })
           // message.error('投稿失败')
         })
     } else {

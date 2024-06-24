@@ -10,7 +10,8 @@ import _ from 'lodash'
 import { onMounted } from 'vue'
 import { computed } from 'vue'
 import type { AuthCodeType, UserType } from '~/types'
-// import { Icon } from '#import'
+import { Icon } from '#components'
+
 type Model = AuthCodeType
 const message = useMessage()
 const dialog = useDialog()
@@ -40,14 +41,14 @@ const user = reactive<UserType>({
 const data = ref<AuthCodeType[]>([])
 useFetch<AuthCodeType[]>('/api/authcode/getAll').then(res => {
   // console.log(res)
-  data.value = res.data.value
+  if(res.data.value) data.value = res.data.value
 })
 
 let editData = ref<Model | null>(null)
 
 const renderIcon = (component: Component | string) => {
   if (typeof component === 'string') {
-    return h('Icon', { name: 'uil:github' })
+    return h(Icon, { name: component })
   }
   return h(NIcon, { component: component, size: 24 })
 }
@@ -64,7 +65,7 @@ const handleEdit = (row: Model) => {
       editData.value = null
       return
     }
-    $fetch('/api/authcode/update', {
+    $fetch<AuthCodeType>('/api/authcode/update', {
       method: 'POST',
       body: editData.value
     }).then(res => {
@@ -84,13 +85,6 @@ const handleEdit = (row: Model) => {
       message.error('保存失败,可能该授权码已存在!')
       if (editData.value) editData.value = null
     })
-    // authcodeStore.update(editData.value!).then(() => {
-    //   editData.value = null
-    // })
-    // .catch(err => {
-    //   message.error('保存失败,可能该授权码已存在!')
-    //   if (editData.value) editData.value = null
-    // })
   }
 }
 const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColumns<Model> => {
@@ -244,11 +238,10 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                   onClick: () => {
                     dialog.create({
                       title: '是否彻底删除？',
-                      icon: () => renderIcon('Delete'),
+                      icon: () => renderIcon('material-symbols:delete'),
                       positiveText: '确定',
                       negativeText: '取消',
                       onPositiveClick: () => {
-                        // authcodeStore.delete(row._id)
                         $fetch(`/api/authcode/delete/${row._id}`, {
                           method: 'delete'
                         }).then(() => {
@@ -294,14 +287,10 @@ const paginationReactive = reactive({
 /** 添加 */
 function handleAdd() {
   $fetch<AuthCodeType>('/api/authcode/add').then(res => {
-    // console.log(res)
     data.value.push(res)
+  }).catch(err => {
+    message.error(err.response._data.message)
   })
-  // authcodeStore.add().catch(err => {
-  //   if (err.response.data.code === 11000) {
-  //     message.error('存在未设置授权码的项目！')
-  //   }
-  // })
 }
 
 /** 全局配置 */
@@ -312,11 +301,17 @@ const status = [
   { label: '禁用', value: 2 }
 ]
 function handleStatusUpdate(value: 0 | 1 | 2) {
-  // user.updateReceiverStatus(value).then(() => {
-  //   message.success('更新成功')
-  // }).catch(err => {
-  //   message.error('更新失败')
-  // })
+  $fetch('/api/user/updateReceiver', {
+    method: 'post',
+    body: {
+      status: value
+    }
+  }).then(() => {
+    message.success('更新成功')
+  }).catch(err => {
+    console.log(err)
+    message.error('更新失败')
+  })
 }
 
 /** 排序 */
@@ -378,7 +373,7 @@ const options = ref<DropdownOption[]>([
       onClick: () => {
         dialog.create({
           title: '是否彻底删除？',
-          icon: () => renderIcon('Delete'),
+          icon: () => renderIcon('material-symbols:delete'),
           positiveText: '确定',
           negativeText: '取消',
           onPositiveClick: () => {

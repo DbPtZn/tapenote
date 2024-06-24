@@ -54,9 +54,9 @@ const submit = () => {
           return
         }
         console.log(accessToken)
-        const accessTokenCookie = useCookie('accessToken',{ maxAge: 60*60*24 })
-        accessTokenCookie.value = accessToken
-        localStorage.setItem('accessToken', accessToken)
+        const accessTokenCookie = useCookie('Authorization',{ maxAge: 60*60*24 })
+        accessTokenCookie.value = `Bearer ${accessToken}`
+        // localStorage.setItem('accessToken', accessToken)
         router.push('/manage')
       } catch (error) {
         console.log(error)

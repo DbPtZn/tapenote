@@ -304,7 +304,7 @@ function collapseText(transcript: string[]) {
               <template #edit>
                 <n-icon :component="EditOutlined" :size="18" @click="handleEdit(element)" />
               </template>
-              <!-- 移除片段 -->
+              <!-- 移除片段 （可以优化，不用每个片段都创建一个实例） -->
               <template #delete>
                 <n-popconfirm positive-text="确认" negative-text="取消"  @positive-click="handleRemove(element)">
                   <template #trigger>

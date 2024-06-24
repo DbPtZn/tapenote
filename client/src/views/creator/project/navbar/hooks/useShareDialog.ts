@@ -32,13 +32,14 @@ export function useShareDialog() {
         subtitleKeyframeSequence: data.subtitleKeyframeSequence,
         
         
-        onResponse: ({ msg })=> {
-          message.success(msg)
+        onResponse: ({ error, msg })=> {
+          error ? message.error(msg) : message.success(msg)
+       
           
         },
 
         onSubmit() {
-          dialog.destroyAll()
+          // dialog.destroyAll()
         }
       })
     })

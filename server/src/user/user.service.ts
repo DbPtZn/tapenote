@@ -285,11 +285,11 @@ export class UserService {
     }
   }
 
-  async updateSubmissionConfig(dto: UpdateUserSubmissionConfigDto, id: string) {
+  async updateSubmissionConfig(dto: UpdateUserSubmissionConfigDto, userId: string) {
     try {
       this.userLogger.log(`正在更新${dto.id}投稿配置...`)
       const { id, name, site, code, desc } = dto
-      const user = await this.findOneById(id)
+      const user = await this.findOneById(userId)
       user.submissionConfig.forEach((item, index, arr) => {
         if (item.id === id) {
           arr[index].name = name

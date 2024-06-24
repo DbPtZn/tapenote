@@ -4,7 +4,7 @@ export default defineConfig({
   presets: [
     // presetAttributify({ /* preset 选项 */}),
     // presetUno(),
-    presetWind(),
+    // presetWind(),
     presetIcons()
   ],
   // rules: [

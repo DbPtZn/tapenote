@@ -17,11 +17,12 @@ export default defineNuxtConfig({
   },
   modules: [
     'nuxtjs-naive-ui',
-    '@unocss/nuxt',
+    // '@unocss/nuxt',
     'nuxt-mongoose',
     'nuxt-icon',
     'nuxt-icons',
     'nuxt-viewport',
+    '@vueuse/nuxt'
   ],
   // app: {
   //   // 配置页面切换过渡效果
@@ -78,16 +79,17 @@ export default defineNuxtConfig({
   // colorMode: {
   //   preference: 'dark'
   // },
-  // nitro: {
-  //   experimental: {
-  //     database: true
-  //   },
-  //   database: {
-  //     default: {
-  //       connector: 'sqlite'
-  //     }
-  //   }
-  // },
+  nitro: {
+    routeRules: {
+      '/api/receiver/**': {
+        cors: true, // 允许跨域
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST',
+        }
+      }
+    }
+  },
   $development: {
     //
   },
