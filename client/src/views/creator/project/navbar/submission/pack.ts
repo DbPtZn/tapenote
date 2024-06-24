@@ -104,7 +104,7 @@ export class Pack {
     const {
       title, content, audio, duration,
       promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence,
-      type, site, code, penname, email, blog, msg
+      // type, site, code, penname, email, blog, msg
     } = data
     const promoseArray = [
       new Promise<{ type: string; file: Blob }>((resolve, reject) => {
@@ -253,7 +253,7 @@ export class Pack {
         const audioBlob = audioIndex === -1 ? null : files[audioIndex].file
         // const file = new File([product], 'product_' + Date.now() + '.json', { type: 'application/json' })
         // const blob = new Blob([file], { type: 'application/octet-stream' })
-        const { type, title, site, code, penname, email, blog, msg } = data
+        const { site, type, title, code, penname, email, blog, msg } = data
 
         const formData = new FormData()
         jsonBlob && formData.append('jsonDocs', jsonBlob, 'document.json')
@@ -269,11 +269,13 @@ export class Pack {
 
         axios({
           method: 'post',
-          url: site,
+          url: `${site}&${code}`,
           data: formData,
           headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+            'Content-Type': 'multipart/form-data',
+            // 'authorization': `Bearer ${code}`,
+            // 'auth-code': `Bearer ${code}`,
+          },
         })
           .then(res => {
             console.log(res)

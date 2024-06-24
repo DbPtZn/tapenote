@@ -150,14 +150,14 @@ const dropMethods = {
     <div class="sidebar">
       <n-space class="wrapper" :vertical="true" size="large">
         <n-space class="btn-group" :vertical="true" size="large">
-          <n-button class="collapse-item-btn" size="large" quaternary block>
-            <Nuxt-link to="/manage/auth">
-              <n-space align="center">
-                <Icon name="uil:github" />
-                <span>授权管理</span>
-              </n-space>
-            </Nuxt-link>
-          </n-button>
+          <Nuxt-link to="/manage/auth">
+            <n-button class="collapse-item-btn" size="large" quaternary block>
+                <n-space align="center">
+                  <Icon name="uil:github" />
+                  <span>授权管理</span>
+                </n-space>
+            </n-button>
+          </Nuxt-link>
           <!-- 布局管理 -->
           <n-button class="collapse-item-btn" size="large" quaternary block disabled>
             <n-space align="center">

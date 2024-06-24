@@ -37,6 +37,14 @@ class AuthcodeService {
     }
   }
 
+  findOneByCode(code: string, userId: ObjectId) {
+    try {
+      return this.authcodesRepository.findOne({ code, userId })
+    } catch (error) {
+      throw error
+    }
+  }
+
   update(dto: UpdateAuthcodeDto, userId: ObjectId) {
     try {
       const { _id, ...data } = dto
