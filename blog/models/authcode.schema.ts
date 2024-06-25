@@ -1,10 +1,8 @@
-import { Types, model } from 'mongoose'
+import { Types } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
-import type { AuthCodeSchema, UserSchema, UserType } from '~/types'
-import { RemovedEnum } from '~/enums'
-// console.log(defineMongooseModel)
+import type { AuthCodeSchema } from '~/types'
 export const Authcode = defineMongooseModel<AuthCodeSchema>({
-  name: 'authcode',
+  name: 'Authcode',
   schema: {
     /** 用户 ID */
     userId: {

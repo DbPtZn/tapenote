@@ -10,6 +10,7 @@ interface ModelType {
   site: string
   code: string
   penname: string
+  editionId: string
   title: string // 标题
   email: string // 邮箱
   blog: string // 博客地址
@@ -24,6 +25,7 @@ const props = defineProps<{
   site?: string
   code?: string
   penname?: string
+  editionId?: string
   title: string
   content: string // 内容
   audio?: string
@@ -43,6 +45,7 @@ const model = ref<ModelType>({
   site: props.site || '',
   code: props.code || '',
   penname: props.penname || '佚名',
+  editionId: props.editionId || '',
   title: props.title || '',
   email: props.email || '',
   blog: props.blog || '',
@@ -53,6 +56,7 @@ const rules: FormRules = {
   site: [],
   code: [],
   penname: [],
+  editionId: [],
   title: [
     {
       required: true,
@@ -123,6 +127,7 @@ function handleSubmit(e: MouseEvent) {
       // }
       pack
         .submit({
+          editionId: model.value.editionId,
           title: model.value.title,
           content: props.content,
           audio: props.audio || '',
@@ -140,7 +145,7 @@ function handleSubmit(e: MouseEvent) {
           msg: model.value.msg
         })
         .then(res => {
-          console.error(res)
+          console.log(res)
           props.onResponse({
             error: false,
             msg: '投稿成功'
@@ -150,7 +155,7 @@ function handleSubmit(e: MouseEvent) {
           console.log(err)
           props.onResponse({ 
             error: true,
-            msg: '投稿失败'
+            msg: err?.response?.data || err?.message || '投稿失败'
           })
           // message.error('投稿失败')
         })
@@ -177,6 +182,9 @@ function handleSubmit(e: MouseEvent) {
         </n-form-item>
         <n-form-item path="penname" label="笔名">
           <n-input class="form-input" v-model:value="model.penname" type="text" placeholder="作品笔名" maxlength="18" show-count />
+        </n-form-item>
+        <n-form-item path="editionId" label="版号">
+          <n-input class="form-input" v-model:value="model.editionId" type="text" placeholder="版号（可不填）" maxlength="64" show-count />
         </n-form-item>
         <n-form-item path="title" label="标题">
           <n-input class="form-input" v-model:value="model.title" type="text" placeholder="作品标题不能为空" maxlength="32" show-count />

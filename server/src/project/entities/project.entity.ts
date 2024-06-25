@@ -66,6 +66,13 @@ export class Project {
   dirname: string // 文件夹路径
 
   @Column({
+    type: 'varchar',
+    length: 255,
+    default: ''
+  })
+  cover: string // 封面
+
+  @Column({
     type: 'text'
     // default: '未命名文档'
   })
@@ -255,6 +262,13 @@ export class Project {
     wordage: number // 字数
     filesize: number // 文件大小(包含音频文件、文本、图片)
   }
+
+  /** 预留字段 */
+  @Column({
+    type: 'varchar',
+    nullable: true
+  })
+  reserved: string
 
   /** 插入实体时设置创建时间 （仅在使用 save 方法进行更新时生效） */
   @BeforeInsert()

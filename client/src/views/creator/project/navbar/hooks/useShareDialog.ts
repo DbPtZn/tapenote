@@ -34,8 +34,6 @@ export function useShareDialog() {
         
         onResponse: ({ error, msg })=> {
           error ? message.error(msg) : message.success(msg)
-       
-          
         },
 
         onSubmit() {

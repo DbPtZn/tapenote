@@ -47,45 +47,41 @@ export default defineEventHandler(async (event) => {
       console.log('File uploaded:', name)
     })
 
-    form.parse(event.node.req, (err, fields, files) => {
+    form.parse(event.node.req, async (err, fields, files) => {
       if (err) {
-        console.error(err)
-        throw createError({
-          message: '投稿失败！',
-        })
+        console.log(err)
+        throw new Error('表单解析失败！')
       }
-      console.log(fields)
-      // console.log(files)
-      console.log(files['jsonDocs']?.[0].filepath) // json 文档数据（未解析状态）
-      // files
+      // console.log(fields)
+      // console.log(fields['type']?.[0])
+      // console.log(fields.penname?.[0])
+      // console.log(files['jsonDocs']?.[0].filepath) // json 文档数据（未解析状态）
+      if(!files['jsonDocs']?.[0].filepath) throw new Error('未提供有效文档内容！')
+      const data: CreateArticleDto = {
+        isParsed: false,
+        editorVersion: '',
+        authorizeId: authcode._id,
+        penname: fields.penname?.[0] || '佚名',
+        email: fields.email?.[0] || '',
+        blog: fields.blog?.[0] || '',
+        msg: fields.msg?.[0] || '',
+        type: fields.type?.[0] || undefined,
+        title: fields.title?.[0] || '',
+        content: files['jsonDocs']?.[0].filepath,
+        audio: files['audios']?.[0].filepath || '',
+      }
+      const article = await articleService.create(data, user._id)
+      if(article) {
+        event.node.res.statusCode = 200
+        event.node.res.end({ editionId: article._id })
+      } else {
+        event.node.res.statusCode = 400
+        event.node.res.end('投稿失败!')
+      }
     })
-
-    const data: CreateArticleDto = {
-      isParsed: false,
-      editorVersion: '',
-      authorizeId: authcode._id,
-      penname: '',
-      email: '',
-      blog: '',
-      msg: '',
-      type: undefined,
-      title: '',
-      content: '',
-      abbrev: '',
-      audio: '',
-      duration: 0,
-      promoterSequence: [],
-      keyframeSequence: [],
-      subtitleSequence: [],
-      subtitleKeyframeSequence: []
-    }
-    // event.node.res.statusCode = 200
-    // event.node.res.end('ok')
-    event.node.res.statusCode = 400
-    event.node.res.end('投稿失败!')
   } catch (error: any) {
-    console.error(error)
+    console.log(error)
     event.node.res.statusCode = 400
-    event.node.res.end('投稿失败!')
+    event.node.res.end(error.message)
   }
 })

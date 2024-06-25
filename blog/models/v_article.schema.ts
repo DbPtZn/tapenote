@@ -1,10 +1,15 @@
 import { Types } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
-import type { ArticleSchema } from '~/types'
+import type { VArticleSchema } from '~/types'
 import { RemovedEnum } from '~/enums'
-export const Article = defineMongooseModel<ArticleSchema>({
-  name: 'Article',
+export const VArticle = defineMongooseModel<VArticleSchema>({
+  name: 'VersionArticle',
   schema: {
+    primaryId: {
+      type: Types.ObjectId,
+      required: true,
+      ref: 'Article'
+    },
     /** 一个较为简短的 ID，用来有限制地查询作品文章 (仅为普通访客查询展示必要的文章信息) */
     UID: {
       type: String,
@@ -31,7 +36,7 @@ export const Article = defineMongooseModel<ArticleSchema>({
     isParsed: {
       type: Boolean,
       required: true,
-      default: false
+      default: true
     },
     /** 编辑器版本号 */
     editorVersion: {
@@ -151,7 +156,7 @@ export const Article = defineMongooseModel<ArticleSchema>({
       // 评论数量
       comments: { type: Number, default: 0 }
     },
-    // 创建时间
+    // 创建时间 也可作为版本创建时间
     createAt: {
       type: Date,
       default: new Date()

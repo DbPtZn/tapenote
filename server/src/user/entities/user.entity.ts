@@ -40,7 +40,10 @@ export class SubmissionConfig {
   desc: string
 }
 
-export class UserConfig {}
+export class UserConfig {
+  autosave?: boolean // 是否自动保存
+  saveInterval?: number // 自动保存间隔毫秒
+}
 
 @Entity()
 export class User {
@@ -166,6 +169,13 @@ export class User {
 
   @UpdateDateColumn()
   updateAt: Date // 更新时间
+
+  /** 预留字段 */
+  @Column({
+    type: 'simple-json',
+    nullable: true
+  })
+  reserved: string
 
   /** 插入实体时设置创建时间 */
   @BeforeInsert()

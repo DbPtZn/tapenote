@@ -21,9 +21,9 @@ export default defineEventHandler(async event => {
       // 通过上下文判断是否有uid
       if (typeof decoded === 'object') {
         event.context.auth = {
-          id: decoded.id,
-          account: decoded.account,
-          UID: decoded.UID
+          id: decoded?.id,
+          account: decoded?.account,
+          UID: decoded?.UID
         }
       }
     } catch (err) {

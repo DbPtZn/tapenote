@@ -43,6 +43,9 @@ interface ProductContent {
 // type PackData = ProductInfo & ProductContent
 
 interface PackData {
+  // 版号
+  editionId: string
+
   // -- 作品内容
   title: string
   content: string
@@ -253,13 +256,14 @@ export class Pack {
         const audioBlob = audioIndex === -1 ? null : files[audioIndex].file
         // const file = new File([product], 'product_' + Date.now() + '.json', { type: 'application/json' })
         // const blob = new Blob([file], { type: 'application/octet-stream' })
-        const { site, type, title, code, penname, email, blog, msg } = data
+        const { site, type, editionId, title, code, penname, email, blog, msg } = data
 
         const formData = new FormData()
         jsonBlob && formData.append('jsonDocs', jsonBlob, 'document.json')
         audioBlob && formData.append('audios', audioBlob, 'audio.wav')
 
         formData.append('type', type)
+        formData.append('editionId', editionId)
         formData.append('title', title)
         formData.append('code', code)
         formData.append('penname', penname)
@@ -271,18 +275,19 @@ export class Pack {
           method: 'post',
           url: `${site}&${code}`,
           data: formData,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            // 'authorization': `Bearer ${code}`,
-            // 'auth-code': `Bearer ${code}`,
-          },
+          // headers: {
+          //   'Content-Type': 'multipart/form-data',
+          //   // 'authorization': `Bearer ${code}`,
+          //   // 'auth-code': `Bearer ${code}`,
+          // },
         })
           .then(res => {
-            console.log(res)
+            // console.log(res)
+            if(!res) throw new Error('投稿失败：推送目标可能无效！')
             resolve(res)
           })
           .catch(error => {
-            console.log(error)
+            // console.log(error)
             reject(error)
           })
       })
