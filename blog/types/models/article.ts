@@ -4,11 +4,14 @@ import type { RemovedEnum } from '~/enums'
 export interface ArticleSchema {
   _id: ObjectId
   UID: string
+  editionId: string
+  fromEditionId: string
   userId: ObjectId
   authorizeId: ObjectId
   columnId: ObjectId
-  type: 'note' | 'course' | unknown
+  type: 'note' | 'course' | 'other'
   isParsed: boolean
+  msg: string
   editorVersion: string
   cover: string
   title: string
@@ -23,15 +26,15 @@ export interface ArticleSchema {
   isPublish: boolean
   removed: RemovedEnum
   author: {
-    penname: string
-    avatar: string
-    email: string
-    website: string
+    penname?: string
+    avatar?: string
+    email?: string
+    blog?: string
   }
   detail: {
-    wordage: number
-    duration: number
-    fileSize: number
+    wordage?: number
+    duration?: number
+    fileSize?: number
   }
   meta: {
     views: number

@@ -131,6 +131,7 @@ export class ProjectService {
         wordage: data.wordage || 0,
         filesize: data.filesize || 0
       }
+      project.submissionHistory = []
 
       let _audiopath = ''
       switch (lib) {

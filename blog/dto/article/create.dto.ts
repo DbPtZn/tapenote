@@ -5,6 +5,8 @@ export interface CreateArticleDto {
 
   editorVersion: string // 编辑器版本号
 
+  UID: string // 用户 UID
+
   authorizeId: ObjectId // 授权码
 
   penname: string // 笔名
@@ -15,7 +17,7 @@ export interface CreateArticleDto {
 
   msg: string // 附加信息(在未分配时显示，分配后清除)
 
-  type: 'course' | 'note' | unknown // 作品的类型
+  type: 'course' | 'note' | 'other' // 作品的类型
 
   title: string // 标题
 

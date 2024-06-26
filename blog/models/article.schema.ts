@@ -8,8 +8,18 @@ export const Article = defineMongooseModel<ArticleSchema>({
     /** 一个较为简短的 ID，用来有限制地查询作品文章 (仅为普通访客查询展示必要的文章信息) */
     UID: {
       type: String,
-      require: true,
+      require: true
+    },
+    /** 版号：每个新项目拥有一个唯一的版号（更新稿件没有独立版号） */
+    editionId: {
+      type: String,
+      required: false,
       unique: true
+    },
+    /** 隶属版号：来自项目的更新稿件会将此字段指向项目版号 */
+    fromEditionId: {
+      type: String,
+      required: false
     },
     /** 用户 ID */
     userId: {
@@ -33,6 +43,11 @@ export const Article = defineMongooseModel<ArticleSchema>({
       required: true,
       default: false
     },
+    /** 投稿时携带的消息 */
+    msg: {
+      type: String,
+      default: ''
+    },
     /** 编辑器版本号 */
     editorVersion: {
       type: String,
@@ -42,6 +57,12 @@ export const Article = defineMongooseModel<ArticleSchema>({
     cover: {
       type: String,
       default: ''
+    },
+    /** 类型 */
+    type: {
+      type: String,
+      required: true,
+      enum: ['note', 'course', 'other']
     },
     /** 标题 */
     title: {
@@ -113,8 +134,8 @@ export const Article = defineMongooseModel<ArticleSchema>({
         require: false,
         default: ''
       },
-      /** 个人主页 */
-      website: {
+      /** 个人博客 */
+      blog: {
         type: String,
         require: false,
         default: ''

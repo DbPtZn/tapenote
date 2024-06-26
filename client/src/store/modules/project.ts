@@ -39,6 +39,19 @@ interface Detial {
   penname: string; email: string; homepage: string, wordage: number; filesize: number
 }
 
+/** 投稿历史 */
+interface SubmissionHistory {
+  editionId: string
+  code: string
+  title: string
+  content?: string
+  penname: string
+  email: string
+  blog: string
+  msg: string
+  date: string
+}
+
 export interface Project {
   account: string
   hostname: string
@@ -70,6 +83,8 @@ export interface Project {
   annotations: Array<any>
 
   detial: Detial
+  submissionHistory: SubmissionHistory[]
+
   createAt: string
   updateAt: string
 }
@@ -192,6 +207,7 @@ export const useProjectStore = defineStore('projectStore', {
         sidenote: data.sidenote || '',
         annotations: data.annotations || [],
         detial: data.detial || { penname: '', email: '', homepage: '', wordage: 0, filesize: 0 },
+        submissionHistory: data.submissionHistory || [],
         createAt: data.createAt || '',
         updateAt: data.updateAt || ''
       }

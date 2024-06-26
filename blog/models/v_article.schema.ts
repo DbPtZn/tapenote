@@ -13,8 +13,7 @@ export const VArticle = defineMongooseModel<VArticleSchema>({
     /** 一个较为简短的 ID，用来有限制地查询作品文章 (仅为普通访客查询展示必要的文章信息) */
     UID: {
       type: String,
-      require: true,
-      unique: true
+      require: true
     },
     /** 用户 ID */
     userId: {

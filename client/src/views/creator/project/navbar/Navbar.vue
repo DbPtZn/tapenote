@@ -10,7 +10,7 @@ import { CreatorShell } from '../../shell'
 import { useShell } from '@/renderer'
 import dayjs from 'dayjs'
 import { Flip, Subtitles, SubtitlesOff, Download, MoreHoriz, TextSharp, DpzButton } from '@/components'
-import { useShareDialog } from './hooks/useShareDialog'
+import { useSubmissionDialog } from './hooks/useSubmissionDialog'
 import { TooltipButton } from './private/_index'
 import { AutorenewOutlined, DownloadRound } from '@vicons/material'
 import { useDownloadDialog } from './hooks/useDownload'
@@ -117,7 +117,7 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
     })
   }
 }
-const { handleExpandShareDialog  } = useShareDialog()
+const { handleExpandShareDialog  } = useSubmissionDialog()
 const { handleDownloadDialog } = useDownloadDialog()
 onMounted(() => {
   // rootRef.value.innerHTML = '&#x1F601'

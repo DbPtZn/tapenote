@@ -31,6 +31,19 @@ export interface ProjectBGM {
   duration: number
 }
 
+/** 投稿历史 */
+export interface SubmissionHistory {
+  editionId: string
+  code: string
+  title: string
+  content?: string
+  penname: string
+  email: string
+  blog: string
+  msg: string
+  date: Date
+}
+
 @Entity()
 export class Project {
   @PrimaryGeneratedColumn('uuid')
@@ -262,6 +275,12 @@ export class Project {
     wordage: number // 字数
     filesize: number // 文件大小(包含音频文件、文本、图片)
   }
+
+  @Column({
+    type: 'simple-json',
+    nullable: true
+  })
+  submissionHistory: SubmissionHistory[]
 
   /** 预留字段 */
   @Column({

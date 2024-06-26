@@ -247,7 +247,7 @@ export class Pack {
   }
 
   submit(data: PackData) {
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       this.toFiles(data).then(files => {
         // const map = mergeMaps<Map<string, Blob>>(maps)
         const jsonIndex = files.findIndex(item => item.type === 'json')
@@ -282,9 +282,10 @@ export class Pack {
           // },
         })
           .then(res => {
-            // console.log(res)
+            console.log(res)
             if(!res) throw new Error('投稿失败：推送目标可能无效！')
-            resolve(res)
+            const editionId = res.data.editionId
+            resolve(editionId)
           })
           .catch(error => {
             // console.log(error)

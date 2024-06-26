@@ -1,29 +1,40 @@
 import type { ObjectId } from 'mongoose'
 import type { CreateArticleDto } from '~/dto'
 import { Article } from '~/models'
-
+import * as UUID from 'uuid'
+import type { ArticleSchema, ArticleType } from '~/types'
 class ArticleService {
   articlesRepository: typeof Article
   constructor() {
     this.articlesRepository = Article
   }
 
-  create(data: CreateArticleDto, userId: ObjectId) {
-    const { isParsed, editorVersion, authorizeId, penname, email, blog, msg, type, title, content, audio } = data
+
+  /** 查询文章版本是否存在 */
+  queryEditionExists(editionId: string) {
+    return this.articlesRepository.exists({ editionId })
+  }
+
+  create(dto: CreateArticleDto, userId: ObjectId, fromEditionId: string) {
+    const { isParsed, editorVersion, authorizeId, penname, email, blog, msg, type, title, content, audio } = dto
     try {
       return this.articlesRepository.create({
         isParsed,
-        userId,
+        editionId: !fromEditionId ? UUID.v4() : null,
+        fromEditionId : fromEditionId ? fromEditionId: null,
         editorVersion,
         authorizeId,
-        penname,
-        email,
-        blog,
         msg,
         type,
         title,
         content,
         audio,
+        author: {
+          penname,
+          email,
+          blog,
+        },
+        userId,
       })
     } catch (error) {}
   }

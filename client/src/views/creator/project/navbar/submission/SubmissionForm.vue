@@ -6,6 +6,8 @@ import { LibraryEnum } from '@/enums'
 import { SelectBaseOption } from 'naive-ui/es/select/src/interface'
 import useStore from '@/store'
 import { pack } from './pack'
+import dayjs from 'dayjs'
+type SubmissionHistory = ReturnType<typeof useStore>['projectStore']['data'][0]['submissionHistory'][0]
 interface ModelType {
   site: string
   code: string
@@ -36,8 +38,12 @@ const props = defineProps<{
   subtitleKeyframeSequence?: number[]
   email?: string
   blog?: string
-  onResponse: (result: { error: boolean, msg: string }) => void
-  onSubmit: () => void
+  // onResponse: (result: { error: boolean, msg: string }) => void
+  // onSuccess: (result: SubmissionHistory) => void
+}>()
+const emits = defineEmits<{
+  response: [result: { error: boolean, msg: string }]
+  success: [SubmissionHistory]
 }>()
 const formRef = ref<FormInst | null>(null)
 /** 表单数据 */
@@ -116,15 +122,6 @@ function handleSubmit(e: MouseEvent) {
   e.preventDefault()
   formRef.value?.validate(errors => {
     if (!errors) {
-      // props.submit(model.value)
-      // let content = ''
-      // switch (props.type) {
-      //   case 'note':
-      //     // content = noteStore.
-      //     break
-      //   case 'course':
-      //     break
-      // }
       pack
         .submit({
           editionId: model.value.editionId,
@@ -144,16 +141,26 @@ function handleSubmit(e: MouseEvent) {
           blog: model.value.blog,
           msg: model.value.msg
         })
-        .then(res => {
-          console.log(res)
-          props.onResponse({
+        .then(editionId => {
+          emits('response', {
             error: false,
             msg: '投稿成功'
+          })
+          console.log(editionId)
+          emits('success', {
+            editionId: editionId,
+            code: model.value.code || '',
+            title: model.value.title ||'',
+            penname: model.value.penname || '',
+            email: model.value.email || '',
+            blog: model.value.blog || '',
+            msg: model.value.msg || '',
+            date: dayjs().format('YYYY-MM-DD HH:mm:ss')
           })
         })
         .catch(err => {
           console.log(err)
-          props.onResponse({ 
+          emits('response', { 
             error: true,
             msg: err?.response?.data || err?.message || '投稿失败'
           })
@@ -163,7 +170,6 @@ function handleSubmit(e: MouseEvent) {
       console.log(errors)
     }
   })
-  props.onSubmit()
 }
 </script>
 

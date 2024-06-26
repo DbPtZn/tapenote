@@ -3,8 +3,8 @@ import { h } from 'vue'
 import SubmissionForm from '../submission/SubmissionForm.vue'
 import useStore from '@/store'
 import { ShareFilled } from '@vicons/material'
-
-export function useShareDialog() {
+type SubmissionHistory = ReturnType<typeof useStore>['projectStore']['data'][0]['submissionHistory'][0]
+export function useSubmissionDialog() {
   const dialog = useDialog()
   const message = useMessage()
   const { projectStore, userStore } = useStore()
@@ -31,12 +31,11 @@ export function useShareDialog() {
         subtitleSequence: data.subtitleSequence,
         subtitleKeyframeSequence: data.subtitleKeyframeSequence,
         
-        
         onResponse: ({ error, msg })=> {
           error ? message.error(msg) : message.success(msg)
         },
-
-        onSubmit() {
+        onSuccess(res) {
+          console.log(res)
           // dialog.destroyAll()
         }
       })

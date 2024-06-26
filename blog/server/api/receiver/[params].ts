@@ -1,6 +1,8 @@
 import { authcodeService, userService, articleService } from '~/services'
 import formidable from 'formidable'
 import { CreateArticleDto } from '~/dto'
+import { Types } from 'mongoose'
+import { H3Event, EventHandlerRequest } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -47,41 +49,56 @@ export default defineEventHandler(async (event) => {
       console.log('File uploaded:', name)
     })
 
-    form.parse(event.node.req, async (err, fields, files) => {
-      if (err) {
-        console.log(err)
-        throw new Error('表单解析失败！')
-      }
-      // console.log(fields)
-      // console.log(fields['type']?.[0])
-      // console.log(fields.penname?.[0])
-      // console.log(files['jsonDocs']?.[0].filepath) // json 文档数据（未解析状态）
-      if(!files['jsonDocs']?.[0].filepath) throw new Error('未提供有效文档内容！')
-      const data: CreateArticleDto = {
-        isParsed: false,
-        editorVersion: '',
-        authorizeId: authcode._id,
-        penname: fields.penname?.[0] || '佚名',
-        email: fields.email?.[0] || '',
-        blog: fields.blog?.[0] || '',
-        msg: fields.msg?.[0] || '',
-        type: fields.type?.[0] || undefined,
-        title: fields.title?.[0] || '',
-        content: files['jsonDocs']?.[0].filepath,
-        audio: files['audios']?.[0].filepath || '',
-      }
-      const article = await articleService.create(data, user._id)
-      if(article) {
-        event.node.res.statusCode = 200
-        event.node.res.end({ editionId: article._id })
-      } else {
-        event.node.res.statusCode = 400
-        event.node.res.end('投稿失败!')
-      }
+    const formParse = () => new Promise<{ fields: any, files: any }>((resolve, reject) => {
+      form.parse(event.node.req, (err, fields, files) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve({ fields, files })
+        }
+      })
     })
+    const { fields, files } = await formParse()
+
+    // 检测是否提供有效内容
+    if(!files['jsonDocs']?.[0].filepath) throw new Error('未提供有效文档内容！')
+    // console.log(files['jsonDocs']?.[0].filepath) // json 文档数据（未解析状态）
+
+    const data: CreateArticleDto = {
+      isParsed: false,
+      editorVersion: '',
+      UID: user.UID,
+      authorizeId: authcode._id,
+      penname: fields.penname?.[0] || '佚名',
+      email: fields.email?.[0] || '',
+      blog: fields.blog?.[0] || '',
+      msg: fields.msg?.[0] || '',
+      type: fields.type?.[0] as any || 'other',
+      title: fields.title?.[0] || '',
+      content: files['jsonDocs']?.[0].filepath,
+      audio: files['audios']?.[0].filepath || '',
+    }
+
+    // 检测是否属于更新投稿
+    let fromEditionId = ''
+    if(fields.editionId?.[0]) {
+      const result = await articleService.queryEditionExists(fields.editionId?.[0])
+      if(result) {
+        fromEditionId = fields.editionId?.[0]
+      }
+    }
+
+    const article = await articleService.create(data, user._id, fromEditionId)
+    if(article) {
+      console.log('收稿成功！')
+      return { editionId: article.editionId }
+    } else {
+      throw new Error('投稿失败，无法创建项目！')
+    }
   } catch (error: any) {
     console.log(error)
     event.node.res.statusCode = 400
     event.node.res.end(error.message)
+    return { error: error.message }
   }
 })
