@@ -7,6 +7,7 @@ import { UpdateTitleDto } from './dto/update-title.dto'
 import { UpdateContentDto } from './dto/update-content.dto'
 import { UpdateSidenoteContentDto } from './dto/update-sidenote-content.dto'
 import { UpdateSpeakerHistoryDto } from './dto/update.dto'
+import { AddSubmissionHistoryDto } from './dto/add-submission.dts'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('project')
@@ -157,6 +158,27 @@ export class ProjectController {
   async updateSpeakerHistory(@Body() updateSpeakerHistoryDto: UpdateSpeakerHistoryDto, @Req() req, @Res() res) {
     try {
       const result = await this.projectService.updateSpeakerHistory(updateSpeakerHistoryDto, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error)
+    }
+  }
+
+  @Patch(`${REST.U}/submission/add`)
+  async addSubmissionHistory(@Body() addSubmissionHistoryDto: AddSubmissionHistoryDto, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.addSubmissionHistory(addSubmissionHistoryDto, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error)
+    }
+  }
+
+  @Patch(`${REST.U}/submission/remove/:target`)
+  async removeSubmissionHistory(@Param('target') target: string, @Req() req, @Res() res) {
+    try {
+      const [id, key] = target.split('&')
+      const result = await this.projectService.removeSubmissionHistory(id, key, req.user.id)
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error)

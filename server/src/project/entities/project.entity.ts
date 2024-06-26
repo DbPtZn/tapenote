@@ -19,8 +19,8 @@ export interface Annotation {
   id: string
   content: string
   annotator: string
-  updateAt: Date
-  createAt: Date
+  updateAt: string
+  createAt: string
 }
 export interface ProjectBGM {
   id: string
@@ -33,6 +33,8 @@ export interface ProjectBGM {
 
 /** 投稿历史 */
 export interface SubmissionHistory {
+  key: string
+  receiver: string
   editionId: string
   code: string
   title: string
@@ -41,7 +43,7 @@ export interface SubmissionHistory {
   email: string
   blog: string
   msg: string
-  date: Date
+  date: string
 }
 
 @Entity()

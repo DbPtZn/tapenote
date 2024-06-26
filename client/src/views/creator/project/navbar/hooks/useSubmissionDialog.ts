@@ -3,7 +3,6 @@ import { h } from 'vue'
 import SubmissionForm from '../submission/SubmissionForm.vue'
 import useStore from '@/store'
 import { ShareFilled } from '@vicons/material'
-type SubmissionHistory = ReturnType<typeof useStore>['projectStore']['data'][0]['submissionHistory'][0]
 export function useSubmissionDialog() {
   const dialog = useDialog()
   const message = useMessage()
@@ -33,10 +32,11 @@ export function useSubmissionDialog() {
         
         onResponse: ({ error, msg })=> {
           error ? message.error(msg) : message.success(msg)
-        },
-        onSuccess(res) {
-          console.log(res)
           // dialog.destroyAll()
+        },
+        onSuccess(data) {
+          console.log(data)
+          projectStore.addSubmissionHistory({id, ...data}, userStore.account, userStore.hostname)
         }
       })
     })

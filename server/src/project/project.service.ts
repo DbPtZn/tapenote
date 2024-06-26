@@ -19,6 +19,8 @@ import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { FolderService } from 'src/folder/folder.service'
 import { UpdateSpeakerHistoryDto } from './dto/update.dto'
+import { AddSubmissionHistoryDto } from './dto/add-submission.dts'
+import crypto from 'crypto'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -761,6 +763,43 @@ export class ProjectService {
   //   const project = this.projectsRepository.findOneBy({ id, userId })
   //   project
   // }
+
+  /** -------------------------------- 投稿 -------------------------------- */
+  /** 添加投稿历史记录 */
+  async addSubmissionHistory(dto: AddSubmissionHistoryDto, userId: string) {
+    const { id, ...data } = dto
+    try {
+      const project = await this.projectsRepository.findOneBy({ id, userId })
+      const key = Date.now().toString(16)
+      const history = {
+        key,
+        ...data
+      }
+      project.submissionHistory ? project.submissionHistory.push(history) : (project.submissionHistory = [history])
+      await this.projectsRepository.save(project)
+      this.userlogger.log(`添加投稿历史记录成功,项目id:${id}`)
+      return { key }
+    } catch (error) {
+      this.userlogger.error(`添加投稿历史记录失败,项目id:${id}`, error.message)
+      throw error
+    }
+  }
+
+  async removeSubmissionHistory(id: string, key: string, userId: string) {
+    try {
+      const project = await this.projectsRepository.findOneBy({ id, userId })
+      const index = project.submissionHistory.findIndex(item => item.key === key)
+      if (index === -1) throw new Error('Submission history not found!')
+      project.submissionHistory.splice(index, 1)
+      const result = await this.projectsRepository.save(project)
+      this.userlogger.log(`删除投稿历史记录成功,项目id:${id}`)
+      return { updateAt: result.updateAt }
+    }
+    catch (error) {
+      this.userlogger.error(`删除投稿历史记录失败,项目id:${id}`, error.message)
+      throw error
+    }
+  }
 
   /** -------------------------------- 片段 ------------------------------------ */
   async updateSequence(args: {

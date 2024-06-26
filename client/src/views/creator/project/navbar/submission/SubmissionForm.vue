@@ -7,7 +7,7 @@ import { SelectBaseOption } from 'naive-ui/es/select/src/interface'
 import useStore from '@/store'
 import { pack } from './pack'
 import dayjs from 'dayjs'
-type SubmissionHistory = ReturnType<typeof useStore>['projectStore']['data'][0]['submissionHistory'][0]
+type SubmissionHistory = Omit<ReturnType<typeof useStore>['projectStore']['data'][0]['submissionHistory'][0], 'key'>
 interface ModelType {
   site: string
   code: string
@@ -148,6 +148,7 @@ function handleSubmit(e: MouseEvent) {
           })
           console.log(editionId)
           emits('success', {
+            receiver: model.value.site || '',
             editionId: editionId,
             code: model.value.code || '',
             title: model.value.title ||'',

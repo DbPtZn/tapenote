@@ -33,16 +33,18 @@ interface UpdateSpeakerHistoryDto {
   speakerId: string
 }
 
-
-interface SubmitProjectDto {
+interface AddSubmissionHistoryDto {
   id: string
-  site: string
+  receiver: string
+  editionId: string
   code: string
-  penname: string
   title: string
+  content?: string
+  penname: string
   email: string
   blog: string
   msg: string
+  date: string
 }
 
 
@@ -75,13 +77,20 @@ export const project = (axios: AxiosInstance) => {
     updateContent<T>(dto: UpdateContentDto) {
       return axios.patch<T>('/project/update/content', dto)
     },
-      /** sidenote update */
+    /** sidenote update */
     updateSidenoteContent<T>(dto: UpdateSidenoteContentDto) {
       return axios.patch<T>('/project/update/sidenote/content', dto)
     },
     updateSpeakerHistory<T>(dto: UpdateSpeakerHistoryDto) {
       return axios.patch<T>('/project/update/speaker/history', dto)
     },
+    addSubmissionHistory<T>(dto: AddSubmissionHistoryDto) {
+      return axios.post<T>('/project/update/submission/add', dto)
+    },
+    removeSubmissionHistory<T>(id: string, key: string) {
+      return axios.delete<T>('/project/update/submission/remove' + id + '&' + key)
+    },
+
     /** 批量投稿（待开发） */
     // submit<T>(dto: SubmitProjectDto) {
     //   return axios.post<T>('/project/submission', dto)

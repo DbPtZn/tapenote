@@ -41,6 +41,8 @@ interface Detial {
 
 /** 投稿历史 */
 interface SubmissionHistory {
+  key: string
+  receiver: string
   editionId: string
   code: string
   title: string
@@ -366,6 +368,22 @@ export const useProjectStore = defineStore('projectStore', {
       })
       return this.creatorApi(account, hostname).project.updateSpeakerHistory<{ updateAt: string }>(params).then(res => {
         this.setUpdateAt(id, res.data.updateAt)
+      })
+    },
+    addSubmissionHistory(params: Parameters<typeof CreatorApi.prototype.project.addSubmissionHistory>[0], account: string, hostname: string){
+      return this.creatorApi(account, hostname).project.addSubmissionHistory<{ key: string }>(params).then(res => {
+        const key = res.data.key
+        const { id, ...data } = params
+        this.get(params.id)?.submissionHistory.unshift({key, ...data})
+      })
+    },
+    removeSubmissionHistory(id: string, key: string, account: string, hostname: string){
+      return this.creatorApi(account, hostname).project.removeSubmissionHistory<{ updateAt: string }>(id, key).then(res => {
+        this.setUpdateAt(id, res.data.updateAt)
+        const index = this.get(id)?.submissionHistory.findIndex(i => i.key === key)
+        if (index !== -1 && index !== undefined) {
+          this.get(id)?.submissionHistory.splice(index, 1)
+        }
       })
     },
     /** 清理缓存 */
