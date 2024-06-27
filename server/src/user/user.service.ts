@@ -186,6 +186,7 @@ export class UserService {
         homepage: user.homepage,
         desc: user.desc,
         dir: user.dir,
+        config: user.config,
         submissionConfig: user.submissionConfig,
         subscriptionConfig: user.subscriptionConfig
       }
@@ -249,6 +250,7 @@ export class UserService {
   async updateConfig(updateConfigDto: UpdateUserConfigDto, id: string) {
     try {
       const { autosave, saveInterval } = updateConfigDto
+      console.log(updateConfigDto)
       const user = await this.usersRepository.findOneBy({ id })
       user.config = {
         autosave: autosave,

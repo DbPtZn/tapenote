@@ -70,6 +70,7 @@ export const useUserStore = defineStore('userStore', {
     updateConfig(params: Parameters<typeof CreatorApi.prototype.user.updateConfig>[0]) {
       return this.creatorApi().user.updateConfig(params).then(res => {
         this.config = params
+        console.log(this.$state)
         this.saveCache() // 更新缓存
       })
     },

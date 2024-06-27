@@ -30,10 +30,12 @@ interface ModelType {
 }
 const inElectron = !!window.electronAPI
 // electron 环境下向主进程询问本地服务的端口号
+let localhost = ''
 inElectron &&
   window.electronAPI.getPort().then(port => {
     console.log('当前本地服务监听的端口：' + port)
     model.value.hostname = `http://localhost:${port}`
+    localhost = `http://localhost:${port}`
   })
 
 const router = useRouter()
@@ -90,7 +92,6 @@ const submit = () => {
   formRef.value?.validate(async errors => {
     if (!errors) {
       // 先判断是否已经登录
-      // const result = userStore.queryCache(model.value.account, model.value.hostname)
       const result = userListStore.get(model.value.account, model.value.hostname)
       if (result) {
         message.info('该用户已登录')
@@ -125,7 +126,7 @@ const loginRef = ref()
 let sub: Subscription
 onMounted(() => {
   sub = fromEvent<KeyboardEvent>(loginRef.value, 'keypress').subscribe(ev => {
-    console.log(ev)
+    // console.log(ev)
     if(ev.key === "Enter") {
       submit()
     }
@@ -180,14 +181,17 @@ function handleRecordPassword(value) {
 const isMenuShow = ref(false)
 function handleMenuShow() {
   isMenuShow.value = !isMenuShow.value
+  isAutoCompleteOptionsShow.value = false
 }
 
 let loginInfoData: Awaited<ReturnType<typeof getLoginInfoData>> = []
+const loginData = ref<Awaited<ReturnType<typeof getLoginInfoData>>>([])
 const options = ref<(DropdownOption | DropdownGroupOption)[]>([])
 onMounted(async () => {
   /** In Electron */
   if (inElectron) {
     loginInfoData = await getLoginInfoData()
+    loginData.value = loginInfoData
     options.value = loginInfoData.map(item => {
       return {
         key: item.key,
@@ -240,7 +244,7 @@ async function getLoginInfoData() {
   return options
 }
 
-function renderOption(props: { node: VNode; option: DropdownOption | DropdownGroupOption }) {
+function renderOption(props: { node: VNode; option: DropdownOption | DropdownGroupOption | SelectOption | SelectGroupOption }) {
   const { option } = props
   return h(LoginInfoCard, {
     avatar: option.avatar as string || './avatar03.png',
@@ -248,15 +252,21 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
     hostname: option.hostname as string,
     onSelected: (account, hostname) => {
       model.value.account = account
-      model.value.hostname = hostname
+      // 本地登录时，原历史记录的端口可能被占用了, 所以自动替换成默认端口
+      if(localhost !== '' && hostname !== localhost) {
+        model.value.hostname = localhost
+      } else {
+        model.value.hostname = hostname
+      }
       model.value.password = option.pwd as string
       recordAccount.value = true
       recordPassword.value = !!option.pwd
       isMenuShow.value = false
+      isAutoCompleteOptionsShow.value = false
     },
     onClose: (account, hostname) => {
       const key = `Record:${account}&${hostname}`
-      console.log(window.electronAPI.removeLoginInfo)
+      // console.log(window.electronAPI.removeLoginInfo)
       window.electronAPI.removeLoginInfo(key).then(result => {
         if(result) {
           options.value.some((item, index, arr) => {
@@ -269,6 +279,37 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
       })
     }
   })
+}
+
+const autoCompleteOptions = computed(() => {
+  return loginData.value.filter(item => {
+    if(item.account.includes(model.value.account)) {
+      return true
+    }
+  }).map(item => {
+    return {
+      label: item.account,
+      value: item.account,
+      key: item.key,
+      avatar: item.avatar,
+      hostname: item.hostname,
+      pwd: item.pwd
+    }
+  })
+})
+const isAutoCompleteOptionsShow = ref(false)
+function handleShow(value: string) {
+  return isAutoCompleteOptionsShow.value
+}
+function handleBlur() {
+  isAutoCompleteOptionsShow.value = false
+}
+function handleUpdate(value: string | null) {
+  if(value && value.length > 0) {
+    isAutoCompleteOptionsShow.value = true
+  } else {
+    isAutoCompleteOptionsShow.value = false
+  }
 }
 </script>
 
@@ -285,7 +326,38 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
             <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" clearable />
           </n-form-item>
           <n-form-item path="account" label="账号">
-            <n-input class="form-input" v-model:value="model.account" placeholder="帐号">
+            <n-auto-complete
+              class="form-input"
+              v-model:value="model.account"
+              placeholder="帐号"
+              :get-show="handleShow"
+              :options="autoCompleteOptions"
+              :render-option="renderOption"
+              @blur="handleBlur"
+              @update:value="handleUpdate"
+              @select="isAutoCompleteOptionsShow = false"
+            >
+              <template #suffix>
+                <n-dropdown
+                  v-if="inElectron"
+                  trigger="click"
+                  :show="isMenuShow && options.length > 0"
+                  :options="options"
+                  :render-option="renderOption"
+                  :animated="false"
+                  :placement="'bottom-end'"
+                  :style="{ marginRight: '-12px', marginTop: '9px' }"
+                  :width="280"
+                  @clickoutside="isMenuShow = false"
+                >
+                  <div class="input-suffix" @click.stop.prevent="handleMenuShow">
+                    <n-icon :component="KeyboardArrowUpRound" v-if="isMenuShow" size="18" />
+                    <n-icon :component="KeyboardArrowDownRound" v-else size="18" />
+                  </div>
+                </n-dropdown>
+              </template>
+            </n-auto-complete>
+            <!-- <n-input class="form-input" v-model:value="model.account" placeholder="帐号">
               <template #suffix>
                 <n-dropdown
                   v-if="inElectron"
@@ -304,7 +376,7 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
                   </div>
                 </n-dropdown>
               </template>
-            </n-input>
+            </n-input> -->
           </n-form-item>
           <n-form-item path="password" label="密码">
             <n-input class="form-input" v-model:value="model.password" type="password" placeholder="密码" clearable/>
