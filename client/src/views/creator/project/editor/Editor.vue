@@ -21,7 +21,7 @@ const props = defineProps<{
   hostname: string
   readonly: () => boolean
 }>()
-const { projectStore, folderStore } = useStore()
+const { projectStore, folderStore, userStore } = useStore()
 const themeVars = useThemeVars()
 // const loadingBar = useLoadingBar()
 const message = useMessage()
@@ -42,6 +42,8 @@ const state = reactive({
   isSubtitleShow: true, //computed(() => bridge.habit.state.subtitle.isShow),
   subtitle: ''
 })
+const autosave = computed(() => userStore.config.autosave) // 自动保存
+const saveInterval = computed(() => userStore.config.saveInterval) // 自动保存的间隔
 onBeforeMount(() => {
   // loadingBar.start() // 加载条开始
 })
@@ -72,18 +74,6 @@ useEditor({
       editor.onChange.subscribe(() => {
         data.value!.isContentUpdating = true
       }),
-      editor.onChange.pipe(debounceTime(2000)).subscribe(() => {
-        if(props.readonly()) return
-        const content = editor.getHTML()
-        if(lastContent === content) {
-          data.value!.isContentUpdating = false
-          return
-        }
-        // console.log('更新 onSave')
-        handleContentSave(content, props.id, props.account, props.hostname)
-        lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
-        // 标题就不管 onSave 了，因为标题没有保存影响也比较小
-      }),
       editor.onSave.subscribe(() => {
         data.value!.isContentUpdating = true
         if(props.readonly()) return
@@ -96,6 +86,20 @@ useEditor({
         handleContentSave(content, props.id, props.account, props.hostname).then(() => {
           message.success('保存成功')
         })
+        lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
+        // 标题就不管 onSave 了，因为标题没有保存影响也比较小
+      })
+    )
+    autosave.value && subs.push(
+      editor.onChange.pipe(debounceTime(saveInterval.value)).subscribe(() => {
+        if(props.readonly()) return
+        const content = editor.getHTML()
+        if(lastContent === content) {
+          data.value!.isContentUpdating = false
+          return
+        }
+        // console.log('更新 onSave')
+        handleContentSave(content, props.id, props.account, props.hostname)
         lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
         // 标题就不管 onSave 了，因为标题没有保存影响也比较小
       })

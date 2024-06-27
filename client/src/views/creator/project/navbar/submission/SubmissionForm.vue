@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { CascaderOption, FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui'
+import { CascaderOption, FormInst, FormItemRule, FormRules, NText, SelectRenderLabel, useMessage } from 'naive-ui'
 import { LibraryEnum } from '@/enums'
 import { SelectBaseOption } from 'naive-ui/es/select/src/interface'
 import useStore from '@/store'
@@ -21,8 +21,9 @@ interface ModelType {
   // dir: [] // 合辑目录（暂不实现）
 }
 type Response = ModelType & Record<string, unknown>
-const { userStore } = useStore()
+const { userStore, projectStore } = useStore()
 const props = defineProps<{
+  id: string // projectId
   type: 'note' | 'course'
   site?: string
   code?: string
@@ -87,6 +88,8 @@ const rules: FormRules = {
     }
   ]
 }
+
+/** 预设配置 */
 const value = ref('null')
 const options = computed(() => {
   const opts = userStore.submissionConfig.map(config => {
@@ -116,6 +119,57 @@ function handleSelect(value: Array<any> | string | number | null, option: Select
     }
   })
 }
+
+/** 历史记录 */
+const historyValue = ref()
+const historyOptions = computed(() => {
+  // return projectStore.get(props.id)?.submissionHistory.map(item => {
+  //   return {
+  //     label: item.title,
+  //     value: item.key
+  //   }
+  // })
+  // 标题 推送目的 版号 推送时间
+  return [
+    {
+      label: 'https://www.bilibili.com/video/BV1Ka411N7VN',
+      value: 'key123456',
+      date: '2024-6-27 8:08'
+    }
+  ]
+})
+const renderLabel: SelectRenderLabel = (option) => {
+      return h(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            alignItems: 'center'
+          }
+        },
+        [
+          h(
+            'div',
+            {
+              style: {
+                marginLeft: '12px',
+                padding: '4px 0'
+              }
+            },
+            [
+              h('div', null, [option.label as string]),
+              h(
+                NText,
+                { depth: 3, tag: 'div' },
+                {
+                  default: () => 'description'
+                }
+              )
+            ]
+          )
+        ]
+      )
+    }
 
 /** 提交 */
 function handleSubmit(e: MouseEvent) {
@@ -177,10 +231,18 @@ function handleSubmit(e: MouseEvent) {
 <template>
   <div class="folder-form">
     <n-space vertical>
-      <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
-        <n-form-item label="预设配置">
+      <n-tabs default-value="preset" size="large" :style="{ marginBottom: '12px' }" justify-content="start">
+        <n-tab-pane name="preset" tab="预设配置">
           <n-select v-model:value="value" :options="options" @update:value="handleSelect" />
-        </n-form-item>
+        </n-tab-pane>
+        <n-tab-pane name="history" tab="历史记录">
+          <n-select v-model:value="historyValue" :options="historyOptions" :render-label="renderLabel" />
+        </n-tab-pane>
+      </n-tabs>
+      <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
+        <!-- <n-form-item label="预设配置">
+          <n-select v-model:value="value" :options="options" @update:value="handleSelect" />
+        </n-form-item> -->
         <n-form-item path="site" label="推送目的">
           <n-input class="form-input" v-model:value="model.site" type="text" placeholder="目标博客地址" />
         </n-form-item>

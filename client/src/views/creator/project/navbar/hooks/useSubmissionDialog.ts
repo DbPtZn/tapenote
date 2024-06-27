@@ -16,6 +16,7 @@ export function useSubmissionDialog() {
       icon: () => h(NIcon, { component: ShareFilled, size: 24 }),
       title: '投稿',
       content: () => h(SubmissionForm, {
+        id: id,
         type: type,
 
         penname: userStore.nickname,

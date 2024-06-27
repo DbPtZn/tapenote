@@ -5,6 +5,7 @@ import type { DataTableColumns, FormItemRule, FormRules, UploadFileInfo } from '
 import { Main, Header } from '@/components'
 import useStore from '@/store'
 import UserInfo from './UserInfo.vue'
+import UserConfig from './UserConfig.vue'
 import Password from './Password.vue'
 import SubmissionConfig from './SubmissionConfig.vue'
 import SubscriptionConfig from './SubscriptionConfig.vue'
@@ -25,6 +26,10 @@ const subscriptionConfig = useSubscriptionConfig()
           <!-- 个人信息 -->
           <n-tab-pane name="userInfo" tab="个人信息">
             <UserInfo />
+          </n-tab-pane>
+          <!-- 习惯配置 -->
+          <n-tab-pane name="userConfig" tab="习惯配置">
+            <UserConfig />
           </n-tab-pane>
           <!-- 密码安全 -->
           <n-tab-pane name="password" tab="密码安全">

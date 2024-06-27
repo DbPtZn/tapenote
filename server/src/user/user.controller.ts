@@ -1,6 +1,11 @@
 import { Controller, Get, Body, Patch, Param, Req, Res, UseGuards } from '@nestjs/common'
 import { UserService } from './user.service'
-import { UpdateUserDto, UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
+import {
+  UpdateUserConfigDto,
+  UpdateUserDto,
+  UpdateUserSubmissionConfigDto,
+  UpdateUserSubscriptionConfigDto
+} from './dto/_api'
 import { AuthGuard } from '@nestjs/passport'
 import { REST } from 'src/enum'
 import { UpdateUserPwdDto } from './dto/update-pwd.dto'
@@ -64,6 +69,17 @@ export class UserController {
     try {
       const updateAt = await this.userService.updatePwd(updateUserPwdDto, req.user.id)
       res.status(200).send(updateAt)
+    } catch (error) {
+      res.status(400).send(error.message)
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch(`${REST.U}/config`)
+  async updateConfig(@Body() dto: UpdateUserConfigDto, @Req() req, @Res() res) {
+    try {
+      const result = await this.userService.updateConfig(dto, req.user.id)
+      res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)
     }

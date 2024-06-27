@@ -2,6 +2,7 @@
 // import axios from "axios"
 
 import { AxiosInstance } from "axios"
+import { update } from "lodash"
 
 interface UpdateUserDto {
   nickname: string
@@ -16,6 +17,12 @@ interface UpdateUserPwdDto {
   oldPwd: string
   newPwd: string
 }
+
+interface UpdateUserConfigDto {
+  autosave: boolean
+  saveInterval: number
+}
+
 
 interface UpdateUserSubmissionConfigDto {
   id: string
@@ -46,6 +53,9 @@ export const user = (axios: AxiosInstance) => {
     },
     updatePassword<T>(dto: UpdateUserPwdDto) {
       return axios.patch<T>('/user/update/pwd', dto)
+    },
+    updateConfig<T>(dto: UpdateUserConfigDto) {
+      return axios.patch<T>('/user/update/config', dto)
     },
     addSubmissionConfig<T>() {
       return axios.patch<T>('/user/update/submission/add')

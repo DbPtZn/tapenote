@@ -9,12 +9,13 @@ import { UpdateUserPwdDto } from './dto/update-pwd.dto'
 import fs from 'fs'
 import path from 'path'
 import { StorageService } from 'src/storage/storage.service'
-import { UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
+import { UpdateUserConfigDto, UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
 import * as UUID from 'uuid'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { LibraryEnum } from 'src/enum'
 import { Folder } from 'src/folder/entities/folder.entity'
+import { UserModule } from './user.module'
 
 const __rootdirname = process.cwd()
 @Injectable()
@@ -75,7 +76,10 @@ export class UserService {
       // 其它配置
       user.submissionConfig = []
       user.subscriptionConfig = []
-      user.config = {}
+      user.config = {
+        autosave: true, // 是否自动保存
+        saveInterval: 15000 // 自动保存间隔毫秒
+      }
 
       // 使用事务来确保所有操作要么全部成功，要么全部撤销
       const queryRunner = this.dataSource.createQueryRunner()
@@ -238,6 +242,21 @@ export class UserService {
       }
     } catch (error) {
       this.userLogger.error(`更新用户密码失败！原因：${error.message} `)
+      throw error
+    }
+  }
+
+  async updateConfig(updateConfigDto: UpdateUserConfigDto, id: string) {
+    try {
+      const { autosave, saveInterval } = updateConfigDto
+      const user = await this.usersRepository.findOneBy({ id })
+      user.config = {
+        autosave: autosave,
+        saveInterval: saveInterval
+      }
+      await this.usersRepository.save(user)
+      return 'Update user config successful'
+    } catch (error) {
       throw error
     }
   }

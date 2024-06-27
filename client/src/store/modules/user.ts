@@ -24,6 +24,10 @@ export const useUserStore = defineStore('userStore', {
         course: '',
         procedure: ''
       },
+      config: {
+        autosave: true, 
+        saveInterval: 15000
+      },
       submissionConfig: [],
       subscriptionConfig: []
     }
@@ -61,6 +65,12 @@ export const useUserStore = defineStore('userStore', {
             return true
           }
         })
+      })
+    },
+    updateConfig(params: Parameters<typeof CreatorApi.prototype.user.updateConfig>[0]) {
+      return this.creatorApi().user.updateConfig(params).then(res => {
+        this.config = params
+        this.saveCache() // 更新缓存
       })
     },
     /** SubmissionConfig */

@@ -30,6 +30,10 @@ export interface User {
     course: string
     procedure: string
   },
+  config: {
+    autosave: boolean, // 是否自动保存
+    saveInterval: number // 自动保存间隔毫秒
+  }
   submissionConfig: SubmissionConfig[],
   subscriptionConfig: SubscriptionConfig[]
 }
@@ -198,6 +202,7 @@ export const useUserListStore = defineStore('userListStore', {
           course: data?.dir?.course || '',
           procedure: data?.dir?.procedure || ''
         },
+        config: data.config || { autosave: true , saveInterval: 15000 },
         submissionConfig: data.submissionConfig || [],
         subscriptionConfig: data.subscriptionConfig || []
       }
