@@ -283,7 +283,7 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
 
 const autoCompleteOptions = computed(() => {
   return loginData.value.filter(item => {
-    if(item.account.includes(model.value.account)) {
+    if(item.account.startsWith(model.value.account)) {
       return true
     }
   }).map(item => {
