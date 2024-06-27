@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { computed, h, ref } from 'vue'
+import { VNode, computed, h, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { CascaderOption, FormInst, FormItemRule, FormRules, NText, SelectRenderLabel, useMessage } from 'naive-ui'
 import { LibraryEnum } from '@/enums'
-import { SelectBaseOption } from 'naive-ui/es/select/src/interface'
+import { SelectBaseOption, SelectGroupOption, SelectOption } from 'naive-ui/es/select/src/interface'
 import useStore from '@/store'
 import { pack } from './pack'
 import dayjs from 'dayjs'
+import HistoryCard from './HistoryCard.vue'
 type SubmissionHistory = Omit<ReturnType<typeof useStore>['projectStore']['data'][0]['submissionHistory'][0], 'key'>
 interface ModelType {
   site: string
@@ -39,11 +40,9 @@ const props = defineProps<{
   subtitleKeyframeSequence?: number[]
   email?: string
   blog?: string
-  // onResponse: (result: { error: boolean, msg: string }) => void
-  // onSuccess: (result: SubmissionHistory) => void
 }>()
 const emits = defineEmits<{
-  response: [result: { error: boolean, msg: string }]
+  response: [result: { error: boolean; msg: string }]
   success: [SubmissionHistory]
 }>()
 const formRef = ref<FormInst | null>(null)
@@ -110,18 +109,25 @@ function handleSelect(value: Array<any> | string | number | null, option: Select
   if (value === 'null') {
     model.value.site = ''
     model.value.code = ''
+    model.value.editionId = ''
     return
   }
   userStore.submissionConfig.some(config => {
     if (config.id === value) {
       model.value.site = config.site
       model.value.code = config.code
+      model.value.editionId = ''
+      return true
     }
   })
 }
 
 /** 历史记录 */
-const historyValue = ref()
+const isHistoryOptionsShow = ref(false)
+const historyValue = ref('key123456a')
+function handleHistoryOptionsShow(value: boolean) {
+  isHistoryOptionsShow.value = !isHistoryOptionsShow.value
+}
 const historyOptions = computed(() => {
   // return projectStore.get(props.id)?.submissionHistory.map(item => {
   //   return {
@@ -132,44 +138,44 @@ const historyOptions = computed(() => {
   // 标题 推送目的 版号 推送时间
   return [
     {
-      label: 'https://www.bilibili.com/video/BV1Ka411N7VN',
-      value: 'key123456',
+      title: '标题dasdasdsadwqdwqdqweqwdasdasdsadwqdwqdqweqwdasdasdsadwqdwqdqweqw标题标题',
+      editionId: 'dasdasdsadwqdwqdqweqw',
+      site: 'https://www.bilibili.com/video/BV1Ka411N7VN/BV1Ka411N7VN/BV1Ka411N7VN/BV1Ka411N7VN',
+      label: `投稿时间：${'2024-6-27 8:08'}`,
+      value: 'key123456a',
+      code: 'key123456qwqw',
+      date: '2024-6-27 8:08'
+    },
+    {
+      title: '标题dasdasdsadwqdwqdqweqwdasdasdsadwqdwqdqweqwdasdasdsadwqdwqdqweqw标题标题',
+      editionId: 'dasdasdsadwqdwqdqweqw',
+      site: 'https://www.bilibili.com/video/BV1Ka411N7VN/BV1Ka411N7VN/BV1Ka411N7VN/BV1Ka411N7VN',
+      label: '2024-6-27 8:08',
+      value: 'key123456fd',
+      code: 'key123456qwqw',
       date: '2024-6-27 8:08'
     }
   ]
 })
-const renderLabel: SelectRenderLabel = (option) => {
-      return h(
-        'div',
-        {
-          style: {
-            display: 'flex',
-            alignItems: 'center'
-          }
-        },
-        [
-          h(
-            'div',
-            {
-              style: {
-                marginLeft: '12px',
-                padding: '4px 0'
-              }
-            },
-            [
-              h('div', null, [option.label as string]),
-              h(
-                NText,
-                { depth: 3, tag: 'div' },
-                {
-                  default: () => 'description'
-                }
-              )
-            ]
-          )
-        ]
-      )
+const renderOption = (props: { node: VNode; option: SelectOption | SelectGroupOption; selected: boolean }) => {
+  const { option } = props
+  return h(HistoryCard, {
+    title: option.title as string,
+    site: option.site as string,
+    code: option.code as string,
+    editionId: option.editionId as string,
+    date: option.date as string,
+    onSelected: () => {
+      model.value.site = option.site as string
+      model.value.code = option.code as string
+      model.value.editionId = option.editionId as string
+      isHistoryOptionsShow.value = false
+    },
+    onClose: () => {
+      //
     }
+  })
+}
 
 /** 提交 */
 function handleSubmit(e: MouseEvent) {
@@ -205,7 +211,7 @@ function handleSubmit(e: MouseEvent) {
             receiver: model.value.site || '',
             editionId: editionId,
             code: model.value.code || '',
-            title: model.value.title ||'',
+            title: model.value.title || '',
             penname: model.value.penname || '',
             email: model.value.email || '',
             blog: model.value.blog || '',
@@ -215,7 +221,7 @@ function handleSubmit(e: MouseEvent) {
         })
         .catch(err => {
           console.log(err)
-          emits('response', { 
+          emits('response', {
             error: true,
             msg: err?.response?.data || err?.message || '投稿失败'
           })
@@ -236,7 +242,15 @@ function handleSubmit(e: MouseEvent) {
           <n-select v-model:value="value" :options="options" @update:value="handleSelect" />
         </n-tab-pane>
         <n-tab-pane name="history" tab="历史记录">
-          <n-select v-model:value="historyValue" :options="historyOptions" :render-label="renderLabel" />
+          <n-select
+            placeholder="投稿历史记录"
+            v-model:value="historyValue"
+            :show="isHistoryOptionsShow"
+            @update:show="handleHistoryOptionsShow"
+            :options="historyOptions" 
+            :render-option="renderOption" 
+            :to="false"
+          />
         </n-tab-pane>
       </n-tabs>
       <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">

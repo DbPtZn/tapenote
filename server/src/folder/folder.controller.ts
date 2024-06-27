@@ -61,7 +61,7 @@ export class FolderController {
   @Patch(`/${REST.U}/restore/:id`)
   async restore(@Param('id') id: string, @Req() req, @Res() res) {
     try {
-      console.log(id)
+      // console.log(id)
       const [folderId, parentId] = id.split('&')
       const result = await this.folderService.restore(folderId, parentId, req.user.id)
       res.send(result)
