@@ -7,6 +7,7 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'url'
 import VueI18nVitePlugin from '@intlify/unplugin-vue-i18n/vite'
+import path from 'node:path'
 
 export default defineNuxtConfig({
   devtools: { enabled: true },
@@ -35,7 +36,8 @@ export default defineNuxtConfig({
   vite: {
     resolve: {
       alias: {
-        'vue-i18n': 'vue-i18n/dist/vue-i18n.runtime.esm-bundler.js'
+        'vue-i18n': 'vue-i18n/dist/vue-i18n.runtime.esm-bundler.js',
+        // '@': path.resolve(__dirname, 'src') // 路径别名
       }
     },
     plugins: [

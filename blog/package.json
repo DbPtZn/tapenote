@@ -11,9 +11,15 @@
   },
   "dependencies": {
     "@prisma/client": "^5.15.1",
+    "@tanbo/bezier": "^1.0.1",
+    "@textbus/core": "3.7.8",
+    "@textbus/editor": "3.7.8",
+    "@textbus/platform-browser": "3.7.8",
     "@vicons/material": "^0.12.0",
     "@vueuse/core": "^10.11.0",
     "@vueuse/nuxt": "^10.11.0",
+    "animejs": "^3.2.2",
+    "classnames": "^2.5.1",
     "dayjs": "^1.11.11",
     "formidable": "^3.5.1",
     "joi": "^17.13.3",
@@ -27,6 +33,7 @@
     "nuxt-icons": "^3.2.1",
     "nuxt-mongoose": "^1.0.6",
     "nuxtjs-naive-ui": "^1.0.2",
+    "prismjs": "^1.29.0",
     "uuid": "^10.0.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"

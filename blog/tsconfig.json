@@ -6,6 +6,30 @@
     "outDir": "dist", 
     "strict": true, 
     "lib": ["esnext"], 
-    "esModuleInterop": true 
+    "esModuleInterop": true,
+
+    /** textbus */
+    "importHelpers": true,
+    // "moduleResolution": "node",
+    // "skipLibCheck": true,
+    // "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    // "sourceMap": true,
+    // "useDefineForClassFields": true,
+    "emitDecoratorMetadata": true,
+    // "experimentalDecorators": true,
+    "noImplicitAny": false,
+    // "suppressImplicitAnyIndexErrors": true,
+    "downlevelIteration": true,
+    // "jsx": "preserve",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@textbus/core",
+    "experimentalDecorators": true,
+
+    /* custom */
+    // "baseUrl": ".",
+    // "paths": {
+    //   "@/*": ["src/*"]
+    // },
   }
 }
