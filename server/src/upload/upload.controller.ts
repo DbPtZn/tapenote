@@ -14,7 +14,7 @@ export class UploadController {
   async uploadImg(@UploadedFile() file, @Body() formData, @Req() req, @Res() res) {
     try {
       // console.log(file)
-      // console.log(formData.dirname)
+      // console.log(formData.dirname) // 暂不考虑该方案
       const filePath = await this.uploadService.uploadImage({
         sourcePath: file.path,
         extname: extname(file.originalname),

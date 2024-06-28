@@ -17,7 +17,7 @@ const state = reactive<ArticleType>({
   userId: '',
   authorizeId: '',
   columnId: '',
-  type: '',
+  type: 'other',
   isParsed: false,
   editorVersion: '',
   cover: '',
@@ -35,7 +35,7 @@ const state = reactive<ArticleType>({
     penname: '',
     avatar: '',
     email: '',
-    website: ''
+    blog: ''
   },
   detail: {
     wordage: 0,
@@ -49,7 +49,10 @@ const state = reactive<ArticleType>({
     comments: 0
   },
   createAt: '',
-  updateAt: ''
+  updateAt: '',
+  editionId: '',
+  fromEditionId: '',
+  msg: ''
 })
 // useEditor({
 //   id: props.id,

@@ -1,5 +1,5 @@
 <template>
-  <MArticle />
+  <div>index</div>
 </template>
 
 <script setup lang="ts">

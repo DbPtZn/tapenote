@@ -19,6 +19,7 @@ if (!userinfo) {
     useLocalStorage('userInfo', JSON.stringify(data.value))
   }
 }
+
 </script>
 
 <template>

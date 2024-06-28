@@ -1,6 +1,5 @@
 import { Observable, Subject, Injectable } from '@textbus/core'
 import axios, { AxiosInstance } from 'axios'
-import utils from '@/utils'
 @Injectable()
 export class ImgToUrlService {
   private axios: AxiosInstance | null
@@ -26,7 +25,7 @@ export class ImgToUrlService {
     hostname: string,
     accessToken: string,
     uploadImgUrl: string,
-    dirname: string
+    dirname?: string
   }) {
     const { hostname, accessToken, uploadImgUrl, dirname } = args
     this.axios = axios.create({
@@ -37,7 +36,7 @@ export class ImgToUrlService {
       }
     })
     this.uploadImgUrl = uploadImgUrl
-    this.dirname = dirname
+    this.dirname = dirname || ''
   }
 
   /** 添加任务 */

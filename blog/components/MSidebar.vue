@@ -4,6 +4,7 @@ import { NButton, NIcon, NInput, useDialog, useMessage, useThemeVars, type Dropd
 // import CreateCollectionForm from '../form/CreateCollectionForm.vue'
 import { onMounted } from 'vue'
 import { DriveFileRenameOutlineFilled } from '@vicons/material'
+import type { UnParsedArticle } from '~/types';
 const themeVars = useThemeVars()
 const message = useMessage()
 const dialog = useDialog()
@@ -18,7 +19,10 @@ function handleExpandedNamesChange(args: Array<any>) {
 }
 /** 显示未分配管理 */
 function handleUnfiledShow() {
-  //
+  $fetch<UnParsedArticle[]>('/api/authcode/getAll').then(res => {
+    // console.log(res)
+    // if(res.data.value) data.value = res.data.value
+  })
 }
 /** 合辑相关方法 */
 const collectionMethods = {
@@ -153,7 +157,7 @@ const dropMethods = {
           <Nuxt-link to="/manage/auth">
             <n-button class="collapse-item-btn" size="large" quaternary block>
                 <n-space align="center">
-                  <Icon name="uil:github" />
+                  <Icon name="hugeicons:authorized" />
                   <span>授权管理</span>
                 </n-space>
             </n-button>
@@ -161,7 +165,7 @@ const dropMethods = {
           <!-- 布局管理 -->
           <n-button class="collapse-item-btn" size="large" quaternary block disabled>
             <n-space align="center">
-              <Icon name="uil:github" />
+              <Icon name="mingcute:layout-10-line" />
               <span>布局管理</span>
             </n-space>
           </n-button>
@@ -186,7 +190,7 @@ const dropMethods = {
         <!-- 折叠面板项 -->
         <n-collapse :expanded-names="expandedNames" @update:expanded-names="handleExpandedNamesChange">
           <template #arrow>
-            <Icon name="uil:github" />
+            <Icon name="mingcute:more-1-fill" />
           </template>
           <!-- 作品合辑 -->
           <n-collapse-item class="collapse-item" name="1">
@@ -194,7 +198,7 @@ const dropMethods = {
               <n-button class="collapse-item-btn" text size="large">作品合辑</n-button>
             </template>
             <template #header-extra>
-              <Icon name="uil:github" @click="collectionMethods.handleAddClick" />
+              <Icon name="material-symbols:add-rounded"  :size="'24'" @click="collectionMethods.handleAddClick" />
             </template>
             <!-- <Draggable
               v-model="collectionsDataStore.data"

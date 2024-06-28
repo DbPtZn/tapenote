@@ -3,8 +3,9 @@ import { NButton, useThemeVars, type DropdownOption } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 // import { FileCard } from './private'
 // import utils from '@/utils'
-import { useListDropDown } from './hooks/useListDropDown'
 import { MoreHorizFilled, ChevronLeftFilled } from '@vicons/material'
+import type { UnParsedArticle } from '~/types'
+import { useListDropDown } from './hooks/useListDropdown'
 enum SortType {
   UPDATE = 'update',
   UPDATE_REVERSE = 'update_reverse',
@@ -85,7 +86,7 @@ const dragMethods = {
 const { dropdownState, options, handleClickoutside, handleContextmenu, handleMoreAction, handleSelect } = useListDropDown()
 </script>
 <template>
-  <div class="itemlist" @mouseover="collapseVisible = true" @mouseleave="collapseVisible = false">
+  <div class="itemlist">
     <div class="header">
       <!-- 顶部导航 -->
       <div class="header-nav">

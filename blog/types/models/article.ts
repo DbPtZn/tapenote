@@ -51,14 +51,47 @@ export type ArticleCard = Omit<
   'content' | 'promoterSequence' | 'keyframeSequence' | 'subtitleSequence' | 'subtitleKeyframeSequence' | 'removed' | 'author' | 'detail' | 'meta'
 >
 
-export type ArticleType = Omit<
-  ArticleSchema,
- '_id'| 'userId' |'authorizeId' | 'columnId' | 'removed' | 'createAt' | 'updateAt'
-> & { 
+export type ArticleType = Omit<ArticleSchema, '_id' | 'userId' | 'authorizeId' | 'columnId' | 'removed' | 'createAt' | 'updateAt'> & {
   _id: string
   userId: string
   authorizeId: string
-  columnId: string,
+  columnId: string
   createAt: string
   updateAt: string
 }
+
+export type Subfile = Pick<
+  ArticleType,
+  | '_id'
+  | 'UID'
+  | 'editionId'
+  | 'fromEditionId'
+  | 'authorizeId'
+  | 'isParsed'
+  | 'title'
+  | 'msg'
+  | 'editorVersion'
+  | 'type'
+  | 'abbrev'
+  | 'author'
+  | 'createAt'
+  | 'updateAt'
+>
+
+export type UnParsedArticle = Pick<
+  ArticleType,
+  | '_id'
+  | 'UID'
+  | 'editionId'
+  | 'fromEditionId'
+  | 'authorizeId'
+  | 'isParsed'
+  | 'title'
+  | 'msg'
+  | 'editorVersion'
+  | 'type'
+  | 'abbrev'
+  | 'author'
+  | 'createAt'
+  | 'updateAt'
+>

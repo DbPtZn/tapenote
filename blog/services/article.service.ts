@@ -9,7 +9,6 @@ class ArticleService {
     this.articlesRepository = Article
   }
 
-
   /** 查询文章版本是否存在 */
   queryEditionExists(editionId: string) {
     return this.articlesRepository.exists({ editionId })
@@ -21,7 +20,7 @@ class ArticleService {
       return this.articlesRepository.create({
         isParsed,
         editionId: !fromEditionId ? UUID.v4() : null,
-        fromEditionId : fromEditionId ? fromEditionId: null,
+        fromEditionId: fromEditionId ? fromEditionId : null,
         editorVersion,
         authorizeId,
         msg,
@@ -32,11 +31,33 @@ class ArticleService {
         author: {
           penname,
           email,
-          blog,
+          blog
         },
-        userId,
+        userId
       })
     } catch (error) {}
+  }
+
+  findAllUnParsed(userId: ObjectId) {
+    return this.articlesRepository.find(
+      { isParsed: false, userId },
+      {
+        _id: 1,
+        UID: 1,
+        editionId: 1,
+        fromEditionId: 1,
+        authorizeId: 1,
+        isParsed: 1,
+        title: 1,
+        msg: 1,
+        editorVersion: 1,
+        type: 1,
+        abbrev: 1,
+        author: 1,
+        createAt: 1,
+        updateAt: 1
+      }
+    )
   }
 
   async get(UID: string) {
