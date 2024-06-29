@@ -27,9 +27,8 @@ export type UserType = Omit<
  '_id' | 'removed' | 'encryptedPassword' | 'createAt' | 'updateAt'
 > & { 
   _id: string
-  userId: string
-  authorizeId: string
-  columnId: string,
   createAt: string
   updateAt: string
 }
+
+export type UserState = UserType

@@ -6,7 +6,6 @@ import ShowOrSelect from './MAuth/ShowOrSelect.vue'
 import DateDisplay from './MAuth/DateDisplay.vue'
 import CancelBtn from './MAuth/CancelBtn.vue'
 import _ from 'lodash'
-// import dayjs from 'dayjs'
 import { onMounted } from 'vue'
 import { computed } from 'vue'
 import type { AuthCodeType, UserType } from '~/types'
@@ -14,21 +13,19 @@ import { Icon } from '#components'
 import useStore from '~/store'
 
 type Model = AuthCodeType
-const { userStore } = useStore()
+const { userStore, submissionStore } = useStore()
 const message = useMessage()
 const dialog = useDialog()
 const themeVars = useThemeVars()
+const router = useRouter()
+const isOnlyShowUnparsed = ref(true)
 // const user = ref<UserType>()
-// onMounted(() => {
-//   console.log(JSON.parse(localStorage.getItem('userInfo')!))
-//   user.value = JSON.parse(localStorage.getItem('userInfo')!)
-//   console.log(user)
-// })
-const data = ref<AuthCodeType[]>([])
-useFetch<AuthCodeType[]>('/api/manage/authcode/getAll').then(res => {
-  // console.log(res)
-  if(res.data.value) data.value = res.data.value
+onMounted(() => {
+  // console.log(router.currentRoute.value.query.id)
+  const id = router.currentRoute.value.query.id as string
+  submissionStore.fetch(id, isOnlyShowUnparsed.value)
 })
+const data = ref<AuthCodeType[]>([])
 
 let editData = ref<Model | null>(null)
 

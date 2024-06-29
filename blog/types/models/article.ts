@@ -78,7 +78,7 @@ export type Subfile = Pick<
   | 'updateAt'
 >
 
-export type UnParsedArticle = Pick<
+export type Submission = Pick<
   ArticleType,
   | '_id'
   | 'UID'
@@ -86,12 +86,40 @@ export type UnParsedArticle = Pick<
   | 'fromEditionId'
   | 'authorizeId'
   | 'isParsed'
+  | 'isPublish'
   | 'title'
   | 'msg'
   | 'editorVersion'
   | 'type'
   | 'abbrev'
   | 'author'
+  | 'detail'
   | 'createAt'
   | 'updateAt'
 >
+
+// _id: '',
+// UID: '',
+// editionId: '',
+// fromEditionId: '',
+// authorizeId: '',
+// isParsed: false,
+// isPublish: false,
+// title: '',
+// msg: '',
+// editorVersion: '',
+// type: 'other',
+// abbrev: '',
+// author: {
+//   penname: '',
+//   avatar: '',
+//   email: '',
+//   blog: ''
+// },
+// detail: {
+//   wordage: 0,
+//   duration: 0,
+//   fileSize: 0,
+// },
+// createAt: '',
+// updateAt: ''

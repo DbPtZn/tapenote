@@ -4,7 +4,6 @@ import { onMounted, ref } from 'vue'
 // import { FileCard } from './private'
 // import utils from '@/utils'
 import { MoreHorizFilled, ChevronLeftFilled } from '@vicons/material'
-import type { UnParsedArticle } from '~/types'
 import { useListDropDown } from './hooks/useListDropdown'
 enum SortType {
   UPDATE = 'update',

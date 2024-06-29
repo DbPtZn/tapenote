@@ -60,6 +60,28 @@ class ArticleService {
     )
   }
 
+  findAllSubmission(userId: ObjectId) {
+    return this.articlesRepository.find(
+      { userId },
+      {
+        _id: 1,
+        UID: 1,
+        editionId: 1,
+        fromEditionId: 1,
+        authorizeId: 1,
+        isParsed: 1,
+        title: 1,
+        msg: 1,
+        editorVersion: 1,
+        type: 1,
+        abbrev: 1,
+        author: 1,
+        createAt: 1,
+        updateAt: 1
+      }
+    )
+  }
+
   async get(UID: string) {
     try {
       const article = await this.articlesRepository

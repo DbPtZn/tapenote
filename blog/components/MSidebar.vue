@@ -4,7 +4,6 @@ import { NButton, NIcon, NInput, useDialog, useMessage, useThemeVars, type Dropd
 // import CreateCollectionForm from '../form/CreateCollectionForm.vue'
 import { onMounted } from 'vue'
 import { DriveFileRenameOutlineFilled } from '@vicons/material'
-import type { UnParsedArticle } from '~/types';
 const themeVars = useThemeVars()
 const message = useMessage()
 const dialog = useDialog()
@@ -18,12 +17,7 @@ function handleExpandedNamesChange(args: Array<any>) {
   expandedNames.value = args
 }
 /** 显示未分配管理 */
-function handleUnfiledShow() {
-  $fetch<UnParsedArticle[]>('/api/authcode/getAll').then(res => {
-    // console.log(res)
-    // if(res.data.value) data.value = res.data.value
-  })
-}
+// function handleUnfiledShow() {}
 /** 合辑相关方法 */
 const collectionMethods = {
   /** 添加合辑按钮 */
@@ -157,40 +151,42 @@ const dropMethods = {
           <Nuxt-link to="/manage/auth">
             <n-button class="collapse-item-btn" size="large" quaternary block>
                 <n-space align="center">
-                  <Icon name="hugeicons:authorized" />
+                  <Icon name="hugeicons:authorized" :size="'24'" />
                   <span>授权管理</span>
                 </n-space>
             </n-button>
           </Nuxt-link>
           <!-- 布局管理 -->
-          <n-button class="collapse-item-btn" size="large" quaternary block disabled>
+          <!-- <n-button class="collapse-item-btn" size="large" quaternary block disabled>
             <n-space align="center">
               <Icon name="mingcute:layout-10-line" />
               <span>布局管理</span>
             </n-space>
-          </n-button>
-          <!-- 待分配文档 -->
-          <n-button 
-            class="collapse-item-btn" 
-            size="large" 
-            quaternary 
-            block
-            @dragenter.prevent="dropMethods.handleDragEnter"
-            @dragover.prevent="dropMethods.handleDragOver"
-            @dragleave.prevent="dropMethods.handleDragLeave"
-            @click="handleUnfiledShow" 
-            @drop="dropMethods.handleDrop($event, '', false)"
-          >
-            <n-space align="center">
-              <Icon name="uil:github" />
-              <span>分拣管理</span>
-            </n-space>
-          </n-button>
+          </n-button> -->
+          <!-- 稿件管理 -->
+          <Nuxt-link to="/manage/submission?id=all">
+            <n-button 
+              class="collapse-item-btn"
+              size="large" 
+              quaternary
+              :bordered="false"
+              block
+              @dragenter.prevent="dropMethods.handleDragEnter"
+              @dragover.prevent="dropMethods.handleDragOver"
+              @dragleave.prevent="dropMethods.handleDragLeave"
+              @drop="dropMethods.handleDrop($event, '', false)"
+            >
+              <n-space align="center">
+                <Icon name="material-symbols-light:folder-data-outline-rounded" :size="'24'" />
+                <span>稿件管理</span>
+              </n-space>
+            </n-button>
+          </Nuxt-link>
         </n-space>
         <!-- 折叠面板项 -->
-        <n-collapse :expanded-names="expandedNames" @update:expanded-names="handleExpandedNamesChange">
+        <n-collapse class="collapse-wrapper" :expanded-names="expandedNames" @update:expanded-names="handleExpandedNamesChange">
           <template #arrow>
-            <Icon name="mingcute:more-1-fill" />
+            <Icon name="material-symbols:arrow-right-rounded"  :size="'24'"/>
           </template>
           <!-- 作品合辑 -->
           <n-collapse-item class="collapse-item" name="1">
@@ -276,6 +272,11 @@ const dropMethods = {
       margin-bottom: 12px;
     }
   }
+}
+
+.collapse-wrapper {
+  padding: 6px 3px;
+  box-sizing: border-box;
 }
 .collapse-item {
   user-select: none;

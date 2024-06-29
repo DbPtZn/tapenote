@@ -1,25 +1,28 @@
 <script setup lang="ts">
 import Cookies from 'js-cookie'
+import useStore from '~/store'
 definePageMeta({
   layout: 'manage'
 })
+const { userStore } = useStore()
 const router = useRouter()
 const token = Cookies.get('Authorization')
 if (!token) {
   router.push('/auth/login')
 }
-const userinfo = Cookies.get('userinfo')
-if (!userinfo) {
-  const { data, error } = await useFetch('/api/user/info')
-  // console.log(data)
-  if(error.value?.statusCode === 401) {
-    Cookies.remove('Authorization')
-    router.push('/auth/login')
-  } else {
-    useLocalStorage('userInfo', JSON.stringify(data.value))
+onMounted(async () => {
+  const id = userStore._id
+  if (!id) {
+    try {
+      await userStore.fetch()
+    } catch (error: any) {
+      if(error.status === 401) {
+        Cookies.remove('Authorization')
+        router.push('/auth/login')
+      }
+    }
   }
-}
-
+})
 </script>
 
 <template>
