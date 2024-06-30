@@ -7,7 +7,7 @@ export interface CreateArticleDto {
 
   UID: string // 用户 UID
 
-  authorizeId: ObjectId // 授权码
+  authcodeId: ObjectId // 授权码
 
   penname: string // 笔名
 

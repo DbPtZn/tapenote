@@ -5,10 +5,9 @@ import {
   defineComponent,
   VElement,
   useRef,
-  useState, onContextMenu, useContext, Injector, onDestroy,
+  useState, onContextMenu, useContext, Injector, onDestroy, Subscription,
 } from '@textbus/core'
 import { ComponentLoader, createElement, createTextNode } from '@textbus/platform-browser'
-import { Subscription } from '@tanbo/stream'
 import { AttrState, Dialog, FileUploader, Form, FormItem, FormRadio, FormTextField, I18n, useDragResize } from '@textbus/editor'
 import { ImgToUrlService } from '..'
 import { AxiosProvider } from '../providers'

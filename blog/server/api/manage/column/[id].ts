@@ -3,8 +3,7 @@ import { articleService, columnService } from "~/services"
 export default defineEventHandler(async (event) => {
   try {
     const id = getRouterParam(event, 'id')
-    const articles = await columnService.findUnparsed(event.context.auth.id)
-    return articles
+    return []
   } catch (error) {
     console.error(error)
     throw createError({

@@ -15,7 +15,7 @@ const state = reactive<ArticleType>({
   _id: '',
   UID: '',
   userId: '',
-  authorizeId: '',
+  authcodeId: '',
   columnId: '',
   type: 'other',
   isParsed: false,

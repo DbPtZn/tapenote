@@ -1,18 +1,15 @@
 <script lang="ts" setup>
 import { NButton, NIcon, NSpace, useDialog, useMessage, useThemeVars } from 'naive-ui'
-import type { DataTableColumns, DropdownOption } from 'naive-ui'
-import ShowOrEdit from './MAuth/ShowOrEdit.vue'
-import ShowOrSelect from './MAuth/ShowOrSelect.vue'
-import DateDisplay from './MAuth/DateDisplay.vue'
-import CancelBtn from './MAuth/CancelBtn.vue'
+import type { DataTableColumns } from 'naive-ui'
 import _ from 'lodash'
 import { onMounted } from 'vue'
 import { computed } from 'vue'
-import type { AuthCodeType, UserType } from '~/types'
+import type { Submission } from '~/types'
 import { Icon } from '#components'
 import useStore from '~/store'
+import dayjs from 'dayjs'
 
-type Model = AuthCodeType
+type Model = Submission
 const { userStore, submissionStore } = useStore()
 const message = useMessage()
 const dialog = useDialog()
@@ -23,11 +20,14 @@ const isOnlyShowUnparsed = ref(true)
 onMounted(() => {
   // console.log(router.currentRoute.value.query.id)
   const id = router.currentRoute.value.query.id as string
-  submissionStore.fetch(id, isOnlyShowUnparsed.value)
+  if(submissionStore.data.length === 0) {
+    submissionStore.fetch(id, isOnlyShowUnparsed.value)
+  }
+  console.log(submissionStore.data)
 })
-const data = ref<AuthCodeType[]>([])
+// const data = ref(submissionStore.data)
 
-let editData = ref<Model | null>(null)
+// let editData = ref<Model | null>(null)
 
 const renderIcon = (component: Component | string) => {
   if (typeof component === 'string') {
@@ -35,109 +35,90 @@ const renderIcon = (component: Component | string) => {
   }
   return h(NIcon, { component: component, size: 24 })
 }
-const handleEdit = (row: Model) => {
-  if (editData.value && editData.value._id !== row._id) {
-    message.error('请先保存上一个编辑项')
-    return
-  }
-  if (!editData.value || editData.value._id !== row._id) {
-    console.log(editData)
-    editData.value = Object.assign({}, row)
-  } else {
-    if (_.isEqual(editData, row)) {
-      editData.value = null
-      return
-    }
-    $fetch<AuthCodeType>('/api/manage/authcode/update', {
-      method: 'POST',
-      body: editData.value
-    }).then(res => {
-      // console.log(res)
-      data.value.some((item, index, arr) => {
-        if (item._id === res._id) {
-          arr[index].name = res.name
-          arr[index].code = res.code
-          arr[index].desc = res.desc
-          arr[index].disabled = res.disabled
-          arr[index].updateAt = res.updateAt
-          return true
-        }
-      })
-      editData.value = null
-    }).catch(err => {
-      message.error('保存失败,可能该授权码已存在!')
-      if (editData.value) editData.value = null
-    })
-  }
+const handleParse = (row: Model) => {
+  $fetch('/api/manage/parse/' + row._id).then(res => {
+    console.log(res)
+    console.log(window.location.host)
+  })
 }
+
 const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColumns<Model> => {
   return [
     {
-      title: '名称',
-      key: 'name',
+      title: '类型',
+      key: 'type',
       resizable: true,
-      width: '15%',
-      render: row =>
-        h(ShowOrEdit, {
-          hightlight: !row.disabled,
-          type: '名称',
-          isEdit: editData.value?._id === row._id,
-          value: row.name,
-          onUpdateValue(v) {
-            editData.value!.name = v
-          }
-        })
+      width: '4%',
+      render: row => h(Icon, { name: row.type === 'note' ? 'mdi:notebook' : 'material-symbols-light:play-lesson-rounded', size: '24px' })
     },
     {
-      title: '授权码',
-      key: 'code',
+      title: '标题',
+      key: 'title',
       resizable: true,
-      width: '15%',
-      render(row) {
-        return h(ShowOrEdit, {
-          hightlight: !row.disabled,
-          type: '授权码',
-          isEdit: editData.value?._id === row._id,
-          value: row.code,
-          onUpdateValue(v) {
-            editData.value!.code = v
-          }
-        })
+      width: '10%',
+      ellipsis: {
+        tooltip: true
       }
     },
     {
-      title: '描述',
-      key: 'desc',
+      title: '内容缩略',
+      key: 'abbrev',
       resizable: true,
-      width: '20%',
-      render(row) {
-        return h(ShowOrEdit, {
-          hightlight: !row.disabled,
-          type: '描述',
-          isEdit: editData.value?._id === row._id,
-          value: row.desc,
-          onUpdateValue(v) {
-            editData.value!.desc = v
-          }
-        })
+      width: '10%',
+      ellipsis: {
+        tooltip: true
       }
-      // ellipsis: {
-      //   tooltip: true
-      // }
+    },
+    {
+      title: '授权来源',
+      key: 'authcode',
+      resizable: true,
+      width: '10%',
+      ellipsis: {
+        tooltip: true
+      },
+      render(row) {
+        return row.authcode.name
+      }
+    },
+    {
+      title: '作者',
+      key: 'author',
+      resizable: true,
+      width: '10%',
+      ellipsis: {
+        tooltip: true
+      },
+      render(row) {
+        return row.author.penname
+      }
+    },
+    {
+      title: '稿件备注',
+      key: 'msg',
+      resizable: true,
+      width: '10%',
+      ellipsis: {
+        tooltip: true
+      }
+    },
+    {
+      title: '解析状态',
+      key: 'isParsed',
+      resizable: true,
+      width: '10%',
+      render: row => h(Icon, { name: row.isParsed ? 'mdi:email-open' : 'material-symbols-light:mail-lock', size: '24px' })
     },
     {
       title: '更新时间',
       key: 'updateAt',
       resizable: true,
       width: '12%',
-      render(row) {
-        return h(DateDisplay, {
-          hightlight: !row.disabled,
-          date: row.updateAt
-        })
-      },
       sortOrder: false,
-      sorter: 'default'
+      sorter: 'default',
+      render(row) {
+        return dayjs(row.updateAt).format('YYYY-MM-DD HH:mm:ss')
+      },
       // sorter(rowA, rowB) {
       //   return Number(rowA.updateAt) - Number(rowB.updateAt)
       // }
@@ -147,41 +128,16 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
       key: 'createAt',
       resizable: true,
       width: '12%',
-      render(row) {
-        return h(DateDisplay, {
-          hightlight: !row.disabled,
-          date: row.createAt
-        })
-      },
       sortOrder: false,
-      sorter: 'default'
-    },
-    {
-      title: '状态',
-      key: 'disable',
-      width: '8%',
-      minWidth: '150px',
-      resizable: true,
+      sorter: 'default',
       render(row) {
-        return h(ShowOrSelect, {
-          hightlight: !row.disabled,
-          isEdit: editData.value?._id === row._id,
-          value: row.disabled,
-          onUpdateValue(v: boolean, cb: () => void) {
-            if ((v && row.name === '') || row.code === '') {
-              cb()
-              message.warning('名称和授权码不能为空')
-              return
-            }
-            editData.value!.disabled = v
-          }
-        })
-      }
+        return dayjs(row.createAt).format('YYYY-MM-DD HH:mm:ss')
+      },
     },
     {
       title: '操作',
       key: 'actions',
-      width: '18%',
+      width: '12%',
       minWidth: '200px',
       maxWidth: '200px',
       render(row) {
@@ -194,24 +150,18 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                 NButton,
                 {
                   strong: true,
-                  tertiary: true,
+                  type: "primary",
                   size: 'small',
                   onClick: () => {
-                    handleEdit(row)
+                    handleParse(row)
                   }
                 },
                 {
                   default: () => {
-                    return editData.value?._id === row._id ? '保存' : '编辑'
+                    return row.isParsed ? '' : '解析'
                   }
                 }
               ),
-              h(CancelBtn, {
-                show: editData.value?._id === row._id,
-                onClick: () => {
-                  editData.value = null
-                }
-              }),
               h(
                 NButton,
                 {
@@ -220,17 +170,18 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                   size: 'small',
                   onClick: () => {
                     dialog.create({
-                      title: '是否彻底删除？',
-                      icon: () => renderIcon('material-symbols:delete'),
+                      title: '确定拒稿？',
+                      content: '一旦拒稿将无法再恢复，请谨慎确认！',
+                      icon: () => renderIcon('material-symbols:do-not-touch-sharp'),
                       positiveText: '确定',
                       negativeText: '取消',
                       onPositiveClick: () => {
-                        $fetch(`/api/manage/authcode/delete/${row._id}`, {
-                          method: 'delete'
-                        }).then(() => {
-                          const index = data.value.findIndex(item => item._id === row._id)
-                          data.value.splice(index, 1)
-                        })
+                        // $fetch(`/api/manage/authcode/delete/${row._id}`, {
+                        //   method: 'delete'
+                        // }).then(() => {
+                        //   const index = data.value.findIndex(item => item._id === row._id)
+                        //   data.value.splice(index, 1)
+                        // })
                       },
                       onNegativeClick: () => {
                         message.error('取消')
@@ -238,7 +189,7 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                     })
                   }
                 },
-                { default: () => '移除' }
+                { default: () => '拒稿' }
               )
             ]
           }
@@ -249,7 +200,7 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
 }
 
 /** 展示列 */
-const cities = ref(['name', 'code', 'desc', 'updateAt', 'createAt', 'disable', 'actions'])
+const cities = ref([ 'type', 'title',  'abbrev', 'authcode',  'msg', 'author', 'isParsed', 'updateAt', 'createAt', 'actions'])
 const columnSelect = ref(false)
 const columns = computed(() => createColumns({ play(row) {} }).filter((c: any) => cities.value.includes(c.key)))
 // console.log(columns)
@@ -269,11 +220,11 @@ const paginationReactive = reactive({
 
 /** 添加 */
 function handleAdd() {
-  $fetch<AuthCodeType>('/api/manage/authcode/add').then(res => {
-    data.value.push(res)
-  }).catch(err => {
-    message.error(err.response._data.message)
-  })
+  // $fetch<AuthCodeType>('/api/manage/authcode/add').then(res => {
+  //   data.value.push(res)
+  // }).catch(err => {
+  //   message.error(err.response._data.message)
+  // })
 }
 
 /** 全局配置 */
@@ -284,17 +235,17 @@ const status = [
   { label: '禁用', value: 2 }
 ]
 function handleStatusUpdate(value: 0 | 1 | 2) {
-  $fetch('/api/user/updateReceiver', {
-    method: 'post',
-    body: {
-      status: value
-    }
-  }).then(() => {
-    message.success('更新成功')
-  }).catch(err => {
-    console.log(err)
-    message.error('更新失败')
-  })
+  // $fetch('/api/user/updateReceiver', {
+  //   method: 'post',
+  //   body: {
+  //     status: value
+  //   }
+  // }).then(() => {
+  //   message.success('更新成功')
+  // }).catch(err => {
+  //   console.log(err)
+  //   message.error('更新失败')
+  // })
 }
 
 /** 排序 */
@@ -339,86 +290,104 @@ const rowProps = (row: Model) => {
     }
   }
 }
-const options = ref<DropdownOption[]>([
-  {
-    label: () => (editData.value?._id ? '保存' : '编辑'),
-    key: 'edit',
-    props: {
-      onClick: () => {
-        targetRow.value && handleEdit(targetRow.value)
-      }
-    }
-  },
-  {
-    label: '移除',
-    key: 'delete',
-    props: {
-      onClick: () => {
-        dialog.create({
-          title: '是否彻底删除？',
-          icon: () => renderIcon('material-symbols:delete'),
-          positiveText: '确定',
-          negativeText: '取消',
-          onPositiveClick: () => {
-            targetRow.value && $fetch(`/api/manage/authcode/delete/${targetRow.value?._id}`, {
-              method: 'delete'
-            }).then(() => {
-              const index = data.value.findIndex(row => row._id === targetRow.value?._id)
-              data.value.splice(index, 1)
-            })
-          },
-          onNegativeClick: () => {
-            message.error('取消')
-          }
-        })
-      }
-    }
-  }
-])
+// const options = ref<DropdownOption[]>([
+//   {
+//     label: () => (editData.value?._id ? '保存' : '编辑'),
+//     key: 'edit',
+//     props: {
+//       onClick: () => {
+//         // targetRow.value && handleParse(targetRow.value)
+//       }
+//     }
+//   },
+//   {
+//     label: '移除',
+//     key: 'delete',
+//     props: {
+//       onClick: () => {
+//         dialog.create({
+//           title: '是否彻底删除？',
+//           icon: () => renderIcon('material-symbols:do-not-touch-sharp'),
+//           positiveText: '确定',
+//           negativeText: '取消',
+//           onPositiveClick: () => {
+//             // targetRow.value && $fetch(`/api/manage/authcode/delete/${targetRow.value?._id}`, {
+//             //   method: 'delete'
+//             // }).then(() => {
+//             //   const index = data.value.findIndex(row => row._id === targetRow.value?._id)
+//             //   data.value.splice(index, 1)
+//             // })
+//           },
+//           onNegativeClick: () => {
+//             message.error('取消')
+//           }
+//         })
+//       }
+//     }
+//   }
+// ])
+
+const showSelectOption = ref('unparsed')
+const showSelectOptions = [
+  { label: '全部', value: 'all' },
+  { label: '已解析', value: 'parsed' },
+  { label: '未解析', value: 'unparsed' }
+]
+function handleShowSelectOptionUpdate(value) {
+  console.log(value)
+}
 </script>
 
 <template>
-  <div class="auth-manage">
+  <div class="submission-manage">
     <div class="header">
       <div class="group">
         <n-flex>
           <!-- 权限设置 -->
-          <n-popselect v-model:value="userStore.receiverConfig.status" :options="status" @update:value="handleStatusUpdate">
+          <!-- <n-popselect v-model:value="userStore.receiverConfig.status" :options="status" @update:value="handleStatusUpdate">
             <n-button secondary>
               {{ status[userStore.receiverConfig.status || 0].label }}
             </n-button>
-          </n-popselect>
+          </n-popselect> -->
           <!-- 显示筛选 -->
           <n-button secondary @click="columnSelect = !columnSelect"> 列可见 </n-button>
         </n-flex>
       </div>
       <div class="group" v-show="columnSelect">
         <n-checkbox-group v-model:value="cities">
+          <!-- 'type', 'title',  'abbrev', 'authcode',  'msg', 'author', 'isParsed', 'updateAt', 'createAt', 'actions' -->
           <n-space item-style="display: flex;">
-            <n-checkbox value="name" label="名称" />
-            <n-checkbox value="code" label="授权码" />
-            <n-checkbox value="desc" label="描述" />
+            <n-checkbox value="type" label="类型" />
+            <n-checkbox value="title" label="标题" />
+            <n-checkbox value="abbrev" label="内容" />
+            <n-checkbox value="authcode" label="授权来源" />
+            <n-checkbox value="author" label="作者" />
+            <n-checkbox value="msg" label="稿件备注" />
+            <n-checkbox value="isParsed" label="解析状态" />
             <n-checkbox value="updateAt" label="更新时间" />
             <n-checkbox value="createAt" label="创建时间" />
-            <n-checkbox value="disable" label="状态" />
+            <n-checkbox value="actions" label="操作" />
           </n-space>
         </n-checkbox-group>
       </div>
       <div class="group">
-        <n-button secondary @click="handleAdd">
-          <Icon name="material-symbols:add-rounded" />
-        </n-button>
+        <n-select 
+        v-model:value="showSelectOption" 
+        :options="showSelectOptions" 
+        :consistent-menu-width="false"
+        @update:value="handleShowSelectOptionUpdate"
+        />
       </div>
     </div>
     <n-data-table
       :columns="columns"
-      :data="data"
+      :data="submissionStore.data"
       :pagination="paginationReactive"
       :bordered="false"
       :row-props="rowProps"
       @update:sorter="handleSorterChange"
     />
-    <n-dropdown
+    <!-- <n-dropdown
       placement="bottom-start"
       trigger="manual"
       :x="xRef"
@@ -427,12 +396,12 @@ const options = ref<DropdownOption[]>([
       :show="showDropdownRef"
       :on-clickoutside="handleClickoutside"
       @select="handleSelect"
-    />
+    /> -->
   </div>
 </template>
 
 <style lang="scss" scoped>
-.auth-manage {
+.submission-manage {
   height: 100%;
   width: 100%;
   display: flex;

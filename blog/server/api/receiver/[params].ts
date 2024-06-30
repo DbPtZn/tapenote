@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
       isParsed: false,
       editorVersion: '',
       UID: user.UID,
-      authorizeId: authcode._id,
+      authcodeId: authcode._id,
       penname: fields.penname?.[0] || '佚名',
       email: fields.email?.[0] || '',
       blog: fields.blog?.[0] || '',

@@ -28,9 +28,9 @@ export const Article = defineMongooseModel<ArticleSchema>({
       ref: 'User'
     },
     /** 授权 ID, 指向授权信息 */
-    authorizeId: {
+    authcodeId: {
       type: Types.ObjectId,
-      ref: 'Authorize'
+      ref: 'Authcode'
     },
     /** 专栏 ID */
     columnId: {

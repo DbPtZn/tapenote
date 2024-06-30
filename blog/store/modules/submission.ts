@@ -18,7 +18,7 @@ export const useSubmissionStore = defineStore('submissionStore', {
         }
       }).then(data => {
         this.data = data
-        console.log(this.data)
+        // console.log(this.data)
       })
     }
   },

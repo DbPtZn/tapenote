@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
       console.log('all')
       if(isOnlyShowUnparsed) {
         const data = await articleService.findAllUnParsed(event.context.auth.id)
-        console.log(data)
+        // console.log(data)
         return data
       } else {
         const data = await articleService.findAllSubmission(event.context.auth.id)
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error(error)
     throw createError({
-      message: '删除授权码失败！',
+      message: '删除授权码失败！'
     })
   }
 })

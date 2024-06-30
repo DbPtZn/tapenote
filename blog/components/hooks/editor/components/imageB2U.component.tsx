@@ -5,10 +5,10 @@ import {
   defineComponent,
   VElement,
   useRef,
-  useState, onContextMenu, useContext, Injector, onDestroy,
+  useState, onContextMenu, useContext, Injector, onDestroy, Subscription,
 } from '@textbus/core'
 import { ComponentLoader, createElement, createTextNode } from '@textbus/platform-browser'
-import { Subscription } from '@tanbo/stream'
+// import { Subscription } from '@tanbo/stream'
 import { AttrState, Dialog, FileUploader, Form, FormItem, FormRadio, FormTextField, I18n, useDragResize } from '@textbus/editor'
 import { ImgToUrlService } from '..'
 import { AxiosProvider } from '../providers'
@@ -184,7 +184,7 @@ export const imageB2UComponent = defineComponent({
     if (data && data.state && !reg.test(data.state.src)) {
       // const formdata = new FormData()
       img2Url.uploadImg(data.state.src).then(url => {
-        console.log(url)
+        // console.log(url)
         stateController.update((draft) => {
           draft.src = url
         })

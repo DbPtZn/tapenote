@@ -1,5 +1,6 @@
 import type { ObjectId } from 'mongoose'
 import type { RemovedEnum } from '~/enums'
+import type { AuthCodeType } from '.'
 
 export interface ArticleSchema {
   _id: ObjectId
@@ -7,7 +8,7 @@ export interface ArticleSchema {
   editionId: string
   fromEditionId: string
   userId: ObjectId
-  authorizeId: ObjectId
+  authcodeId: ObjectId
   columnId: ObjectId
   type: 'note' | 'course' | 'other'
   isParsed: boolean
@@ -51,10 +52,10 @@ export type ArticleCard = Omit<
   'content' | 'promoterSequence' | 'keyframeSequence' | 'subtitleSequence' | 'subtitleKeyframeSequence' | 'removed' | 'author' | 'detail' | 'meta'
 >
 
-export type ArticleType = Omit<ArticleSchema, '_id' | 'userId' | 'authorizeId' | 'columnId' | 'removed' | 'createAt' | 'updateAt'> & {
+export type ArticleType = Omit<ArticleSchema, '_id' | 'userId' | 'authcodeId' | 'columnId' | 'removed' | 'createAt' | 'updateAt'> & {
   _id: string
   userId: string
-  authorizeId: string
+  authcodeId: string
   columnId: string
   createAt: string
   updateAt: string
@@ -66,7 +67,7 @@ export type Subfile = Pick<
   | 'UID'
   | 'editionId'
   | 'fromEditionId'
-  | 'authorizeId'
+  | 'authcodeId'
   | 'isParsed'
   | 'title'
   | 'msg'
@@ -84,7 +85,6 @@ export type Submission = Pick<
   | 'UID'
   | 'editionId'
   | 'fromEditionId'
-  | 'authorizeId'
   | 'isParsed'
   | 'isPublish'
   | 'title'
@@ -96,13 +96,15 @@ export type Submission = Pick<
   | 'detail'
   | 'createAt'
   | 'updateAt'
->
+> & {
+  authcode: AuthCodeType
+}
 
 // _id: '',
 // UID: '',
 // editionId: '',
 // fromEditionId: '',
-// authorizeId: '',
+// authcodeId: '',
 // isParsed: false,
 // isPublish: false,
 // title: '',
