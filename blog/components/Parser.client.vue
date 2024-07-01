@@ -1,21 +1,20 @@
-// /** 导出编辑器配置 */
-// // import type { EditorOptions } from '@textbus/editor'
-
-// import { Injector, debounceTime } from '@textbus/core'
-// import {
-//   rootComponent,
-//   rootComponentLoader,
-//   defaultComponents,
-//   defaultComponentLoaders,
-//   colorFormatter,
-//   textBackgroundColorFormatter,
-//   defaultFormatters,
-//   colorFormatLoader,
-//   textBackgroundColorFormatLoader,
-//   defaultFormatLoaders,
-//   createEditor,
-//   Layout
-// } from '@textbus/editor'
+<script setup lang="ts">
+import { Injector, debounceTime } from '@textbus/core'
+import {
+  rootComponent,
+  rootComponentLoader,
+  defaultComponents,
+  defaultComponentLoaders,
+  colorFormatter,
+  textBackgroundColorFormatter,
+  defaultFormatters,
+  colorFormatLoader,
+  textBackgroundColorFormatLoader,
+  defaultFormatLoaders,
+  createEditor,
+  Layout,
+  Editor
+} from '@textbus/editor'
 // import {
 //   imageB2UComponent,
 //   animePlayerComponent,
@@ -28,7 +27,7 @@
 //   ImgToUrlService
 // } from '~/editor'
 
-// async function getEditorConfig() {
+// function getEditorConfig() {
 //   const config = {
 //     rootComponent: rootComponent,
 //     rootComponentLoader: rootComponentLoader,
@@ -59,11 +58,41 @@
 //   }
 //   return config
 // }
+const props = defineProps<{
+  content: string
+}>()
+const emits = defineEmits<{
+  parsed: [string]
+}>()
+const host = ref()
+let editor: Editor | null = null
+onMounted(() => {
+  // parseContent(props.content).then((data) => {
+  //   emits('parsed', data.content)
+  // })
+  const host = document.createElement('div')
+  editor = createEditor()
+  editor.mount(host)
+  editor.onReady.subscribe(() => {
+    editor?.replaceContent(props.content)
+    console.log('html:')
+    console.log(editor?.getHTML())
+    emits('parsed', 'successful')
+  })
+})
 
-// /** 获取内容数据 */
+onUnmounted(() => {
+  editor?.destroy()
+})
+
+onErrorCaptured((error) => {
+  console.log('error')
+  console.log(error)
+})
+/** 获取内容数据 */
 // function parseContent(content: string) {
-//   return new Promise<{ content: string; cover: string }>(async (resolve, reject) => {
-//     const config = await getEditorConfig()
+//   return new Promise<{ content: string; cover: string }>((resolve, reject) => {
+//     const config = getEditorConfig()
 //     const editor = createEditor(config)
 //     console.log(config)
 //     const host = document.createElement('div')
@@ -116,9 +145,10 @@
 //     })
 //   })
 // }
+</script>
 
-// export function useParser() {
-//   return {
-//     parseContent
-//   }
-// }
+<template>
+  <div ref="host" class="default">default</div>
+</template>
+
+<style scoped lang="scss"></style>

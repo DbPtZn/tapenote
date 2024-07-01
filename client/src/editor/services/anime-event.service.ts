@@ -1,5 +1,4 @@
-import { Observable, Subject, distinctUntilChanged } from '@tanbo/stream'
-import { Injectable, VElement, Subscription } from '@textbus/core'
+import { Injectable, VElement, Subscription, Observable, Subject, distinctUntilChanged } from '@textbus/core'
 import { onAnimePlayerFormatterContextmenu } from '../formatters/anime-player.formatter'
 @Injectable()
 export class AnimeEventService {

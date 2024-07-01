@@ -18,12 +18,16 @@ export class UploadService {
     const { sourcePath, extname, dirname, userId } = args
     // console.log(sourcePath, extname, dirname, userId)
     return new Promise((resolve, reject) => {
+      // console.log('开始上传图片')
+      // console.log(sourcePath)
       this.calculateFileStats(sourcePath)
         .then(async stats => {
           const { size, md5 } = stats
           const file = await this.uploadFilesRepository.findOneBy({ md5, size, userId })
           if (file) {
-            console.log('用户上传的图片已存在，直接返回图片路径!')
+            // console.log('用户上传的图片已存在，直接返回图片路径!')
+            // console.log(file.id)
+            // console.log(file.path)
             resolve(file.path)
             return
           }

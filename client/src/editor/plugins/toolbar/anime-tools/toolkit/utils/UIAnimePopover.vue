@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { Injector, Keyboard, Keymap } from '@textbus/core'
-import { AnimeProvider, UIIcon } from '@/editor'
+import { AnimeProvider, UIIcon } from '../../../../..'
 import { computed, inject, reactive, ref } from 'vue'
-import { MaterialTypeEnum } from '@/editor'
+import { MaterialTypeEnum } from '../../../../..'
 type AnimeOption = ReturnType<AnimeProvider['getOptions']>[0]
 const injector = inject<Injector>('injector')
 const keyboard = injector?.get(Keyboard)

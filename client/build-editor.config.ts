@@ -12,7 +12,7 @@ export default defineConfig(({ command, mode }) => {
       // dts()
       dts({
         entryRoot: resolve(__dirname, 'src', 'editor'),
-        include: ["src/editor/**/*.ts", "src/editor/**/*.d.ts", "src/editor/**/*.vue"],
+        include: ["src/editor/**/*.ts", "src/editor/**/*.tsx", "src/editor/**/*.d.ts", "src/editor/**/*.vue", "src/editor/**/*.css", "src/editor/**/*.scss"],
       })
     ],
     resolve: {

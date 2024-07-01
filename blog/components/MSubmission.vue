@@ -2,13 +2,25 @@
 import { NButton, NIcon, NSpace, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
 import _ from 'lodash'
-import { onMounted } from 'vue'
-import { computed } from 'vue'
+import { onMounted, createApp, computed } from 'vue'
 import type { Submission } from '~/types'
-import { Icon } from '#components'
+import { Icon, Parser } from '#components'
 import useStore from '~/store'
 import dayjs from 'dayjs'
-
+// import {
+//   TestService
+//   // animePlayerComponent,
+//   // animeIgnoreComponent,
+//   // imageB2UComponentLoader,
+//   // animePlayerComponentLoader,
+//   // animeIgnoreComponentLoader,
+//   // animePlayerFormatter,
+//   // animePlayerFormatLoader,
+//   // ImgToUrlService
+// } from '~/editor'
+// import LazyParserClient from './LazyParser.client.vue'
+// import { useParser } from './hooks/useParser'
+import '@textbus/editor/bundles/textbus.min.css'
 type Model = Submission
 const { userStore, submissionStore } = useStore()
 const message = useMessage()
@@ -36,9 +48,21 @@ const renderIcon = (component: Component | string) => {
   return h(NIcon, { component: component, size: 24 })
 }
 const handleParse = (row: Model) => {
-  $fetch('/api/manage/parse/' + row._id).then(res => {
-    console.log(res)
-    console.log(window.location.host)
+  $fetch('/api/manage/parse/' + row._id).then(async (res:any) => {
+    // console.log(res.content)
+    // console.log(window.location.host)
+    try {
+      const { createEditor } = await import('@textbus/editor')
+      const { TestService } = await import('~/editor')
+      const editorRef = document.getElementById('editorRef')
+      const editor = createEditor({
+        content: res.content,
+        providers: [TestService]
+      })
+      editor.mount(editorRef!)
+    } catch (error) {
+      console.log(error)
+    }
   })
 }
 
@@ -387,6 +411,7 @@ function handleShowSelectOptionUpdate(value) {
       :row-props="rowProps"
       @update:sorter="handleSorterChange"
     />
+    <div id="editorRef"></div>
     <!-- <n-dropdown
       placement="bottom-start"
       trigger="manual"

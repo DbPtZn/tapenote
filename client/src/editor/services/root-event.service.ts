@@ -1,5 +1,4 @@
-import { Observable, Subject, distinctUntilChanged } from '@tanbo/stream'
-import { ComponentInstance, Injectable } from '@textbus/core'
+import { Observable, Subject, distinctUntilChanged, ComponentInstance, Injectable } from '@textbus/core'
 
 @Injectable()
 export class RootEventService {

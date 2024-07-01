@@ -24,7 +24,7 @@ export default defineNuxtConfig({
     'nuxt-icons',
     'nuxt-viewport',
     '@vueuse/nuxt',
-    '@pinia/nuxt'
+    '@pinia/nuxt',
   ],
   // app: {
   //   // 配置页面切换过渡效果

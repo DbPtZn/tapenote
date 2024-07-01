@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   try {
     const id = getRouterParam(event, 'id')
     if(!id) throw new Error('未提供有效 id 参数')
-    const file = articleService.getUnparsedFile(id)
+    const file = await articleService.getUnparsedFile(id)
     return file
   } catch (error) {
     console.error(error)

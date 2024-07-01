@@ -58,7 +58,7 @@ const handleFinish = (options: { file: UploadFileInfo; fileList: UploadFileInfo[
         if (typeof src !== 'string') {
           return
         }
-        if (imgToUrlService.isBase64(src)) {
+        if (ImgToUrlService.isBase64(src)) {
           await imgToUrlService
             .uploadImg(src)
             .then(url => {

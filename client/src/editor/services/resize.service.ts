@@ -1,5 +1,4 @@
-import { Injectable } from '@textbus/core'
-import { Observable, Subject } from '@textbus/core'
+import { Injectable, Observable, Subject } from '@textbus/core'
 
 @Injectable()
 export class ResizeService {

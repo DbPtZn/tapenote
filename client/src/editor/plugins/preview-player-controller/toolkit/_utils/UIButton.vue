@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Keymap } from '@textbus/core'
-import { UIIcon } from '@/editor'
+import { UIIcon } from '../../../..'
 import { computed, reactive } from 'vue'
 import { useThemeVars } from 'naive-ui'
 const themeVars = useThemeVars()

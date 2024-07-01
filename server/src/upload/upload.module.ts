@@ -35,6 +35,7 @@ const __rootdirname = process.cwd()
             filename: (_, file, cb) => {
               // console.log(file)
               // const filename = `${new Date().getTime()}${extname(file.originalname)}`
+               // 使用 file.originalname 的时候，如果上传多张图片，必须确保图片名称不一样，否则后面的图片会覆盖前面的
               cb(null, file.originalname)
             }
           })

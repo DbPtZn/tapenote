@@ -182,18 +182,34 @@ export const imageB2UComponent = defineComponent({
     // 非 https
     if (data && data.state && !reg.test(data.state.src)) {
       // const formdata = new FormData()
-      img2Url.uploadImg(data.state.src).then(url => {
-        console.log(url)
-        stateController.update((draft) => {
-          draft.src = url
-        })
-      }).catch(err => {
-        console.log('图片上传失败')
-        stateController.update((draft) => {
-          draft.src = 'image-error.png'
-        })
-        console.log(err)
-      }) 
+      // img2Url.uploadImg(data.state.src).then(url => {
+      //   console.log(url)
+      //   stateController.update((draft) => {
+      //     draft.src = url
+      //   })
+      // }).catch(err => {
+      //   console.log('图片上传失败')
+      //   stateController.update((draft) => {
+      //     draft.src = 'image-error.png'
+      //   })
+      //   console.log(err)
+      // })
+      img2Url.addUploadProcess(
+        data.state.src, 
+        (url) => {
+          console.log(url)
+          stateController.update((draft) => {
+            draft.src = url
+          })
+        },
+        (err) => {
+          console.log('图片上传失败')
+          stateController.update((draft) => {
+            draft.src = 'image-error.png'
+          })
+          console.log(err)
+        }
+      )
     }
 
     let state = data?.state || {

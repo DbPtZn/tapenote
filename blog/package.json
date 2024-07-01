@@ -23,6 +23,7 @@
     "axios": "^1.7.2",
     "classnames": "^2.5.1",
     "dayjs": "^1.11.11",
+    "element-resize-detector": "^1.2.4",
     "formidable": "^3.5.1",
     "joi": "^17.13.3",
     "js-cookie": "^3.0.5",

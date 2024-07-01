@@ -9,6 +9,7 @@ import {
   LinkJumpTipPlugin,
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
+import { useUploadImg } from '../useUploadImg'
 export function getNoteConfig(args: {
   account: string,
   hostname: string,
@@ -111,12 +112,18 @@ export function getNoteConfig(args: {
       // 图片工具
       const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
       const imgToUrlService = injector.get(ImgToUrlService)
-      imgToUrlService.setup({
-        hostname: hostname,
-        accessToken: accessToken || '',
-        uploadImgUrl: '/upload/img',
-        dirname: dirname
-      })
+      // imgToUrlService.setup({
+      //   hostname: hostname,
+      //   accessToken: accessToken || '',
+      //   uploadImgUrl: '/upload/img',
+      //   dirname: dirname
+      // })
+      const { uploadImgFunction } = useUploadImg('/upload/img', hostname, accessToken || '')
+      imgToUrlService.setup(uploadImgFunction)
+      // imgToUrlService.onFinish.subscribe((value) => {
+      //   console.log('上传成功:')
+      //   console.log(value)
+      // })
     }
   }
   return config
