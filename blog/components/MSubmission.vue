@@ -21,6 +21,7 @@ import dayjs from 'dayjs'
 // import LazyParserClient from './LazyParser.client.vue'
 // import { useParser } from './hooks/useParser'
 import '@textbus/editor/bundles/textbus.min.css'
+import { useParser } from './hooks/useParser'
 type Model = Submission
 const { userStore, submissionStore } = useStore()
 const message = useMessage()
@@ -52,14 +53,17 @@ const handleParse = (row: Model) => {
     // console.log(res.content)
     // console.log(window.location.host)
     try {
-      const { createEditor } = await import('@textbus/editor')
-      const { TestService } = await import('~/editor')
-      const editorRef = document.getElementById('editorRef')
-      const editor = createEditor({
-        content: res.content,
-        providers: [TestService]
-      })
-      editor.mount(editorRef!)
+      // const { createEditor } = await import('@textbus/editor')
+      // const { ImgToUrlService } = await import('~/editor')
+      // const editorRef = document.getElementById('editorRef')
+      // const editor = createEditor({
+      //   content: res.content,
+      //   providers: [ImgToUrlService]
+      // })
+      // editor.mount(editorRef!)
+      const parser = useParser()
+      const data = await parser.parseContent(res.content)
+      console.log(data)
     } catch (error) {
       console.log(error)
     }

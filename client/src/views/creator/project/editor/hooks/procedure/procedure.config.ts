@@ -28,6 +28,7 @@ import {
   LinkJumpTipPlugin
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
+import { useUploadImg } from '../useUploadImg'
 export function getProcedureConfig(args: {
   account: string,
   hostname: string,
@@ -158,12 +159,8 @@ export function getProcedureConfig(args: {
       // 图片工具
       const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
       const imgToUrlService = injector.get(ImgToUrlService)
-      imgToUrlService.setup({
-        hostname: hostname,
-        accessToken: accessToken || '',
-        uploadImgUrl: '/upload/img',
-        dirname: dirname
-      })
+      const { uploadImgFunction } = useUploadImg('/upload/img', hostname, accessToken || '')
+      imgToUrlService.setup(uploadImgFunction)
     }
   }
   return config

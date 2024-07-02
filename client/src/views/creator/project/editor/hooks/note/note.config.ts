@@ -112,12 +112,6 @@ export function getNoteConfig(args: {
       // 图片工具
       const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
       const imgToUrlService = injector.get(ImgToUrlService)
-      // imgToUrlService.setup({
-      //   hostname: hostname,
-      //   accessToken: accessToken || '',
-      //   uploadImgUrl: '/upload/img',
-      //   dirname: dirname
-      // })
       const { uploadImgFunction } = useUploadImg('/upload/img', hostname, accessToken || '')
       imgToUrlService.setup(uploadImgFunction)
       // imgToUrlService.onFinish.subscribe((value) => {

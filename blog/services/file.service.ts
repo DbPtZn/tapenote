@@ -22,10 +22,12 @@ export class FileService {
   }
 
   saveImage(args: { sourcePath: string; extname: string; dirname: string }, userId: ObjectId) {
+    // console.log('saveImage')
     const { sourcePath, extname, dirname } = args
+    // console.log(args)
     return new Promise<string>(async (resolve, reject) => {
       const { size, md5 } = await this.calculateFileStats(sourcePath)
-
+      // console.log({ size, md5 })
       const file = await this.filesRepository.findOne({ md5, size, userId })
       if (file) {
         const isExists = fs.existsSync(file.path)
@@ -36,12 +38,18 @@ export class FileService {
         }
       }
 
-      const filename = `${randomstring.generate(3)}${new Date().getTime()}.${extname}`
+      const extWithoutDot = extname.charAt(0) === '.' ? extname.slice(1) : extname
+      const filename = `${randomstring.generate(3)}${new Date().getTime()}.${extWithoutDot}`
       const filepath = this.getFilePath({
         dirname,
         filename,
         category: 'image'
       })
+
+      const targetDir = path.dirname(filepath)
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true })
+      }
 
       // 移动文件
       fs.rename(sourcePath, filepath, err => {
@@ -81,7 +89,7 @@ export class FileService {
 
       // 监听子线程发回的消息
       child.on('message', (msg: any) => {
-        // console.log('child msg' + msg)
+        console.log('child msg' + msg)
         if (msg.error) {
           // console.log(data.error)
           console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)
