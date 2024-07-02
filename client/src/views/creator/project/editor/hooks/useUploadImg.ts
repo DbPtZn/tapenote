@@ -43,7 +43,8 @@ function base64ImgtoFile(baseUrl: any) {
 }
 
 function isBase64(str: string) {
-  const regex = /^data:image\/([a-zA-Z]+);base64,/
+  // const regex = /^data:image\/([a-zA-Z]+);base64,/
+  const regex = /^data:image\/.*;base64,/i
   return regex.test(str)
 }
 

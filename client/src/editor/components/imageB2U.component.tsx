@@ -178,9 +178,9 @@ export const imageB2UComponent = defineComponent({
     const img2Url = injector.get(ImgToUrlService) 
 
     // const reg = /^https?/gi
-    const reg = /^https?:\/\/.+\.(jpg|jpeg|png|gif|bmp|svg)$/i
-    // 非 https
-    if (data && data.state && !reg.test(data.state.src)) {
+    // const reg = /^https?:\/\/.+\.(jpg|jpeg|png|gif|bmp|svg)$/i
+    // 若图片为 base64
+    if (data && data.state && ImgToUrlService.isBase64(data.state.src)) {
       // const formdata = new FormData()
       // img2Url.uploadImg(data.state.src).then(url => {
       //   console.log(url)

@@ -11943,8 +11943,7 @@ const imageB2UComponent = defineComponent$1({
   setup(data) {
     const injector = useContext();
     const img2Url = injector.get(ImgToUrlService);
-    const reg = /^https?:\/\/.+\.(jpg|jpeg|png|gif|bmp|svg)$/i;
-    if (data && data.state && !reg.test(data.state.src)) {
+    if (data && data.state && ImgToUrlService.isBase64(data.state.src)) {
       img2Url.addUploadProcess(
         data.state.src,
         (url) => {
@@ -12332,7 +12331,7 @@ let ImgToUrlService = class {
     });
   }
   static isBase64(str) {
-    const regex = /^data:image\/([a-zA-Z]+);base64,/;
+    const regex = /^data:image\/.*;base64,/i;
     return regex.test(str);
   }
   destory() {
