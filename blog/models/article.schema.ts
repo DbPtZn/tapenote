@@ -2,6 +2,7 @@ import { Types } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
 import type { ArticleSchema } from '~/types'
 import { RemovedEnum } from '~/enums'
+import mongoosePaginate from 'mongoose-paginate'
 export const Article = defineMongooseModel<ArticleSchema>({
   name: 'Article',
   schema: {
@@ -184,13 +185,15 @@ export const Article = defineMongooseModel<ArticleSchema>({
     }
   },
   options: {
-    timestamps: true
+    timestamps: true,
+    pluginTags: ['paginate']
   },
   hooks(schema) {
     // 可以在这里进行保存时的处理，比如校验、加密等
     schema.pre('save', function (this, next) {
       this.updateAt = new Date()
       next()
-    })
-  }
+    }),
+    schema.plugin(mongoosePaginate)
+  },
 })

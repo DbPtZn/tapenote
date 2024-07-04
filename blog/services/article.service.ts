@@ -1,8 +1,9 @@
 import type { ObjectId } from 'mongoose'
-import type { CreateArticleDto, ParseArticleDto } from '~/dto'
+import type { CreateArticleDto, GetArticleDto, ParseArticleDto } from '~/dto'
 import { Article } from '~/models'
 import * as UUID from 'uuid'
 import fs from 'fs'
+import mongoosePaginate from 'mongoose-paginate'
 import type { ArticleSchema, ArticleType } from '~/types'
 
 class ArticleService {
@@ -64,6 +65,43 @@ class ArticleService {
     } catch (error) {
       throw error
     }
+  }
+
+  async find(dto: GetArticleDto, userId: ObjectId) {
+    const { filter, limit, skip, sort } = dto
+    const articles = await this.articlesRepository.find(
+      { ...filter, userId },
+      {
+        _id: 1,
+        UID: 1,
+        editionId: 1,
+        fromEditionId: 1,
+        authcodeId: 1,
+        isParsed: 1,
+        title: 1,
+        msg: 1,
+        editorVersion: 1,
+        type: 1,
+        abbrev: 1,
+        author: 1,
+        createAt: 1,
+        updateAt: 1
+      },
+      {
+        populate: ['authcodeId'],
+        limit: limit,
+        skip: skip,
+        sort: sort
+      }
+    )
+    const data = articles.map(artilce => {
+      const { authcodeId, ...members } = artilce.toJSON()
+      return {
+        ...members,
+        authcode: artilce.authcodeId
+      }
+    })
+    return data
   }
 
   async findAllUnParsed(userId: ObjectId) {

@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error(error)
     throw createError({
-      message: '删除授权码失败！'
+      message: '获取稿件数据失败！'
     })
   }
 })
