@@ -49,6 +49,7 @@ interface PackData {
   // -- 作品内容
   title: string
   content: string
+  abbrev: string
   audio: string
   duration: number
   promoterSequence: Array<string>
@@ -256,7 +257,7 @@ export class Pack {
         const audioBlob = audioIndex === -1 ? null : files[audioIndex].file
         // const file = new File([product], 'product_' + Date.now() + '.json', { type: 'application/json' })
         // const blob = new Blob([file], { type: 'application/octet-stream' })
-        const { site, type, editionId, title, code, penname, email, blog, msg } = data
+        const { site, type, editionId, title, abbrev, code, penname, email, blog, msg } = data
 
         const formData = new FormData()
         jsonBlob && formData.append('jsonDocs', jsonBlob, 'document.json')
@@ -265,6 +266,7 @@ export class Pack {
         formData.append('type', type)
         formData.append('editionId', editionId)
         formData.append('title', title)
+        formData.append('abbrev', abbrev)
         formData.append('code', code)
         formData.append('penname', penname)
         formData.append('email', email)

@@ -11,7 +11,7 @@ export function useUploadImg() {
       //     resolve(url)
       //   })
       //   .catch(err => reject(err))
-      $fetch('/api/uploads/img', {
+      $fetch('/api/upload/img', {
         method: 'POST',
         body: formdata
       }).then(url => {

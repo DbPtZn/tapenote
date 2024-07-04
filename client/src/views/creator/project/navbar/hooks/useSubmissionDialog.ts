@@ -24,6 +24,7 @@ export function useSubmissionDialog() {
 
         title: data.title,
         content: data.content,
+        abbrev: data.abbrev,
         audio: data.audio,
         duration: data.duration,
         promoterSequence: data.promoterSequence,

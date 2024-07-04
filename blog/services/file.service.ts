@@ -89,7 +89,7 @@ export class FileService {
 
       // 监听子线程发回的消息
       child.on('message', (msg: any) => {
-        console.log('child msg' + msg)
+        // console.log('child msg' + msg)
         if (msg.error) {
           // console.log(data.error)
           console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)

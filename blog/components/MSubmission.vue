@@ -4,7 +4,7 @@ import type { DataTableColumns } from 'naive-ui'
 import _ from 'lodash'
 import { onMounted, createApp, computed } from 'vue'
 import type { Submission } from '~/types'
-import { Icon, Parser } from '#components'
+import { Icon } from '#components'
 import useStore from '~/store'
 import dayjs from 'dayjs'
 // import {
@@ -22,6 +22,7 @@ import dayjs from 'dayjs'
 // import { useParser } from './hooks/useParser'
 import '@textbus/editor/bundles/textbus.min.css'
 import { useParser } from './hooks/useParser'
+import type { ParseArticleDto } from '~/dto'
 type Model = Submission
 const { userStore, submissionStore } = useStore()
 const message = useMessage()
@@ -50,24 +51,38 @@ const renderIcon = (component: Component | string) => {
 }
 const handleParse = (row: Model) => {
   $fetch('/api/manage/parse/' + row._id).then(async (res:any) => {
-    // console.log(res.content)
-    // console.log(window.location.host)
     try {
-      // const { createEditor } = await import('@textbus/editor')
-      // const { ImgToUrlService } = await import('~/editor')
-      // const editorRef = document.getElementById('editorRef')
-      // const editor = createEditor({
-      //   content: res.content,
-      //   providers: [ImgToUrlService]
-      // })
-      // editor.mount(editorRef!)
       const parser = useParser()
-      const data = await parser.parseContent(res.content)
-      console.log(data)
+      const result = await parser.parseContent(res.content)
+      const dto: ParseArticleDto = {
+        _id: row._id,
+        content: result.content,
+        cover: result.cover.split(window.location.host)[1],
+        duration: res.duration, // 音频时长
+        promoterSequence: res.promoterSequence, // 启动子序列
+        keyframeSequence: res.keyframeSequence, // 关键帧序列
+        subtitleSequence: res.subtitleSequence, // 字幕序列
+        subtitleKeyframeSequence: res.subtitleKeyframeSequence, // 字幕关键帧序列
+      }
+      $fetch('/api/manage/article/parse', {
+        method: 'POST',
+        body: dto
+      }).then(() => {
+        message.success('解析成功')
+        row.abbrev = result.content.replace(/<[^>]+>/g, '').slice(0, 100)
+        row.isParsed = true
+      }).catch(error => {
+        console.log(error)
+        message.error('解析失败,项目文件可能损坏或不符合稿件规范！')
+      })
     } catch (error) {
       console.log(error)
     }
   })
+}
+
+const handleOpen = (row: Model) => {
+  message.success(row._id)
 }
 
 const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColumns<Model> => {
@@ -181,18 +196,19 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                   type: "primary",
                   size: 'small',
                   onClick: () => {
-                    handleParse(row)
+                    row.isParsed ? handleOpen(row) :handleParse(row)
                   }
                 },
                 {
                   default: () => {
-                    return row.isParsed ? '' : '解析'
+                    return row.isParsed ? '打开' : '解析'
                   }
                 }
               ),
               h(
                 NButton,
                 {
+                  show: !row.isParsed,
                   strong: true,
                   tertiary: true,
                   size: 'small',
@@ -217,7 +233,7 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                     })
                   }
                 },
-                { default: () => '拒稿' }
+                { default: () => row.isParsed ? '分配' : '拒稿' }
               )
             ]
           }

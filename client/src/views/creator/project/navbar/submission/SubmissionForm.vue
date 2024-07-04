@@ -32,6 +32,7 @@ const props = defineProps<{
   editionId?: string
   title: string
   content: string // 内容
+  abbrev: string
   audio?: string
   duration?: number
   promoterSequence?: string[]
@@ -187,6 +188,7 @@ function handleSubmit(e: MouseEvent) {
           editionId: model.value.editionId,
           title: model.value.title,
           content: props.content,
+          abbrev: props.abbrev || '',
           audio: props.audio || '',
           duration: props.duration || 0,
           promoterSequence: props.promoterSequence || [],

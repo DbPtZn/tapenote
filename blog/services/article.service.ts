@@ -1,9 +1,10 @@
 import type { ObjectId } from 'mongoose'
-import type { CreateArticleDto } from '~/dto'
+import type { CreateArticleDto, ParseArticleDto } from '~/dto'
 import { Article } from '~/models'
 import * as UUID from 'uuid'
 import fs from 'fs'
 import type { ArticleSchema, ArticleType } from '~/types'
+
 class ArticleService {
   articlesRepository: typeof Article
   constructor() {
@@ -37,6 +38,32 @@ class ArticleService {
         userId
       })
     } catch (error) {}
+  }
+
+  async parse(dto: ParseArticleDto, userId: ObjectId) {
+    try {
+      const { _id, cover, content, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } = dto
+      const result = await this.articlesRepository.updateOne(
+        { _id },
+        {
+          $set: {
+            isParsed: true,
+            cover,
+            content,
+            abbrev: content.replace(/<[^>]+>/g, '').slice(0, 100),
+            duration,
+            promoterSequence,
+            keyframeSequence,
+            subtitleSequence,
+            subtitleKeyframeSequence
+          }
+        }
+      )
+      console.log(result)
+      return result.acknowledged
+    } catch (error) {
+      throw error
+    }
   }
 
   async findAllUnParsed(userId: ObjectId) {
@@ -114,13 +141,12 @@ class ArticleService {
     }
   }
 
-
   async getUnparsedFile(_id: string) {
     try {
       const article = await this.articlesRepository.findById(_id)
-      if(article && !article.isParsed) {
+      if (article && !article.isParsed) {
         const filepath = article.content
-        if(fs.existsSync(filepath)) {
+        if (fs.existsSync(filepath)) {
           const file = fs.readFileSync(filepath)
           return file
         } else {
@@ -132,10 +158,6 @@ class ArticleService {
     } catch (error) {
       throw error
     }
-  }
-
-  parse() {
-    //
   }
 
   async get(UID: string) {
