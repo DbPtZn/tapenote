@@ -1,6 +1,7 @@
 import type { ObjectId } from 'mongoose'
 import type { RemovedEnum } from '~/enums'
 import type { AuthCodeType } from '.'
+import  type { PaginateResult } from 'mongoose'
 
 export interface ArticleSchema {
   _id: ObjectId
@@ -61,6 +62,15 @@ export type ArticleType = Omit<ArticleSchema, '_id' | 'userId' | 'authcodeId' | 
   updateAt: string
 }
 
+export type ArticleFilter = Omit<ArticleSchema, '_id' | 'userId' | 'authcodeId' | 'columnId' | 'createAt' | 'updateAt'> & {
+  _id: string
+  userId: string
+  authcodeId: string
+  columnId: string
+  createAt: string
+  updateAt: string
+}
+
 export type Subfile = Pick<
   ArticleType,
   | '_id'
@@ -100,6 +110,21 @@ export type Submission = Pick<
   authcode: AuthCodeType
 }
 
+export type ArticlePaginateResult = PaginateResult<Submission>
+
+export type SubmissionState = Pick<
+  ArticlePaginateResult,
+  | 'docs'
+  | 'totalDocs'
+  | 'limit'
+  | 'hasPrevPage'
+  | 'hasNextPage'
+  | 'page'
+  | 'totalPages'
+  | 'prevPage'
+  | 'nextPage'
+  | 'pagingCounter'
+>
 // _id: '',
 // UID: '',
 // editionId: '',

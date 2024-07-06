@@ -7,50 +7,35 @@ import type { Submission } from '~/types'
 import { Icon } from '#components'
 import useStore from '~/store'
 import dayjs from 'dayjs'
-// import {
-//   TestService
-//   // animePlayerComponent,
-//   // animeIgnoreComponent,
-//   // imageB2UComponentLoader,
-//   // animePlayerComponentLoader,
-//   // animeIgnoreComponentLoader,
-//   // animePlayerFormatter,
-//   // animePlayerFormatLoader,
-//   // ImgToUrlService
-// } from '~/editor'
-// import LazyParserClient from './LazyParser.client.vue'
-// import { useParser } from './hooks/useParser'
 import '@textbus/editor/bundles/textbus.min.css'
 import { useParser } from './hooks/useParser'
 import type { ParseArticleDto } from '~/dto'
+import { RemovedEnum } from '~/enums'
 type Model = Submission
 const { userStore, submissionStore } = useStore()
 const message = useMessage()
 const dialog = useDialog()
 const themeVars = useThemeVars()
 const router = useRouter()
-const isOnlyShowUnparsed = ref(true)
 // const user = ref<UserType>()
 onMounted(() => {
   // console.log(router.currentRoute.value.query.id)
   const id = router.currentRoute.value.query.id as string
-  if(submissionStore.data.length === 0) {
-    submissionStore.fetch(id, isOnlyShowUnparsed.value)
+  if (submissionStore.docs.length === 0) {
+    submissionStore.fetch({
+      filter: { removed: RemovedEnum.NEVER },
+      limit: 10,
+      skip: 0
+    })
   }
-  console.log(submissionStore.data)
+  console.log(submissionStore.docs)
 })
-// const data = ref(submissionStore.data)
-
-// let editData = ref<Model | null>(null)
-
-const renderIcon = (component: Component | string) => {
-  if (typeof component === 'string') {
-    return h(Icon, { name: component })
-  }
-  return h(NIcon, { component: component, size: 24 })
+const data = computed(() => submissionStore.$state)
+const renderIcon = (component: string) => {
+  return h(Icon, { name: component })
 }
 const handleParse = (row: Model) => {
-  $fetch('/api/manage/parse/' + row._id).then(async (res:any) => {
+  $fetch('/api/manage/parse/' + row._id).then(async (res: any) => {
     try {
       const parser = useParser()
       const result = await parser.parseContent(res.content)
@@ -62,19 +47,21 @@ const handleParse = (row: Model) => {
         promoterSequence: res.promoterSequence, // 启动子序列
         keyframeSequence: res.keyframeSequence, // 关键帧序列
         subtitleSequence: res.subtitleSequence, // 字幕序列
-        subtitleKeyframeSequence: res.subtitleKeyframeSequence, // 字幕关键帧序列
+        subtitleKeyframeSequence: res.subtitleKeyframeSequence // 字幕关键帧序列
       }
       $fetch('/api/manage/article/parse', {
         method: 'POST',
         body: dto
-      }).then(() => {
-        message.success('解析成功')
-        row.abbrev = result.content.replace(/<[^>]+>/g, '').slice(0, 100)
-        row.isParsed = true
-      }).catch(error => {
-        console.log(error)
-        message.error('解析失败,项目文件可能损坏或不符合稿件规范！')
       })
+        .then(() => {
+          message.success('解析成功')
+          row.abbrev = result.content.replace(/<[^>]+>/g, '').slice(0, 100)
+          row.isParsed = true
+        })
+        .catch(error => {
+          console.log(error)
+          message.error('解析失败,项目文件可能损坏或不符合稿件规范！')
+        })
     } catch (error) {
       console.log(error)
     }
@@ -161,7 +148,7 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
       sorter: 'default',
       render(row) {
         return dayjs(row.updateAt).format('YYYY-MM-DD HH:mm:ss')
-      },
+      }
       // sorter(rowA, rowB) {
       //   return Number(rowA.updateAt) - Number(rowB.updateAt)
       // }
@@ -175,7 +162,7 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
       sorter: 'default',
       render(row) {
         return dayjs(row.createAt).format('YYYY-MM-DD HH:mm:ss')
-      },
+      }
     },
     {
       title: '操作',
@@ -193,10 +180,10 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                 NButton,
                 {
                   strong: true,
-                  type: "primary",
+                  type: 'primary',
                   size: 'small',
                   onClick: () => {
-                    row.isParsed ? handleOpen(row) :handleParse(row)
+                    row.isParsed ? handleOpen(row) : handleParse(row)
                   }
                 },
                 {
@@ -233,7 +220,7 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                     })
                   }
                 },
-                { default: () => row.isParsed ? '分配' : '拒稿' }
+                { default: () => (row.isParsed ? '分配' : '拒稿') }
               )
             ]
           }
@@ -244,13 +231,14 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
 }
 
 /** 展示列 */
-const cities = ref([ 'type', 'title',  'abbrev', 'authcode',  'msg', 'author', 'isParsed', 'updateAt', 'createAt', 'actions'])
+const cities = ref(['type', 'title', 'abbrev', 'authcode', 'msg', 'author', 'isParsed', 'updateAt', 'createAt', 'actions'])
 const columnSelect = ref(false)
 const columns = computed(() => createColumns({ play(row) {} }).filter((c: any) => cities.value.includes(c.key)))
 // console.log(columns)
 const paginationReactive = reactive({
-  page: 1,
-  pageSize: 10,
+  page: computed(() => data.value.page),
+  pageSize: computed(() => data.value.limit ? data.value.limit : 10), // 注意，不能为 0，否则会内存泄漏
+  pageCount: computed(() => data.value.totalPages),
   // showSizePicker: true,
   // pageSizes: [6, 8, 10, 12],
   onChange: (page: number) => {
@@ -415,17 +403,17 @@ function handleShowSelectOptionUpdate(value) {
         </n-checkbox-group>
       </div>
       <div class="group">
-        <n-select 
-        v-model:value="showSelectOption" 
-        :options="showSelectOptions" 
-        :consistent-menu-width="false"
-        @update:value="handleShowSelectOptionUpdate"
+        <n-select
+          v-model:value="showSelectOption"
+          :options="showSelectOptions"
+          :consistent-menu-width="false"
+          @update:value="handleShowSelectOptionUpdate"
         />
       </div>
     </div>
     <n-data-table
       :columns="columns"
-      :data="submissionStore.data"
+      :data="submissionStore.docs"
       :pagination="paginationReactive"
       :bordered="false"
       :row-props="rowProps"

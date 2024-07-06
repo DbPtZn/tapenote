@@ -52,7 +52,7 @@
     //   "@/*": ["src/*"]
     // },
   },
-  "types": [
-    "@pinia/nuxt"
-  ]
+  // "types": [
+  //   "@pinia/nuxt"
+  // ]
 }

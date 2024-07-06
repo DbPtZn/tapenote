@@ -2,7 +2,10 @@ import { Types } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
 import type { ArticleSchema } from '~/types'
 import { RemovedEnum } from '~/enums'
-import mongoosePaginate from 'mongoose-paginate'
+// import mongoosePaginate from 'mongoose-paginate'
+import mongoosePaginateV2 from 'mongoose-paginate-v2'
+import type { PaginateModel } from 'mongoose'
+// mongoose.plugin(mongoosePaginate)
 export const Article = defineMongooseModel<ArticleSchema>({
   name: 'Article',
   schema: {
@@ -193,7 +196,8 @@ export const Article = defineMongooseModel<ArticleSchema>({
     schema.pre('save', function (this, next) {
       this.updateAt = new Date()
       next()
-    }),
-    schema.plugin(mongoosePaginate)
-  },
-})
+    })
+    schema.plugin(mongoosePaginateV2)
+  }
+}) as PaginateModel<ArticleSchema>
+// 使用了 mongoosePaginateV2 之后需要使用类型断言将 model 设置成 PaginateModel
