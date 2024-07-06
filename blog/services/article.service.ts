@@ -18,7 +18,7 @@ class ArticleService {
   }
 
   create(dto: CreateArticleDto, userId: ObjectId, fromEditionId: string) {
-    const { isParsed, editorVersion, authcodeId, penname, email, blog, msg, type, title, content, audio } = dto
+    const { isParsed, editorVersion, authcodeId, penname, email, blog, msg, type, title, abbrev, content, audio } = dto
     try {
       return this.articlesRepository.create({
         isParsed,
@@ -29,6 +29,7 @@ class ArticleService {
         msg,
         type,
         title,
+        abbrev,
         content,
         audio,
         author: {
@@ -68,7 +69,7 @@ class ArticleService {
   }
 
   async find(dto: GetArticleDto, userId: ObjectId) {
-    const { filter, limit, skip, sort } = dto
+    const { filter, limit, page, sort } = dto
     const result = await this.articlesRepository.paginate({ ...filter, userId }, {
       projection: {
         _id: 1,
@@ -87,8 +88,9 @@ class ArticleService {
         updateAt: 1
       },
       populate: ['authcodeId'],
-      limit: 2,
-      page: 1
+      limit: limit || 10,
+      page: page || 1,
+      sort
     })
     result.docs = result.docs.map(artilce => {
       const { authcodeId, ...members } = artilce.toJSON()

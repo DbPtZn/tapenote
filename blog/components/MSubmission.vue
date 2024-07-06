@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { NButton, NIcon, NSpace, useDialog, useMessage, useThemeVars } from 'naive-ui'
-import type { DataTableColumns } from 'naive-ui'
+import type { DataTableColumns, PaginationInfo } from 'naive-ui'
 import _ from 'lodash'
 import { onMounted, createApp, computed } from 'vue'
 import type { Submission } from '~/types'
@@ -18,16 +18,18 @@ const dialog = useDialog()
 const themeVars = useThemeVars()
 const router = useRouter()
 // const user = ref<UserType>()
+const id = computed(() => router.currentRoute.value.query.id as string)
+const page = computed(() => Number(router.currentRoute.value.query.page))
 onMounted(() => {
   // console.log(router.currentRoute.value.query.id)
-  const id = router.currentRoute.value.query.id as string
-  if (submissionStore.docs.length === 0) {
+  
+  // if (submissionStore.docs.length === 0) {
     submissionStore.fetch({
       filter: { removed: RemovedEnum.NEVER },
-      limit: 10,
-      skip: 0
+      limit: 3,
+      page: page.value || 1
     })
-  }
+  // }
   console.log(submissionStore.docs)
 })
 const data = computed(() => submissionStore.$state)
@@ -236,18 +238,27 @@ const columnSelect = ref(false)
 const columns = computed(() => createColumns({ play(row) {} }).filter((c: any) => cities.value.includes(c.key)))
 // console.log(columns)
 const paginationReactive = reactive({
-  page: computed(() => data.value.page),
-  pageSize: computed(() => data.value.limit ? data.value.limit : 10), // 注意，不能为 0，否则会内存泄漏
-  pageCount: computed(() => data.value.totalPages),
+  page: data.value.page,
+  pageSize: data.value.limit ? data.value.limit : 10, // 注意，不能为 0，否则会内存泄漏
+  pageCount: data.value.totalPages,
+  itemCount: 100,
   // showSizePicker: true,
   // pageSizes: [6, 8, 10, 12],
+  next: (info: PaginationInfo) => {
+    return h('button', {}, '下一页')
+  },
+  prev: (info: PaginationInfo) => {
+    return h('button', {}, '上一页')
+  },
   onChange: (page: number) => {
+    console.log(page)
     paginationReactive.page = page
   },
-  onUpdatePageSize: (pageSize: number) => {
-    paginationReactive.pageSize = pageSize
-    paginationReactive.page = 1
-  }
+  // onUpdatePageSize: (pageSize: number) => {
+  //   console.log(pageSize)
+  //   paginationReactive.pageSize = pageSize
+  //   paginationReactive.page = 1
+  // }
 })
 
 /** 添加 */
@@ -414,12 +425,13 @@ function handleShowSelectOptionUpdate(value) {
     <n-data-table
       :columns="columns"
       :data="submissionStore.docs"
-      :pagination="paginationReactive"
       :bordered="false"
       :row-props="rowProps"
       @update:sorter="handleSorterChange"
     />
-    <div id="editorRef"></div>
+    <div class="footer">
+      <n-pagination v-model:page="paginationReactive.page" :page-count="paginationReactive.pageCount" />
+    </div>
     <!-- <n-dropdown
       placement="bottom-start"
       trigger="manual"
@@ -457,6 +469,11 @@ function handleShowSelectOptionUpdate(value) {
       cursor: pointer;
     }
   }
+}
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px;
 }
 /*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/
 ::-webkit-scrollbar {

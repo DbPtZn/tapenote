@@ -21,9 +21,9 @@ export interface CreateArticleDto {
 
   title: string // 标题
 
-  content: string // 内容
+  abbrev: string // 缩略
 
-  // abbrev: string // 缩略
+  content: string // 内容
 
   audio: string // 音频地址
 

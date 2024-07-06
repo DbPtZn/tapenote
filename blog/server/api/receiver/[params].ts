@@ -75,6 +75,7 @@ export default defineEventHandler(async (event) => {
       msg: fields.msg?.[0] || '',
       type: fields.type?.[0] as any || 'other',
       title: fields.title?.[0] || '',
+      abbrev: fields.abbrev?.[0] || '',
       content: files['jsonDocs']?.[0].filepath,
       audio: files['audios']?.[0].filepath || '',
     }
