@@ -164,7 +164,7 @@ const dropMethods = {
             </n-space>
           </n-button> -->
           <!-- 稿件管理 -->
-          <Nuxt-link to="/manage/submission?id=all">
+          <Nuxt-link to="/manage/submission">
             <n-button 
               class="collapse-item-btn"
               size="large" 

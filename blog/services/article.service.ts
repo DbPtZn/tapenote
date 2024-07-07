@@ -70,6 +70,7 @@ class ArticleService {
 
   async find(dto: GetArticleDto, userId: ObjectId) {
     const { filter, limit, page, sort } = dto
+    console.log(filter)
     const result = await this.articlesRepository.paginate({ ...filter, userId }, {
       projection: {
         _id: 1,

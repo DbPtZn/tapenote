@@ -396,16 +396,18 @@ const options = ref<DropdownOption[]>([
         </n-flex>
       </div>
       <div class="group" v-show="columnSelect">
-        <n-checkbox-group v-model:value="cities">
-          <n-space item-style="display: flex;">
-            <n-checkbox value="name" label="名称" />
-            <n-checkbox value="code" label="授权码" />
-            <n-checkbox value="desc" label="描述" />
-            <n-checkbox value="updateAt" label="更新时间" />
-            <n-checkbox value="createAt" label="创建时间" />
-            <n-checkbox value="disable" label="状态" />
-          </n-space>
-        </n-checkbox-group>
+        <ClientOnly>
+          <n-checkbox-group v-model:value="cities">
+            <n-space item-style="display: flex;">
+              <n-checkbox value="name" label="名称" />
+              <n-checkbox value="code" label="授权码" />
+              <n-checkbox value="desc" label="描述" />
+              <n-checkbox value="updateAt" label="更新时间" />
+              <n-checkbox value="createAt" label="创建时间" />
+              <n-checkbox value="disable" label="状态" />
+            </n-space>
+          </n-checkbox-group>
+        </ClientOnly>
       </div>
       <div class="group">
         <n-button secondary @click="handleAdd">

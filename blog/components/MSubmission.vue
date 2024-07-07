@@ -20,19 +20,28 @@ const router = useRouter()
 // const user = ref<UserType>()
 const id = computed(() => router.currentRoute.value.query.id as string)
 const page = computed(() => Number(router.currentRoute.value.query.page))
+const docs = ref<Submission[]>([])
 onMounted(() => {
-  // console.log(router.currentRoute.value.query.id)
-  
-  // if (submissionStore.docs.length === 0) {
-    submissionStore.fetch({
-      filter: { removed: RemovedEnum.NEVER },
-      limit: 3,
-      page: page.value || 1
-    })
-  // }
+  // 考虑在离开页面的时候在 store 保存当前的状态(分页、id)
+  // 返回稿件管理页面时恢复状态
+  submissionStore.fetch({
+    filter: { removed: RemovedEnum.NEVER },
+    limit: 2,
+    page:  1
+  }).then(data => docs.value = data)
   console.log(submissionStore.docs)
 })
-const data = computed(() => submissionStore.$state)
+onUnmounted(() => {
+  console.log('离开')
+  submissionStore.$reset()
+})
+// watch(() => [id.value, page.value], () => {
+//   submissionStore.fetch({
+//     filter: { _id: id.value, removed: RemovedEnum.NEVER },
+//     limit: 2,
+//     page: page.value || 1
+//   })
+// })
 const renderIcon = (component: string) => {
   return h(Icon, { name: component })
 }
@@ -202,6 +211,10 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                   tertiary: true,
                   size: 'small',
                   onClick: () => {
+                    if(row.isParsed) {
+                      message.error('该稿件已解析，无法再操作！')
+                      return
+                    }
                     dialog.create({
                       title: '确定拒稿？',
                       content: '一旦拒稿将无法再恢复，请谨慎确认！',
@@ -237,59 +250,6 @@ const cities = ref(['type', 'title', 'abbrev', 'authcode', 'msg', 'author', 'isP
 const columnSelect = ref(false)
 const columns = computed(() => createColumns({ play(row) {} }).filter((c: any) => cities.value.includes(c.key)))
 // console.log(columns)
-const paginationReactive = reactive({
-  page: data.value.page,
-  pageSize: data.value.limit ? data.value.limit : 10, // 注意，不能为 0，否则会内存泄漏
-  pageCount: data.value.totalPages,
-  itemCount: 100,
-  // showSizePicker: true,
-  // pageSizes: [6, 8, 10, 12],
-  next: (info: PaginationInfo) => {
-    return h('button', {}, '下一页')
-  },
-  prev: (info: PaginationInfo) => {
-    return h('button', {}, '上一页')
-  },
-  onChange: (page: number) => {
-    console.log(page)
-    paginationReactive.page = page
-  },
-  // onUpdatePageSize: (pageSize: number) => {
-  //   console.log(pageSize)
-  //   paginationReactive.pageSize = pageSize
-  //   paginationReactive.page = 1
-  // }
-})
-
-/** 添加 */
-function handleAdd() {
-  // $fetch<AuthCodeType>('/api/manage/authcode/add').then(res => {
-  //   data.value.push(res)
-  // }).catch(err => {
-  //   message.error(err.response._data.message)
-  // })
-}
-
-/** 全局配置 */
-// const value = ref(user.receiverStatus)
-const status = [
-  { label: '完全开放', value: 0 },
-  { label: '启用', value: 1 },
-  { label: '禁用', value: 2 }
-]
-function handleStatusUpdate(value: 0 | 1 | 2) {
-  // $fetch('/api/user/updateReceiver', {
-  //   method: 'post',
-  //   body: {
-  //     status: value
-  //   }
-  // }).then(() => {
-  //   message.success('更新成功')
-  // }).catch(err => {
-  //   console.log(err)
-  //   message.error('更新失败')
-  // })
-}
 
 /** 排序 */
 // const columnsRef = ref(columns)
@@ -370,15 +330,39 @@ const rowProps = (row: Model) => {
 //   }
 // ])
 
-const showSelectOption = ref('unparsed')
+const showSelectOption = ref(submissionStore.isParsed)
 const showSelectOptions = [
   { label: '全部', value: 'all' },
-  { label: '已解析', value: 'parsed' },
-  { label: '未解析', value: 'unparsed' }
+  { label: '已解析', value: 'true' },
+  { label: '未解析', value: 'false' }
 ]
 function handleShowSelectOptionUpdate(value) {
-  console.log(value)
+  // console.log(value)
+  submissionStore.isParsed = value
+  submissionStore.fetch({
+    filter: { _id: id.value, removed: RemovedEnum.NEVER },
+    limit: 2,
+    page: 1
+  }).then(data => docs.value = data)
 }
+
+/** 翻页 */
+function handlePageChange(page: number) {
+  console.log('page change')
+  // router.push({
+  //   path: router.currentRoute.value.path,
+  //   query: {
+  //     id: id.value,
+  //     page: page,
+  //   }
+  // })
+  submissionStore.fetch({
+    filter: { _id: id.value, removed: RemovedEnum.NEVER },
+    limit: 2,
+    page: page || 1
+  }).then(data => docs.value = data)
+}
+
 </script>
 
 <template>
@@ -397,21 +381,23 @@ function handleShowSelectOptionUpdate(value) {
         </n-flex>
       </div>
       <div class="group" v-show="columnSelect">
-        <n-checkbox-group v-model:value="cities">
-          <!-- 'type', 'title',  'abbrev', 'authcode',  'msg', 'author', 'isParsed', 'updateAt', 'createAt', 'actions' -->
-          <n-space item-style="display: flex;">
-            <n-checkbox value="type" label="类型" />
-            <n-checkbox value="title" label="标题" />
-            <n-checkbox value="abbrev" label="内容" />
-            <n-checkbox value="authcode" label="授权来源" />
-            <n-checkbox value="author" label="作者" />
-            <n-checkbox value="msg" label="稿件备注" />
-            <n-checkbox value="isParsed" label="解析状态" />
-            <n-checkbox value="updateAt" label="更新时间" />
-            <n-checkbox value="createAt" label="创建时间" />
-            <n-checkbox value="actions" label="操作" />
-          </n-space>
-        </n-checkbox-group>
+        <ClientOnly>
+          <n-checkbox-group v-model:value="cities">
+            <!-- 'type', 'title',  'abbrev', 'authcode',  'msg', 'author', 'isParsed', 'updateAt', 'createAt', 'actions' -->
+            <n-space item-style="display: flex;">
+              <n-checkbox value="type" label="类型" />
+              <n-checkbox value="title" label="标题" />
+              <n-checkbox value="abbrev" label="内容" />
+              <n-checkbox value="authcode" label="授权来源" />
+              <n-checkbox value="author" label="作者" />
+              <n-checkbox value="msg" label="稿件备注" />
+              <n-checkbox value="isParsed" label="解析状态" />
+              <n-checkbox value="updateAt" label="更新时间" />
+              <n-checkbox value="createAt" label="创建时间" />
+              <n-checkbox value="actions" label="操作" />
+            </n-space>
+          </n-checkbox-group>
+        </ClientOnly>
       </div>
       <div class="group">
         <n-select
@@ -424,13 +410,18 @@ function handleShowSelectOptionUpdate(value) {
     </div>
     <n-data-table
       :columns="columns"
-      :data="submissionStore.docs"
+      :data="docs"
       :bordered="false"
       :row-props="rowProps"
       @update:sorter="handleSorterChange"
     />
     <div class="footer">
-      <n-pagination v-model:page="paginationReactive.page" :page-count="paginationReactive.pageCount" />
+      <n-pagination 
+        v-model:page="submissionStore.page"
+        :page-count="submissionStore.getTotalPages"
+        @update:page="handlePageChange"
+      />
+      <!-- :item-count="submissionStore.totalDocs"  -->
     </div>
     <!-- <n-dropdown
       placement="bottom-start"

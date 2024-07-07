@@ -2,31 +2,57 @@ import { defineStore } from 'pinia'
 import type { GetArticleDto } from '~/dto'
 import type { ArticlePaginateResult, Submission, SubmissionState } from '~/types'
 type State = SubmissionState
+& {
+  isParsed: boolean | 'all'
+}
 export const useSubmissionStore = defineStore('submissionStore', {
   state(): State {
     return {
       docs: [],
-      totalDocs: 0,
-      limit: 10,
-      totalPages: 0,
-      page: 0,
-      pagingCounter: 0,
+      totalDocs: 2,
+      limit: 2,
+      totalPages: 2,
+      page: 1,
+      pagingCounter: 2,
       hasPrevPage: false,
       hasNextPage: false,
       prevPage: null,
-      nextPage: 0
+      nextPage: 2,
+
+      isParsed: 'all'
     }
   },
   actions: {
     fetch(dto: GetArticleDto) {
+      this.isParsed !== 'all' && (
+        dto.filter = {
+          ...dto.filter,
+          isParsed: this.isParsed
+        }
+      )
+
       return $fetch<ArticlePaginateResult>('/api/manage/submission', {
         method: 'post',
         body: dto
       }).then(result => {
-        this.$patch(result)
-        console.log(this.$state)
+        const { docs, ...data } = result
+        this.$patch(data)
+        return docs
       })
     }
   },
-  getters: {}
+  getters: {
+    getDocs(): Submission[] {
+      return this.docs
+    },
+    getPage(): number {
+      return this.page || 1
+    },
+    getTotalPages(): number {
+      return this.totalPages
+    },
+    getTotalDocs(): number {
+      return this.totalDocs
+    },
+  }
 })
