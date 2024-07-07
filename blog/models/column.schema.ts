@@ -18,17 +18,15 @@ export const Column = defineMongooseModel<ColumnSchema>({
       require: true,
       unique: true
     },
-    /** 账号 */
-    account: {
-      type: String,
-      maxlength: 32,
-      require: true
-    },
     name: {
       type: String,
       maxlength: 32,
       default: '',
       require: true
+    },
+    cover: {
+      type: String,
+      default: ''
     },
     isPublish: {
       type: Boolean,

@@ -8,6 +8,7 @@ export interface ColumnSchema {
   UID: string
   account: string
   name: string
+  cover: string
   isPublish: boolean
   removed: RemovedEnum
   createAt: Date

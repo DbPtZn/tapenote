@@ -21,6 +21,20 @@ const router = useRouter()
 const id = computed(() => router.currentRoute.value.query.id as string)
 const page = computed(() => Number(router.currentRoute.value.query.page))
 const docs = ref<Submission[]>([])
+// const state = reactive({
+//   docs: [] as Submission[],
+//   totalDocs: 2,
+//   limit: 2,
+//   totalPages: 2,
+//   page: 1,
+//   pagingCounter: 2,
+//   hasPrevPage: false,
+//   hasNextPage: false,
+//   prevPage: null,
+//   nextPage: 2,
+
+//   isParsed: 'all'
+// })
 onMounted(() => {
   // 考虑在离开页面的时候在 store 保存当前的状态(分页、id)
   // 返回稿件管理页面时恢复状态

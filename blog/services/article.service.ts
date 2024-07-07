@@ -105,80 +105,7 @@ class ArticleService {
     return result
   }
 
-  async findAllUnParsed(userId: ObjectId) {
-    try {
-      const articles = await this.articlesRepository.find(
-        { isParsed: false, userId },
-        {
-          _id: 1,
-          UID: 1,
-          editionId: 1,
-          fromEditionId: 1,
-          authcodeId: 1,
-          isParsed: 1,
-          title: 1,
-          msg: 1,
-          editorVersion: 1,
-          type: 1,
-          abbrev: 1,
-          author: 1,
-          createAt: 1,
-          updateAt: 1
-        },
-        {
-          populate: ['authcodeId']
-        }
-      )
-      const data = articles.map(artilce => {
-        const { authcodeId, ...members } = artilce.toJSON()
-        return {
-          ...members,
-          authcode: artilce.authcodeId
-        }
-      })
-      return data
-    } catch (error) {
-      throw error
-    }
-  }
 
-  async findAllSubmission(userId: ObjectId) {
-    try {
-      const articles = await this.articlesRepository.find(
-        { userId },
-        {
-          _id: 1,
-          UID: 1,
-          editionId: 1,
-          fromEditionId: 1,
-          authorizeId: 1,
-          isParsed: 1,
-          title: 1,
-          msg: 1,
-          editorVersion: 1,
-          type: 1,
-          abbrev: 1,
-          author: 1,
-          createAt: 1,
-          updateAt: 1
-        },
-        {
-          populate: ['authorizeId']
-        }
-      )
-
-      const data = articles.map(artilce => {
-        const { authcodeId, ...members } = artilce.toJSON()
-        return {
-          ...members,
-          authcode: artilce.authcodeId
-        }
-      })
-      return data
-    } catch (error) {
-      throw error
-    }
-  }
 
   async getUnparsedFile(_id: string) {
     try {
@@ -198,6 +125,17 @@ class ArticleService {
       throw error
     }
   }
+
+
+  async allot(_id: string, columnId: string, userId: ObjectId) {
+    try {
+      const result = await this.articlesRepository.updateOne({ _id, userId }, { $set: { columnId } })
+      return result.acknowledged
+    } catch (error) {
+      throw error
+    }
+  }
+
 
   async get(UID: string) {
     try {
