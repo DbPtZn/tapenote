@@ -3,7 +3,7 @@ import type { GetArticleDto } from '~/dto'
 import type { ArticlePaginateResult, Submission, SubmissionState } from '~/types'
 type State = SubmissionState
 & {
-  isParsed: boolean | 'all'
+  isParsed: 'true' | 'false' | 'all'
 }
 export const useSubmissionStore = defineStore('submissionStore', {
   state(): State {
@@ -27,7 +27,7 @@ export const useSubmissionStore = defineStore('submissionStore', {
       this.isParsed !== 'all' && (
         dto.filter = {
           ...dto.filter,
-          isParsed: this.isParsed
+          isParsed: this.isParsed === 'true'
         }
       )
 

@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongoose'
 import type { RemovedEnum } from '~/enums'
-import type { AuthCodeType } from '.'
+import type { AuthCodeType, ColumnType } from '.'
 import  type { PaginateResult } from 'mongoose'
 
 export interface ArticleSchema {
@@ -78,7 +78,9 @@ export type Subfile = Pick<
   | 'editionId'
   | 'fromEditionId'
   | 'authcodeId'
+  | 'columnId'
   | 'isParsed'
+  | 'isPublish'
   | 'title'
   | 'msg'
   | 'editorVersion'
@@ -95,6 +97,7 @@ export type Submission = Pick<
   | 'UID'
   | 'editionId'
   | 'fromEditionId'
+  | 'columnId'
   | 'isParsed'
   | 'isPublish'
   | 'title'
@@ -108,6 +111,7 @@ export type Submission = Pick<
   | 'updateAt'
 > & {
   authcode: AuthCodeType
+  column: ColumnType
 }
 
 export type ArticlePaginateResult = PaginateResult<Submission>

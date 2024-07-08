@@ -1,5 +1,5 @@
 import type { ObjectId } from 'mongoose'
-import type { CreateUserDto } from '~/dto'
+import type { CreateUserDto, UpdateColumnSequenceDto } from '~/dto'
 import { User } from '~/models'
 import type { UserType } from '~/types'
 import bcrypt from 'bcryptjs'
@@ -122,7 +122,19 @@ class UserService {
     }
   }
 
-
+  /** 更新比较麻烦，需要考虑增删改的情况，所以先直接用前端改完的数据覆盖 */
+  updateColumnsSequence(dto: UpdateColumnSequenceDto, _id: ObjectId) {
+    try {
+      const { sequence } = dto
+      console.log(sequence)
+      return this.usersRepository.updateOne(
+        { _id },
+        { $set: { columnSequence: sequence } }
+      )
+    } catch (error) {
+      throw error
+    }
+  }
 
 }
 

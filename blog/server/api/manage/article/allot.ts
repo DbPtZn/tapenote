@@ -4,8 +4,8 @@ import { articleService } from '~/services'
 export default defineEventHandler(async (event) => {
   try {
     const dto = await readBody<AllotArticleDto>(event)
-    const { _id, columnId } = dto
-    const result = await articleService.allot(_id, columnId, event.context.auth.id)
+    const { articleId, columnId } = dto
+    const result = await articleService.allot(articleId, columnId, event.context.auth.id)
     return {
       statusCode: 200,
       message: '分配项目成功!',

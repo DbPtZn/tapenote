@@ -4,7 +4,7 @@ import useStore from '~/store'
 definePageMeta({
   layout: 'manage'
 })
-const { userStore } = useStore()
+const { userStore, columnStore } = useStore()
 const router = useRouter()
 const token = Cookies.get('Authorization')
 if (!token) {
@@ -30,7 +30,7 @@ onMounted(async () => {
     <div class="sidebar-wrapper">
       <MSidebar />
     </div>
-    <div class="itemlist-wrapper">
+    <div v-if="columnStore._id" class="itemlist-wrapper">
       <MItemlist />
     </div>
     <div class="workbench-wrapper">

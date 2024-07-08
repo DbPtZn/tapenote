@@ -6,9 +6,9 @@ export interface ColumnSchema {
   _id: ObjectId
   userId: ObjectId
   UID: string
-  account: string
   name: string
   cover: string
+  desc: string
   isPublish: boolean
   removed: RemovedEnum
   createAt: Date
@@ -22,6 +22,6 @@ export type ColumnType = Omit<ColumnSchema, '_id' | 'userId' | 'removed' | 'crea
   updateAt: string
 }
 
-export type ColumnState = ColumnType & {
+export type ColumnState = Pick<ColumnType, '_id' | 'name' | 'isPublish'> & {
   subfiles: Subfile[]
 }

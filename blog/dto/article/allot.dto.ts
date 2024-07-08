@@ -1,7 +1,7 @@
 import type { ObjectId } from "mongoose"
 
 export interface AllotArticleDto {
-  _id: string
+  articleId: string
 
   columnId: string
 }

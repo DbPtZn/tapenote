@@ -1,25 +1,31 @@
 import type { ObjectId } from 'mongoose'
-import { Article, Column  } from '~/models'
+import { Article, Column, User  } from '~/models'
 import * as UUID from 'uuid'
 import type { ArticleSchema, ArticleType, ColumnState, Subfile } from '~/types'
 import { articleService } from '.'
 import { RemovedEnum } from '~/enums'
+import type { CreateColumnDto } from '~/dto'
 class ColumnService {
   articlesRepository: typeof Article
   columnsRepository: typeof Column
+  usersRepository: typeof User
   constructor() {
     this.articlesRepository = Article
     this.columnsRepository = Column
+    this.usersRepository = User
   }
 
-  async create(name: string, userId: string) {
+  async create(dto: CreateColumnDto, userId: string, UID: string) {
     try {
       const column = await this.columnsRepository.create({
-        name,
+        ...dto,
         userId,
+        UID
       })
+      await this.usersRepository.updateOne({ _id: userId }, { $push: { columnSequence: { $each: [column._id], $position: 0 } } })
       return column
     } catch (error) {
+      console.log(error)
       throw error
     }
   }
@@ -46,6 +52,7 @@ class ColumnService {
       const data = {
         _id: column._id,
         name: column.name,
+        isPublish: column.isPublish,
         subfiles: articles.map((article) => {
           return {
             _id: article._id,

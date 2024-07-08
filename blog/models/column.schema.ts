@@ -16,7 +16,6 @@ export const Column = defineMongooseModel<ColumnSchema>({
     UID: {
       type: String,
       require: true,
-      unique: true
     },
     name: {
       type: String,
@@ -25,6 +24,10 @@ export const Column = defineMongooseModel<ColumnSchema>({
       require: true
     },
     cover: {
+      type: String,
+      default: ''
+    },
+    desc: {
       type: String,
       default: ''
     },

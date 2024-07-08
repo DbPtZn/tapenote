@@ -1,14 +1,14 @@
 import { nextTick, ref, h, reactive, computed } from 'vue'
 import { NIcon, NInput, useDialog, useMessage, type DropdownOption } from 'naive-ui'
 import { DriveFileMoveRtlFilled, DriveFileRenameOutlineFilled } from '@vicons/material'
-import type { ArticleCard } from '~/types'
+import type { Subfile } from '~/types'
 export function useListDropDown () {
   const dialog = useDialog()
   const message = useMessage()
   const dropdownState = reactive({
     lib: ref<any>(),
     type: ref<'file' | 'folder' | 'list'>(),
-    target: ref<ArticleCard>(),
+    target: ref<Subfile>(),
     xRef: ref<number>(0),
     yRef: ref<number>(0),
     showDropdownRef: ref<boolean>(false),
@@ -190,7 +190,7 @@ export function useListDropDown () {
     ]
   })
 
-  function handleContextmenu(ev: MouseEvent, target: ArticleCard, type?: 'folder' | 'file' | 'list') {
+  function handleContextmenu(ev: MouseEvent, target: Subfile, type?: 'folder' | 'file' | 'list') {
     dropdownState.type = type
     ev.preventDefault()
     ev.stopPropagation()
@@ -204,7 +204,7 @@ export function useListDropDown () {
       dropdownState.placementRef = 'bottom-start'
     })
   }
-  function handleMoreAction(ev: MouseEvent, target: ArticleCard, type?: 'folder' | 'file') {
+  function handleMoreAction(ev: MouseEvent, target: Subfile, type?: 'folder' | 'file') {
     dropdownState.type = type
     ev.preventDefault()
     ev.stopPropagation()

@@ -70,7 +70,7 @@ class ArticleService {
 
   async find(dto: GetArticleDto, userId: ObjectId) {
     const { filter, limit, page, sort } = dto
-    console.log(filter)
+    // console.log(filter)
     const result = await this.articlesRepository.paginate({ ...filter, userId }, {
       projection: {
         _id: 1,
@@ -78,6 +78,7 @@ class ArticleService {
         editionId: 1,
         fromEditionId: 1,
         authcodeId: 1,
+        columnId: 1,
         isParsed: 1,
         title: 1,
         msg: 1,
@@ -88,17 +89,20 @@ class ArticleService {
         createAt: 1,
         updateAt: 1
       },
-      populate: ['authcodeId'],
+      populate: ['authcodeId', 'columnId'],
       limit: limit || 10,
       page: page || 1,
       sort
     })
     result.docs = result.docs.map(artilce => {
-      const { authcodeId, ...members } = artilce.toJSON()
+      const { authcodeId, columnId, ...members } = artilce.toJSON()
+      // console.log(columnId)
       return {
         ...members,
         authcode: artilce.authcodeId,
-        authcodeId: authcodeId['_id']
+        authcodeId: authcodeId['_id'],
+        column: columnId || null,
+        columnId: columnId?.['_id'] || null
       }
     }) as any[]
     // console.log(result.docs)

@@ -5,6 +5,8 @@ import { onMounted, ref } from 'vue'
 // import utils from '@/utils'
 import { MoreHorizFilled, ChevronLeftFilled } from '@vicons/material'
 import { useListDropDown } from './hooks/useListDropdown'
+import dayjs from 'dayjs'
+import useStore from '~/store'
 enum SortType {
   UPDATE = 'update',
   UPDATE_REVERSE = 'update_reverse',
@@ -13,7 +15,9 @@ enum SortType {
   NAME = 'name',
   NAME_REVERSE = 'name_reverse'
 }
+const { columnStore } = useStore()
 const themeVars = useThemeVars()
+const router = useRouter()
 const value = ref()
 const listRef = ref<HTMLElement>()
 const sortType = ref<SortType>(SortType.UPDATE_REVERSE)
@@ -68,10 +72,8 @@ function generateHeaderBtnOptions (): DropdownOption[] {
   ]
 }
 
-function handleToFile(id: string, isParsed: boolean) {
-  console.log(isParsed)
-  // shell.useWorkbench()
-  // shell.workbench.setById({ id }, isParsed ? 'product' : 'unparsed')
+function handleToFile(id: string) {
+  router.push(`/manage/article/${id}`)
 }
 const dragMethods = {
   handleDragStart(ev: DragEvent, id: string) {
@@ -110,23 +112,23 @@ const { dropdownState, options, handleClickoutside, handleContextmenu, handleMor
     </div>
     <div ref="scrollerRef" class="main">
       <div ref="listRef" class="list">
-        <!-- <FileCard
-          v-for="item in collectionStore.getSubfiles(sortType)"
-          :id="item.id"
+        <MItemlistFileCard
+          v-for="item in columnStore.getSubfiles(sortType)"
+          :key="item._id"
+          :id="item._id"
           :type="item.type"
           :is-publish="item.isPublish"
           :title="item.title"
           :abbrev="item.abbrev"
-          :date="utils.dateFormat2(new Date(item.updateAt))"
-          :key="item.id"
-          :active="shell.workbench.itemId === item.id"
+          :date="dayjs(item.updateAt).format('YYYY-MM-DD HH:mm:ss')"
+          :active="item._id === $route.params.id"
           draggable="true"
-          @dragstart="dragMethods.handleDragStart($event, item.id)"
+          @dragstart="dragMethods.handleDragStart($event, item._id)"
           @dragend="dragMethods.handleDragEnd"
-          @click="handleToFile(item.id, item.isParsed)"
+          @click="handleToFile(item._id)"
           @on-more-action="handleMoreAction($event, item)"
           @contextmenu="handleContextmenu($event, item)"
-        /> -->
+        />
       </div>
     </div>
   </div>

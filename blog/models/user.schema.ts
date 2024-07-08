@@ -63,6 +63,10 @@ export const User = defineMongooseModel<UserSchema>({
       autoParse: { type: Boolean, default: false, require: false, }, // 接收投稿时是否自动解析
       sizeLimit: { type: Number, default: 0, require: false, } // 接收文件大小的限制，0 表示无限制
     },
+    columnSequence: {
+      type: [String],
+      default: []
+    },
     // 创建时间
     createAt: {
       type: Date,

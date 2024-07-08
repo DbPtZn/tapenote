@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { NButton, NIcon, NSpace, useDialog, useMessage, useThemeVars } from 'naive-ui'
+import { NButton, NIcon, NSelect, NSpace, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import type { DataTableColumns, PaginationInfo } from 'naive-ui'
 import _ from 'lodash'
 import { onMounted, createApp, computed } from 'vue'
@@ -9,10 +9,10 @@ import useStore from '~/store'
 import dayjs from 'dayjs'
 import '@textbus/editor/bundles/textbus.min.css'
 import { useParser } from './hooks/useParser'
-import type { ParseArticleDto } from '~/dto'
+import type { AllotArticleDto, ParseArticleDto } from '~/dto'
 import { RemovedEnum } from '~/enums'
 type Model = Submission
-const { userStore, submissionStore } = useStore()
+const { userStore, submissionStore, columnListStore } = useStore()
 const message = useMessage()
 const dialog = useDialog()
 const themeVars = useThemeVars()
@@ -49,13 +49,6 @@ onUnmounted(() => {
   console.log('离开')
   submissionStore.$reset()
 })
-// watch(() => [id.value, page.value], () => {
-//   submissionStore.fetch({
-//     filter: { _id: id.value, removed: RemovedEnum.NEVER },
-//     limit: 2,
-//     page: page.value || 1
-//   })
-// })
 const renderIcon = (component: string) => {
   return h(Icon, { name: component })
 }
@@ -103,8 +96,20 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
       title: '类型',
       key: 'type',
       resizable: true,
-      width: '4%',
+      width: '8%',
       render: row => h(Icon, { name: row.type === 'note' ? 'mdi:notebook' : 'material-symbols-light:play-lesson-rounded', size: '24px' })
+    },
+    {
+      title: '专栏',
+      key: 'column',
+      resizable: true,
+      width: '8%',
+      ellipsis: {
+        tooltip: true
+      },
+      render(row) {
+        return row.column?.name
+      }
     },
     {
       title: '标题',
@@ -140,7 +145,7 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
       title: '作者',
       key: 'author',
       resizable: true,
-      width: '10%',
+      width: '8%',
       ellipsis: {
         tooltip: true
       },
@@ -226,7 +231,45 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
                   size: 'small',
                   onClick: () => {
                     if(row.isParsed) {
-                      message.error('该稿件已解析，无法再操作！')
+                      const opitons = columnListStore.data.map(item => {
+                        return {
+                          key: item._id,
+                          label: item.name,
+                          value: item._id
+                        }
+                      })
+                      const columnVal = ref(row.column?._id)
+                      dialog.create({
+                        title: '选择一个专栏',
+                        content: () => h(NSelect, {
+                          value: columnVal.value,
+                          options: opitons,
+                          onUpdateValue: (value) => {
+                            columnVal.value = value
+                          }
+                        }),
+                        icon: () => renderIcon('material-symbols-light:folder-data-rounded'),
+                        positiveText: '确定',
+                        negativeText: '取消',
+                        onPositiveClick: () => {
+                          const dto: AllotArticleDto = {
+                            articleId: row._id,
+                            columnId: columnVal.value
+                          }
+                          $fetch(`/api/manage/article/allot`, {
+                            method: 'POST',
+                            body: dto
+                          }).then(() => {
+                            const index = docs.value.findIndex(item => item._id === row._id)
+                            const column = columnListStore.data.find(item => item._id === columnVal.value)
+                            if(!column) return
+                            docs.value[index].column = column
+                          })
+                        },
+                        onNegativeClick: () => {
+                          message.error('取消')
+                        }
+                      })
                       return
                     }
                     dialog.create({
@@ -260,7 +303,7 @@ const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColum
 }
 
 /** 展示列 */
-const cities = ref(['type', 'title', 'abbrev', 'authcode', 'msg', 'author', 'isParsed', 'updateAt', 'createAt', 'actions'])
+const cities = ref(['type', 'title', 'abbrev', 'authcode', 'column', 'msg', 'author', 'isParsed', 'updateAt', 'createAt', 'actions'])
 const columnSelect = ref(false)
 const columns = computed(() => createColumns({ play(row) {} }).filter((c: any) => cities.value.includes(c.key)))
 // console.log(columns)
@@ -397,9 +440,9 @@ function handlePageChange(page: number) {
       <div class="group" v-show="columnSelect">
         <ClientOnly>
           <n-checkbox-group v-model:value="cities">
-            <!-- 'type', 'title',  'abbrev', 'authcode',  'msg', 'author', 'isParsed', 'updateAt', 'createAt', 'actions' -->
             <n-space item-style="display: flex;">
               <n-checkbox value="type" label="类型" />
+              <n-checkbox value="column" label="专栏" />
               <n-checkbox value="title" label="标题" />
               <n-checkbox value="abbrev" label="内容" />
               <n-checkbox value="authcode" label="授权来源" />
@@ -435,7 +478,6 @@ function handlePageChange(page: number) {
         :page-count="submissionStore.getTotalPages"
         @update:page="handlePageChange"
       />
-      <!-- :item-count="submissionStore.totalDocs"  -->
     </div>
     <!-- <n-dropdown
       placement="bottom-start"

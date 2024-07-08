@@ -17,6 +17,7 @@ export interface UserSchema {
     autoParse: boolean
     sizeLimit: number
   }
+  columnSequence: string[]
   createAt: Date
   updateAt: Date
 }

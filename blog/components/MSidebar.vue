@@ -2,15 +2,24 @@
 import { NButton, NIcon, NInput, useDialog, useMessage, useThemeVars, type DropdownOption } from 'naive-ui'
 // import CollectionItem from './private/CollectionItem.vue'
 // import CreateCollectionForm from '../form/CreateCollectionForm.vue'
+import CreateColumnForm from './MSidebar/CreateColumnForm.vue'
 import { onMounted } from 'vue'
 import { DriveFileRenameOutlineFilled } from '@vicons/material'
+import { Icon } from '#components'
+import { VueDraggable, type SortableEvent } from 'vue-draggable-plus'
+import useStore from '~/store'
+import ColumnItem from './MSidebar/ColumnItem.vue'
+import type { ColumnType } from '~/types'
 const themeVars = useThemeVars()
 const message = useMessage()
 const dialog = useDialog()
 const router = useRouter()
+const { columnListStore, columnStore, userStore } = useStore()
 onMounted(() => {
   // 获取数据
+  columnListStore.get()
 })
+
 /** 折叠面板 */
 const expandedNames = ref<any[]>(['1'])
 function handleExpandedNamesChange(args: Array<any>) {
@@ -18,24 +27,24 @@ function handleExpandedNamesChange(args: Array<any>) {
 }
 /** 显示未分配管理 */
 // function handleUnfiledShow() {}
-/** 合辑相关方法 */
-const collectionMethods = {
-  /** 添加合辑按钮 */
+/** 专栏相关方法 */
+const columnMethods = {
+  /** 添加专栏按钮 */
   handleAddClick(ev: PointerEvent) {
-    // ev.preventDefault()
-    // ev.stopPropagation()
-    // dialog.create({
-    //   title: '新建合辑',
-    //   icon: () => h(DpzIcon, { icon: `${MaterialTypeEnum.FILLED}create_new_folder`, size: 24 }),
-    //   content: () =>
-    //     h(CreateCollectionForm, {
-    //       submit(res) {
-    //         // 新建合辑
-          
-    //         dialog.destroyAll()
-    //       }
-    //     })
-    // })
+    ev.preventDefault()
+    ev.stopPropagation()
+    dialog.create({
+      title: '新建专栏',
+      icon: () => h(Icon, { name: 'material-symbols:create-new-folder-outline-rounded', style: { marginBottom: '8px' } }),
+      content: () =>
+        h(CreateColumnForm, {
+          onSubmit(res) {
+            // console.log(res)
+            columnListStore.create(res)
+            dialog.destroyAll()
+          }
+        })
+    })
   },
   handleItemClick(id: string) {
     // console.log(id)
@@ -95,7 +104,7 @@ const collectionMethods = {
               maskClosable: true,
               onPositiveClick: () => {
                 if (newname.value === collection.name) return
-                if (newname.value === '') message.error('合辑名称不能为空！')
+                if (newname.value === '') message.error('专栏名称不能为空！')
                 if (newname.value && collection.id) {
                   // collectionsDataStore.rename(collection.id, newname.value).then(() => {
                   //   collection.name = newname.value
@@ -120,8 +129,6 @@ const collectionMethods = {
       }
     ]
   },
-  /** 合辑项目顺序发生变化时触发 */
-  handleOrderChange() {}
 }
 const dropMethods = {
   handleDrop(ev: DragEvent, collectionId: string, isPublish: boolean) {
@@ -142,6 +149,20 @@ const dropMethods = {
   handleDragEnter() {},
   handleDragOver() {},
   handleDragLeave() {}
+}
+const data = computed(() => columnListStore.data.sort((a, b) => {
+  const sequence = userStore.columnSequence
+  return sequence!.indexOf(a._id) - sequence!.indexOf(b._id)
+}))
+function handleMove(event: SortableEvent) {
+  const oldIndex = event.oldIndex
+  const newIndex = event.newIndex
+  const columnId = event.item.id
+  if(oldIndex === undefined || newIndex === undefined || columnId === undefined) return
+  userStore.updateColumnSequence(oldIndex, newIndex, columnId)
+}
+function handleColumnClick(column: ColumnType) {
+  columnStore.fetch(column._id)
 }
 </script>
 <template>
@@ -188,34 +209,17 @@ const dropMethods = {
           <template #arrow>
             <Icon name="material-symbols:arrow-right-rounded"  :size="'24'"/>
           </template>
-          <!-- 作品合辑 -->
+          <!-- 作品专栏 -->
           <n-collapse-item class="collapse-item" name="1">
             <template #header>
-              <n-button class="collapse-item-btn" text size="large">作品合辑</n-button>
+              <n-button class="collapse-item-btn" text size="large">作品专栏</n-button>
             </template>
             <template #header-extra>
-              <Icon name="material-symbols:add-rounded"  :size="'24'" @click="collectionMethods.handleAddClick" />
+              <Icon name="material-symbols:add-rounded"  :size="'24'" @click="columnMethods.handleAddClick" />
             </template>
-            <!-- <Draggable
-              v-model="collectionsDataStore.data"
-              :itemKey="'id'"
-              handle=".move"
-              animation="300"
-              @change="collectionMethods.handleOrderChange"
-            >
-              <template #item="{ element }">
-                <CollectionItem
-                  :key="element.id"
-                  :item="element"
-                  :dropdown-options="collectionMethods.generateOptions(element)"
-                  @dragenter.prevent="dropMethods.handleDragEnter"
-                  @dragover.prevent="dropMethods.handleDragOver"
-                  @dragleave.prevent="dropMethods.handleDragLeave"
-                  @drop.prevent="dropMethods.handleDrop($event, element.id, element.isPublish)"
-                  @click="collectionMethods.handleItemClick(element.id)"
-                />
-              </template>
-            </Draggable> -->
+            <VueDraggable class="draggable" handle=".move" v-model="data" :itemKey="'_id'" @end="handleMove($event)">
+              <ColumnItem v-for="item in data" :key="item._id" :id="item._id" :item="item" @click="handleColumnClick(item)" />
+            </VueDraggable>
           </n-collapse-item>
           <!-- 轮播管理 -->
           <!-- 首推管理 -->
