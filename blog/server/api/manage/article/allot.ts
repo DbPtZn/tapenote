@@ -3,6 +3,7 @@ import { articleService } from '~/services'
 
 export default defineEventHandler(async (event) => {
   try {
+    console.log('allot')
     const dto = await readBody<AllotArticleDto>(event)
     const { articleId, columnId } = dto
     const result = await articleService.allot(articleId, columnId, event.context.auth.id)

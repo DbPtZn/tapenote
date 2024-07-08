@@ -3,6 +3,7 @@ import { articleService } from '~/services'
 
 export default defineEventHandler(async (event) => {
   try {
+    console.log('parse')
     const dto = await readBody<ParseArticleDto>(event)
     const result = await articleService.parse(dto, event.context.auth.id)
     return {

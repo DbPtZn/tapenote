@@ -88,6 +88,7 @@ const handleParse = (row: Model) => {
 
 const handleOpen = (row: Model) => {
   message.success(row._id)
+  router.push('/manage/article/' + row._id)
 }
 
 const createColumns = ({ play }: { play: (row: Model) => void }): DataTableColumns<Model> => {

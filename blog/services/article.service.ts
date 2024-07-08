@@ -68,6 +68,10 @@ class ArticleService {
     }
   }
 
+  findOne(_id: string, userId: ObjectId) {
+    return this.articlesRepository.findOne({ _id, userId })
+  }
+
   async find(dto: GetArticleDto, userId: ObjectId) {
     const { filter, limit, page, sort } = dto
     // console.log(filter)

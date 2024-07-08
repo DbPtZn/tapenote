@@ -7,11 +7,12 @@ import dayjs from 'dayjs'
 import type { ArticleType } from '~/types'
 // import _ from 'lodash'
 const themeVars = useThemeVars()
+const route = useRoute()
 const scrollerRef = ref()
 const controllerRef = ref()
 const editorRef = ref()
 const rootRef = ref()
-const state = reactive<ArticleType>({
+const state = ref<ArticleType>({
   _id: '',
   UID: '',
   userId: '',
@@ -54,6 +55,13 @@ const state = reactive<ArticleType>({
   fromEditionId: '',
   msg: ''
 })
+useFetch<ArticleType>(`/api/manage/article/${route.params.id}`).then(res => {
+  if(res.error.value) {
+    return
+  }
+  // console.log(res.data.value)
+  if(res.data.value) state.value = res.data.value
+})
 // useEditor({
 //   id: props.id,
 //   rootRef: rootRef,
@@ -81,7 +89,7 @@ onMounted(() => {
         <!-- 文章主体 -->
         <div class="product-main">
           <div class="product-title">{{ state.title }}</div>
-          <div ref="editorRef" class="editor" />
+          <div ref="editorRef" class="editor" v-html="state.content" />
         </div>
         <n-divider class="product-footer-divider" dashed />
       </div>
