@@ -21,9 +21,9 @@ export interface ArticleSchema {
   abbrev: string
   audio: string
   promoterSequence: string[]
-  keyframeSequence: string[]
+  keyframeSequence: number[]
   subtitleSequence: string[]
-  subtitleKeyframeSequence: string[]
+  subtitleKeyframeSequence: number[]
   tags: string[]
   isPublish: boolean
   removed: RemovedEnum

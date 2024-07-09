@@ -55,12 +55,14 @@ const state = ref<ArticleType>({
   fromEditionId: '',
   msg: ''
 })
+const player = usePlayer()
 useFetch<ArticleType>(`/api/manage/article/${route.params.id}`).then(res => {
   if(res.error.value) {
     return
   }
   // console.log(res.data.value)
   if(res.data.value) state.value = res.data.value
+  
 })
 // useEditor({
 //   id: props.id,
@@ -89,7 +91,7 @@ onMounted(() => {
         <!-- 文章主体 -->
         <div class="product-main">
           <div class="product-title">{{ state.title }}</div>
-          <div ref="editorRef" class="editor" v-html="state.content" />
+          <div ref="editorRef" class="editor" data-theme="dark-theme" v-html="state.content" />
         </div>
         <n-divider class="product-footer-divider" dashed />
       </div>
@@ -153,29 +155,55 @@ $--header-height: 60px;
     font-size: 36px;
     font-weight: 600;
   }
+  .scroller {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color:  v-bind('themeVars.bodyColor');
+  }
   .editor {
     height: 100%;
-    min-height: 75vh;
-    // overflow-x: hidden;
     :deep(.textbus-container) {
       height: 100% !important;
       margin: 0 auto;
-      padding: 0;
       outline: none;
       border: none;
       border-radius: 0px;
-      .tb-root {
-        padding: 0;
-      }
       .textbus-ui-middle {
-        color: #000000; // 默认颜色
         border: none;
+        // max-width: v-bind('state.editorWidth');
+        max-width: 880px;
         width: 100%;
         margin: 0 auto;
-        background-color: v-bind('themeVars.cardColor');
+        background-color:  v-bind('themeVars.bodyColor');
       }
     }
   }
+  // .editor {
+  //   height: 100%;
+  //   min-height: 75vh;
+  //   // overflow-x: hidden;
+  //   :deep(.textbus-container) {
+  //     height: 100% !important;
+  //     margin: 0 auto;
+  //     padding: 0;
+  //     outline: none;
+  //     border: none;
+  //     border-radius: 0px;
+  //     .tb-root {
+  //       padding: 0;
+  //     }
+  //     .textbus-ui-middle {
+  //       color: #000000; // 默认颜色
+  //       border: none;
+  //       width: 100%;
+  //       margin: 0 auto;
+  //       background-color: v-bind('themeVars.cardColor');
+  //     }
+  //   }
+  // }
 }
 
 .product-scroller {
