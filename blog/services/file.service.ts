@@ -73,6 +73,57 @@ export class FileService {
     })
   }
 
+  saveAudio(args: { sourcePath: string; extname: string; dirname: string }, userId: ObjectId) {
+    const { sourcePath, extname, dirname } = args
+
+    return new Promise<string>(async (resolve, reject) => {
+      const { size, md5 } = await this.calculateFileStats(sourcePath)
+      // console.log({ size, md5 })
+      const file = await this.filesRepository.findOne({ md5, size, userId })
+      if (file) {
+        const isExists = fs.existsSync(file.path)
+        if(isExists) {
+          console.log('用户上传的音频已存在，直接返回音频文件路径!')
+          resolve(file.path)
+          return
+        }
+      }
+
+      const extWithoutDot = extname.charAt(0) === '.' ? extname.slice(1) : extname
+      const filename = `${randomstring.generate(3)}${new Date().getTime()}.${extWithoutDot}`
+      const filepath = this.getFilePath({
+        dirname,
+        filename,
+        category: 'audio'
+      })
+
+      const targetDir = path.dirname(filepath)
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true })
+      }
+
+      // 移动文件
+      fs.rename(sourcePath, filepath, err => {
+        if (err) {
+          reject(err)
+        } else {
+          // 这里可以异步处理
+          this.filesRepository.create({
+            userId,
+            name: filename,
+            extname,
+            type: 'audio',
+            path: filepath,
+            size,
+            md5,
+          })
+
+          resolve(filepath)
+        }
+      })
+    })
+  }
+
   async calculateFileStats(filePath: string): Promise<{ md5: string; size: number }> {
     return new Promise<{ md5: string; size: number }>((resolve, reject) => {
       // 创建子线程

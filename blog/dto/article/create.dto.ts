@@ -27,7 +27,7 @@ export interface CreateArticleDto {
 
   audio: string // 音频地址
 
-  // duration: number // 音频时长
+  duration: number // 音频时长
 
   // promoterSequence: Array<string> // 启动子序列
 

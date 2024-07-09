@@ -3,6 +3,7 @@ import { Injector, Injectable } from '@textbus/core'
 import _ from 'lodash'
 import { Structurer } from '.'
 import { Layout } from '@textbus/editor'
+import '../index.scss'
 type ThemeState = 'light' | 'dark'
 /**
  * 主题控制器

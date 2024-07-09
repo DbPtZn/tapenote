@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui'
 import { computed, ref } from 'vue'
-// import { useEditor } from './hooks/useEditor'
-import { onMounted } from 'vue'
+import { onMounted, onBeforeUnmount } from 'vue'
 import dayjs from 'dayjs'
 import type { ArticleType } from '~/types'
-// import _ from 'lodash'
+import { usePlayer } from './hooks/usePlayer'
+import type { Editor } from '@textbus/editor'
+import '~/editor/style.css'
 const themeVars = useThemeVars()
 const route = useRoute()
 const scrollerRef = ref()
@@ -55,46 +56,78 @@ const state = ref<ArticleType>({
   fromEditionId: '',
   msg: ''
 })
-const player = usePlayer()
-useFetch<ArticleType>(`/api/manage/article/${route.params.id}`).then(res => {
-  if(res.error.value) {
-    return
-  }
-  // console.log(res.data.value)
-  if(res.data.value) state.value = res.data.value
-  
-})
-// useEditor({
-//   id: props.id,
-//   rootRef: rootRef,
-//   editorRef: editorRef,
-//   scrollerRef: scrollerRef,
-//   controllerRef: controllerRef
+
+// useFetch<ArticleType>(`/api/manage/article/${route.params.id}`).then(res => {
+//   console.log('use fetch')
+//   if(res.error.value) {
+//     return
+//   }
+//   // console.log(res.data.value)
+//   if(res.data.value) state.value = res.data.value
 // })
-onMounted(() => {
-  // console.log(productStore.get(props.id))
+
+let player: Editor
+let pck: typeof import('~/editor')
+onMounted(async () => {
+  console.log('onMounted')
+  pck = await import('~/editor')
+  $fetch<ArticleType>(`/api/manage/article/${route.params.id}`).then(async res => {
+    console.log('use fetch')
+    state.value = res
+    usePlayer({
+      rootRef,
+      editorRef,
+      scrollerRef,
+      controllerRef,
+      data: state.value
+    }).then(res => {
+      player = res
+      console.log(player)
+    })
+  })
+})
+
+onUnmounted(() => {
+  try {
+    console.log('销毁依赖')
+    player.get(pck.Player).destory()
+    player.get(pck.OutlineService).destory()
+    player.get(pck.DialogProvider).destory()
+    player.get(pck.AnimeProvider).destory()
+    player.get(pck.Structurer).destory()
+    player.get(pck.ThemeProvider).destory()
+    player.get(pck.RootEventService).destory()
+    player.get(pck.AnimeEventService).destory()
+    player.destroy()
+    console.log('编辑器是否已经销毁：' + player.destroyed)
+  } catch (error) {
+    console.log(error)
+    console.error('编辑器销毁失败！')
+  }
 })
 </script>
 
 <template>
   <div class="product" ref="rootRef">
     <div class="product-wrapper" :bordered="false">
-      <div ref="scrollerRef" class="product-scroller">
-        <!-- 文章头部 -->
-        <div class="product-header">
-          <div class="product-header-item">作者：{{ state.author.penname }}</div>
-          <div class="product-header-item">时间：{{ dayjs(state.createAt).format('YYYY-MM-DD HH:mm:ss') }}</div>
-          <div class="product-header-item">字数：{{ state.detail.wordage }}</div>
-          <div class="product-header-item" v-if="state.detail.duration">时长：{{ state.detail.duration }}</div>
+      <Client-only>
+        <div ref="scrollerRef" class="product-scroller">
+          <!-- 文章头部 -->
+          <div class="product-header">
+            <div class="product-header-item">作者：{{ state.author.penname }}</div>
+            <div class="product-header-item">时间：{{ dayjs(state.createAt).format('YYYY-MM-DD HH:mm:ss') }}</div>
+            <div class="product-header-item">字数：{{ state.detail.wordage }}</div>
+            <div class="product-header-item" v-if="state.type === 'course' && state.detail.duration">时长：{{ dayjs().minute(Math.floor(state.detail.duration/60)).second(state.detail.duration%60).format('mm:ss') }}</div>
+          </div>
+          <n-divider class="product-header-divider" dashed />
+          <!-- 文章主体 -->
+          <div class="product-main">
+            <div class="product-title">{{ state.title }}</div>
+            <div ref="editorRef" class="editor" data-theme="dark-theme" />
+          </div>
+          <n-divider class="product-footer-divider" dashed />
         </div>
-        <n-divider class="product-header-divider" dashed />
-        <!-- 文章主体 -->
-        <div class="product-main">
-          <div class="product-title">{{ state.title }}</div>
-          <div ref="editorRef" class="editor" data-theme="dark-theme" v-html="state.content" />
-        </div>
-        <n-divider class="product-footer-divider" dashed />
-      </div>
+      </Client-only>
     </div>
     <div v-show="state.type === 'course'" ref="controllerRef" :class="['controller']"></div>
   </div>
@@ -151,18 +184,20 @@ $--header-height: 60px;
 .product-main {
   padding: 0 15px;
   box-sizing: border-box;
+  // .scroller {
+  //   display: flex;
+  //   flex-direction: column;
+  //   width: 100%;
+  //   overflow-y: auto;
+  //   overflow-x: hidden;
+  //   background-color: v-bind('themeVars.bodyColor');
+  // }
   .product-title {
     font-size: 36px;
     font-weight: 600;
+    color: v-bind('themeVars.textColor1');
   }
-  .scroller {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background-color:  v-bind('themeVars.bodyColor');
-  }
+
   .editor {
     height: 100%;
     :deep(.textbus-container) {
@@ -174,10 +209,10 @@ $--header-height: 60px;
       .textbus-ui-middle {
         border: none;
         // max-width: v-bind('state.editorWidth');
-        max-width: 880px;
+        // max-width: 880px;
         width: 100%;
         margin: 0 auto;
-        background-color:  v-bind('themeVars.bodyColor');
+        background-color: v-bind('themeVars.cardColor');
       }
     }
   }

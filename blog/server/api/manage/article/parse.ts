@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   try {
     console.log('parse')
     const dto = await readBody<ParseArticleDto>(event)
-    const result = await articleService.parse(dto, event.context.auth.id)
+    const result = await articleService.parse(dto, event.context.auth.id, event.context.auth.UID)
     return {
       statusCode: 200,
       message: '解析项目成功!',

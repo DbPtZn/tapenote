@@ -3,8 +3,10 @@ import type { CreateArticleDto, GetArticleDto, ParseArticleDto } from '~/dto'
 import { Article } from '~/models'
 import * as UUID from 'uuid'
 import fs from 'fs'
+import path from 'path'
 import  type { PaginateResult } from 'mongoose'
 import type { ArticleSchema, ArticleType } from '~/types'
+import { fileService } from './file.service'
 
 class ArticleService {
   articlesRepository: typeof Article
@@ -37,14 +39,29 @@ class ArticleService {
           email,
           blog
         },
+        createAt: new Date(),
+        updateAt: new Date(),
         userId
       })
     } catch (error) {}
   }
 
-  async parse(dto: ParseArticleDto, userId: ObjectId) {
+  async parse(dto: ParseArticleDto, userId: ObjectId, UID: string) {
     try {
       const { _id, cover, content, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } = dto
+      const article = await this.articlesRepository.findById(_id)
+      if (!article) {
+        throw new Error('文章不存在！')
+      }
+      let filepath = ''
+      if(article.type === 'course' && article.audio) {
+        filepath = await fileService.saveAudio({
+          sourcePath: article.audio,
+          extname: path.extname(article.audio),
+          dirname: UID
+        }, userId)
+        console.log(filepath)
+      }
       const result = await this.articlesRepository.updateOne(
         { _id },
         {
@@ -52,8 +69,10 @@ class ArticleService {
             isParsed: true,
             cover,
             content,
+            audio: filepath,
             abbrev: content.replace(/<[^>]+>/g, '').slice(0, 100),
-            duration,
+            'detail.duration': duration,
+            'detail.wordage': content.replace(/<[^>]+>/g, '').length,
             promoterSequence,
             keyframeSequence,
             subtitleSequence,
@@ -61,7 +80,7 @@ class ArticleService {
           }
         }
       )
-      console.log(result)
+      // console.log(result)
       return result.acknowledged
     } catch (error) {
       throw error

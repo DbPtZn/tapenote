@@ -45,6 +45,7 @@ const badgeRef = ref<HTMLElement>()
     border-radius: 24px;
     display: inline-block;
     min-width: 10px;
+    width: max-content;
     height: 18px;
     font-size: 12px;
     line-height: 18px;

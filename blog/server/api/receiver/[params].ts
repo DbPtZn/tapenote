@@ -78,6 +78,7 @@ export default defineEventHandler(async (event) => {
       abbrev: fields.abbrev?.[0] || '',
       content: files['jsonDocs']?.[0].filepath,
       audio: files['audios']?.[0].filepath || '',
+      duration: fields.duration?.[0] || 0,
     }
 
     // 检测是否属于更新投稿

@@ -257,7 +257,7 @@ export class Pack {
         const audioBlob = audioIndex === -1 ? null : files[audioIndex].file
         // const file = new File([product], 'product_' + Date.now() + '.json', { type: 'application/json' })
         // const blob = new Blob([file], { type: 'application/octet-stream' })
-        const { site, type, editionId, title, abbrev, code, penname, email, blog, msg } = data
+        const { site, type, editionId, title, abbrev, code, penname, email, blog, msg, duration } = data
 
         const formData = new FormData()
         jsonBlob && formData.append('jsonDocs', jsonBlob, 'document.json')
@@ -272,6 +272,7 @@ export class Pack {
         formData.append('email', email)
         formData.append('blog', blog)
         formData.append('msg', msg)
+        formData.append('duration', `${duration || 0}`)
 
         axios({
           method: 'post',

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { createApp } from 'vue'
 import './style.css'
-import './style.scss'
+// import './style.scss'
 import App from './App.vue'
 import { createPinia } from 'pinia'
 import router from './router'
