@@ -1,18 +1,18 @@
-@charset "UTF-8";@keyframes rotate-e179f417 {
+@charset "UTF-8";@keyframes rotate-fa07a37b {
 100% {
     transform: rotate(360deg);
 }
 }
-.rotate[data-v-e179f417] {
+.rotate[data-v-fa07a37b] {
   display: block;
-  animation: 5s rotate-e179f417 infinite linear;
-  animation-duration: var(--40e4484e);
+  animation: 5s rotate-fa07a37b infinite linear;
+  animation-duration: var(--799daff1);
 }
-.icon[data-v-e179f417] {
+.icon[data-v-fa07a37b] {
   color: inherit;
   font-size: inherit;
 }
-.icon[data-v-e179f417]::before {
+.icon[data-v-fa07a37b]::before {
   line-height: 1.1;
 }
 .editor-outline[data-v-36195bfe] {
@@ -1011,7 +1011,108 @@
 }
 [data-theme=dark-theme] [data-bgcolor="#8A2BE2"] {
   background-color: #8B008B !important;
-}.disabled[data-v-1ccc9bc2] {
+}[class^="material-"]:before , [class*=" material-"]:before {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  content: attr(material);
+  font-size: inherit;
+  color: inherit;
+}
+/** 查询到类包含该前缀时，就会添加以下样式 */
+[class^="material-icons-filled-"], [class*=" material-icons-filled-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "Material Icons";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga";
+}
+[class^="material-icons-outlined-"], [class*=" material-icons-outlined-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "Material Icons Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga";
+}
+[class^="material-icons-round-"], [class*=" material-icons-round-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "Material Icons Round";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga";
+}
+[class^="material-icons-sharp-"], [class*=" material-icons-sharp-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "Material Icons Sharp";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga";
+}
+[class^="material-icons-two-tone-"], [class*=" material-icons-two-tone-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "Material Icons Two Tone";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga";
+}
+/* [class^="material-icons-"], [class*=" material-icons-"] {
+} */
+/* .material-icons-cloud::before {
+  content: 'cloud';
+} */.disabled[data-v-1ccc9bc2] {
   opacity: var(--tb-opacityDisabled) !important;
   cursor: not-allowed !important;
 }

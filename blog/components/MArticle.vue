@@ -7,6 +7,7 @@ import type { ArticleType } from '~/types'
 import { usePlayer } from './hooks/usePlayer'
 import type { Editor } from '@textbus/editor'
 import '~/editor/style.css'
+import 'material-icons/iconfont/material-icons.css'
 const themeVars = useThemeVars()
 const route = useRoute()
 const scrollerRef = ref()

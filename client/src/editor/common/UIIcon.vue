@@ -28,9 +28,9 @@ const material = computed(() => {
 })
 </script>
 <template>
-  <n-icon :size="size" :depth="depth" :color="color">
+  <i :style="{ color: color, fontSize: `${size}px`, opacity: `${depth ? (depth*2)/10 : 1}` }">
     <span :material="material" :class="[icon, 'icon', rotateVal && 'rotate']"></span>
-  </n-icon>
+  </i>
 </template>
 
 <style lang="scss" scoped>

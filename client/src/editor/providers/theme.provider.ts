@@ -4,6 +4,8 @@ import _ from 'lodash'
 import { Structurer } from '.'
 import { Layout } from '@textbus/editor'
 import '../index.scss'
+import '../assets/index.css'
+import 'material-icons/iconfont/material-icons.css'
 type ThemeState = 'light' | 'dark'
 /**
  * 主题控制器

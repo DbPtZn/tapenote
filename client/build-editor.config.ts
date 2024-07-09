@@ -3,7 +3,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import dts from "vite-plugin-dts"
-import styleImport from 'vite-plugin-style-import'
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   // const env = loadEnv(mode, process.cwd(), '')
@@ -14,7 +15,13 @@ export default defineConfig(({ command, mode }) => {
       dts({
         entryRoot: resolve(__dirname, 'src', 'editor'),
         include: ["src/editor/**/*.ts", "src/editor/**/*.tsx", "src/editor/**/*.d.ts", "src/editor/**/*.vue", "src/editor/**/*.css", "src/editor/**/*.scss"],
-      })
+      }),
+      Components({
+        extensions: ['vue'],
+        resolvers: [NaiveUiResolver()],
+        // 可以指定放置类型声明文件的位置和名称
+        dts: 'src/types/components.d.ts'
+      }),
     ],
     resolve: {
       alias: {
@@ -25,7 +32,7 @@ export default defineConfig(({ command, mode }) => {
       // sourcemap: true,
       // target: 'esnext',
       minify: false,
-      outDir: 'editor-dist', //输出文件名称
+      outDir: '../blog/editor', //输出文件名称
       lib: {
         entry: resolve(__dirname, 'src', 'editor', 'index.ts'), //指定组件编译入口文件
         name: 'tapenote-editor',
@@ -64,9 +71,13 @@ export default defineConfig(({ command, mode }) => {
           "tslib",
           "uuid",
           "vfonts",
-          // "vue",
+          "vue",
           "vue-router",
-          "vuedraggable"
+          "vuedraggable",
+          "log4js",
+          "vue-draggable-plus",
+          "electron-store",
+          "crypto-js"
         ],
         output: {
           // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量

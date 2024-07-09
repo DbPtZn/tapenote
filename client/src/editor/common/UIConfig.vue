@@ -7,7 +7,7 @@
 </template>
 <script lang="ts" setup>
 import { inject, onUnmounted, ref } from 'vue'
-import { GlobalTheme, darkTheme } from 'naive-ui'
+import { GlobalTheme, darkTheme, NConfigProvider, NMessageProvider } from 'naive-ui'
 import { Injector } from '@textbus/core'
 import { ThemeProvider } from '..'
 const injector = inject<Injector>('injector')
