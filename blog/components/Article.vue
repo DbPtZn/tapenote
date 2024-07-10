@@ -6,6 +6,8 @@ import type { PublicArticleType } from '~/types'
 import dayjs from 'dayjs'
 import { usePlayer } from './hooks/usePlayer'
 import type { Editor } from '@textbus/editor'
+import '~/editor/style.css'
+import 'material-icons/iconfont/material-icons.css'
 const themeVars = useThemeVars()
 const props = defineProps<{
   id: string
@@ -139,7 +141,7 @@ onUnmounted(() => {
           </div>
           <div v-if="state.detail.duration" class="duration">
             <n-icon :component="TimerOutlined" />
-            <span>{{ dayjs().minute(Math.floor(state.detail.duration/60)).second(state.detail.duration%60).format('mm:ss') }}}}</span>
+            <span>{{ dayjs().minute(Math.floor(state.detail.duration/60)).second(state.detail.duration%60).format('mm:ss') }}</span>
           </div>
         </div>
         <n-divider />
@@ -157,11 +159,13 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .article {
   width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
 }
 .wrapper {
   width: 100%;
+  height: 100%;
   margin: 0 auto;
 }
 
@@ -240,7 +244,7 @@ onUnmounted(() => {
         // max-width: 880px;
         width: 100%;
         margin: 0 auto;
-        background-color: v-bind('themeVars.bodyColor');
+        background-color: v-bind('themeVars.cardColor');
       }
     }
   }

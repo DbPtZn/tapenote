@@ -201,9 +201,8 @@ class ArticleService {
             sort
           }
         )
-      console.log(result.docs[0].columnId)
       result.docs = result.docs.map(artilce => {
-        const { authcodeId, columnId, ...members } = artilce.toJSON()
+        const { columnId, ...members } = artilce.toJSON()
         // console.log(columnId)
         return {
           ...members,
@@ -211,7 +210,7 @@ class ArticleService {
           columnId: columnId?.['_id'] || null
         }
       }) as any[]
-      console.log(result.docs[0])
+      // console.log(result.docs[0])
       // TODO 1. 文章要isPublish true 才能显示，同时要过滤 column 也要 isPublish true， 非所有文章都有 column , 所以要进行判断 当且仅当 column 存在且 isPublish 为 false 时将其过滤
       // .filter(article => article.column.isPublish) as any[]
       return result.docs
