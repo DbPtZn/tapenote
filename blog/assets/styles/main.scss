@@ -2,13 +2,16 @@
 html {
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   font-size: 15px;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  // overflow: hidden;
   height: 100%;
   width: 100%;
 }
@@ -21,4 +24,26 @@ body {
 a {
   text-decoration: none;
   color: unset;
+}
+
+/** 定制滚动条 */
+/* 定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸 */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 16px;
+  // background-color: unset;
+}
+
+/* 定义滚动条轨道 内阴影+圆角 */
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: rgb(83, 83, 83);
+}
+
+/* 定义滑块 内阴影+圆角 */
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  // box-shadow: unset;
+  // background-color: unset;
+  background-color: rgb(51, 51, 51);
 }

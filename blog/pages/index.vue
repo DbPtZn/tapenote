@@ -6,6 +6,11 @@ const appConfig = useAppConfig()
 // console.log(runtimeConfig)
 // console.log(appConfig)
 // console.log(appConfig.title)
+console.log('index')
+// const route = useRoute()
+// if(!route.params.uid) {
+//   navigateTo('/home')
+// }
 /** 定义页面元数据 */
 // definePageMeta({
 //   middleware: (from) => {
@@ -13,6 +18,9 @@ const appConfig = useAppConfig()
 //       // return navigateTo(`/${validFeeds[0]}/1`)
 //     }
 //   }
+// })
+// useFetch('/api/article/list').then(res => {
+
 // })
 const themeVars = useThemeVars()
 function handleClick(id: number) {
@@ -23,7 +31,8 @@ function handleClick(id: number) {
 
 <template>
   <div class="home">
-    <ItemCard v-for="item in 10" :key="10" @click="handleClick(item)" />
+    home
+    <!-- <ItemCard v-for="item in 10" :key="10" @click="handleClick(item)" /> -->
   </div>
 </template>
 <style scoped lang="postcss">

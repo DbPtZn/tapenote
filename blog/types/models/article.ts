@@ -62,6 +62,13 @@ export type ArticleType = Omit<ArticleSchema, '_id' | 'userId' | 'authcodeId' | 
   updateAt: string
 }
 
+export type PublicArticleType = Omit<ArticleSchema, '_id' | 'userId' | 'authcodeId' | 'columnId' | 'removed' | 'createAt' | 'updateAt'> & {
+  _id: string
+  columnId: string
+  createAt: string
+  updateAt: string
+}
+
 export type ArticleFilter = Omit<ArticleSchema, '_id' | 'userId' | 'authcodeId' | 'columnId' | 'createAt' | 'updateAt'> & {
   _id: string
   userId: string
@@ -129,6 +136,14 @@ export type SubmissionState = Pick<
   | 'nextPage'
   | 'pagingCounter'
 >
+
+export type ArticleListItem = Omit<
+  ArticleType,
+  'editionId' | 'fromEditionId' | 'authcodeId' | 'isParsed' | 'msg' | 'editorVersion' |'content' | 'audio' | 'promoterSequence' | 'keyframeSequence' | 'subtitleSequence' | 'subtitleKeyframeSequence' | 'removed'
+>
+
+
+
 // _id: '',
 // UID: '',
 // editionId: '',

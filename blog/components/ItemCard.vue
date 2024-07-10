@@ -42,14 +42,12 @@ const props = defineProps({
       return value.length <= 28
     }
   },
-  detail: {
+  /** 作者介绍 */
+  intro: {
     type: String,
     require: false,
-    vaildator(value: string) {
-      return value.length <= 30
-    }
   },
-  firstPicture: {
+  cover: {
     type: String,
     require: false
   },
@@ -67,7 +65,7 @@ const props = defineProps({
     //   return value.length <= 60
     // }
   },
-  collectionName: {
+  columnName: {
     type: String,
     require: false
   },
@@ -90,11 +88,11 @@ const state = reactive({
   createAt: props.createAt ? dayjs(props.createAt || null).format('YYYY-MM-DD HH:mm:ss') : '',
   avatar: props.avatar || './avatar03.png',
   penname: props.penname || '佚名',
-  detail: props.detail || '',
-  firstPicture: props.firstPicture || '',
+  intro: props.intro || '',
+  cover: props.cover || '',
   title: props.title || '无标题',
   abbrev: props.abbrev || '无内容',
-  collectionName: props.collectionName || '',
+  columnName: props.columnName || '',
   tags: props.tags || [],
   count: props.count || { like: 0, comment: 0, collection: 0, read: 0 }
 })
@@ -135,12 +133,12 @@ const methods = {
           <div class="author-info" @click="emits('viewAuthor')">
             <n-avatar class="avatar" size="small" :src="state.avatar" fallback-src="./avatar03.png" />
             <span class="author-info-txt pen-name">{{ state.penname }}</span>
-            <span v-if="state.detail" class="author-info-txt comma">，</span>
-            <span class="author-info-txt detail">{{ state.detail }}</span>
+            <span v-if="state.intro" class="author-info-txt comma">，</span>
+            <span class="author-info-txt detail">{{ state.intro }}</span>
           </div>
           <div class="abbrev">
-            <div v-if="state.firstPicture" class="first-image">
-              <img :src="state.firstPicture" alt="" @error="methods.handleError" />
+            <div v-if="state.cover" class="first-image">
+              <img :src="state.cover" alt="" @error="methods.handleError" />
             </div>
             <div class="text">
               {{ state.abbrev.slice(0, 100) }}
@@ -158,7 +156,7 @@ const methods = {
       <div v-if="mode === 'normal'">
         <n-flex align="center">
           <n-button class="collection" strong secondary type="info" :size="'small'" @click="emits('toCollection')">
-            {{ collectionName }}
+            {{ columnName }}
           </n-button>
           <n-tag class="tag" v-for="tag in state.tags" :key="tag" :bordered="false" @click="emits('toTag', tag)" >
             {{ tag }}

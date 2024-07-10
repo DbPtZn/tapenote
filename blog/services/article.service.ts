@@ -5,8 +5,9 @@ import * as UUID from 'uuid'
 import fs from 'fs'
 import path from 'path'
 import  type { PaginateResult } from 'mongoose'
-import type { ArticleSchema, ArticleType } from '~/types'
+import type { ArticleListItem, ArticleSchema, ArticleType, ColumnSchema } from '~/types'
 import { fileService } from './file.service'
+import { RemovedEnum } from '~/enums'
 
 class ArticleService {
   articlesRepository: typeof Article
@@ -20,7 +21,7 @@ class ArticleService {
   }
 
   create(dto: CreateArticleDto, userId: ObjectId, fromEditionId: string) {
-    const { isParsed, editorVersion, authcodeId, penname, email, blog, msg, type, title, abbrev, content, audio } = dto
+    const { UID, isParsed, editorVersion, authcodeId, penname, email, blog, msg, type, title, abbrev, content, audio } = dto
     try {
       return this.articlesRepository.create({
         isParsed,
@@ -41,7 +42,8 @@ class ArticleService {
         },
         createAt: new Date(),
         updateAt: new Date(),
-        userId
+        userId,
+        UID
       })
     } catch (error) {}
   }
@@ -164,13 +166,55 @@ class ArticleService {
   }
 
 
-  async get(UID: string) {
+  async get(_id: string) {
     try {
-      const article = await this.articlesRepository
-        .findOne({ UID: UID })
-        .select(['_id', 'columnId', 'cover', 'title', 'content', 'abbrev', 'tags', 'createdAt', 'updatedAt'])
-      console.log(article)
+      const article = await this.articlesRepository.findOne({ _id, removed: RemovedEnum.NEVER, isParsed: true })
+      // console.log(article)
       return article
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async getAll(UID: string, limit?: number, page?: number, sort?: any) {
+    try {
+      const result = await this.articlesRepository
+        .paginate(
+          { UID: UID, isParsed: true, removed: RemovedEnum.NEVER },
+          {
+            projection: {
+              '_id': 1, 
+              'columnId': 1, 
+              'cover': 1, 
+              'title': 1, 
+              'abbrev': 1, 
+              'detail': 1, 
+              'author': 1, 
+              'meta': 1, 
+              'tags': 1, 
+              'createdAt': 1, 
+              'updatedAt': 1
+            },
+            populate: ['columnId'],
+            limit: limit || 10,
+            page: page || 1,
+            sort
+          }
+        )
+      console.log(result.docs[0].columnId)
+      result.docs = result.docs.map(artilce => {
+        const { authcodeId, columnId, ...members } = artilce.toJSON()
+        // console.log(columnId)
+        return {
+          ...members,
+          column: columnId as unknown as ColumnSchema || null ,
+          columnId: columnId?.['_id'] || null
+        }
+      }) as any[]
+      console.log(result.docs[0])
+      // TODO 1. 文章要isPublish true 才能显示，同时要过滤 column 也要 isPublish true， 非所有文章都有 column , 所以要进行判断 当且仅当 column 存在且 isPublish 为 false 时将其过滤
+      // .filter(article => article.column.isPublish) as any[]
+      return result.docs
     } catch (error) {
       throw error
     }

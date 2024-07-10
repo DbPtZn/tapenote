@@ -5,7 +5,7 @@ import type { Injector } from '@textbus/core'
 import type { Editor, EditorOptions } from '@textbus/editor'
 import type { CaretLimit } from '@textbus/platform-browser'
 import type { CourseData } from '~/editor'
-import type { ArticleType } from '~/types'
+import type { ArticleType, PublicArticleType } from '~/types'
 
 async function getConfig(args: {
   rootRef: HTMLElement
@@ -77,7 +77,7 @@ async function getConfig(args: {
           [speedDownTool, rewindTool, startTool, forwardTool, speedUpTool, replayTool, stopTool, volumeUpTool, volumeDownTool],
           controllerRef!
         ),
-      // () => new PlayerContextMenuPlugin(),
+      () => new PlayerContextMenuPlugin(),
       () => new OutlinePlugin(),
       () => new LinkJumpTipPlugin()
     ],
@@ -118,7 +118,7 @@ async function getConfig(args: {
 }
 
 export function usePlayer(args: {
-  data: ArticleType
+  data: ArticleType | PublicArticleType
   rootRef: Ref<HTMLElement>
   editorRef: Ref<HTMLElement>
   scrollerRef: Ref<HTMLElement>

@@ -1,70 +1,181 @@
 <script setup lang="ts">
-import { useThemeVars } from 'naive-ui'
+import { useMessage, useThemeVars } from 'naive-ui'
 import { TimerOutlined } from '@vicons/material'
 import UserAvatar from './icons/UserAvatar.vue'
+import type { PublicArticleType } from '~/types'
+import dayjs from 'dayjs'
+import { usePlayer } from './hooks/usePlayer'
+import type { Editor } from '@textbus/editor'
 const themeVars = useThemeVars()
+const props = defineProps<{
+  id: string
+}>()
+const message = useMessage()
+const scrollerRef = ref()
+const controllerRef = ref()
+const editorRef = ref()
+const rootRef = ref()
+const state = ref<PublicArticleType>({
+  UID: '',
+  editionId: '',
+  fromEditionId: '',
+  type: 'note',
+  isParsed: false,
+  msg: '',
+  editorVersion: '',
+  cover: '',
+  title: '',
+  content: '',
+  abbrev: '',
+  audio: '',
+  promoterSequence: [],
+  keyframeSequence: [],
+  subtitleSequence: [],
+  subtitleKeyframeSequence: [],
+  tags: [],
+  isPublish: false,
+  author: {
+    penname: '',
+    avatar: '',
+    email: '',
+    blog: ''
+  },
+  detail: {
+    wordage: 0,
+    duration: 0,
+    fileSize: 0
+  },
+  meta: {
+    views: 0,
+    likes: 0,
+    collections: 0,
+    comments: 0
+  },
+  _id: '',
+  columnId: '',
+  createAt: '',
+  updateAt: ''
+})
+// const { data, execute } = await useLazyFetch<PublicArticleType>('/api/article/' + props.id)
+// .then((res) => {
+//   if(res.error.value) {
+//     message.error('获取文章失败!')
+//     navigateTo('/')
+//   }
+//   if(res.data.value) data.value = res.data.value
+//   console.log('获取文章数据成功!')
+// })
+let player: Editor
+let pck: typeof import('~/editor')
+onMounted(async () => {
+  // console.log('onMounted')
+  // execute().then(res => {
+  //   console.log('获取数据')
+  //   console.log(res)
+  //   console.log(data.value)
+  // })
+  scrollerRef.value = document.body
+  pck = await import('~/editor')
+  $fetch<PublicArticleType>(`/api/article/${props.id}`).then(res => {
+    console.log('use fetch')
+    // console.log(res)
+    state.value = res
+    usePlayer({
+      rootRef,
+      editorRef,
+      scrollerRef,
+      controllerRef,
+      data: state.value
+    }).then(res => {
+      player = res
+      // console.log(player)
+    })
+  }).catch(err => {
+    message.error('获取文章失败!')
+    navigateTo('/')
+  })
+})
+onUnmounted(() => {
+  try {
+    console.log('销毁依赖')
+    player.get(pck.Player).destory()
+    player.get(pck.OutlineService).destory()
+    player.get(pck.DialogProvider).destory()
+    player.get(pck.AnimeProvider).destory()
+    player.get(pck.Structurer).destory()
+    player.get(pck.ThemeProvider).destory()
+    player.get(pck.RootEventService).destory()
+    player.get(pck.AnimeEventService).destory()
+    player.destroy()
+    console.log('编辑器是否已经销毁：' + player.destroyed)
+  } catch (error) {
+    console.log(error)
+    console.error('编辑器销毁失败！')
+  }
+})
 </script>
 
 <template>
-  <div class="article">
+  <div ref="rootRef" class="article">
     <div class="wrapper">
       <div class="header">
-        <div class="title">标题{{ $route.params.id }}</div>
-        <div class="intro">一段介绍的话</div>
+        <div class="title">{{ state.title }}</div>
+        <!-- <div class="intro">一段介绍的话</div> -->
         <div class="tags">
-          <n-tag :bordered="false">标签</n-tag>
+          <n-tag v-for="tag in state.tags" :bordered="false">{{ tag }}</n-tag>
         </div>
         <div class="detail">
           <div class="author">
             <n-icon :component="UserAvatar" />
-            <span>作者</span>
+            <span>{{ state.author.penname }}</span>
           </div>
           <div class="time">
             <n-icon :component="TimerOutlined" />
-            <span>2022-01-01</span>
+            <span>{{ dayjs(state.createAt).format('YYYY-MM-DD HH:mm:ss') }}</span>
           </div>
           <div class="wordage">
             <n-icon :component="TimerOutlined" />
-            <span>字数</span>
+            <span>{{ state.detail.wordage }}</span>
           </div>
-          <div class="duration">
+          <div v-if="state.detail.duration" class="duration">
             <n-icon :component="TimerOutlined" />
-            <span>12:04</span>
+            <span>{{ dayjs().minute(Math.floor(state.detail.duration/60)).second(state.detail.duration%60).format('mm:ss') }}}}</span>
           </div>
         </div>
         <n-divider />
       </div>
       <div class="main">
-        <div class="content">
-          <h1>SSR（Server-Side Render）</h1>
-          <p>{{ `Vue是一个SPA框架，网页的内容完全在客户端完成渲染，如果你有看过请求Vue项目时，返回的第一个html文件，文件中有很多的<script>标签和一个<div id=app></div>之后，vue会使用请求到的js文件从这个div开始渲染页面。这导致了SPA项目对于SEO的优化不是很好。使用SSR时，完整的html文件会在服务端完成渲染，第一次请求时会返回完整的内容，搜索引擎可以捕捉这些内容，从而对搜索关键词、搜索结果进行优化。` }}</p>
-          <p>{{ `除此之外，SSR还具有以下优点：` }}</p>
-          <p>{{ `更快的初始页面加载时间: Nuxt将完全呈现的HTML页面发送到浏览器，可以立即显示。这可以提供更快的感知页面加载时间和更好的用户体验 (UX)，尤其是在较慢的网络或设备上。` }}</p>
-          <p>{{ `在低功率设备上更好的性能: 它减少了需要在客户端下载和执行的JavaScript的数量，这对于可能难以处理繁重的JavaScript应用程序的低功率设备是有益的。` }}</p>
-          <p>{{ `更好的可访问性: 内容在初始页面加载时立即可用，从而改善依赖屏幕阅读器或其他辅助技术的用户的可访问性。` }}</p>
-          <p>{{ `更容易缓存: 页面可以在服务器端缓存，这可以通过减少生成内容并将内容发送到客户端所花费的时间来进一步提高性能。` }}</p>
-          <h1>SSR（Server-Side Render）</h1>
-          <p>{{ `Vue是一个SPA框架，网页的内容完全在客户端完成渲染，如果你有看过请求Vue项目时，返回的第一个html文件，文件中有很多的<script>标签和一个<div id=app></div>之后，vue会使用请求到的js文件从这个div开始渲染页面。这导致了SPA项目对于SEO的优化不是很好。使用SSR时，完整的html文件会在服务端完成渲染，第一次请求时会返回完整的内容，搜索引擎可以捕捉这些内容，从而对搜索关键词、搜索结果进行优化。` }}</p>
-          <p>{{ `除此之外，SSR还具有以下优点：` }}</p>
-          <p>{{ `更快的初始页面加载时间: Nuxt将完全呈现的HTML页面发送到浏览器，可以立即显示。这可以提供更快的感知页面加载时间和更好的用户体验 (UX)，尤其是在较慢的网络或设备上。` }}</p>
-          <p>{{ `在低功率设备上更好的性能: 它减少了需要在客户端下载和执行的JavaScript的数量，这对于可能难以处理繁重的JavaScript应用程序的低功率设备是有益的。` }}</p>
-          <p>{{ `更好的可访问性: 内容在初始页面加载时立即可用，从而改善依赖屏幕阅读器或其他辅助技术的用户的可访问性。` }}</p>
-          <p>{{ `更容易缓存: 页面可以在服务器端缓存，这可以通过减少生成内容并将内容发送到客户端所花费的时间来进一步提高性能。` }}</p>
-        </div>
+        <div ref="editorRef" class="content editor" />
         <div class="outliner">
           SSR（Server-Side Render）
         </div>
       </div>
     </div>
+    <div v-show="state.type === 'course'" ref="controllerRef" :class="['controller']"></div>
   </div>
 </template>
 <style scoped lang="scss">
 .article {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 .wrapper {
   width: 100%;
   margin: 0 auto;
+}
+
+.controller {
+  position: fixed;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+  z-index: 1;
+  word-wrap: break-word;
 }
 
 .header {
@@ -114,6 +225,24 @@ const themeVars = useThemeVars()
   .content {
     width: 100%;
     max-width: 760px;
+  }
+  .editor {
+    height: 100%;
+    :deep(.textbus-container) {
+      height: 100% !important;
+      margin: 0 auto;
+      outline: none;
+      border: none;
+      border-radius: 0px;
+      .textbus-ui-middle {
+        border: none;
+        // max-width: v-bind('state.editorWidth');
+        // max-width: 880px;
+        width: 100%;
+        margin: 0 auto;
+        background-color: v-bind('themeVars.bodyColor');
+      }
+    }
   }
   .outliner {
     width: 100%;

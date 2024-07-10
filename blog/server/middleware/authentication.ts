@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken'
 
 export default defineEventHandler(async event => {
-  console.log('auth middleware')
+  // console.log('auth middleware')
+  // if (!event.path.includes('/api/manage')) return
   // 获取token
   // let token = getHeader(event)
   let token = getCookie(event, 'Authorization')

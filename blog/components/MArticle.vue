@@ -70,7 +70,7 @@ const state = ref<ArticleType>({
 let player: Editor
 let pck: typeof import('~/editor')
 onMounted(async () => {
-  console.log('onMounted')
+  // console.log('onMounted')
   pck = await import('~/editor')
   $fetch<ArticleType>(`/api/manage/article/${route.params.id}`).then(async res => {
     console.log('use fetch')
@@ -124,7 +124,7 @@ onUnmounted(() => {
           <!-- 文章主体 -->
           <div class="product-main">
             <div class="product-title">{{ state.title }}</div>
-            <div ref="editorRef" class="editor" data-theme="dark-theme" />
+            <div ref="editorRef" class="editor" />
           </div>
           <n-divider class="product-footer-divider" dashed />
         </div>

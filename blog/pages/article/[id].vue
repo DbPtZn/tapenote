@@ -1,15 +1,15 @@
 <script setup lang="ts">
 const route = useRoute()
-console.log(route.meta)
-if (route.params.group === 'admins' && !route.params.id) {
+if (!route.params.id) {
   console.log('警告！确保用户已经通过身份验证！')
+  navigateTo('/')
 }
 </script>
 
 
 <template>
   <div>
-    <Article />
+    <Article :id="route.params.id" />
   </div>
 </template>
 

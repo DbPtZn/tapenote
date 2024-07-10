@@ -2,7 +2,15 @@
   <n-config-provider :theme="appConfig.theme.dark ? darkTheme : null">
     <n-dialog-provider>
       <n-message-provider>
-        <n-layout content-style="display: flex; flex-direction: column;">
+        <n-layout 
+          content-style="display: flex; flex-direction: column;"
+          :native-scrollbar="true"
+          :scrollbar-props="{
+            style: {
+              overflow: 'hidden'
+            }
+          }"
+        >
           <div class="header">
             <AppHeader />
           </div>
@@ -30,7 +38,7 @@ const appConfig = useAppConfig()
   height: 100%;
 }
 .n-layout {
-  height: 100vh;
+  min-height: 100vh;
 }
 .layout-container {
   position: relative;
