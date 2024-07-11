@@ -1,10 +1,10 @@
-export function splitText(text: string, maxLength = 48) {
+export function splitText(text: string, maxLength = 48): string[] {
   // 定义常见的中文标点符号 punctuations
   const quotesRegExp = /["”’']/
   const primaryRegExp = /[.?!;。？！；]/ // ['。', '？', '！', '；', '.', '?', '!', ';']
   const secondaryRegExp = /[,，]/  // ['，', '、', ',', '、']
-  // 如果文本长度小于等于最大长度，直接返回
-  if (text.length <= maxLength) return text
+  // 如果文本长度小于等于最大长度，直接返回 （不能直接返回字符串文本，因为会被 for let...of 解析为单字符数组）
+  if (text.length <= maxLength) return [text]
 
   // 用于存储分割后的文本数组
   const segments: string[] = [] // 分割后的文本数组

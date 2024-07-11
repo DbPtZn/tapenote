@@ -8,10 +8,14 @@ const emits = defineEmits(['onTextOutput'])
 const themeVars = useThemeVars()
 const inputValue = ref('')
 const message = useMessage()
-const output = () => {
+const output = (ev) => {
   if (containsEnglish(inputValue.value)) {
     message.warning('目前语音合成模型暂不支持英文！')
     return
+  }
+  if (ev.key === 'Enter') {
+    // 清除换行的符号
+    inputValue.value = inputValue.value.replace(/(\r\n|\n|\r)/gm, "")
   }
   emits('onTextOutput', inputValue.value)
   inputValue.value = ''

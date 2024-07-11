@@ -63,6 +63,12 @@ const {
     // TODO 对过长的文本进行分片
     if (text.length > 32) {
       const chunks = splitText(text)
+      if(typeof chunks === 'string') {
+        console.log(chunks)
+        // 防御：避免字符串文本，因为会被 for let...of 解析为单字符数组
+        message.error('输入发生错误，请尝试重新输入')
+        return
+      }
       const promiseArr: Promise<any>[] = []
       for(let chunk of chunks) {
         promiseArr.push(

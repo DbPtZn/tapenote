@@ -233,7 +233,7 @@ onUnmounted(() => {
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
-  pointer-events: none;
+  // pointer-events: none; // 之前为什么要加上这个？
 }
 // .order {
 //   writing-mode: vertical-lr;
