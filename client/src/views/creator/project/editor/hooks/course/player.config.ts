@@ -118,7 +118,7 @@ export function getCourseConfig(args: {
       })
       /** 播放器依赖注入 */
       const player = injector.get(Player)
-      player.setup(injector, scrollerRef)
+      player.setup(injector, scrollerRef, document.body)
     }
   }
   return config

@@ -56,7 +56,7 @@ export class Player {
   private data: ParseData[] = [] // 数据
   sourceData: CourseData[]  = []// 源数据
   private scrollerRef!: HTMLElement // 滚动条
-  private rootRef!: HTMLElement // 课程最外层容器
+  private rootRef!: HTMLElement // 最外层容器
   private containerRef!: HTMLElement
   private subs: Subscription[] = []
   private scrollerSub!: Subscription
@@ -89,11 +89,12 @@ export class Player {
   private animeElementSequence: NodeListOf<HTMLElement>[] = []
 
   constructor() {}
-  setup(injector: Injector, scrollerRef: HTMLElement) {
+  setup(injector: Injector, scrollerRef: HTMLElement, containerRef?: HTMLElement) {
     const structurer = injector.get(Structurer)
     // loadData 依赖 scrollerRef， 依赖注入时应保证 structurer 依赖在前面，为了避免 structurer 顺序问题，要求在 setup 中传入 scrollerRef
     this.scrollerRef = scrollerRef || structurer.scrollerRef!
-    this.containerRef = injector.get(Layout).container
+    // 指定容器： 默认容器是编辑器，但在一些场景中滚动时的容器可能是 body 之类的
+    this.containerRef = containerRef ? containerRef : injector.get(Layout).container
     this.anime = injector.get(AnimeProvider)
     this.injector = injector
   }
@@ -519,6 +520,8 @@ export class Player {
     const Horizon = scroller.clientHeight // 可视窗口的高度
     const Scrolled = scroller.scrollTop // 已滚动高度
     const Node2Top = getTopDistance(el) - container.offsetTop // 节点距离文档顶部（指节点的上边界至文档顶部）
+    // console.log(getTopDistance(el))
+    // console.log(container.offsetTop)
     const NodeHeight = el.clientHeight // 元素自身的高度
     const Node2HorizonBottom = Horizon + Scrolled - Node2Top - NodeHeight //节点距离可视区间底部
     if (Node2Top < Scrolled) {
