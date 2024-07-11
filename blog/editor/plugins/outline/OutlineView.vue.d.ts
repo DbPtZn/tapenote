@@ -5,11 +5,13 @@ export interface OutlineItem {
 }
 declare const _default: import('vue').DefineComponent<__VLS_TypePropsToRuntimeProps<{
     data: () => OutlineItem[];
+    openDelayAnimate: boolean;
     activeIndex: () => number;
     scrollTop: () => number;
     scrollerTo: (offsetTop: number) => void;
 }>, {}, unknown, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, string, import('vue').PublicProps, Readonly<import('vue').ExtractPropTypes<__VLS_TypePropsToRuntimeProps<{
     data: () => OutlineItem[];
+    openDelayAnimate: boolean;
     activeIndex: () => number;
     scrollTop: () => number;
     scrollerTo: (offsetTop: number) => void;

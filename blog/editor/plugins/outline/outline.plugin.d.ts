@@ -1,6 +1,8 @@
 import { Plugin, Injector } from '@textbus/core';
 
 export declare class OutlinePlugin implements Plugin {
+    private target?;
+    private openDelayAnimate;
     private app;
     private workbench;
     private host;
@@ -13,7 +15,7 @@ export declare class OutlinePlugin implements Plugin {
     private activeIndex;
     private scrollTop;
     private injector;
-    constructor();
+    constructor(target?: HTMLElement | undefined, openDelayAnimate?: boolean);
     setup(injector: Injector): void;
     private expand;
     private collapse;

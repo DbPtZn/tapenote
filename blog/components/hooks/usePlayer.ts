@@ -11,11 +11,12 @@ async function getConfig(args: {
   rootRef: HTMLElement
   editorRef: HTMLElement
   scrollerRef: HTMLElement
-  toolbarRef?: HTMLElement
+  outlineRef?: HTMLElement
   controllerRef?: HTMLElement
   content?: string
 }) {
-  const { rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  const { rootRef, editorRef, scrollerRef, outlineRef, controllerRef, content } = args
+  console.log(outlineRef)
   const { defaultComponentLoaders, defaultComponents, defaultFormatLoaders, defaultFormatters, LinkJumpTipPlugin } = await import('@textbus/editor')
   const { fromEvent } = await import('@textbus/core')
   const { Input } = await import('@textbus/platform-browser')
@@ -78,7 +79,7 @@ async function getConfig(args: {
           controllerRef!
         ),
       () => new PlayerContextMenuPlugin(),
-      () => new OutlinePlugin(),
+      () => new OutlinePlugin(outlineRef, false),
       () => new LinkJumpTipPlugin()
     ],
     setup(injector: Injector) {
@@ -105,13 +106,16 @@ async function getConfig(args: {
       structurer.setup({
         rootRef,
         scrollerRef,
-        toolbarRef,
         editorRef,
         controllerRef
       })
+      /** 大纲视图 */
+      const outlineService = injector.get(OutlineService)
+      outlineService.setup(true)
+      // outlineService.handleExpand()
       /** 播放器依赖注入 */
       const player = injector.get(Player)
-      player.setup(injector, scrollerRef)
+      player.setup(injector, scrollerRef, scrollerRef)
     }
   }
   return config
@@ -123,8 +127,9 @@ export function usePlayer(args: {
   editorRef: Ref<HTMLElement>
   scrollerRef: Ref<HTMLElement>
   controllerRef: Ref<HTMLElement>
+  outlineRef: Ref<HTMLElement>
 }) {
-  const { data, rootRef, editorRef, scrollerRef, controllerRef } = args
+  const { data, rootRef, editorRef, scrollerRef, outlineRef, controllerRef } = args
   // const { debounceTime } = await import('@textbus/core')
   let editor: Editor
   return new Promise<Editor>(async (resolve, reject) => {
@@ -150,6 +155,7 @@ export function usePlayer(args: {
         editorRef: editorRef.value,
         scrollerRef: scrollerRef.value,
         controllerRef: controllerRef.value,
+        outlineRef: outlineRef.value,
         content
       })
       editor = createEditor(config)

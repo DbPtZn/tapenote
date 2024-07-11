@@ -16,6 +16,7 @@ const message = useMessage()
 const scrollerRef = ref()
 const controllerRef = ref()
 const editorRef = ref()
+const outlineRef = ref()
 const rootRef = ref()
 const state = ref<PublicArticleType>({
   UID: '',
@@ -87,6 +88,7 @@ onMounted(async () => {
       editorRef,
       scrollerRef,
       controllerRef,
+      outlineRef,
       data: state.value
     }).then(res => {
       player = res
@@ -97,6 +99,9 @@ onMounted(async () => {
     navigateTo('/')
   })
 })
+function handleExpand() {
+  
+}
 onUnmounted(() => {
   try {
     console.log('销毁依赖')
@@ -148,15 +153,21 @@ onUnmounted(() => {
       </div>
       <div class="main">
         <div ref="editorRef" class="content editor" />
-        <div class="outliner">
-          SSR（Server-Side Render）
-        </div>
+        <div ref="outlineRef" class="outliner"></div>
+        <!-- <div class="outline-switch" @click="handleExpand">
+          <Icon name="material-symbols:close-small-outline" size="24px"/>
+        </div> -->
       </div>
     </div>
     <div v-show="state.type === 'course'" ref="controllerRef" :class="['controller']"></div>
   </div>
 </template>
 <style scoped lang="scss">
+.outline-switch {
+  position: sticky;
+  top: 0;
+  right: 0;
+}
 .article {
   width: 100%;
   height: 100%;
@@ -223,12 +234,13 @@ onUnmounted(() => {
 }
 
 .main {
+  position: relative;
   display: flex;
   flex-direction: row;
   width: 100%;
   .content {
     width: 100%;
-    max-width: 760px;
+    max-width: 880px;
   }
   .editor {
     height: 100%;
@@ -244,17 +256,18 @@ onUnmounted(() => {
         // max-width: 880px;
         width: 100%;
         margin: 0 auto;
-        background-color: v-bind('themeVars.cardColor');
+        background-color: v-bind('themeVars.bodyColor');
       }
     }
   }
-  .outliner {
-    width: 100%;
-    max-width: 240px;
-    margin-top: 2rem;
-    padding-left: 1.5rem;
-    padding: .5rem;
-  }
+}
+.outliner {
+  position: relative;
+  width: 100%;
+  max-width: 144px;
+  margin-top: 2rem;
+  padding-left: 1.5rem;
+  padding: .5rem;
 }
 @media (min-width: 1280px) {
   .wrapper {
@@ -268,6 +281,10 @@ onUnmounted(() => {
 }
 
 @include SmallDesktop {
+  .header {
+    padding: 12px 8px 0px 8px;
+    box-sizing: border-box;
+  }
   .main {
     .content {
       max-width: 1024px;
@@ -280,6 +297,8 @@ onUnmounted(() => {
 
 @include Mobile {
   .header {
+    padding: 12px 8px 0px 8px;
+    box-sizing: border-box;
     .detail {
       justify-content: space-between;
       .wordage {

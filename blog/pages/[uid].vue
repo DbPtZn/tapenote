@@ -30,7 +30,7 @@ useFetch<ArticleListItem[]>('/api/article/list/' + route.params.uid).then(res =>
     return
   }
   if(res.data.value) articleList.value = res.data.value
-  console.log(articleList.value)
+  // console.log(articleList.value)
 })
 const themeVars = useThemeVars()
 function handleClick(item: ArticleListItem) {

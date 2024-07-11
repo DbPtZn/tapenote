@@ -62,7 +62,7 @@ class ArticleService {
           extname: path.extname(article.audio),
           dirname: UID
         }, userId)
-        console.log(filepath)
+        // console.log(filepath)
       }
       const result = await this.articlesRepository.updateOne(
         { _id },

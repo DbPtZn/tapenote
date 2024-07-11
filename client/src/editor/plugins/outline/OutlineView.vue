@@ -8,6 +8,7 @@ export interface OutlineItem {
 }
 const props = defineProps<{
   data: () => OutlineItem[]
+  openDelayAnimate: boolean
   activeIndex: () => number
   scrollTop: () => number
   scrollerTo: (offsetTop: number) => void
@@ -21,7 +22,7 @@ const state = reactive({
 </script>
 
 <template>
-  <div class="editor-outline" :style="{ position: 'absolute', top: state.scrollTop + 'px' }">
+  <div :class="['editor-outline', openDelayAnimate ? 'delay' : '' ]" :style="{ position: 'absolute', top: state.scrollTop + 'px' }">
     <n-space id="editor-outline-container" class="editor-outline-container scrollbar" vertical>
       <div v-for="(item, index) in state.data" :key="index" :class="['outline-heading-item', `outline-heading-${item?.tagName.toLocaleLowerCase() || 'null'}`]">
         <a
@@ -39,8 +40,10 @@ const state = reactive({
 <style lang="scss" scoped>
 .editor-outline {
   width: 200px;
-  transition: top 0.2s ease-in-out;
   overflow-x: hidden;
+}
+.delay {
+  transition: top 0.2s ease-in-out;
 }
 .editor-outline-container {
   width: 100%;

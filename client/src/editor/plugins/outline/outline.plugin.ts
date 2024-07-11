@@ -20,13 +20,15 @@ export class OutlinePlugin implements Plugin {
   private activeIndex: Ref<number> = ref(0)
   private scrollTop: Ref<number> = ref(0)
   private injector!: Injector
-  constructor() {}
+  constructor(private target?: HTMLElement, private openDelayAnimate = true) {}
   setup(injector: Injector): void {
     const layout = injector.get(Layout)
     // const configProvider = injector.get(ConfigProvider)
     const structurer = injector.get(Structurer)
     this.injector = injector
-    this.workbench = layout.workbench
+    console.log(this.target)
+    this.workbench = layout.workbench // 设置大纲视图要挂在的目标
+    console.log(this.workbench)
     this.rootComponentRef = injector.get(RootComponentRef) // 获取根组件
     this.renderer = injector.get(Renderer)
     this.outlineService = injector.get(OutlineService)
@@ -36,8 +38,9 @@ export class OutlinePlugin implements Plugin {
     this.scrollTop = ref<number>(0)
     /** 创建挂载大纲视图的节点 */
     this.host = createElement('div', { classes: ['outline-container'] }) // 挂载大纲视图的节点
-    this.workbench.appendChild(this.host) // 将挂载节点插入 workbench 中
-    // this.expand()
+    this.target ? this.target.appendChild(this.host) : this.workbench.appendChild(this.host) // 将挂载节点插入 workbench 中
+    const delay = this.openDelayAnimate ? 20 : 0
+    this.outlineService.isExpanded && this.expand()
     this.subs.push(
       // TODO 设置条件：1.当且仅当大纲视图展开时才同步更新。
       this.renderer.onViewUpdated.pipe(sampleTime(1000)).subscribe(() => {
@@ -61,7 +64,7 @@ export class OutlinePlugin implements Plugin {
           }
         })
       }),
-      fromEvent(this.scrollerRef!, 'scroll').pipe(debounceTime(20)).subscribe(() => {
+      fromEvent(this.scrollerRef!, 'scroll').pipe(debounceTime(delay)).subscribe(() => {
         this.activeIndex.value = this.outlineData.value.findIndex(item => item.offsetTop >= this.scrollerRef!.scrollTop)
         this.scrollTop.value = this.scrollerRef!.scrollTop
       }),
@@ -82,6 +85,7 @@ export class OutlinePlugin implements Plugin {
     this.app = createApp(h(UIConfig, null, {
       default: () => h(OutlineView, { 
         data: () => this.outlineData.value,
+        openDelayAnimate: this.openDelayAnimate,
         activeIndex: () => this.activeIndex.value,
         scrollTop: () => this.scrollTop.value,
         scrollerTo: (offsetTop) => this.scrollerToCallback(offsetTop),

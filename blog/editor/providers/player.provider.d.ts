@@ -60,7 +60,7 @@ export declare class Player {
     private subtitleKeyframeSequence;
     private animeElementSequence;
     constructor();
-    setup(injector: Injector, scrollerRef: HTMLElement): void;
+    setup(injector: Injector, scrollerRef: HTMLElement, containerRef?: HTMLElement): void;
     loadData(data: CourseData[]): Promise<ParseData[]>;
     /** 递归播放多个项目 */
     private playMulti;

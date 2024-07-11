@@ -152,14 +152,15 @@ const _sfc_main$q = /* @__PURE__ */ defineComponent({
   __name: "OutlineView",
   props: {
     data: { type: Function },
+    openDelayAnimate: { type: Boolean },
     activeIndex: { type: Function },
     scrollTop: { type: Function },
     scrollerTo: { type: Function }
   },
   setup(__props) {
     useCssVars((_ctx) => ({
-      "644940c3": unref(themeVars).textColor3,
-      "644940c2": unref(themeVars).textColor2
+      "b00569a0": unref(themeVars).textColor3,
+      "b00569a2": unref(themeVars).textColor2
     }));
     const props = __props;
     const themeVars = useThemeVars();
@@ -171,7 +172,7 @@ const _sfc_main$q = /* @__PURE__ */ defineComponent({
     return (_ctx, _cache) => {
       const _component_n_space = NSpace;
       return openBlock(), createElementBlock("div", {
-        class: "editor-outline",
+        class: normalizeClass(["editor-outline", _ctx.openDelayAnimate ? "delay" : ""]),
         style: normalizeStyle({ position: "absolute", top: state.scrollTop + "px" })
       }, [
         createVNode(_component_n_space, {
@@ -196,13 +197,13 @@ const _sfc_main$q = /* @__PURE__ */ defineComponent({
           ]),
           _: 1
         })
-      ], 4);
+      ], 6);
     };
   }
 });
-const OutlineView = /* @__PURE__ */ _export_sfc(_sfc_main$q, [["__scopeId", "data-v-36195bfe"]]);
+const OutlineView = /* @__PURE__ */ _export_sfc(_sfc_main$q, [["__scopeId", "data-v-5975ad54"]]);
 class OutlinePlugin {
-  constructor() {
+  constructor(target, openDelayAnimate = true) {
     __publicField(this, "app", null);
     __publicField(this, "workbench", null);
     __publicField(this, "host", null);
@@ -215,12 +216,16 @@ class OutlinePlugin {
     __publicField(this, "activeIndex", ref(0));
     __publicField(this, "scrollTop", ref(0));
     __publicField(this, "injector");
+    this.target = target;
+    this.openDelayAnimate = openDelayAnimate;
   }
   setup(injector) {
     const layout = injector.get(Layout);
     const structurer = injector.get(Structurer);
     this.injector = injector;
+    console.log(this.target);
     this.workbench = layout.workbench;
+    console.log(this.workbench);
     this.rootComponentRef = injector.get(RootComponentRef);
     this.renderer = injector.get(Renderer);
     this.outlineService = injector.get(OutlineService);
@@ -229,7 +234,9 @@ class OutlinePlugin {
     this.activeIndex = ref(0);
     this.scrollTop = ref(0);
     this.host = createElement("div", { classes: ["outline-container"] });
-    this.workbench.appendChild(this.host);
+    this.target ? this.target.appendChild(this.host) : this.workbench.appendChild(this.host);
+    const delay2 = this.openDelayAnimate ? 20 : 0;
+    this.outlineService.isExpanded && this.expand();
     this.subs.push(
       // TODO 设置条件：1.当且仅当大纲视图展开时才同步更新。
       this.renderer.onViewUpdated.pipe(sampleTime(1e3)).subscribe(() => {
@@ -250,7 +257,7 @@ class OutlinePlugin {
           };
         });
       }),
-      fromEvent(this.scrollerRef, "scroll").pipe(debounceTime(20)).subscribe(() => {
+      fromEvent(this.scrollerRef, "scroll").pipe(debounceTime(delay2)).subscribe(() => {
         this.activeIndex.value = this.outlineData.value.findIndex((item) => item.offsetTop >= this.scrollerRef.scrollTop);
         this.scrollTop.value = this.scrollerRef.scrollTop;
       }),
@@ -269,6 +276,7 @@ class OutlinePlugin {
     this.app = createApp(h(_sfc_main$s, null, {
       default: () => h(OutlineView, {
         data: () => this.outlineData.value,
+        openDelayAnimate: this.openDelayAnimate,
         activeIndex: () => this.activeIndex.value,
         scrollTop: () => this.scrollTop.value,
         scrollerTo: (offsetTop) => this.scrollerToCallback(offsetTop)
@@ -9863,7 +9871,7 @@ let Player = class {
     __publicField(this, "scrollerRef");
     // 滚动条
     __publicField(this, "rootRef");
-    // 课程最外层容器
+    // 最外层容器
     __publicField(this, "containerRef");
     __publicField(this, "subs", []);
     __publicField(this, "scrollerSub");
@@ -9894,10 +9902,10 @@ let Player = class {
     __publicField(this, "subtitleKeyframeSequence", []);
     __publicField(this, "animeElementSequence", []);
   }
-  setup(injector, scrollerRef) {
+  setup(injector, scrollerRef, containerRef) {
     const structurer = injector.get(Structurer);
     this.scrollerRef = scrollerRef || structurer.scrollerRef;
-    this.containerRef = injector.get(Layout).container;
+    this.containerRef = containerRef ? containerRef : injector.get(Layout).container;
     this.anime = injector.get(AnimeProvider);
     this.injector = injector;
   }
