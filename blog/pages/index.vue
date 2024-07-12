@@ -31,24 +31,49 @@ function handleClick(id: number) {
 
 <template>
   <div class="home">
-    home
-    <!-- <ItemCard v-for="item in 10" :key="10" @click="handleClick(item)" /> -->
+    <div class="cards">
+      <BloggerCard class="blogger-card" v-for="item in 10" :key="item" />
+    </div>
   </div>
 </template>
-<style scoped lang="postcss">
+<style scoped lang="scss">
+.cards {
+  padding-top: 36px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap ;
+  --n: 4;
+  --space: calc(100% - var(--n) * 240px);
+  --h: calc(var(--space) / var(--n) / 2);
+  .blogger-card {
+    margin: 10px var(--h);
+  }
+}
 .home {
   width: 100%;
   margin: 0 auto;
   background-color: v-bind('themeVars.bodyColor');
+}
+
+@include Desktop {
+  .home {
+    max-width: 1024px;
+  }
 }
 @media (min-width: 1024px) {
   .home {
     max-width: 1024px;
   }
 }
-@include Desktop {
-  .home {
-    max-width: 1024px;
+
+@media (max-width: 1024px) {
+  .cards {
+    --n: 3;
+  }
+}
+@include Mobile {
+  .cards {
+    --n: 2;
   }
 }
 </style>
