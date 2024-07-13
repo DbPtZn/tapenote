@@ -9,7 +9,7 @@ if (!route.params.id) {
 
 <template>
   <div>
-    <Article :id="route.params.id" />
+    <Article :id="(route.params.id as string)" />
   </div>
 </template>
 

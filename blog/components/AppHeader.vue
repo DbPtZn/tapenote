@@ -6,42 +6,53 @@ import MenuIcon from '../components/MenuIcon.vue'
 import { useThemeVars } from 'naive-ui'
 const appConfig = useAppConfig()
 const router = useRouter()
+const route = useRoute()
 const themeVars = useThemeVars()
+// const uid = computed(() => localStorage.getItem('uid'))
+
+onMounted(() => {
+  // uid.value = localStorage.getItem('uid') as string
+  // console.log(uid.value)
+  // if(!uid.value) {
+  //   router.push({ path: `/` })
+  // }
+  // console.log(useState('uid').value)
+})
 const { theme } = appConfig
 const { t } = useI18n()
 const activeKey = ref()
-const menuOptions = [
-  {
-    key: 'home',
-    label: `${t('home')}`,
-    onClick: () => {
-      router.push({ path: `/` })
-    }
-  },
-  {
-    key: 'column',
-    label: `${t('column')}`,
-    onClick: () => {
-      router.push({ path: '/column' })
-    }
-  },
-  {
-    key: 'tag',
-    label: `${t('tag')}`,
-    disabled: true,
-    onClick: () => {
-      router.push({ path: `/tag` })
-    }
-  },
-  {
-    key: 'about',
-    label: `${t('about')}`,
-    disabled: true,
-    onClick: () => {
-      //
-    }
-  }
-]
+// const menuOptions = [
+//   {
+//     key: 'home',
+//     label: `${t('home')}`,
+//     onClick: () => {
+//       router.push({ path: `/${uid}` })
+//     }
+//   },
+//   {
+//     key: 'column',
+//     label: `${t('column')}`,
+//     onClick: () => {
+//       router.push({ path: '/column' })
+//     }
+//   },
+//   {
+//     key: 'tag',
+//     label: `${t('tag')}`,
+//     disabled: true,
+//     onClick: () => {
+//       router.push({ path: `/tag` })
+//     }
+//   },
+//   {
+//     key: 'about',
+//     label: `${t('about')}`,
+//     disabled: true,
+//     onClick: () => {
+//       //
+//     }
+//   }
+// ]
 
 function handleThemeUpdate(value: boolean) {
   theme.dark = value
@@ -59,24 +70,24 @@ function handleDblClick() {
         <div class="title">
           <!-- <n-icon class="tapenote-icon" :component="HomeFilled" :size="24" />-->
           <img class="tapenote-icon logo" src="/logo.png" alt="" @dblclick="handleDblClick" />
-          <span class="tapenote-name">{{ $t('title') }}</span>
+          <nuxt-link class="tapenote-name" to="/">{{ $t('title') }}</nuxt-link>
         </div>
       </div>
       <div class="right">
         <div class="tools">
-          <n-input class="search" placeholder="搜索" disabled>
+          <!-- <n-input class="search" placeholder="搜索" disabled>
             <template #suffix>
               <n-button class="btn" text ghost>
                 <n-icon :component="SearchOutlined" :size="18" />
               </n-button>
             </template>
-          </n-input>
+          </n-input> -->
         </div>
 
         <div class="menu">
           <n-flex align="center" :size="[12, 0]">
             <n-button text>
-              <nuxt-link class="menu-btn" to="/">{{ $t('home') }}</nuxt-link>
+              <nuxt-link class="menu-btn" to="..">{{ $t('home') }}</nuxt-link>
             </n-button>
             <n-button text>
               <nuxt-link class="menu-btn" to="/test">{{ $t('column') }}</nuxt-link>

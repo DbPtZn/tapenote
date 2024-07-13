@@ -14,6 +14,15 @@ if(!route.params.uid) {
   // console.log('route.params.uid' + route.params.uid)
   navigateTo('/')
 }
+// useState('uid', () => route.params.uid)
+onMounted(() => {
+  // console.log('uid'+ route.params.uid)
+  // if(route.params.uid) {
+  //   localStorage.setItem('uid', route.params.uid as string)
+  //   // useLocalStorage('uid', route.params.uid as string)
+  
+  // }
+})
 /** 定义页面元数据 */
 // definePageMeta({
 //   middleware: (from) => {

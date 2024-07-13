@@ -33,3 +33,8 @@ export type UserType = Omit<
 }
 
 export type UserState = UserType
+
+export type UserListItem = Pick<
+  UserType,
+  'UID' | 'nickname' | 'avatar' | 'desc' | 'createAt' | 'updateAt'
+> 

@@ -76,6 +76,25 @@ class UserService {
     }
   }
 
+  async findAll() {
+    try {
+      const users = await this.usersRepository.find(
+        {},
+        {
+          UID: 1,
+          nickname: 1,
+          avatar: 1,
+          desc: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        }
+      )
+      return users
+    } catch (error) {
+      throw error
+    }
+  }
+
   /** 生成用户私有文件夹的地址 */
   async generateUID() {
     let UID = generateRandomStr()

@@ -1,27 +1,14 @@
 <script setup lang="ts">
 import { useThemeVars } from 'naive-ui'
-
-const runtimeConfig = useRuntimeConfig()
-const appConfig = useAppConfig()
-// console.log(runtimeConfig)
-// console.log(appConfig)
-// console.log(appConfig.title)
-console.log('index')
-// const route = useRoute()
-// if(!route.params.uid) {
-//   navigateTo('/home')
-// }
+import type { UserListItem } from '~/types';
 /** 定义页面元数据 */
-// definePageMeta({
-//   middleware: (from) => {
-//     if (from.path === '/') {
-//       // return navigateTo(`/${validFeeds[0]}/1`)
-//     }
-//   }
-// })
-// useFetch('/api/article/list').then(res => {
-
-// })
+definePageMeta({
+  layout: false
+})
+const users = ref<UserListItem[]>([])
+useFetch<UserListItem[]>('/api/user/list').then(res => {
+  if(res.data.value) users.value = res.data.value
+})
 const themeVars = useThemeVars()
 function handleClick(id: number) {
   console.log('click')
@@ -32,7 +19,12 @@ function handleClick(id: number) {
 <template>
   <div class="home">
     <div class="cards">
-      <BloggerCard class="blogger-card" v-for="item in 10" :key="item" />
+      <BloggerCard 
+        class="blogger-card" 
+        v-for="item in users" 
+        :key="item.UID"
+        :data="item"
+      />
     </div>
   </div>
 </template>
@@ -51,6 +43,7 @@ function handleClick(id: number) {
 }
 .home {
   width: 100%;
+  min-height: 100vh;
   margin: 0 auto;
   background-color: v-bind('themeVars.bodyColor');
 }

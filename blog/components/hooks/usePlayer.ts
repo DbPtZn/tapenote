@@ -16,7 +16,7 @@ async function getConfig(args: {
   content?: string
 }) {
   const { rootRef, editorRef, scrollerRef, outlineRef, controllerRef, content } = args
-  console.log(outlineRef)
+  // console.log(outlineRef)
   const { defaultComponentLoaders, defaultComponents, defaultFormatLoaders, defaultFormatters, LinkJumpTipPlugin } = await import('@textbus/editor')
   const { fromEvent } = await import('@textbus/core')
   const { Input } = await import('@textbus/platform-browser')
@@ -127,7 +127,7 @@ export function usePlayer(args: {
   editorRef: Ref<HTMLElement>
   scrollerRef: Ref<HTMLElement>
   controllerRef: Ref<HTMLElement>
-  outlineRef: Ref<HTMLElement>
+  outlineRef?: Ref<HTMLElement>
 }) {
   const { data, rootRef, editorRef, scrollerRef, outlineRef, controllerRef } = args
   // const { debounceTime } = await import('@textbus/core')
@@ -155,7 +155,7 @@ export function usePlayer(args: {
         editorRef: editorRef.value,
         scrollerRef: scrollerRef.value,
         controllerRef: controllerRef.value,
-        outlineRef: outlineRef.value,
+        outlineRef: outlineRef?.value || undefined,
         content
       })
       editor = createEditor(config)

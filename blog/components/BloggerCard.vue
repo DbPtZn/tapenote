@@ -1,20 +1,26 @@
 <script setup lang="ts">
 import { useThemeVars } from 'naive-ui'
-
+import type { UserListItem } from '~/types';
 const themeVars = useThemeVars()
+const props = defineProps<{
+  data: UserListItem
+}>()
+const handleError = (ev) => {
+  ev.target.src = '/avatar03.png'
+}
 </script>
 
 <template>
   <div class="card card--1">
-    <div class="card__info-hover">
+    <!-- <div class="card__info-hover">
       1
       <div class="card__clock-info">2</div>
-    </div>
+    </div> -->
     <div class="card__img">
       <div class="card__avatar">
-        <img src="/avatar03.png" alt="avatar">
+        <img :src="data.avatar" alt="avatar" @error="handleError">
       </div>
-      <span class="card-fullname">William Rocheald</span>
+      <span class="card-fullname">{{ data.nickname }}</span>
     </div>
     <!-- <a href="#" class="card_link">
       <div class="card__img--hover">
@@ -22,9 +28,13 @@ const themeVars = useThemeVars()
       </div>
     </a> -->
     <div class="card__info">
-      <span class="card__category"> About</span>
-      <h3 class="card__title">Crisp Spanish tortilla Matzo brei</h3>
-      <span class="card__by">前往 <a href="#" class="card__author" title="author">查看用户</a></span>
+      <span class="card__category"> Desc</span>
+      <h3 class="card__title">{{ data.desc }}</h3>
+      <span class="card__by">
+        <!-- <Icon name="material-symbols-light:arrow-right-alt" size="24" /> -->
+        <Nuxt-link class="card__author" title="author" :to="`/${data.UID}`">查看主页</Nuxt-link>
+        <!-- <a href="#" class="card__author" title="author"></a> -->
+      </span>
     </div>
   </div>
 </template>
