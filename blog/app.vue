@@ -1,10 +1,18 @@
 <template>
-  <NuxtLayout> 
-    <NuxtPage />
-  </NuxtLayout> 
+  <n-config-provider :style="{ height: '100%' }" :theme="appConfig.theme.dark ? darkTheme : null">
+    <n-dialog-provider>
+      <n-message-provider>
+        <NuxtLayout>
+          <NuxtPage />
+        </NuxtLayout>
+      </n-message-provider>
+    </n-dialog-provider>
+  </n-config-provider>
 </template>
 
 <script setup lang="ts">
+import { darkTheme } from 'naive-ui'
+import { useThemeVars } from 'naive-ui'
 definePageMeta({
   layout: 'default'
 })
@@ -17,11 +25,9 @@ useSeoMeta({
   twitterImage: 'logo.png',
   twitterSite: '@Tapenote',
   twitterCreator: '@Tapenote',
-  twitterCard: 'summary_large_image',
+  twitterCard: 'summary_large_image'
 })
 useHead({
-  link: [
-    { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }
-  ]
+  link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }]
 })
 </script>

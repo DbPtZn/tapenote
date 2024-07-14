@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useThemeVars } from 'naive-ui'
-import type { ArticleListItem, ArticleType } from '~/types';
+import type { ArticleListItem, ArticleType } from '~/types'
 
 // const runtimeConfig = useRuntimeConfig()
 // const appConfig = useAppConfig()
@@ -9,18 +9,19 @@ const router = useRouter()
 // console.log(appConfig)
 // console.log(appConfig.title)
 const route = useRoute()
-if(!route.params.uid) {
+if (!route.params.uid) {
   // 本地测试：VC5b8uAp
   // console.log('route.params.uid' + route.params.uid)
   navigateTo('/')
 }
 // useState('uid', () => route.params.uid)
 onMounted(() => {
+  console.log(route.params.uid)
   // console.log('uid'+ route.params.uid)
   // if(route.params.uid) {
   //   localStorage.setItem('uid', route.params.uid as string)
   //   // useLocalStorage('uid', route.params.uid as string)
-  
+
   // }
 })
 /** 定义页面元数据 */
@@ -34,11 +35,11 @@ onMounted(() => {
 // console.log('uid'+ route.params.uid)
 const articleList = ref<ArticleListItem[]>([])
 useFetch<ArticleListItem[]>('/api/article/list/' + route.params.uid).then(res => {
-  if(res.error.value) {
+  if (res.error.value) {
     navigateTo(`/`)
     return
   }
-  if(res.data.value) articleList.value = res.data.value
+  if (res.data.value) articleList.value = res.data.value
   // console.log(articleList.value)
 })
 const themeVars = useThemeVars()
@@ -49,8 +50,8 @@ function handleClick(item: ArticleListItem) {
 
 <template>
   <div class="home">
-    <ItemCard 
-      v-for="item in articleList" 
+    <ItemCard
+      v-for="item in articleList"
       :key="item._id"
       :id="item._id"
       :cover="item.cover"
@@ -61,7 +62,7 @@ function handleClick(item: ArticleListItem) {
       :avatar="item.author.avatar"
       :penname="item.author.penname"
       :create-at="item.createAt"
-      @click="handleClick(item)" 
+      @click="handleClick(item)"
     />
   </div>
 </template>
@@ -82,4 +83,3 @@ function handleClick(item: ArticleListItem) {
   }
 }
 </style>
-

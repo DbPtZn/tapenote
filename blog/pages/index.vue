@@ -34,6 +34,7 @@ function handleClick(id: number) {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap ;
+  margin: 0 auto;
   --n: 4;
   --space: calc(100% - var(--n) * 240px);
   --h: calc(var(--space) / var(--n) / 2);
@@ -49,12 +50,12 @@ function handleClick(id: number) {
 }
 
 @include Desktop {
-  .home {
+  .cards {
     max-width: 1024px;
   }
 }
 @media (min-width: 1024px) {
-  .home {
+  .cards {
     max-width: 1024px;
   }
 }

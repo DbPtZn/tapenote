@@ -9,8 +9,9 @@ const router = useRouter()
 const route = useRoute()
 const themeVars = useThemeVars()
 // const uid = computed(() => localStorage.getItem('uid'))
-
+console.log(route.params.uid)
 onMounted(() => {
+  console.log(route.params.uid)
   // uid.value = localStorage.getItem('uid') as string
   // console.log(uid.value)
   // if(!uid.value) {

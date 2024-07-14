@@ -1,50 +1,26 @@
 <template>
-  <n-config-provider :theme="appConfig.theme.dark ? darkTheme : null">
-    <n-dialog-provider>
-      <n-message-provider>
-        <n-layout 
-          content-style="display: flex; flex-direction: column;"
-          :native-scrollbar="true"
-          :scrollbar-props="{
-            style: {
-              overflow: 'hidden'
-            }
-          }"
-        >
-          <div class="header">
-            <AppHeader />
-          </div>
-          <div class="content">
-            <slot />
-          </div>
-          <div class="footer">
-            <AppFooter />
-          </div>
-        </n-layout>
-      </n-message-provider>
-    </n-dialog-provider>
-  </n-config-provider>
+  <n-flex class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
+    <div class="header">
+      <AppHeader />
+    </div>
+    <div class="content">
+      <slot />
+    </div>
+    <div class="footer">
+      <AppFooter />
+    </div>
+  </n-flex>
 </template>
 
 <script setup lang="ts">
-import { darkTheme } from 'naive-ui'
 import { useThemeVars } from 'naive-ui'
 const themeVars = useThemeVars()
-const appConfig = useAppConfig()
 </script>
 
 <style lang="scss" scoped>
-.n-config-provider {
+.layout {
   height: 100%;
-}
-.n-layout {
-  min-height: 100vh;
-}
-.layout-container {
-  position: relative;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  color: v-bind('themeVars.textColor1'); // 默认字体颜色
 }
 .header {
   position: sticky;
@@ -54,13 +30,13 @@ const appConfig = useAppConfig()
 .content {
   flex: 1;
 }
-.footer {
-  // height: 64px;
-}
+// .footer {
+//   // height: 64px;
+// }
 
-#default {
-  background-color: v-bind('themeVars.bodyColor');
-}
+// #default {
+//   background-color: v-bind('themeVars.bodyColor');
+// }
 
 /** 定制滚动条 */
 /* 定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸 */
