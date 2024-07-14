@@ -10,8 +10,12 @@ const route = useRoute()
 const themeVars = useThemeVars()
 // const uid = computed(() => localStorage.getItem('uid'))
 console.log(route.params.uid)
+const match = route.path.match(/^\/([a-zA-Z0-9_-]+)\/?.*/)
+const uid = ref(match ? match[1] : '')
 onMounted(() => {
-  console.log(route.params.uid)
+  // console.log(route.params.uid)
+  // console.log(route.path)
+  console.log(uid.value)
   // uid.value = localStorage.getItem('uid') as string
   // console.log(uid.value)
   // if(!uid.value) {
@@ -88,10 +92,10 @@ function handleDblClick() {
         <div class="menu">
           <n-flex align="center" :size="[12, 0]">
             <n-button text>
-              <nuxt-link class="menu-btn" to="..">{{ $t('home') }}</nuxt-link>
+              <nuxt-link class="menu-btn" :to="'/' + uid">{{ $t('home') }}</nuxt-link>
             </n-button>
             <n-button text>
-              <nuxt-link class="menu-btn" to="/test">{{ $t('column') }}</nuxt-link>
+              <nuxt-link class="menu-btn" :to="uid + '/test'">{{ $t('column') }}</nuxt-link>
             </n-button>
             <n-button text>
               <nuxt-link class="menu-btn" to="/test">{{ $t('tag') }}</nuxt-link>
