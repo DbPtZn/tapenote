@@ -25,6 +25,7 @@ export default defineNuxtConfig({
     'nuxt-viewport',
     '@vueuse/nuxt',
     '@pinia/nuxt',
+    '@nuxtjs/device',
   ],
   // app: {
   //   // 配置页面切换过渡效果

@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongoose'
 import type { RemovedEnum } from '~/enums'
-import type { AuthCodeType, ColumnType } from '.'
+import type { ArticleUserInfo, AuthCodeType, ColumnType } from '.'
 import  type { PaginateResult } from 'mongoose'
 
 export interface ArticleSchema {
@@ -64,6 +64,7 @@ export type ArticleType = Omit<ArticleSchema, '_id' | 'userId' | 'authcodeId' | 
 
 export type PublicArticleType = Omit<ArticleSchema, '_id' | 'userId' | 'authcodeId' | 'columnId' | 'removed' | 'createAt' | 'updateAt'> & {
   _id: string
+  user: ArticleUserInfo
   columnId: string
   createAt: string
   updateAt: string

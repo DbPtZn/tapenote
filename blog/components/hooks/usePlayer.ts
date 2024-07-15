@@ -133,7 +133,7 @@ export function usePlayer(args: {
   // const { debounceTime } = await import('@textbus/core')
   let editor: Editor
   return new Promise<Editor>(async (resolve, reject) => {
-    console.log('create editor')
+    // console.log('create editor')
     const { createEditor } = await import('@textbus/editor')
     const { Player, OutlineService, DialogProvider, AnimeProvider, Structurer, ThemeProvider, RootEventService, AnimeEventService } = await import(
       '~/editor'
@@ -148,7 +148,7 @@ export function usePlayer(args: {
     }
     // console.log(courseData)
     const content = data.content
-    console.log(content)
+    // console.log(content)
     try {
       const config = await getConfig({
         rootRef: rootRef.value,

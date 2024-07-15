@@ -8,6 +8,7 @@ import { usePlayer } from './hooks/usePlayer'
 import type { Editor } from '@textbus/editor'
 import '~/editor/style.css'
 import 'material-icons/iconfont/material-icons.css'
+import type { Subscription } from '@tanbo/stream'
 const themeVars = useThemeVars()
 const props = defineProps<{
   id: string
@@ -18,8 +19,14 @@ const controllerRef = ref()
 const editorRef = ref()
 const outlineRef = ref()
 const rootRef = ref()
+const navRef = ref()
 const state = ref<PublicArticleType>({
   UID: '',
+  user: {
+    UID: '',
+    nickname: '',
+    avatar: ''
+  },
   editionId: '',
   fromEditionId: '',
   type: 'note',
@@ -59,29 +66,14 @@ const state = ref<PublicArticleType>({
   createAt: '',
   updateAt: ''
 })
-// const { data, execute } = await useLazyFetch<PublicArticleType>('/api/article/' + props.id)
-// .then((res) => {
-//   if(res.error.value) {
-//     message.error('获取文章失败!')
-//     navigateTo('/')
-//   }
-//   if(res.data.value) data.value = res.data.value
-//   console.log('获取文章数据成功!')
-// })
+
 let player: Editor
 let pck: typeof import('~/editor')
+const subs: Array<Subscription> = []
 onMounted(async () => {
-  // console.log('onMounted')
-  // execute().then(res => {
-  //   console.log('获取数据')
-  //   console.log(res)
-  //   console.log(data.value)
-  // })
   scrollerRef.value = document.body
   pck = await import('~/editor')
   $fetch<PublicArticleType>(`/api/article/${props.id}`).then(res => {
-    console.log('use fetch')
-    // console.log(res)
     state.value = res
     usePlayer({
       rootRef,
@@ -93,6 +85,14 @@ onMounted(async () => {
     }).then(res => {
       player = res
       // console.log(player)
+      const controller = player.get(pck.Player)
+      subs.push(
+        controller.onStateUpdate.subscribe(() => {
+          if(controller.isPlaying) {
+            navRef.value.setNavVisible(false)
+          }
+        })
+      )
     })
   }).catch(err => {
     message.error('获取文章失败!')
@@ -105,6 +105,7 @@ function handleExpand() {
 onUnmounted(() => {
   try {
     console.log('销毁依赖')
+    subs.forEach(sub => sub.unsubscribe())
     player.get(pck.Player).destory()
     player.get(pck.OutlineService).destory()
     player.get(pck.DialogProvider).destory()
@@ -120,9 +121,17 @@ onUnmounted(() => {
     console.error('编辑器销毁失败！')
   }
 })
+
+function handleBloggerClick(uid: string) {
+  navigateTo(`/${uid}`)
+}
 </script>
 
 <template>
+  <ArticleHeader
+    ref="navRef"
+    :user="state.user"
+  />
   <div ref="rootRef" class="article">
     <div class="wrapper">
       <div class="header">
@@ -132,6 +141,7 @@ onUnmounted(() => {
           <n-tag v-for="tag in state.tags" :bordered="false">{{ tag }}</n-tag>
         </div>
         <div class="detail">
+          <!-- @click="handleBloggerClick(state.UID)" -->
           <div class="author">
             <n-icon :component="UserAvatar" />
             <span>{{ state.author.penname }}</span>
@@ -153,6 +163,7 @@ onUnmounted(() => {
       </div>
       <div class="main">
         <div ref="editorRef" class="content editor" />
+        <!-- <span class="outliner-test">111</span> -->
         <div ref="outlineRef" class="outliner"></div>
         <!-- <div class="outline-switch" @click="handleExpand">
           <Icon name="material-symbols:close-small-outline" size="24px"/>
@@ -163,9 +174,20 @@ onUnmounted(() => {
   </div>
 </template>
 <style scoped lang="scss">
+
+.outliner {
+  position: sticky;
+  top: 80px;
+  width: 100%;
+  height: fit-content;
+  max-width: 144px;
+  margin-top: 2rem;
+  padding-left: 1.5rem;
+  padding: .5rem;
+}
 .outline-switch {
   position: sticky;
-  top: 0;
+  top: 200px;
   right: 0;
 }
 .article {
@@ -173,6 +195,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   justify-content: center;
+  // flex-direction: column;
 }
 .wrapper {
   width: 100%;
@@ -182,6 +205,7 @@ onUnmounted(() => {
 
 .controller {
   position: fixed;
+  z-index: 1;
   right: 0;
   height: 100%;
   display: flex;
@@ -189,7 +213,6 @@ onUnmounted(() => {
   justify-content: center;
   box-sizing: border-box;
   transition: all 0.2s ease-in-out;
-  z-index: 1;
   word-wrap: break-word;
 }
 
@@ -227,6 +250,9 @@ onUnmounted(() => {
         color: v-bind('themeVars.infoColor');
       }
     }
+    .author {
+      cursor: pointer;
+    }
   }
   .n-divider {
     margin-top: 1rem;
@@ -234,7 +260,7 @@ onUnmounted(() => {
 }
 
 .main {
-  position: relative;
+  // position: relative;
   display: flex;
   flex-direction: row;
   width: 100%;
@@ -261,14 +287,7 @@ onUnmounted(() => {
     }
   }
 }
-.outliner {
-  position: relative;
-  width: 100%;
-  max-width: 144px;
-  margin-top: 2rem;
-  padding-left: 1.5rem;
-  padding: .5rem;
-}
+
 @media (min-width: 1280px) {
   .wrapper {
     padding-top: 4rem;

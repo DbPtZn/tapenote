@@ -26,9 +26,9 @@ export class OutlinePlugin implements Plugin {
     // const configProvider = injector.get(ConfigProvider)
     const structurer = injector.get(Structurer)
     this.injector = injector
-    console.log(this.target)
+    // console.log(this.target)
     this.workbench = layout.workbench // 设置大纲视图要挂在的目标
-    console.log(this.workbench)
+    // console.log(this.workbench)
     this.rootComponentRef = injector.get(RootComponentRef) // 获取根组件
     this.renderer = injector.get(Renderer)
     this.outlineService = injector.get(OutlineService)
@@ -66,7 +66,7 @@ export class OutlinePlugin implements Plugin {
       }),
       fromEvent(this.scrollerRef!, 'scroll').pipe(debounceTime(delay)).subscribe(() => {
         this.activeIndex.value = this.outlineData.value.findIndex(item => item.offsetTop >= this.scrollerRef!.scrollTop)
-        this.scrollTop.value = this.scrollerRef!.scrollTop
+        this.openDelayAnimate && (this.scrollTop.value = this.scrollerRef!.scrollTop)
       }),
       this.outlineService.onExpand.subscribe(() => {
         this.outlineService.isExpanded ? this.expand() : this.collapse()

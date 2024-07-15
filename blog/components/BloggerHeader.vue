@@ -65,7 +65,7 @@ function handleDblClick() {
         <div class="title">
           <!-- <n-icon class="tapenote-icon" :component="HomeFilled" :size="24" />-->
           <img class="tapenote-icon logo" src="/logo.png" alt="" @dblclick="handleDblClick" />
-          <nuxt-link class="tapenote-name" to="/">{{ $t('title') }}</nuxt-link>
+          <nuxt-link class="tapenote-name" to="/">blogger</nuxt-link>
         </div>
       </div>
       <div class="right">

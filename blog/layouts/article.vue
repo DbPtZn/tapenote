@@ -1,16 +1,10 @@
 <template>
   <ClientOnly>
-    <n-flex class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
-      <div class="header">
-        <AppHeader />
-      </div>
-      <div class="content">
+    <div class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
+      <div>
         <slot />
       </div>
-      <div class="footer">
-        <AppFooter />
-      </div>
-    </n-flex>
+    </div>
   </ClientOnly>
 </template>
 
@@ -24,21 +18,6 @@ const themeVars = useThemeVars()
   min-height: 100%;
   color: v-bind('themeVars.textColor1'); // 默认字体颜色
 }
-.header {
-  position: sticky;
-  top: 0;
-  height: 64px;
-}
-.content {
-  flex: 1;
-}
-// .footer {
-//   // height: 64px;
-// }
-
-// #default {
-//   background-color: v-bind('themeVars.bodyColor');
-// }
 
 /** 定制滚动条 */
 /* 定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸 */

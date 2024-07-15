@@ -38,3 +38,8 @@ export type UserListItem = Pick<
   UserType,
   'UID' | 'nickname' | 'avatar' | 'desc' | 'createAt' | 'updateAt'
 > 
+
+export type ArticleUserInfo = Pick<
+  UserType,
+  'UID' | 'nickname' | 'avatar'
+> 

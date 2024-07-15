@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     if(!id) throw new Error('未提供 uid 参数！')
     const artilce = await articleService.get(id)
     if(artilce?.type === 'course') {
-      artilce.audio = artilce.audio.split('public')[1]
+      artilce.audio = artilce.audio ? artilce.audio.split('public')[1] : ''
     }
     // console.log(uid)
     return artilce

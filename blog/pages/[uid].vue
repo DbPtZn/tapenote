@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useThemeVars } from 'naive-ui'
 import type { ArticleListItem, ArticleType } from '~/types'
-
+definePageMeta({
+  layout: 'blogger'
+})
 // const runtimeConfig = useRuntimeConfig()
 // const appConfig = useAppConfig()
 const router = useRouter()

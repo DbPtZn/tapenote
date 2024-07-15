@@ -2,7 +2,7 @@
   <ClientOnly>
     <n-flex class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
       <div class="header">
-        <AppHeader />
+        <BloggerHeader />
       </div>
       <div class="content">
         <slot />

@@ -5,7 +5,7 @@ import * as UUID from 'uuid'
 import fs from 'fs'
 import path from 'path'
 import  type { PaginateResult } from 'mongoose'
-import type { ArticleListItem, ArticleSchema, ArticleType, ColumnSchema } from '~/types'
+import type { ArticleListItem, ArticleSchema, ArticleType, ArticleUserInfo, ColumnSchema, UserSchema } from '~/types'
 import { fileService } from './file.service'
 import { RemovedEnum } from '~/enums'
 
@@ -168,9 +168,30 @@ class ArticleService {
 
   async get(_id: string) {
     try {
-      const article = await this.articlesRepository.findOne({ _id, removed: RemovedEnum.NEVER, isParsed: true })
-      // console.log(article)
-      return article
+      const article = await this.articlesRepository.findOne(
+        { _id, removed: RemovedEnum.NEVER, isParsed: true },
+        {
+          editionId: 0,
+          fromEditionId: 0,
+          msg: 0,
+          removed: 0
+        },
+        {
+          populate: ['userId']
+        }
+      )
+      if(!article) throw new Error('文章不存在！')
+      const { userId, ...meta } = article.toJSON()
+      const data = Object.assign({}, meta)
+      const user = userId as unknown as UserSchema
+      const userinfo: ArticleUserInfo =  {
+        UID: user.UID,
+        nickname: user.nickname,
+        avatar: user.avatar ? user.avatar.split('public')[1] : ''
+      }
+      data['user'] = userinfo
+      // console.log(data)
+      return data
     } catch (error) {
       throw error
     }
