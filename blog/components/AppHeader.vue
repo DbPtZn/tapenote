@@ -95,13 +95,13 @@ function handleDblClick() {
               <nuxt-link class="menu-btn" :to="'/' + uid">{{ $t('home') }}</nuxt-link>
             </n-button>
             <n-button text>
-              <nuxt-link class="menu-btn" :to="uid + '/test'">{{ $t('column') }}</nuxt-link>
+              <nuxt-link class="menu-btn" :to="uid + '/column'">{{ $t('column') }}</nuxt-link>
             </n-button>
             <n-button text>
-              <nuxt-link class="menu-btn" to="/test">{{ $t('tag') }}</nuxt-link>
+              <nuxt-link class="menu-btn" :to="uid + '/tag'">{{ $t('tag') }}</nuxt-link>
             </n-button>
             <n-button text>
-              <nuxt-link class="menu-btn" to="/test">{{ $t('about') }}</nuxt-link>
+              <nuxt-link class="menu-btn" :to="uid + '/about'">{{ $t('about') }}</nuxt-link>
             </n-button>
           </n-flex>
         </div>
