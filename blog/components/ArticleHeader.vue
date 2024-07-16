@@ -14,6 +14,10 @@ const { t } = useI18n()
 const props = defineProps<{
   user: ArticleUserInfo
 }>()
+const emits = defineEmits<{
+  outlineVisible: [boolean]
+  moreClick: []
+}>()
 defineExpose({
   setNavVisible(value: boolean) {
     visible.value = value
@@ -29,10 +33,11 @@ function handleNavClick(to: string) {
 function handleThemeUpdate() {
   theme.dark = !theme.dark
 }
-// function handleDblClick() {
-//   console.log('dbclick')
-//   router.push({ path: `/manage` })
-// }
+const isOutlineShow = ref(true)
+function handleOutlineVisible() {
+  isOutlineShow.value = !isOutlineShow.value
+  emits('outlineVisible', isOutlineShow.value)
+}
 const themeIconVar = computed(() => {
   return theme.dark ? 'material-symbols:dark-mode' : 'material-symbols:light-mode'
 })
@@ -43,7 +48,7 @@ onMounted(() => {
     // fromEvent(document.body, 'scroll').subscribe(() => {
     //   console.log('scro')
     // }),
-    fromEvent<WheelEvent>(document.body, 'wheel').subscribe((event) => {
+    fromEvent<WheelEvent>(document.body, 'wheel').subscribe(event => {
       // console.log(event)
       if (event.deltaY > 0) {
         // 用户向上滚动
@@ -64,62 +69,37 @@ function handleError(event: Event) {
   const target = event.target as HTMLImageElement
   target.src = '/avatar03.png'
 }
+
+function handleMoreClick() {
+  emits('moreClick')
+}
 </script>
 
 <template>
   <div :class="['nav', visible && 'visible']">
     <div class="nav-container">
       <div class="left">
-        <nuxt-link :to="`/${user.UID}`"> 
-        <div class="title">
-          <img class="tapenote-icon logo" :src="user.avatar" alt="" @error="handleError" />
-          <span class="tapenote-name" :to="`/${user.UID}`">{{ user.nickname }}</span>
-        </div>
+        <nuxt-link :to="`/${user.UID}`">
+          <div class="title">
+            <img class="tapenote-icon logo" :src="user.avatar" alt="" @error="handleError" />
+            <span class="tapenote-name" :to="`/${user.UID}`">{{ user.nickname }}</span>
+          </div>
         </nuxt-link>
       </div>
       <div class="right">
-        <div class="tools">
-        </div>
+        <div class="tools"></div>
 
         <div class="menu">
-          <n-flex align="center" :size="[12, 0]">
-            <!-- <n-button text v-for="(item, index) in navOptions" :key="item.key" @click="item.onClick">
-              <span class="menu-btn">{{ item.label }}</span>
-            </n-button> -->
-            <!-- <n-button text>
-              <nuxt-link class="menu-btn" :to="'/' + uid">{{ $t('home') }}</nuxt-link>
-            </n-button>
-            <n-button text>
-              <nuxt-link class="menu-btn" :to="uid + '/column'">{{ $t('column') }}</nuxt-link>
-            </n-button>
-            <n-button text>
-              <nuxt-link class="menu-btn" :to="uid + '/tag'">{{ $t('tag') }}</nuxt-link>
-            </n-button>
-            <n-button text>
-              <nuxt-link class="menu-btn" :to="uid + '/about'">{{ $t('about') }}</nuxt-link>
-            </n-button> -->
-          </n-flex>
+          <div class="outline-switch" @click="handleOutlineVisible">
+            <Icon class="outline-switch-icon" :name="isOutlineShow ? 'heroicons-outline:eye' : 'heroicons-outline:eye-off'" size="24px" />
+          </div>
+          <n-divider class="divider" vertical />
+          <div class="theme-switch" @click="handleThemeUpdate">
+            <Icon :name="themeIconVar" size="24px" />
+          </div>
         </div>
-        <!-- <n-divider class="divider" vertical />
-        <n-switch class="theme-switch" @update:value="handleThemeUpdate" :value="theme.dark" size="medium">
-          <template #icon>
-            <span v-if="!theme">☀</span>
-            <span v-if="theme">🌙</span>
-          </template>
-        </n-switch> -->
-        <div class="theme-switch" @click="handleThemeUpdate">
-          <Icon :name="themeIconVar" size="24px" />
-        </div>
-        <!-- 用户配置自定义外链（图标 + 超链接） -->
-        <!-- <n-divider class="divider" vertical /> -->
-        <!-- <n-button text>
-          <n-icon class="nav-btn" :component="Github" :size="24" />
-        </n-button>
-        <n-button text>
-          <n-icon class="nav-btn" :component="Facebook" :size="24" />
-        </n-button> -->
-        <!-- <n-icon class="more-btn" :component="MoreHorizRound" :size="24" /> -->
-        <MenuIcon class="collapse-btn" :style="{ scale: 0.6 }" />
+        <Icon class="more-btn" name="mingcute:more-1-fill" size="24px" @click="handleMoreClick" />
+        <MenuIcon class="collapse-btn" :style="{ scale: 0.6 }" @click="handleMoreClick"/>
       </div>
     </div>
   </div>
@@ -139,8 +119,8 @@ function handleError(event: Event) {
   height: 64px;
   min-height: 64px;
   // padding: 0 32px;
-  border: 1px solid v-bind('themeVars.dividerColor');
-  background-color: v-bind('themeVars.bodyColor');
+  border-bottom: 1px solid v-bind('themeVars.dividerColor');
+  background-color: v-bind('themeVars.cardColor');
   box-shadow: v-bind('themeVars.boxShadow1');
   .nav-container {
     display: flex;
@@ -186,18 +166,18 @@ function handleError(event: Event) {
 
   .menu {
     display: flex;
-    .menu-btn {
-      font-size: 16px;
-      margin: 0 6px;
+    align-items: center;
+    .theme-switch {
+      cursor: pointer;
+    }
+    .outline-switch {
+      cursor: pointer;
     }
   }
-  .nav-btn {
-    font-size: 16px;
-    margin: 0 6px;
+  .more-btn {
+    display: none;
+    cursor: pointer;
   }
-  // .more-btn {
-  //   display: none;
-  // }
   .tools {
     flex-grow: 1;
     padding-left: 32px;
@@ -205,14 +185,8 @@ function handleError(event: Event) {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    .search {
-      max-width: 150px;
-      height: 40px;
-    }
   }
-  .theme-switch {
-    cursor: pointer;
-  }
+
   .collapse-btn {
     display: none;
   }
@@ -254,19 +228,12 @@ function handleError(event: Event) {
     .tools {
       display: none;
     }
-    .divider {
+    .menu {
       display: none;
     }
-    // .theme-switch {
-    //   display: none;
-    // }
-    .nav-btn {
-      display: none;
+    .more-btn {
+      display: block;
     }
-    // .more-btn {
-    //   display: block;
-    //   margin-left: 12px;
-    // }
     .menu-btn {
       display: block;
     }
@@ -301,9 +268,9 @@ function handleError(event: Event) {
     .tools {
       display: none;
     }
-    .theme-switch {
-      display: none;
-    }
+    // .theme-switch {
+    //   display: none;
+    // }
     .nav-btn {
       display: none;
     }

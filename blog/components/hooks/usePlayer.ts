@@ -163,7 +163,14 @@ export function usePlayer(args: {
         const themeProvider = editor?.get(ThemeProvider)
         const appConfig = useAppConfig()
         themeProvider?.handleThemeUpdate(appConfig.theme.dark ? 'dark' : 'light')
-        console.log(themeProvider.theme)
+        watch(
+          () => appConfig.theme.dark,
+          () => {
+            const themeProvider = editor?.get(ThemeProvider)
+            // console.log(appConfig.theme.dark)
+            themeProvider?.handleThemeUpdate(appConfig.theme.dark ? 'dark' : 'light')
+          }
+        )
         /** 载入微课数据 */
         if (data.type === 'course') {
           const player = editor?.get(Player)
