@@ -77,42 +77,44 @@ const activeIndex = ref(0)
 onMounted(async () => {
   scrollerRef.value = document.body
   pck = await import('~/editor')
-  $fetch<PublicArticleType>(`/api/article/${props.id}`).then(res => {
-    state.value = res
-    usePlayer({
-      rootRef,
-      editorRef,
-      scrollerRef,
-      controllerRef,
-      outlineRef,
-      data: state.value
-    }).then(res => {
-      player = res
-      // console.log(player)
-      const controller = player.get(pck.Player)
-      subs.push(
-        controller.onStateUpdate.subscribe(() => {
-          if(controller.isPlaying) {
-            navRef.value.setNavVisible(false)
-          }
-        }),
-        /** 编辑器准备完成后，获取目录信息，生成目录数据 */
-        player.onReady.subscribe(() => {
-          headings = editorRef.value.querySelectorAll('h1, h2, h3, h4, h5, h6')
-          headings.forEach(heading => {
-            outlineData.push({
-              tagName: heading.tagName.toLocaleLowerCase(),
-              text: heading.textContent || '',
-              offsetTop: heading.offsetTop
+  $fetch<PublicArticleType>(`/api/article/${props.id}`)
+    .then(res => {
+      state.value = res
+      usePlayer({
+        rootRef,
+        editorRef,
+        scrollerRef,
+        controllerRef,
+        outlineRef,
+        data: state.value
+      }).then(res => {
+        player = res
+        // console.log(player)
+        const controller = player.get(pck.Player)
+        subs.push(
+          controller.onStateUpdate.subscribe(() => {
+            if (controller.isPlaying) {
+              navRef.value.setNavVisible(false)
+            }
+          }),
+          /** 编辑器准备完成后，获取目录信息，生成目录数据 */
+          player.onReady.subscribe(() => {
+            headings = editorRef.value.querySelectorAll('h1, h2, h3, h4, h5, h6')
+            headings.forEach(heading => {
+              outlineData.push({
+                tagName: heading.tagName.toLocaleLowerCase(),
+                text: heading.textContent || '',
+                offsetTop: heading.offsetTop
+              })
             })
           })
-        })
-      )
+        )
+      })
     })
-  }).catch(err => {
-    message.error('获取文章失败!')
-    navigateTo('/')
-  })
+    .catch(err => {
+      message.error('获取文章失败!')
+      navigateTo('/')
+    })
 
   /** 监听 scroll 事件，设置目录焦点 */
   subs.push(
@@ -185,17 +187,26 @@ function handleFloatBtnClick() {
 // function updateFloatBtnIcon(icon: string) {
 //   if (!controller.isPlaying && !controller.isPause)
 // }
+const isMenuVisible = ref(true)
+let timer: NodeJS.Timeout
+function handleMouseDown() {
+  timer = setTimeout(() => {
+    console.log('mousedown')
+    isMenuVisible.value = true
+    clearTimeout(timer)
+  }, 1000)
+}
 
-
+function handleMouseUp() {
+  clearTimeout(timer)
+}
+function handleShowMenu(value: boolean) {
+  isMenuVisible.value = value
+}
 </script>
 
 <template>
-  <ArticleHeader
-    ref="navRef"
-    :user="state.user"
-    @outline-visible="handleOutlineVisible"
-    @more-click="handleMoreClick"
-  />
+  <ArticleHeader ref="navRef" :user="state.user" @outline-visible="handleOutlineVisible" @more-click="handleMoreClick" />
   <div ref="rootRef" class="article">
     <div class="wrapper">
       <div class="header">
@@ -207,20 +218,25 @@ function handleFloatBtnClick() {
         <div class="detail">
           <!-- @click="handleBloggerClick(state.UID)" -->
           <div class="author">
-            <Icon name="clarity:avatar-solid" size="20px"/>
+            <Icon name="clarity:avatar-solid" size="20px" />
             <span>{{ state.author.penname }}</span>
           </div>
           <div class="time">
-            <Icon name="material-symbols:calendar-clock" size="20px"/>
+            <Icon name="material-symbols:calendar-clock" size="20px" />
             <span>{{ dayjs(state.createAt).format('YYYY-MM-DD HH:mm:ss') }}</span>
           </div>
           <div class="wordage">
-            <Icon name="ant-design:field-number-outlined" size="24px"/>
+            <Icon name="ant-design:field-number-outlined" size="24px" />
             <span>{{ state.detail.wordage }}</span>
           </div>
           <div v-if="state.detail.duration" class="duration">
-            <Icon name="material-symbols:alarm" size="20px"/>
-            <span>{{ dayjs().minute(Math.floor(state.detail.duration/60)).second(state.detail.duration%60).format('mm:ss') }}</span>
+            <Icon name="material-symbols:alarm" size="20px" />
+            <span>{{
+              dayjs()
+                .minute(Math.floor(state.detail.duration / 60))
+                .second(state.detail.duration % 60)
+                .format('mm:ss')
+            }}</span>
           </div>
         </div>
         <n-divider />
@@ -234,11 +250,32 @@ function handleFloatBtnClick() {
     </div>
     <div v-show="state.type === 'course'" ref="controllerRef" :class="['controller']"></div>
   </div>
-  <n-float-button-group class="mo-controller" shape="circle" position="fixed" right="40px" bottom="40px">
-    <n-float-button @click="handleFloatBtnClick">
-      <Icon :name="floatBtnIcon" size="24"/>
-    </n-float-button>
-  </n-float-button-group>
+  <n-float-button
+    class="mo-controller"
+    shape="circle"
+    position="fixed"
+    right="40px"
+    bottom="40px"
+    @click="handleFloatBtnClick"
+    @mousedown="handleMouseDown"
+    @mouseup="handleMouseUp"
+    @touchstart="handleMouseDown"
+    @touchend="handleMouseUp"
+    @toucemove="handleMouseUp"
+  >
+    <Icon :name="floatBtnIcon" size="24" />
+    <!-- <template #menu>
+      <n-float-button >
+        <Icon name="clarity:avatar-solid" size="20px" />
+      </n-float-button>
+      <n-float-button >
+        <Icon name="clarity:avatar-solid" size="20px" />
+      </n-float-button>
+      <n-float-button >
+        <Icon name="clarity:avatar-solid" size="20px" />
+      </n-float-button>
+    </template> -->
+  </n-float-button>
 
   <n-back-top class="back-top" :right="100" :to="rootRef" />
   <n-drawer v-model:show="drawerActive" width="40%" placement="right" :to="rootRef">
@@ -246,14 +283,14 @@ function handleFloatBtnClick() {
       <div vertical>
         <n-flex>
           <span>主题 ：</span>
-          <n-switch class="theme-switch" @update:value="val => appConfig.theme.dark = val" :value="appConfig.theme.dark" size="medium">
+          <n-switch class="theme-switch" @update:value="val => (appConfig.theme.dark = val)" :value="appConfig.theme.dark" size="medium">
             <template #icon>
               <span v-if="!appConfig.theme.dark">☀</span>
               <span v-if="appConfig.theme.dark">🌙</span>
             </template>
           </n-switch>
         </n-flex>
-        <n-divider class="divider"/>
+        <n-divider class="divider" />
         <div class="custom-outline">
           <n-flex vertical>
             目录
@@ -291,7 +328,7 @@ function handleFloatBtnClick() {
     max-width: 144px;
     margin-top: 2rem;
     padding-left: 1.5rem;
-    padding: .5rem;
+    padding: 0.5rem;
   }
 }
 
@@ -453,7 +490,6 @@ function handleFloatBtnClick() {
     display: none;
   }
 }
-
 
 .custom-outline {
   width: 100%;
