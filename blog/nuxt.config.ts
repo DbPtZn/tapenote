@@ -18,7 +18,6 @@ export default defineNuxtConfig({
   },
   modules: [
     'nuxtjs-naive-ui',
-    // '@unocss/nuxt',
     'nuxt-mongoose',
     'nuxt-icon',
     'nuxt-icons',
@@ -64,7 +63,12 @@ export default defineNuxtConfig({
           additionalData: "@import '~/assets/styles/var.scss';"
         }
       }
-    }
+    },
+    // build: {
+    //   minify: 'esbuild',
+    //   chunkSizeWarningLimit: 500,
+    //   cssCodeSplit: true, // 如果设置为false，整个项目中的所有 CSS 将被提取到一个 CSS 文件中
+    // }
   },
   mongoose: {
     uri: process.env.MONGODB_URI,
