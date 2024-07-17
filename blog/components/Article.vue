@@ -163,6 +163,30 @@ function handleScrollTo(offsetTop: number) {
   })
 }
 
+const floatBtnIcon = ref('material-symbols:play-arrow-rounded')
+function handleFloatBtnClick() {
+  const controller = player.get(pck.Player)
+  if (!controller.isPlaying && !controller.isPause) {
+    controller.start()
+    floatBtnIcon.value = 'material-symbols:pause-rounded'
+    return
+  }
+  if (controller.isPlaying && !controller.isPause) {
+    controller.pause()
+    floatBtnIcon.value = 'material-symbols:play-arrow-rounded'
+    return
+  }
+  if (!controller.isPlaying && controller.isPause) {
+    controller.resume()
+    floatBtnIcon.value = 'material-symbols:pause-rounded'
+    return
+  }
+}
+// function updateFloatBtnIcon(icon: string) {
+//   if (!controller.isPlaying && !controller.isPause)
+// }
+
+
 </script>
 
 <template>
@@ -210,6 +234,12 @@ function handleScrollTo(offsetTop: number) {
     </div>
     <div v-show="state.type === 'course'" ref="controllerRef" :class="['controller']"></div>
   </div>
+  <n-float-button-group class="mo-controller" shape="circle" position="fixed" right="40px" bottom="40px">
+    <n-float-button @click="handleFloatBtnClick">
+      <Icon :name="floatBtnIcon" size="24"/>
+    </n-float-button>
+  </n-float-button-group>
+
   <n-back-top class="back-top" :right="100" :to="rootRef" />
   <n-drawer v-model:show="drawerActive" width="40%" placement="right" :to="rootRef">
     <n-drawer-content title="Menu">
@@ -243,10 +273,16 @@ function handleScrollTo(offsetTop: number) {
   </n-drawer>
 </template>
 <style scoped lang="scss">
+.mo-controller {
+  z-index: 1;
+  opacity: 0.6;
+  &:hover {
+    opacity: 0.8;
+  }
+}
 
 .outline-wrapper {
   position: relative;
-  
   .outliner {
     position: sticky;
     top: 80px;
