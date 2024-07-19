@@ -78,11 +78,11 @@ function handleMoreAction(ev) {
   }
   &:hover {
     border-radius: v-bind('themeVars.borderRadius');
+    background-color: v-bind('themeVars.cardColor');
+    border-top: 1px solid #ffffff00;
     .header-icon {
       opacity: 1;
     }
-    background-color: v-bind('themeVars.cardColor');
-    border-top: 1px solid #ffffff00;
     &:last-child {
       border-bottom: 1px solid #ffffff00;
     }

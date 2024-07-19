@@ -202,6 +202,7 @@ const methods = {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 14px;
   .title {
     overflow: hidden;
     cursor: pointer;
@@ -219,7 +220,6 @@ const methods = {
     overflow: hidden;
     white-space: pre-line;
   }
-  margin-bottom: 14px;
 }
 .main {
   display: flex;

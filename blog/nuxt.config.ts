@@ -7,15 +7,15 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'url'
 import VueI18nVitePlugin from '@intlify/unplugin-vue-i18n/vite'
-import path from 'node:path'
+// import path from 'node:path'
 
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  imports: {
-    dirs: [
-      'composables'
-    ]
-  },
+  // imports: {
+  //   dirs: [
+  //     'composables'
+  //   ]
+  // },
   modules: [
     'nuxtjs-naive-ui',
     'nuxt-mongoose',
