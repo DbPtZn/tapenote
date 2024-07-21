@@ -10,6 +10,7 @@ import VueI18nVitePlugin from '@intlify/unplugin-vue-i18n/vite'
 // import path from 'node:path'
 
 export default defineNuxtConfig({
+  compatibilityDate: '2024-07-21',
   devtools: { enabled: true },
   // imports: {
   //   dirs: [
