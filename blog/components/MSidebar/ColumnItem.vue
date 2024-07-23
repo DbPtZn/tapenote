@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {  useThemeVars } from 'naive-ui'
 import { defineComponent, h, ref } from 'vue'
-import { DragIndicatorFilled, MenuBookRound, BookRound, BookOutlined } from '@vicons/material'
+// import { DragIndicatorFilled, MenuBookRound, BookRound, BookOutlined } from '@vicons/material'
 import type useStore from '~/store'
 // import { Icon } from '#components'
 type Column = ReturnType<typeof useStore>['columnListStore']['data'][0]
@@ -13,10 +13,10 @@ const themeVar = useThemeVars()
 <template>
   <n-button class="column-item" quaternary>
     <div class="prefix move">
-      <n-icon :component="DragIndicatorFilled" :size="24" />
+      <!-- <n-icon :component="DragIndicatorFilled" :size="24" /> -->
     </div>
     <div class="icon">
-      <n-icon :component="item.isPublish ? MenuBookRound : BookOutlined" :size="24" />
+      <!-- <n-icon :component="item.isPublish ? MenuBookRound : BookOutlined" :size="24" /> -->
     </div>
     <div class="label">
       <div class="txt">{{ item.name }}</div>

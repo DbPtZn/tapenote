@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useMessage, useThemeVars } from 'naive-ui'
-import { TimerOutlined } from '@vicons/material'
 import UserAvatar from './icons/UserAvatar.vue'
 import type { PublicArticleType } from '~/types'
 import dayjs from 'dayjs'

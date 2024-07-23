@@ -22,8 +22,8 @@ export default defineNuxtConfig({
     'nuxt-mongoose',
     'nuxt-icon',
     'nuxt-icons',
-    'nuxt-viewport',
-    '@vueuse/nuxt',
+    // 'nuxt-viewport',
+    // '@vueuse/nuxt',
     '@pinia/nuxt',
     '@nuxtjs/device',
   ],
@@ -76,7 +76,7 @@ export default defineNuxtConfig({
     options: {
       //
     },
-    modelsDir: 'models',
+    modelsDir: '~/server/models',
     devtools: true
   },
   icon: {

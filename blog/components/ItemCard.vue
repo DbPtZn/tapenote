@@ -2,7 +2,6 @@
 <script setup lang="ts">
 import { useThemeVars } from 'naive-ui'
 import { computed, reactive } from 'vue'
-import { MoreHorizRound } from '@vicons/material'
 import dayjs from 'dayjs'
 interface Count {
   like: number //点赞数
@@ -145,7 +144,8 @@ const methods = {
               <span>...</span>
               <a class="expand"  @click="emits('readMore', state.id!)">
                 <span>阅读全文</span>
-                <n-icon class="icon" :component="MoreHorizRound" :size="18" />
+                <!-- <n-icon class="icon" :component="MoreHorizRound" :size="18" /> -->
+                ...
               </a>
             </div>
           </div>

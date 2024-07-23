@@ -1,7 +1,8 @@
 import { nextTick, ref, h, reactive, computed } from 'vue'
 import { NIcon, NInput, useDialog, useMessage, type DropdownOption } from 'naive-ui'
-import { DriveFileMoveRtlFilled, DriveFileRenameOutlineFilled } from '@vicons/material'
+// import { DriveFileMoveRtlFilled, DriveFileRenameOutlineFilled } from '@vicons/material'
 import type { Subfile } from '~/types'
+import { Icon } from '#components'
 export function useListDropDown () {
   const dialog = useDialog()
   const message = useMessage()
@@ -16,8 +17,8 @@ export function useListDropDown () {
     placementRef: ref<'bottom' | 'bottom-start'>('bottom-start')
   })
     
-  const renderIcon = (component: Component) => {
-    return h(NIcon, { component: component, size: 24 })
+  const renderIcon = (icon: string) => {
+    return h(Icon, { name: icon, size: '24px' })
   }
   const options = computed<DropdownOption[]>(() => {
     // const { collectionsDataStore, productStore, collectionStore } = useStore('manage')
@@ -33,7 +34,7 @@ export function useListDropDown () {
           onClick: () => {
             dialog.create({
               title: '分配合辑',
-              icon: () => renderIcon(DriveFileMoveRtlFilled),
+              icon: () => renderIcon('DriveFileMoveRtlFilled'),
               content: () => {}
                 // h(SelectCollectionForm, {
                 //   data: collectionsDataStore.data.map(item => {
@@ -80,7 +81,7 @@ export function useListDropDown () {
           onClick: () => {
             const newTitle = ref(target.title)
             dialog.create({
-              icon: () => h(NIcon, { component: DriveFileRenameOutlineFilled, size: 24 }),
+              icon: () => h(Icon, { name: 'DriveFileRenameOutlineFilled', size: '24px' }),
               title: '文件夹重命名',
               content: () =>
                 h(NInput, {
@@ -148,7 +149,7 @@ export function useListDropDown () {
           onClick: () => {
             dialog.create({
               title: '移动',
-              icon: () => renderIcon(DriveFileMoveRtlFilled),
+              icon: () => renderIcon('DriveFileMoveRtlFilled'),
               content: () => {}
                 // h(SelectCollectionForm, {
                 //   data: collectionsDataStore.data.map(item => {

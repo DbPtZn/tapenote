@@ -1,9 +1,6 @@
 <script lang="ts" setup>
-import { SearchOutlined, MoreHorizRound } from '@vicons/material'
-import Facebook from '../components/Facebook.vue'
-import Github from '../components/Github.vue'
-import MenuIcon from '../components/MenuIcon.vue'
 import { useThemeVars } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 const appConfig = useAppConfig()
 const router = useRouter()
 const themeVars = useThemeVars()

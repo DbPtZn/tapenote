@@ -3,6 +3,7 @@ import { userService } from "~/services"
 export default defineEventHandler(async (event) => {
   try {
     const users = await userService.findAll()
+    console.log(users)
     return users
   } catch (error) {
     console.error(error)

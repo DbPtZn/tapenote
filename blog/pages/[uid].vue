@@ -52,35 +52,41 @@ function handleClick(item: ArticleListItem) {
 
 <template>
   <div class="home">
-    <ItemCard
-      v-for="item in articleList"
-      :key="item._id"
-      :id="item._id"
-      :cover="item.cover"
-      :title="item.title"
-      :abbrev="item.abbrev"
-      :columnName="'专栏名'"
-      :wordage="item.detail.wordage"
-      :avatar="item.author.avatar"
-      :penname="item.author.penname"
-      :create-at="item.createAt"
-      @click="handleClick(item)"
-    />
+    <div class="cards">
+      <ItemCard
+        v-for="item in articleList"
+        :key="item._id"
+        :id="item._id"
+        :cover="item.cover"
+        :title="item.title"
+        :abbrev="item.abbrev"
+        :columnName="'专栏名'"
+        :wordage="item.detail.wordage"
+        :avatar="item.author.avatar"
+        :penname="item.author.penname"
+        :create-at="item.createAt"
+        @click="handleClick(item)"
+      />
+    </div>
   </div>
 </template>
 <style scoped lang="postcss">
 .home {
   width: 100%;
-  margin: 0 auto;
+  height: 100%;
+  color: v-bind('themeVars.textColor1');
   background-color: v-bind('themeVars.bodyColor');
 }
+.cards {
+  margin: 0 auto;
+}
 @media (min-width: 1024px) {
-  .home {
+  .cards {
     max-width: 1024px;
   }
 }
 @include Desktop {
-  .home {
+  .cards {
     max-width: 1024px;
   }
 }

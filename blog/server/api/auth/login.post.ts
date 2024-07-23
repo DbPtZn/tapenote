@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import { User } from '~/models'
+import { User } from '~/server/models'
 import { userService } from '~/services'
 import jwt from 'jsonwebtoken'
 

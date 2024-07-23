@@ -1,9 +1,10 @@
 
 import { defineMongooseModel } from '#nuxt/mongoose'
 import { Types } from 'mongoose'
+import mongoosePaginateV2 from 'mongoose-paginate-v2'
 import { RemovedEnum } from '~/enums'
 import type { ColumnSchema } from '~/types'
-
+// const schema = new mongoose
 export const Column = defineMongooseModel<ColumnSchema>({
   name: 'Column',
   schema: {
@@ -60,6 +61,7 @@ export const Column = defineMongooseModel<ColumnSchema>({
       this.updateAt = new Date()
       next()
     })
+    schema.plugin(mongoosePaginateV2)
   },
 })
 

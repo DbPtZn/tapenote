@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { NButton, useThemeVars } from 'naive-ui'
-import { MoreVertRound, PublicFilled, BookOutlined, PlayLessonOutlined } from '@vicons/material'
+// import { MoreVertRound, PublicFilled, BookOutlined, PlayLessonOutlined } from '@vicons/material'
 const themeVars = useThemeVars()
 const props = defineProps<{
   id: string,
@@ -28,13 +28,13 @@ function handleMoreAction(ev) {
   <n-card :class="['file-card', props.active && 'active']" size="small" :bordered="false">
     <template #header>
       <div class="header">
-        <n-icon :style="{ marginRight: '4px' }" :component="type === 'note' ? BookOutlined : PlayLessonOutlined" size="22" />
+        <!-- <n-icon :style="{ marginRight: '4px' }" :component="type === 'note' ? BookOutlined : PlayLessonOutlined" size="22" /> -->
         <n-text class="header-title" :depth="2"> {{ title }} </n-text>
       </div>
     </template>
     <template #header-extra>
       <n-button text class="header-icon" @click.prevent.stop="handleMoreAction">
-        <n-icon :component="MoreVertRound" size="22" />
+        <!-- <n-icon :component="MoreVertRound" size="22" /> -->
       </n-button>
     </template>
     <template #default>
@@ -44,7 +44,7 @@ function handleMoreAction(ev) {
       <div class="footer">
         <n-text class="footer" :depth="3">{{ date }}</n-text>
         <div class="publish">
-          <n-icon v-if="isPublish" :component="PublicFilled" size="18" />
+          <!-- <n-icon v-if="isPublish" :component="PublicFilled" size="18" /> -->
           <!-- <n-text class="footer" :depth="3">{{ isPublish ? '已发布' : '' }}</n-text> -->
         </div>
       </div>

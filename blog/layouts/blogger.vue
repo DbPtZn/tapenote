@@ -1,27 +1,38 @@
 <template>
   <ClientOnly>
-    <n-flex class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
-      <div class="header">
-        <BloggerHeader />
-      </div>
-      <div class="content">
-        <slot />
-      </div>
-      <div class="footer">
-        <AppFooter />
-      </div>
-    </n-flex>
+    <n-config-provider style="height:100%" :theme="appConfig.theme.dark ? darkTheme : null">
+      <n-dialog-provider>
+        <n-message-provider>
+          <div class="layout">
+            <div class="header">
+              <BloggerHeader />
+            </div>
+            <div class="content">
+              <slot />
+            </div>
+            <!-- <div class="footer" :style="{ backgroundColor: themeVars.bodyColor }">
+              <AppFooter />
+            </div> -->
+          </div>
+        </n-message-provider>
+      </n-dialog-provider>
+    </n-config-provider>
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
-import { useThemeVars } from 'naive-ui'
+import { useThemeVars, darkTheme } from 'naive-ui'
 const themeVars = useThemeVars()
+const appConfig = useAppConfig()
 </script>
 
 <style lang="scss" scoped>
 .layout {
+  height: 100%;
+  width: 100%;
   min-height: 100%;
+  display: flex;
+  flex-direction: column;
   color: v-bind('themeVars.textColor1'); // 默认字体颜色
 }
 .header {

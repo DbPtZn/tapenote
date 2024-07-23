@@ -1,16 +1,23 @@
 <template>
   <ClientOnly>
-    <div class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
-      <div>
-        <slot />
-      </div>
-    </div>
+    <n-config-provider :theme="appConfig.theme.dark ? darkTheme : null">
+      <n-dialog-provider>
+        <n-message-provider>
+          <div class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
+            <div>
+              <slot />
+            </div>
+          </div>
+        </n-message-provider>
+      </n-dialog-provider>
+    </n-config-provider>
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
-import { useThemeVars } from 'naive-ui'
+import { useThemeVars, darkTheme } from 'naive-ui'
 const themeVars = useThemeVars()
+const appConfig = useAppConfig()
 </script>
 
 <style lang="scss" scoped>

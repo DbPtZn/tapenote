@@ -4,7 +4,7 @@ import { NButton, NIcon, NInput, useDialog, useMessage, useThemeVars, type Dropd
 // import CreateCollectionForm from '../form/CreateCollectionForm.vue'
 import CreateColumnForm from './MSidebar/CreateColumnForm.vue'
 import { onMounted } from 'vue'
-import { DriveFileRenameOutlineFilled } from '@vicons/material'
+// import { DriveFileRenameOutlineFilled } from '@vicons/material'
 import { Icon } from '#components'
 import { VueDraggable, type SortableEvent } from 'vue-draggable-plus'
 import useStore from '~/store'
@@ -86,7 +86,7 @@ const columnMethods = {
           onClick: () => {
             const newname = ref(collection.name)
             dialog.create({
-              icon: () => h(NIcon, { component: DriveFileRenameOutlineFilled, size: 24 }),
+              icon: () => h(Icon, { name: 'DriveFileRenameOutlineFilled', size: '24px' }),
               title: '文件夹重命名',
               content: () =>
                 h(NInput, {

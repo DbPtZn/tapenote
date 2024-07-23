@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { MoreHorizRound } from '@vicons/material'
 import Facebook from '../components/Facebook.vue'
 import Github from '../components/Github.vue'
 import MenuIcon from '../components/MenuIcon.vue'
 import { useThemeVars } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 const appConfig = useAppConfig()
 const router = useRouter()
 const route = useRoute()
@@ -113,7 +113,8 @@ function handleDblClick() {
         <n-button text>
           <n-icon class="nav-btn" :component="Facebook" :size="24" />
         </n-button>
-        <n-icon class="more-btn" :component="MoreHorizRound" :size="24" />
+        <!-- <n-icon class="more-btn" :component="MoreHorizRound" :size="24" /> -->
+        <Icon name="" />
         <MenuIcon class="collapse-btn" :style="{ scale: 0.6 }" />
       </div>
     </div>

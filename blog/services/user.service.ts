@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongoose'
 import type { CreateUserDto, UpdateColumnSequenceDto } from '~/dto'
-import { User } from '~/models'
+import { User } from '~/server/models'
 import type { UserType } from '~/types'
 import bcrypt from 'bcryptjs'
 import path from 'path'

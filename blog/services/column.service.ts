@@ -1,5 +1,5 @@
 import type { ObjectId } from 'mongoose'
-import { Article, Column, User  } from '~/models'
+import { Article, Column, User  } from '~/server/models'
 import * as UUID from 'uuid'
 import type { ArticleSchema, ArticleType, ColumnState, Subfile } from '~/types'
 import { articleService } from '.'

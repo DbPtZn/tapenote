@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { useThemeVars } from 'naive-ui'
-import type { UserListItem } from '~/types';
+import type { UserListItem } from '~/types'
 /** 定义页面元数据 */
-definePageMeta({
-  layout: false
-})
+// definePageMeta({
+//   layout: false
+// })
 const users = ref<UserListItem[]>([])
 useFetch<UserListItem[]>('/api/user/list').then(res => {
+  console.log(res)
+  console.log(res.data.value)
   if(res.data.value) users.value = res.data.value
 })
 const themeVars = useThemeVars()

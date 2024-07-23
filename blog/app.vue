@@ -1,21 +1,11 @@
 <template>
-  <n-config-provider :style="{ height: '100%' }" :theme="appConfig.theme.dark ? darkTheme : null">
-    <n-dialog-provider>
-      <n-message-provider>
-        <NuxtLayout>
-          <NuxtPage />
-        </NuxtLayout>
-      </n-message-provider>
-    </n-dialog-provider>
-  </n-config-provider>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
 
 <script setup lang="ts">
-import { darkTheme } from 'naive-ui'
-import { useThemeVars } from 'naive-ui'
-definePageMeta({
-  layout: 'default'
-})
+import { darkTheme, NConfigProvider, NDialogProvider, NMessageProvider } from 'naive-ui'
 const appConfig = useAppConfig()
 useSeoMeta({
   titleTemplate: 'Tapenote Blog',

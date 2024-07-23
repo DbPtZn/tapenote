@@ -1,22 +1,21 @@
 <template>
-  <ClientOnly>
-    <n-flex class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
-      <div class="header">
-        <AppHeader />
-      </div>
-      <div class="content">
-        <slot />
-      </div>
-      <div class="footer">
-        <AppFooter />
-      </div>
-    </n-flex>
-  </ClientOnly>
+  <!-- <ClientOnly> -->
+    <n-config-provider :theme="appConfig.theme.dark ? darkTheme : null">
+      <n-dialog-provider>
+        <n-message-provider>
+          <n-flex class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
+            <slot />
+          </n-flex>
+        </n-message-provider>
+      </n-dialog-provider>
+    </n-config-provider>
+  <!-- </ClientOnly> -->
 </template>
 
 <script setup lang="ts">
-import { useThemeVars } from 'naive-ui'
+import { useThemeVars, darkTheme } from 'naive-ui'
 const themeVars = useThemeVars()
+const appConfig = useAppConfig()
 </script>
 
 <style lang="scss" scoped>

@@ -3,7 +3,6 @@ import { NButton, useThemeVars, type DropdownOption } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 // import { FileCard } from './private'
 // import utils from '@/utils'
-import { MoreHorizFilled, ChevronLeftFilled } from '@vicons/material'
 import { useListDropDown } from './hooks/useListDropdown'
 import dayjs from 'dayjs'
 import useStore from '~/store'
@@ -104,7 +103,8 @@ const { dropdownState, options, handleClickoutside, handleContextmenu, handleMor
         <div class="header-nav-right">
           <n-dropdown trigger="click" :options="generateHeaderBtnOptions()" placement="bottom-start">
             <n-button text >
-              <n-icon :component="MoreHorizFilled" :size="24" />
+              <!-- <n-icon :component="MoreHorizFilled" :size="24" /> -->
+              ...
             </n-button>
           </n-dropdown>
         </div>

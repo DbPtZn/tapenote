@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongoose'
 import type { CreateArticleDto, GetArticleDto, ParseArticleDto } from '~/dto'
-import { Article } from '~/models'
+import { Article } from '~/server/models'
 import * as UUID from 'uuid'
 import fs from 'fs'
 import path from 'path'

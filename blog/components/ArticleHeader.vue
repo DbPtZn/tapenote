@@ -4,6 +4,7 @@ import { useThemeVars } from 'naive-ui'
 import { Subscription, fromEvent } from '@tanbo/stream'
 import 'animate.css'
 import type { ArticleUserInfo } from '~/types'
+import { useI18n } from 'vue-i18n'
 const appConfig = useAppConfig()
 const router = useRouter()
 const route = useRoute()
