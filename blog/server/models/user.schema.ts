@@ -1,5 +1,6 @@
 
 import { defineMongooseModel } from '#nuxt/mongoose'
+import mongoosePaginateV2 from 'mongoose-paginate-v2'
 import type { UserSchema} from '~/types'
 
 export const User = defineMongooseModel<UserSchema>({
@@ -86,7 +87,8 @@ export const User = defineMongooseModel<UserSchema>({
     schema.pre('save', function (this, next) {
       this.updateAt = new Date()
       next()
-    })
+    }),
+    schema.plugin(mongoosePaginateV2)
   },
 })
 

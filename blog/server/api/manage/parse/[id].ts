@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import { articleService } from '~/services'
+import { articleService } from '~/server/services'
 
 /** 根据授权 ID 查询项目 */
 export default defineEventHandler(async (event) => {

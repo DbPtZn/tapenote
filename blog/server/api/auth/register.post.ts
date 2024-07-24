@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { User } from '~/server/models'
-import { userService } from '~/services'
+import { userService } from '~/server/services'
 // import { PrismaClient } from '@prisma/client'
 // const prisma = new PrismaClient()
 

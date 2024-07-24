@@ -2,7 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import randomstring from 'randomstring'
 import child_process from 'child_process'
-import { UploadFile } from '~/server/models'
+import { UploadFile } from '../models'
 import type { ObjectId } from 'mongoose'
 
 type Category = 'audio' | 'image' | 'bgm' | 'logs'

@@ -1,6 +1,7 @@
 import { Types } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
 import type { AuthCodeSchema } from '~/types'
+import mongoosePaginateV2 from 'mongoose-paginate-v2'
 export const Authcode = defineMongooseModel<AuthCodeSchema>({
   name: 'Authcode',
   schema: {
@@ -59,6 +60,7 @@ export const Authcode = defineMongooseModel<AuthCodeSchema>({
     schema.pre('save', function (this, next) {
       this.updateAt = new Date()
       next()
-    })
+    }),
+    schema.plugin(mongoosePaginateV2)
   }
 })

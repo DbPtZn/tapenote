@@ -2,6 +2,7 @@ import { Types } from 'mongoose'
 import { defineMongooseModel } from '#nuxt/mongoose'
 import type { VArticleSchema } from '~/types'
 import { RemovedEnum } from '~/enums'
+import mongoosePaginateV2 from 'mongoose-paginate-v2'
 export const VArticle = defineMongooseModel<VArticleSchema>({
   name: 'VersionArticle',
   schema: {
@@ -174,6 +175,7 @@ export const VArticle = defineMongooseModel<VArticleSchema>({
     schema.pre('save', function (this, next) {
       this.updateAt = new Date()
       next()
-    })
+    }),
+    schema.plugin(mongoosePaginateV2)
   }
 })

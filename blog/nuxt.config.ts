@@ -1,5 +1,3 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
-// ui
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
@@ -22,10 +20,7 @@ export default defineNuxtConfig({
     'nuxt-mongoose',
     'nuxt-icon',
     'nuxt-icons',
-    // 'nuxt-viewport',
-    // '@vueuse/nuxt',
-    '@pinia/nuxt',
-    '@nuxtjs/device',
+    '@pinia/nuxt'
   ],
   // app: {
   //   // 配置页面切换过渡效果

@@ -1,4 +1,4 @@
-import { FileService, fileService } from '~/services'
+import { FileService, fileService } from '~/server/services'
 import formidable from 'formidable'
 import { CreateArticleDto } from '~/dto'
 import { Types } from 'mongoose'

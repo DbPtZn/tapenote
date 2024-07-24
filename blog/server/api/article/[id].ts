@@ -1,4 +1,4 @@
-import { articleService } from "~/services"
+import { articleService } from "~/server/services"
 
 export default defineEventHandler(async (event) => {
   try {

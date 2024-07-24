@@ -1,14 +1,17 @@
 import type { ObjectId } from 'mongoose'
 import type { CreateArticleDto, GetArticleDto, ParseArticleDto } from '~/dto'
-import { Article } from '~/server/models'
+import { Article, Column } from '../models'
 import * as UUID from 'uuid'
 import fs from 'fs'
 import path from 'path'
-import  type { PaginateResult } from 'mongoose'
+import type { PaginateResult } from 'mongoose'
 import type { ArticleListItem, ArticleSchema, ArticleType, ArticleUserInfo, ColumnSchema, UserSchema } from '~/types'
 import { fileService } from './file.service'
 import { RemovedEnum } from '~/enums'
-
+const _ = [
+  Article.length,
+  Column.length
+]
 class ArticleService {
   articlesRepository: typeof Article
   constructor() {
@@ -56,12 +59,15 @@ class ArticleService {
         throw new Error('文章不存在！')
       }
       let filepath = ''
-      if(article.type === 'course' && article.audio) {
-        filepath = await fileService.saveAudio({
-          sourcePath: article.audio,
-          extname: path.extname(article.audio),
-          dirname: UID
-        }, userId)
+      if (article.type === 'course' && article.audio) {
+        filepath = await fileService.saveAudio(
+          {
+            sourcePath: article.audio,
+            extname: path.extname(article.audio),
+            dirname: UID
+          },
+          userId
+        )
         // console.log(filepath)
       }
       const result = await this.articlesRepository.updateOne(
@@ -96,29 +102,32 @@ class ArticleService {
   async find(dto: GetArticleDto, userId: ObjectId) {
     const { filter, limit, page, sort } = dto
     // console.log(filter)
-    const result = await this.articlesRepository.paginate({ ...filter, userId }, {
-      projection: {
-        _id: 1,
-        UID: 1,
-        editionId: 1,
-        fromEditionId: 1,
-        authcodeId: 1,
-        columnId: 1,
-        isParsed: 1,
-        title: 1,
-        msg: 1,
-        editorVersion: 1,
-        type: 1,
-        abbrev: 1,
-        author: 1,
-        createAt: 1,
-        updateAt: 1
-      },
-      populate: ['authcodeId', 'columnId'],
-      limit: limit || 10,
-      page: page || 1,
-      sort
-    })
+    const result = await this.articlesRepository.paginate(
+      { ...filter, userId },
+      {
+        projection: {
+          _id: 1,
+          UID: 1,
+          editionId: 1,
+          fromEditionId: 1,
+          authcodeId: 1,
+          columnId: 1,
+          isParsed: 1,
+          title: 1,
+          msg: 1,
+          editorVersion: 1,
+          type: 1,
+          abbrev: 1,
+          author: 1,
+          createAt: 1,
+          updateAt: 1
+        },
+        populate: ['authcodeId', 'columnId'],
+        limit: limit || 10,
+        page: page || 1,
+        sort
+      }
+    )
     result.docs = result.docs.map(artilce => {
       const { authcodeId, columnId, ...members } = artilce.toJSON()
       // console.log(columnId)
@@ -133,8 +142,6 @@ class ArticleService {
     // console.log(result.docs)
     return result
   }
-
-
 
   async getUnparsedFile(_id: string) {
     try {
@@ -155,7 +162,6 @@ class ArticleService {
     }
   }
 
-
   async allot(_id: string, columnId: string, userId: ObjectId) {
     try {
       const result = await this.articlesRepository.updateOne({ _id, userId }, { $set: { columnId } })
@@ -164,7 +170,6 @@ class ArticleService {
       throw error
     }
   }
-
 
   async get(_id: string) {
     try {
@@ -180,11 +185,11 @@ class ArticleService {
           populate: ['userId']
         }
       )
-      if(!article) throw new Error('文章不存在！')
+      if (!article) throw new Error('文章不存在！')
       const { userId, ...meta } = article.toJSON()
       const data = Object.assign({}, meta)
       const user = userId as unknown as UserSchema
-      const userinfo: ArticleUserInfo =  {
+      const userinfo: ArticleUserInfo = {
         UID: user.UID,
         nickname: user.nickname,
         avatar: user.avatar ? user.avatar.split('public')[1] : ''
@@ -199,35 +204,34 @@ class ArticleService {
 
   async getAll(UID: string, limit?: number, page?: number, sort?: any) {
     try {
-      const result = await this.articlesRepository
-        .paginate(
-          { UID: UID, isParsed: true, removed: RemovedEnum.NEVER },
-          {
-            projection: {
-              '_id': 1, 
-              'columnId': 1, 
-              'cover': 1, 
-              'title': 1, 
-              'abbrev': 1, 
-              'detail': 1, 
-              'author': 1, 
-              'meta': 1, 
-              'tags': 1, 
-              'createdAt': 1, 
-              'updatedAt': 1
-            },
-            populate: ['columnId'],
-            limit: limit || 10,
-            page: page || 1,
-            sort
-          }
-        )
+      const result = await this.articlesRepository.paginate(
+        { UID: UID, isParsed: true, removed: RemovedEnum.NEVER },
+        {
+          projection: {
+            _id: 1,
+            columnId: 1,
+            cover: 1,
+            title: 1,
+            abbrev: 1,
+            detail: 1,
+            author: 1,
+            meta: 1,
+            tags: 1,
+            createdAt: 1,
+            updatedAt: 1
+          },
+          populate: ['columnId'],
+          limit: limit || 10,
+          page: page || 1,
+          sort
+        }
+      )
       result.docs = result.docs.map(artilce => {
         const { columnId, ...members } = artilce.toJSON()
         // console.log(columnId)
         return {
           ...members,
-          column: columnId as unknown as ColumnSchema || null ,
+          column: (columnId as unknown as ColumnSchema) || null,
           columnId: columnId?.['_id'] || null
         }
       }) as any[]

@@ -1,5 +1,5 @@
 import { Types } from 'mongoose'
-import { authcodeService } from '~/services'
+import { authcodeService } from '~/server/services'
 
 export default defineEventHandler(async (event) => {
   try {

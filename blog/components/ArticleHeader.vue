@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import MenuIcon from '../components/MenuIcon.vue'
-import { useThemeVars } from 'naive-ui'
+// import { useThemeVars } from 'naive-ui'
 import { Subscription, fromEvent } from '@tanbo/stream'
 import 'animate.css'
 import type { ArticleUserInfo } from '~/types'

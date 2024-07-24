@@ -1,6 +1,6 @@
 import type { ObjectId, Types } from 'mongoose'
 import type { UpdateAuthcodeDto } from '~/dto'
-import { Authcode } from '~/server/models'
+import { Authcode } from '../models'
 
 class AuthcodeService {
   authcodesRepository: typeof Authcode

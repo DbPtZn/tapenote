@@ -1,4 +1,4 @@
-import { columnService } from "~/services"
+import { columnService } from "~/server/services"
 
 export default defineEventHandler(async (event) => {
   try {

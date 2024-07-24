@@ -1,4 +1,4 @@
-import { userService } from "~/services"
+import { userService } from "~/server/services"
 
 export default defineEventHandler(async (event) => {
   try {

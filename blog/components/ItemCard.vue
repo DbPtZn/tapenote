@@ -1,6 +1,6 @@
 /** 文章卡片 */
 <script setup lang="ts">
-import { useThemeVars } from 'naive-ui'
+// import { useThemeVars } from 'naive-ui'
 import { computed, reactive } from 'vue'
 import dayjs from 'dayjs'
 interface Count {

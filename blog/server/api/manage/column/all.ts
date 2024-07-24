@@ -1,5 +1,5 @@
 import { CreateColumnDto } from "~/dto"
-import { articleService, columnService } from "~/services"
+import { articleService, columnService } from "~/server/services"
 
 export default defineEventHandler(async (event) => {
   try {
