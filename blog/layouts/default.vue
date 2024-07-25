@@ -1,6 +1,6 @@
 <template>
   <!-- <ClientOnly> -->
-    <n-config-provider :theme="appConfig.theme.dark ? darkTheme : null">
+    <n-config-provider :style="{ height: '100%' }" :theme="appConfig.theme.dark ? darkTheme : null">
       <n-dialog-provider>
         <n-message-provider>
           <n-flex class="layout" vertical :style="{ backgroundColor: themeVars.bodyColor }">
@@ -20,6 +20,7 @@ const appConfig = useAppConfig()
 
 <style lang="scss" scoped>
 .layout {
+  height: 100%;
   min-height: 100%;
   color: v-bind('themeVars.textColor1'); // 默认字体颜色
 }

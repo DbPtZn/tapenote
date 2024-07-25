@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useMessage } from 'naive-ui'
+import { useMessage, useThemeVars } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 // import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui'
@@ -11,6 +11,7 @@ interface ModelType {
 const router = useRouter()
 const formRef = ref()
 const message = useMessage()
+const themeVars = useThemeVars()
 /** 表单数据 */
 const model = ref<ModelType>({
   nickname: 'dbx',
@@ -137,6 +138,8 @@ function handleToLogin() {
   height: 100%;
   display: flex;
   align-items: center;
+  color: v-bind('themeVars.textColor1');
+  background-color: v-bind('themeVars.cardColor');
   .wrapper {
     width: 100%;
     max-width: 450px;

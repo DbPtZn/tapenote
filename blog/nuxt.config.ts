@@ -9,6 +9,15 @@ import VueI18nVitePlugin from '@intlify/unplugin-vue-i18n/vite'
 
 export default defineNuxtConfig({
   compatibilityDate: '2024-07-21',
+  // app: {
+  //   // baseURL: '/blog/',
+  //   buildAssetsDir: './',
+  // },
+  build: {
+    transpile: ['/vue-i18n/', '@tanbo/bezier'],
+    
+  },
+  // srcDir: '/blog/',
   devtools: { enabled: true },
   modules: [
     'nuxtjs-naive-ui',
@@ -21,10 +30,8 @@ export default defineNuxtConfig({
   //   // pageTransition: { name: 'page', mode: 'out-in' }
   // },
   css: ['~/assets/styles/main.scss'],
-  build: {
-    transpile: ['/vue-i18n/', '@tanbo/bezier'],
-  },
   vite: {
+    // base: '/blog/',
     resolve: {
       alias: {
         'vue-i18n': 'vue-i18n/dist/vue-i18n.runtime.esm-bundler.js',

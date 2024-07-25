@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useMessage } from 'naive-ui'
+import { useMessage, useThemeVars } from 'naive-ui'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 // import { FormRules, FormItemRule } from 'naive-ui'
@@ -9,6 +9,7 @@ interface ModelType {
 }
 const router = useRouter()
 const message = useMessage()
+const themeVars = useThemeVars()
 const formRef = ref()
 const model = ref<ModelType>({
   account: '261849747@qq.com',
@@ -121,6 +122,8 @@ function handleToRegister() {
   height: 100%;
   display: flex;
   align-items: center;
+  color: v-bind('themeVars.textColor1');
+  background-color: v-bind('themeVars.cardColor');
   .wrapper {
     width: 100%;
     max-width: 450px;
