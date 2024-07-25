@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// import { useThemeVars } from 'naive-ui'
+import { useThemeVars } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 const appConfig = useAppConfig()
 const router = useRouter()

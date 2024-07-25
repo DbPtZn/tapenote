@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { NButton, useThemeVars, type DropdownOption } from 'naive-ui'
 import { onMounted, ref } from 'vue'
-// import { FileCard } from './private'
-// import utils from '@/utils'
 import { useListDropDown } from './hooks/useListDropdown'
 import dayjs from 'dayjs'
 import useStore from '~/store'
@@ -103,8 +101,7 @@ const { dropdownState, options, handleClickoutside, handleContextmenu, handleMor
         <div class="header-nav-right">
           <n-dropdown trigger="click" :options="generateHeaderBtnOptions()" placement="bottom-start">
             <n-button text >
-              <!-- <n-icon :component="MoreHorizFilled" :size="24" /> -->
-              ...
+              <Icon name="mingcute:more-1-fill" size="24px" />
             </n-button>
           </n-dropdown>
         </div>

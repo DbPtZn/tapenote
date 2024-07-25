@@ -1,15 +1,14 @@
 <script lang="ts" setup>
 import MenuIcon from '../components/MenuIcon.vue'
-// import { useThemeVars } from 'naive-ui'
 import { Subscription, fromEvent } from '@tanbo/stream'
 import 'animate.css'
 import type { ArticleUserInfo } from '~/types'
 import { useI18n } from 'vue-i18n'
+import { useThemeVars } from 'naive-ui'
 const appConfig = useAppConfig()
 const router = useRouter()
 const route = useRoute()
 const themeVars = useThemeVars()
-const device = useDevice()
 const { theme } = appConfig
 const { t } = useI18n()
 const props = defineProps<{
@@ -119,7 +118,7 @@ function handleMoreClick() {
   width: 100%;
   height: 64px;
   min-height: 64px;
-  // padding: 0 32px;
+  color: v-bind('themeVars.textColor1');
   border-bottom: 1px solid v-bind('themeVars.dividerColor');
   background-color: v-bind('themeVars.cardColor');
   box-shadow: v-bind('themeVars.boxShadow1');

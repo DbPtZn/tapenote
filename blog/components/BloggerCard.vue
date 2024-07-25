@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// import { useThemeVars } from 'naive-ui'
+import { useThemeVars } from 'naive-ui'
 import type { UserListItem } from '~/types'
 const themeVars = useThemeVars()
 const props = defineProps<{

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// import { useThemeVars } from 'naive-ui'
+import { useThemeVars } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { onMounted, onBeforeUnmount } from 'vue'
 import dayjs from 'dayjs'

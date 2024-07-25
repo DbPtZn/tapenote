@@ -2,7 +2,7 @@
 import Facebook from '../components/Facebook.vue'
 import Github from '../components/Github.vue'
 import MenuIcon from '../components/MenuIcon.vue'
-// import { useThemeVars } from 'naive-ui'
+import { useThemeVars } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 const appConfig = useAppConfig()
 const router = useRouter()
@@ -63,7 +63,6 @@ function handleDblClick() {
     <div class="nav-container">
       <div class="left">
         <div class="title">
-          <!-- <n-icon class="tapenote-icon" :component="HomeFilled" :size="24" />-->
           <img class="tapenote-icon logo" src="/logo.png" alt="" @dblclick="handleDblClick" />
           <nuxt-link class="tapenote-name" to="/">blogger</nuxt-link>
         </div>
@@ -108,13 +107,12 @@ function handleDblClick() {
         <!-- 用户配置自定义外链（图标 + 超链接） -->
         <n-divider class="divider" vertical />
         <n-button text>
-          <n-icon class="nav-btn" :component="Github" :size="24" />
+          <Icon name="mdi:qqchat" size="24px" />
         </n-button>
         <n-button text>
-          <n-icon class="nav-btn" :component="Facebook" :size="24" />
+          <Icon name="ic:baseline-wechat" size="24px" />
         </n-button>
-        ...
-        <!-- <n-icon class="more-btn" :component="MoreHorizRound" :size="24" /> -->
+        <Icon class="more-btn" name="mingcute:more-1-fill" size="24px" />
         <MenuIcon class="collapse-btn" :style="{ scale: 0.6 }" />
       </div>
     </div>

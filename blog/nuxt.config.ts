@@ -10,16 +10,10 @@ import VueI18nVitePlugin from '@intlify/unplugin-vue-i18n/vite'
 export default defineNuxtConfig({
   compatibilityDate: '2024-07-21',
   devtools: { enabled: true },
-  // imports: {
-  //   dirs: [
-  //     'composables'
-  //   ]
-  // },
   modules: [
     'nuxtjs-naive-ui',
     'nuxt-mongoose',
-    'nuxt-icon',
-    'nuxt-icons',
+    '@nuxt/icon',
     '@pinia/nuxt'
   ],
   // app: {
@@ -28,13 +22,12 @@ export default defineNuxtConfig({
   // },
   css: ['~/assets/styles/main.scss'],
   build: {
-    transpile: ['/vue-i18n/']
+    transpile: ['/vue-i18n/', '@tanbo/bezier'],
   },
   vite: {
     resolve: {
       alias: {
         'vue-i18n': 'vue-i18n/dist/vue-i18n.runtime.esm-bundler.js',
-        // '@': path.resolve(__dirname, 'src') // 路径别名
       }
     },
     plugins: [
@@ -60,11 +53,23 @@ export default defineNuxtConfig({
         }
       }
     },
-    // build: {
-    //   minify: 'esbuild',
-    //   chunkSizeWarningLimit: 500,
-    //   cssCodeSplit: true, // 如果设置为false，整个项目中的所有 CSS 将被提取到一个 CSS 文件中
-    // }
+    // ssr: {
+    //   noExternal: ["naive-ui", "vueuc", "date-fns"],
+    // },
+    build: {
+      minify: 'esbuild',
+      chunkSizeWarningLimit: 500,
+      cssCodeSplit: true, // 如果设置为false，整个项目中的所有 CSS 将被提取到一个 CSS 文件中
+    },
+    esbuild: {
+      // 排除有问题的模块
+      // exclude: ['@tanbo/bezier', '@iconify', 'immer']
+      // 将console.log和debugger丢弃
+      // drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    },
+    optimizeDeps: {
+      exclude: ['@tanbo/bezier']
+    }
   },
   mongoose: {
     uri: process.env.MONGODB_URI,
@@ -82,9 +87,6 @@ export default defineNuxtConfig({
       }
     ]
   },
-  // colorMode: {
-  //   preference: 'dark'
-  // },
   nitro: {
     routeRules: {
       '/api/receiver/**': {

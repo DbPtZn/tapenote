@@ -8,6 +8,7 @@ import type { Editor } from '@textbus/editor'
 import '~/editor/style.css'
 import 'material-icons/iconfont/material-icons.css'
 import { fromEvent, type Subscription } from '@tanbo/stream'
+import { useMessage, useThemeVars } from 'naive-ui'
 const themeVars = useThemeVars()
 const props = defineProps<{
   id: string
@@ -92,6 +93,8 @@ onMounted(async () => {
         const controller = player.get(pck.Player)
         subs.push(
           controller.onStateUpdate.subscribe(() => {
+            console.log('playing')
+            isPlaying.value = controller.isPlaying
             if (controller.isPlaying) {
               navRef.value.setNavVisible(false)
             }
@@ -164,22 +167,26 @@ function handleScrollTo(offsetTop: number) {
   })
 }
 
-const floatBtnIcon = ref('material-symbols:play-arrow-rounded')
+const isPlaying = ref(false)
+const floatBtnIcon = computed(() => isPlaying.value ? 'material-symbols:pause-rounded' : 'material-symbols:play-arrow-rounded')
 function handleFloatBtnClick() {
   const controller = player.get(pck.Player)
   if (!controller.isPlaying && !controller.isPause) {
     controller.start()
-    floatBtnIcon.value = 'material-symbols:pause-rounded'
+    isPlaying.value = true
+    // floatBtnIcon.value = 'material-symbols:pause-rounded'
     return
   }
   if (controller.isPlaying && !controller.isPause) {
     controller.pause()
-    floatBtnIcon.value = 'material-symbols:play-arrow-rounded'
+    isPlaying.value = false
+    // floatBtnIcon.value = 'material-symbols:play-arrow-rounded'
     return
   }
   if (!controller.isPlaying && controller.isPause) {
     controller.resume()
-    floatBtnIcon.value = 'material-symbols:pause-rounded'
+    isPlaying.value = true
+    // floatBtnIcon.value = 'material-symbols:pause-rounded'
     return
   }
 }
@@ -249,6 +256,28 @@ function handleShowMenu(value: boolean) {
     </div>
     <div v-show="state.type === 'course'" ref="controllerRef" :class="['controller']"></div>
   </div>
+
+  <!-- <n-float-button
+    class="mo-controller"
+    shape="circle"
+    position="fixed"
+    right="40px"
+    top="240px"
+    menu-trigger="click"
+  >
+    <Icon name="streamline:interface-setting-slider-horizontal-adjustment-adjust-controls-fader-horizontal-settings-slider" size="24" />
+    <template #menu>
+      <n-float-button >
+        <Icon name="clarity:avatar-solid" size="20px" />
+      </n-float-button>
+      <n-float-button >
+        <Icon name="clarity:avatar-solid" size="20px" />
+      </n-float-button>
+      <n-float-button >
+        <Icon name="clarity:avatar-solid" size="20px" />
+      </n-float-button>
+    </template>
+  </n-float-button> -->
   <n-float-button
     class="mo-controller"
     shape="circle"
@@ -263,7 +292,7 @@ function handleShowMenu(value: boolean) {
     @toucemove="handleMouseUp"
   >
     <Icon :name="floatBtnIcon" size="24" />
-    <!-- <template #menu>
+    <template #menu>
       <n-float-button >
         <Icon name="clarity:avatar-solid" size="20px" />
       </n-float-button>
@@ -273,7 +302,7 @@ function handleShowMenu(value: boolean) {
       <n-float-button >
         <Icon name="clarity:avatar-solid" size="20px" />
       </n-float-button>
-    </template> -->
+    </template>
   </n-float-button>
 
   <n-back-top class="back-top" :right="100" :to="rootRef" />
@@ -312,6 +341,7 @@ function handleShowMenu(value: boolean) {
 .mo-controller {
   z-index: 1;
   opacity: 0.6;
+  display: none;
   &:hover {
     opacity: 0.8;
   }
@@ -340,6 +370,7 @@ function handleShowMenu(value: boolean) {
   height: 100%;
   display: flex;
   justify-content: center;
+  color: v-bind('themeVars.textColor1');
   background-color: v-bind('themeVars.cardColor');
 }
 .wrapper {
@@ -392,7 +423,6 @@ function handleShowMenu(value: boolean) {
       span {
         margin-left: 0.25rem;
         opacity: 0.8;
-        // color: v-bind('themeVars.infoColor');
       }
     }
     .author {
@@ -487,6 +517,10 @@ function handleShowMenu(value: boolean) {
   }
   :deep(.back-top) {
     display: none;
+  }
+
+  .mo-controller {
+    display: flex;
   }
 }
 

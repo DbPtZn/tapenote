@@ -2,7 +2,7 @@
 import Facebook from '../components/Facebook.vue'
 import Github from '../components/Github.vue'
 import MenuIcon from '../components/MenuIcon.vue'
-// import { useThemeVars } from 'naive-ui'
+import { useThemeVars } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 const appConfig = useAppConfig()
 const router = useRouter()
@@ -10,7 +10,6 @@ const route = useRoute()
 const themeVars = useThemeVars()
 const { theme } = appConfig
 const { t } = useI18n()
-const activeKey = ref()
 const navOptions = [
   {
     key: 'home',
@@ -113,8 +112,7 @@ function handleDblClick() {
         <n-button text>
           <n-icon class="nav-btn" :component="Facebook" :size="24" />
         </n-button>
-        <!-- <n-icon class="more-btn" :component="MoreHorizRound" :size="24" /> -->
-        <Icon name="" />
+        <Icon name="mingcute:more-1-fill" size="24px" />
         <MenuIcon class="collapse-btn" :style="{ scale: 0.6 }" />
       </div>
     </div>
