@@ -9,15 +9,9 @@ import VueI18nVitePlugin from '@intlify/unplugin-vue-i18n/vite'
 
 export default defineNuxtConfig({
   compatibilityDate: '2024-07-21',
-  // app: {
-  //   // baseURL: '/blog/',
-  //   buildAssetsDir: './',
-  // },
   build: {
     transpile: ['/vue-i18n/', '@tanbo/bezier'],
-    
   },
-  // srcDir: '/blog/',
   devtools: { enabled: true },
   modules: [
     'nuxtjs-naive-ui',
@@ -56,7 +50,7 @@ export default defineNuxtConfig({
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: "@import '~/assets/styles/var.scss';"
+          additionalData: "@use '~/assets/styles/var.scss' as *;"
         }
       }
     },
@@ -94,7 +88,12 @@ export default defineNuxtConfig({
       }
     ]
   },
+  // app: {
+  //   baseURL: '/', // 默认为 '/'
+  //   buildAssetsDir: '/_nuxt/', // 默认为 '/_nuxt/'
+  // },
   nitro: {
+    preset: 'node-server',
     routeRules: {
       '/api/receiver/**': {
         cors: true, // 允许跨域
@@ -103,15 +102,31 @@ export default defineNuxtConfig({
           'Access-Control-Allow-Methods': 'POST',
           'Access-Control-Allow-Headers': 'Content-Type, Auth-Code'
         },
-      }
-    }
+      },
+      // '/api/**': {
+      //   proxy: 'http://picx.tapenote.cn/api/**'
+      // }
+    },
+    // devProxy: {
+    //   '/api': {
+    //     target: 'http://picx.tapenote.cn/api', // 这里是接口地址
+    //     changeOrigin: true,
+    //     prependPath: true
+    //   }
+    // },
   },
-  $development: {
-    //
-  },
-  $production: {
-    //
-  },
+  // experimental: {
+  //   // componentIslands: {
+  //   //   selectiveClient: 'deep'
+  //   // },
+  //   componentIslands: 'local+remote'
+  // },
+  // $development: {
+  //   //
+  // },
+  // $production: {
+  //   //
+  // },
   /**
    * runtimeConfig：需要在构建后使用环境变量指定的私有或公共令牌
    * 环境变量 √
@@ -126,8 +141,11 @@ export default defineNuxtConfig({
     // 只在服务器端可用的私有键
     apiSecret: 'DbPtZn',
     // public中的键也可以在客户端使用
-    public: {
-      apiBase: '/api'
-    }
-  }
+    // public: {
+    //   apiBase: '/api'
+    // },
+    tempDir: process.env.TEMP_DIR,
+    staticDir: process.env.STATIC_DIR,
+    staticPrefix: process.env.STATIC_PREFIX
+  },
 })

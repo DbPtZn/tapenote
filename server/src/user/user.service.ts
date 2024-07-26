@@ -250,7 +250,7 @@ export class UserService {
   async updateConfig(updateConfigDto: UpdateUserConfigDto, id: string) {
     try {
       const { autosave, saveInterval } = updateConfigDto
-      console.log(updateConfigDto)
+      // console.log(updateConfigDto)
       const user = await this.usersRepository.findOneBy({ id })
       user.config = {
         autosave: autosave,
@@ -268,6 +268,7 @@ export class UserService {
     try {
       this.userLogger.log(`正在添加投稿配置...`)
       const user = await this.findOneById(id)
+      console.log(user)
       const config = new SubmissionConfig()
       config.id = UUID.v4()
       config.name = ''

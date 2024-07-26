@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongoose'
 import type { CreateArticleDto, GetArticleDto, ParseArticleDto } from '~/dto'
-import { Article, Column } from '../models'
+import { Article, Column, Authcode, User, UploadFile } from '../models'
 import * as UUID from 'uuid'
 import fs from 'fs'
 import path from 'path'
@@ -10,7 +10,10 @@ import { fileService } from './file.service'
 import { RemovedEnum } from '~/enums'
 const _ = [
   Article.length,
-  Column.length
+  Column.length,
+  Authcode.length, 
+  User.length, 
+  UploadFile.length
 ]
 class ArticleService {
   articlesRepository: typeof Article
@@ -134,9 +137,9 @@ class ArticleService {
       return {
         ...members,
         authcode: artilce.authcodeId,
-        authcodeId: authcodeId['_id'],
+        authcodeId: (authcodeId as unknown as any)['_id'],
         column: columnId || null,
-        columnId: columnId?.['_id'] || null
+        columnId: (columnId as unknown as any)?.['_id'] || null
       }
     }) as any[]
     // console.log(result.docs)
@@ -187,7 +190,7 @@ class ArticleService {
       )
       if (!article) throw new Error('文章不存在！')
       const { userId, ...meta } = article.toJSON()
-      const data = Object.assign({}, meta)
+      const data = Object.assign({}, meta) as any
       const user = userId as unknown as UserSchema
       const userinfo: ArticleUserInfo = {
         UID: user.UID,
@@ -232,7 +235,7 @@ class ArticleService {
         return {
           ...members,
           column: (columnId as unknown as ColumnSchema) || null,
-          columnId: columnId?.['_id'] || null
+          columnId: (columnId as unknown as any)?.['_id'] || null
         }
       }) as any[]
       // console.log(result.docs[0])

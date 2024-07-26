@@ -1,12 +1,12 @@
 import { articleService } from "~/server/services"
-
+const runtimeConfig = useRuntimeConfig()
 export default defineEventHandler(async (event) => {
   try {
     const id = getRouterParam(event, 'id')
     if(!id) throw new Error('未提供 uid 参数！')
     const artilce = await articleService.get(id)
     if(artilce?.type === 'course') {
-      artilce.audio = artilce.audio ? artilce.audio.split('public')[1] : ''
+      artilce.audio = artilce.audio ? runtimeConfig.staticPrefix + artilce.audio.split(runtimeConfig.staticDir)[1] : ''
     }
     // console.log(uid)
     return artilce

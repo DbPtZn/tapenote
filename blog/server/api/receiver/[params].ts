@@ -1,7 +1,8 @@
 import { authcodeService, userService, articleService } from '~/server/services'
 import formidable from 'formidable'
 import { CreateArticleDto } from '~/dto'
-
+const runtimeConfig = useRuntimeConfig()
+console.log(runtimeConfig.tempDir)
 export default defineEventHandler(async (event) => {
   try {
     const params = getRouterParam(event, 'params')
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event) => {
     /** 接收/处理 formdata 数据 */
     const form = formidable({
       multiples: true,
-      uploadDir: 'uploads/', // 指定上传文件存放的目录
+      uploadDir: runtimeConfig.tempDir, // 指定上传文件存放的目录
       keepExtensions: true, // 保持文件的原始扩展名
       maxFileSize: 32 * 1024 * 1024, // 限制文件大小为 32MB
     })
@@ -35,9 +36,10 @@ export default defineEventHandler(async (event) => {
     form.on('error', (err) => {
       if (err.code === 'ENOENT') {
         // 文件大小超出限制
-        console.error('File size exceeds the limit')
+        console.error(err.message)
+        // console.error('File size exceeds the limit')
         event.node.res.statusCode = 400
-        event.node.res.end('文件大小超出限制，最大可上传文件大小为 32 MB')
+        event.node.res.end(err.message || '文件上传错误')
       }
     })
 

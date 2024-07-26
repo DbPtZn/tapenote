@@ -7,6 +7,7 @@ import type { ObjectId } from 'mongoose'
 
 type Category = 'audio' | 'image' | 'bgm' | 'logs'
 const __rootdirname = process.cwd()
+const runtimeConfig = useRuntimeConfig()
 
 export class FileService {
   filesRepository: typeof UploadFile
@@ -17,7 +18,8 @@ export class FileService {
   getFilePath(args: { filename: string; dirname: string | string[]; category: Category }) {
     const { dirname, category, filename } = args
     const dir = typeof dirname === 'string' ? dirname : dirname.join('/')
-    const dirPath = path.join(__rootdirname, 'public', dir, category)
+    // const dirPath = path.join(__rootdirname, 'public', dir, category)
+    const dirPath = path.join(runtimeConfig.staticDir, dir, category)
     return `${dirPath}/${filename}`
   }
 
@@ -45,7 +47,7 @@ export class FileService {
         filename,
         category: 'image'
       })
-
+      console.log(filepath)
       const targetDir = path.dirname(filepath)
       if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true })

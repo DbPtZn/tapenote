@@ -4,13 +4,13 @@ import { CreateArticleDto } from '~/dto'
 import { Types } from 'mongoose'
 import { H3Event, EventHandlerRequest } from 'h3'
 import { extname } from 'path'
-
+const runtimeConfig = useRuntimeConfig()
 export default defineEventHandler(async (event) => {
   try {
      /** 接收/处理 formdata 数据 */
      const form = formidable({
       multiples: true,
-      uploadDir: 'uploads/', // 指定上传文件存放的目录
+      uploadDir: runtimeConfig.tempDir, // 指定上传文件存放的目录
       keepExtensions: true, // 保持文件的原始扩展名
       maxFileSize: 12 * 1024 * 1024, // 限制文件大小为 12 MB
     })
@@ -44,7 +44,9 @@ export default defineEventHandler(async (event) => {
     }, event.context.auth.id)
     
     // console.log(path)
-    const imgPath = path.split('public')[1]
+    // console.log(runtimeConfig.staticDir)
+    // console.log(path.split(runtimeConfig.staticDir))
+    const imgPath = runtimeConfig.staticPrefix + path.split(runtimeConfig.staticDir)[1]
     // console.log(imgPath)
     return imgPath
   } catch (error: any) {

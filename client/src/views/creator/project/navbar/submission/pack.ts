@@ -75,16 +75,21 @@ export class Pack {
       const config = getEditorConfig(content) // 获取导出模式的编辑器配置
       const editor = createEditor(config) // 创建编辑器
       const host = document.createElement('div') // 创建节点
+      let timer
       editor.mount(host) // 挂载编辑器
 
       const img2base64 = editor.get(Img2base64Service) // 获取 img2base64 依赖注入实例
 
       editor.onReady.subscribe(() => {
         // 编辑器实例化 1s 后如果没有图片转换任务，则意味着已经转换完成或者不存在需要替换的图片组件，此时直接导出内容
-        setTimeout(() => {
+        timer = setTimeout(() => {
           if (img2base64.tasks === 0) {
-            resolve({ content: editor.getHTML(), resources: editor.getResources() })
-            editor.destroy()
+            try {
+              resolve({ content: editor.getHTML(), resources: editor.getResources() })
+              editor.destroy()
+            } catch (error) {
+              reject(error)
+            }
           }
         }, 1000)
       })
@@ -92,6 +97,7 @@ export class Pack {
       // 图片转换完成时：
       img2base64.onFinish.subscribe(() => {
         console.log('Base64 img replace finish!')
+        clearTimeout(timer)
         // 导出富文本数据
         resolve({ content: editor.getHTML(), resources: editor.getResources() })
         editor.destroy()
@@ -99,6 +105,7 @@ export class Pack {
 
       img2base64.onError.subscribe(error => {
         console.error(error)
+        clearTimeout(timer)
         reject(error)
       })
     })
