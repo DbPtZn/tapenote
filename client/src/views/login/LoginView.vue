@@ -251,9 +251,10 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
     account: option.value as string,
     hostname: option.hostname as string,
     onSelected: (account, hostname) => {
+      // console.log(account, hostname)
       model.value.account = account
       // 本地登录时，原历史记录的端口可能被占用了, 所以自动替换成默认端口
-      if(localhost !== '' && hostname !== localhost) {
+      if(localhost !== '' && hostname !== localhost && hostname.includes('localhost')) {
         model.value.hostname = localhost
       } else {
         model.value.hostname = hostname

@@ -351,21 +351,23 @@ export const useUserListStore = defineStore('userListStore', {
       return state.data.map((item) => {
         return {
           key: `User:${item.account}&${item.hostname}`,
-          hostname: item.hostname || '',
-          account: item.account || '',
-          nickname: item.nickname || '',
-          avatar: item.avatar || '',
-          desc: item.desc || '',
-          email: item.email || '',
-          phone: item.phone || '',
-          homepage: item.homepage || '',
-          dir: {
-            note: item.dir.note || '',
-            course: item.dir.course || '',
-            procedure: item.dir.procedure || ''
-          },
-          submissionConfig: item.submissionConfig || [],
-          subscriptionConfig: item.subscriptionConfig || []
+          ...item
+          // hostname: item.hostname || '',
+          // account: item.account || '',
+          // nickname: item.nickname || '',
+          // avatar: item.avatar || '',
+          // desc: item.desc || '',
+          // email: item.email || '',
+          // phone: item.phone || '',
+          // homepage: item.homepage || '',
+          // dir: {
+          //   note: item.dir.note || '',
+          //   course: item.dir.course || '',
+          //   procedure: item.dir.procedure || ''
+          // },
+          // config: item.config || [],
+          // submissionConfig: item.submissionConfig || [],
+          // subscriptionConfig: item.subscriptionConfig || []
         }
       }).sort((a, b) => {
         return state.sequence.indexOf(a.key) - state.sequence.indexOf(b.key)

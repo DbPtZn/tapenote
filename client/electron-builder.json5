@@ -26,11 +26,11 @@
       "filter": ["**/*"]
     },
     // 语音模型文件比较大，测试打包的时候可以先注释掉
-    {
-      "from": "sherpa",
-      "to": "../sherpa",
-      "filter": ["**/*"]
-    }
+    // {
+    //   "from": "sherpa",
+    //   "to": "../sherpa",
+    //   "filter": ["**/*"]
+    // }
   ],
   "mac": {
     "target": [

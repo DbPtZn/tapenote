@@ -27,6 +27,7 @@ const props = defineProps<{
   penname?: string
   title: string
   content: string // 内容
+  abbrev?: string
   audio?: string
   duration?: number
   promoterSequence?: string[]
@@ -35,7 +36,7 @@ const props = defineProps<{
   subtitleKeyframeSequence?: number[]
   email?: string
   blog?: string
-  onResponse: (result: { type: 'error' | 'success', msg: string }) => void
+  onResponse: (result: { type: 'error' | 'success'; msg: string }) => void
   onSubmit: () => void
 }>()
 const formRef = ref<FormInst | null>(null)
@@ -129,7 +130,9 @@ function handleSubmit(e: MouseEvent) {
           penname: model.value.penname,
           email: model.value.email,
           blog: model.value.blog,
-          msg: model.value.msg
+          msg: model.value.msg,
+          editionId: '',
+          abbrev: props.abbrev || ''
         })
         .then(() => {
           props.onResponse({ type: 'success', msg: '导出成功' })
