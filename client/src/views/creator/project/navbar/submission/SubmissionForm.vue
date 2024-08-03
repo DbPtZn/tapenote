@@ -35,6 +35,7 @@ const props = defineProps<{
   abbrev: string
   audio?: string
   duration?: number
+  wordage?: number
   promoterSequence?: string[]
   keyframeSequence?: number[]
   subtitleSequence?: string[]
@@ -191,6 +192,7 @@ function handleSubmit(e: MouseEvent) {
           abbrev: props.abbrev || '',
           audio: props.audio || '',
           duration: props.duration || 0,
+          wordage: props.wordage || 0,
           promoterSequence: props.promoterSequence || [],
           keyframeSequence: props.keyframeSequence || [],
           subtitleSequence: props.subtitleSequence || [],
@@ -222,12 +224,12 @@ function handleSubmit(e: MouseEvent) {
           })
         })
         .catch(err => {
-          console.log(err)
+          // console.log(err)
+          console.log(err?.response?.data || err?.message)
           emits('response', {
             error: true,
-            msg: err?.response?.data || err?.message || '投稿失败'
+            msg: '投稿失败'
           })
-          // message.error('投稿失败')
         })
     } else {
       console.log(errors)

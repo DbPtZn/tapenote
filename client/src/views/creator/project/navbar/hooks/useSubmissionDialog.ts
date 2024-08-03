@@ -27,12 +27,14 @@ export function useSubmissionDialog() {
         abbrev: data.abbrev,
         audio: data.audio,
         duration: data.duration,
+        wordage: data.detial.wordage,
         promoterSequence: data.promoterSequence,
         keyframeSequence: data.keyframeSequence,
         subtitleSequence: data.subtitleSequence,
         subtitleKeyframeSequence: data.subtitleKeyframeSequence,
         
         onResponse: ({ error, msg })=> {
+          // console.log(msg)
           error ? message.error(msg) : message.success(msg)
           // dialog.destroyAll()
         },
