@@ -79,7 +79,7 @@ function handleSubmit(e: MouseEvent) {
               <n-input v-model:value="model.name" type="text" placeholder="名称（不可重复）" maxlength="36" show-count />
             </n-form-item>
             <!-- 博客地址 -->
-            <n-form-item path="site" label="博客地址">
+            <n-form-item path="site" label="投稿地址">
               <n-input v-model:value="model.site" type="text" placeholder="https://" />
             </n-form-item>
             <!-- 授权码 -->
