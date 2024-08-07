@@ -30,6 +30,7 @@ const props = defineProps<{
   abbrev?: string
   audio?: string
   duration?: number
+  wordage?: number
   promoterSequence?: string[]
   keyframeSequence?: number[]
   subtitleSequence?: string[]
@@ -120,6 +121,7 @@ function handleSubmit(e: MouseEvent) {
           content: props.content,
           audio: props.audio || '',
           duration: props.duration || 0,
+          wordage: props.wordage || 0,
           promoterSequence: props.promoterSequence || [],
           keyframeSequence: props.keyframeSequence || [],
           subtitleSequence: props.subtitleSequence || [],

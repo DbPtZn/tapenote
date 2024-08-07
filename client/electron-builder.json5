@@ -39,7 +39,6 @@
     "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
   },
   "win": {
-    "icon": "public/logo1.png",
     "target": [
       {
         "target": "nsis",

@@ -20,7 +20,7 @@ const subscriptionConfig = useSubscriptionConfig()
 <template>
   <div class="admin">
     <!-- <Header :height="34"></Header> -->
-    <Main :flex="1">
+    <div class="main">
       <n-card title="账户配置管理" style="height: 100%; margin-bottom: 16px; border-radius: 0">
         <n-tabs :placement="'left'" pane-class="pane">
           <!-- 个人信息 -->
@@ -76,7 +76,7 @@ const subscriptionConfig = useSubscriptionConfig()
           <!-- 用户自定义语音文字互转接口（待开发） -->
         </n-tabs>
       </n-card>
-    </Main>
+    </div>
   </div>
 </template>
 
@@ -87,6 +87,12 @@ const subscriptionConfig = useSubscriptionConfig()
   flex-direction: column;
   width: 100%;
   height: 100%;
+}
+.main {
+  flex: 1;
+  display: flex;
+  box-sizing: border-box;
+  position: relative;
 }
 .pane {
   height: 92vh;
