@@ -3,10 +3,14 @@ import { Layout } from '@textbus/editor'
 import { createElement } from '@textbus/platform-browser'
 import { OutlineService } from './outline.service'
 import { App, createApp, h, Ref, ref } from 'vue'
-import OutlineView, { OutlineItem } from './OutlineView.vue'
+import OutlineView from './OutlineView.vue'
 import { UIConfig } from '../../common'
 import { Structurer } from '../..'
-
+interface OutlineItem {
+  tagName: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  text: string
+  offsetTop: number
+}
 export class OutlinePlugin implements Plugin {
   private app: App | null = null
   private workbench: HTMLElement | null = null
@@ -64,14 +68,25 @@ export class OutlinePlugin implements Plugin {
           }
         })
       }),
-      fromEvent(this.scrollerRef!, 'scroll').pipe(debounceTime(delay)).subscribe(() => {
-        this.activeIndex.value = this.outlineData.value.findIndex(item => item.offsetTop >= this.scrollerRef!.scrollTop)
-        this.openDelayAnimate && (this.scrollTop.value = this.scrollerRef!.scrollTop)
-      }),
       this.outlineService.onExpand.subscribe(() => {
         this.outlineService.isExpanded ? this.expand() : this.collapse()
       })
     )
+    if (this.scrollerRef === document.documentElement) {
+      this.subs.push(
+        fromEvent(window, 'scroll').pipe(debounceTime(delay)).subscribe(() => {
+          this.activeIndex.value = this.outlineData.value.findIndex(item => item.offsetTop >= this.scrollerRef!.scrollTop)
+          this.openDelayAnimate && (this.scrollTop.value = this.scrollerRef!.scrollTop)
+        })
+      )
+    } else {
+      this.subs.push(
+        fromEvent(this.scrollerRef!, 'scroll').pipe(debounceTime(delay)).subscribe(() => {
+          this.activeIndex.value = this.outlineData.value.findIndex(item => item.offsetTop >= this.scrollerRef!.scrollTop)
+          this.openDelayAnimate && (this.scrollTop.value = this.scrollerRef!.scrollTop)
+        })
+      )
+    }
     // 2. 跟随页面滚动
   }
   // 展开视图

@@ -255,14 +255,25 @@ class OutlinePlugin {
           };
         });
       }),
-      fromEvent(this.scrollerRef, "scroll").pipe(debounceTime(delay2)).subscribe(() => {
-        this.activeIndex.value = this.outlineData.value.findIndex((item) => item.offsetTop >= this.scrollerRef.scrollTop);
-        this.openDelayAnimate && (this.scrollTop.value = this.scrollerRef.scrollTop);
-      }),
       this.outlineService.onExpand.subscribe(() => {
         this.outlineService.isExpanded ? this.expand() : this.collapse();
       })
     );
+    if (this.scrollerRef === document.documentElement) {
+      this.subs.push(
+        fromEvent(window, "scroll").pipe(debounceTime(delay2)).subscribe(() => {
+          this.activeIndex.value = this.outlineData.value.findIndex((item) => item.offsetTop >= this.scrollerRef.scrollTop);
+          this.openDelayAnimate && (this.scrollTop.value = this.scrollerRef.scrollTop);
+        })
+      );
+    } else {
+      this.subs.push(
+        fromEvent(this.scrollerRef, "scroll").pipe(debounceTime(delay2)).subscribe(() => {
+          this.activeIndex.value = this.outlineData.value.findIndex((item) => item.offsetTop >= this.scrollerRef.scrollTop);
+          this.openDelayAnimate && (this.scrollTop.value = this.scrollerRef.scrollTop);
+        })
+      );
+    }
   }
   // 展开视图
   expand() {
