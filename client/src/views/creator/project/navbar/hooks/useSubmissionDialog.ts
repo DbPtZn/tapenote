@@ -1,4 +1,4 @@
-import { NIcon, useDialog, useMessage } from 'naive-ui'
+import { NIcon, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import { h } from 'vue'
 import SubmissionForm from '../submission/SubmissionForm.vue'
 import useStore from '@/store'
@@ -6,6 +6,7 @@ import { ShareFilled } from '@vicons/material'
 export function useSubmissionDialog() {
   const dialog = useDialog()
   const message = useMessage()
+  const themeVars = useThemeVars()
   const { projectStore, userStore } = useStore()
   const handleExpandShareDialog = (id: string) => {
     const data = projectStore.get(id)
@@ -39,7 +40,15 @@ export function useSubmissionDialog() {
           // dialog.destroyAll()
         },
         onSuccess(data) {
-          console.log(data)
+          // console.log(data)
+          // TODO 桌面端 a 标签打开地址要实现自动通过默认浏览器打开而不是在 electron 应用中打开
+          dialog.success({
+            title: '作品地址',
+            content: () => h('a', { href: data.address, target: '_blank', style: { color: themeVars.value.textColor1 } }, { default: () => `${data.address}` }),
+            onPositiveClick(e) {
+              dialog.destroyAll()
+            },
+          })
           projectStore.addSubmissionHistory({id, ...data}, userStore.account, userStore.hostname)
         }
       })

@@ -218,6 +218,12 @@ onUnmounted(() => {
             <n-button block @click="handleCreate()">创建</n-button>
           </n-space>
         </n-tab-pane>
+        <!-- 投稿历史 -->
+        <n-tab-pane name="submitHistory" tab="投稿历史">
+          <div v-for="item in data?.submissionHistory || []" :key="item.key">
+            <a class="submission-adress" :href="item.address" target="_blank" rel="noopener noreferrer">{{ item.address }}</a>
+          </div>
+        </n-tab-pane>
       </n-tabs>
     </n-drawer-content>
   </n-drawer>
@@ -262,6 +268,10 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
   }
+}
+
+.submission-adress {
+  color: var(--dpz-textColor);
 }
 
 @keyframes rotate {

@@ -37,6 +37,7 @@ interface AddSubmissionHistoryDto {
   id: string
   receiver: string
   editionId: string
+  address: string
   code: string
   title: string
   content?: string
@@ -85,7 +86,7 @@ export const project = (axios: AxiosInstance) => {
       return axios.patch<T>('/project/update/speaker/history', dto)
     },
     addSubmissionHistory<T>(dto: AddSubmissionHistoryDto) {
-      return axios.post<T>('/project/update/submission/add', dto)
+      return axios.patch<T>('/project/update/submission/add', dto)
     },
     removeSubmissionHistory<T>(id: string, key: string) {
       return axios.delete<T>('/project/update/submission/remove' + id + '&' + key)

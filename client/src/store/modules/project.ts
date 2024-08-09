@@ -44,6 +44,7 @@ interface SubmissionHistory {
   key: string
   receiver: string
   editionId: string
+  address: string
   code: string
   title: string
   content?: string

@@ -126,38 +126,24 @@ function handleSelect(value: Array<any> | string | number | null, option: Select
 
 /** 历史记录 */
 const isHistoryOptionsShow = ref(false)
-const historyValue = ref('key123456a')
+const historyValue = ref()
 function handleHistoryOptionsShow(value: boolean) {
   isHistoryOptionsShow.value = !isHistoryOptionsShow.value
 }
 const historyOptions = computed(() => {
-  // return projectStore.get(props.id)?.submissionHistory.map(item => {
-  //   return {
-  //     label: item.title,
-  //     value: item.key
-  //   }
-  // })
-  // 标题 推送目的 版号 推送时间
-  return [
-    {
-      title: '标题dasdasdsadwqdwqdqweqwdasdasdsadwqdwqdqweqwdasdasdsadwqdwqdqweqw标题标题',
-      editionId: 'dasdasdsadwqdwqdqweqw',
-      site: 'https://www.bilibili.com/video/BV1Ka411N7VN/BV1Ka411N7VN/BV1Ka411N7VN/BV1Ka411N7VN',
-      label: `投稿时间：${'2024-6-27 8:08'}`,
-      value: 'key123456a',
-      code: 'key123456qwqw',
-      date: '2024-6-27 8:08'
-    },
-    {
-      title: '标题dasdasdsadwqdwqdqweqwdasdasdsadwqdwqdqweqwdasdasdsadwqdwqdqweqw标题标题',
-      editionId: 'dasdasdsadwqdwqdqweqw',
-      site: 'https://www.bilibili.com/video/BV1Ka411N7VN/BV1Ka411N7VN/BV1Ka411N7VN/BV1Ka411N7VN',
-      label: '2024-6-27 8:08',
-      value: 'key123456fd',
-      code: 'key123456qwqw',
-      date: '2024-6-27 8:08'
+  return projectStore.get(props.id)?.submissionHistory.map(item => {
+    return {
+      title: item.title,
+      editionId: item.editionId,
+      address: item.address,
+      site: item.receiver,
+      label: item.title + ' | ' + item.date,
+      value: item.key,
+      code: item.code,
+      date: item.date
     }
-  ]
+  })
+  // 标题 推送目的 版号 推送时间
 })
 const renderOption = (props: { node: VNode; option: SelectOption | SelectGroupOption; selected: boolean }) => {
   const { option } = props
@@ -168,10 +154,12 @@ const renderOption = (props: { node: VNode; option: SelectOption | SelectGroupOp
     editionId: option.editionId as string,
     date: option.date as string,
     onSelected: () => {
+      // console.log(option)
       model.value.site = option.site as string
       model.value.code = option.code as string
       model.value.editionId = option.editionId as string
       isHistoryOptionsShow.value = false
+      historyValue.value = option.value
     },
     onClose: () => {
       //
@@ -205,15 +193,16 @@ function handleSubmit(e: MouseEvent) {
           blog: model.value.blog,
           msg: model.value.msg
         })
-        .then(editionId => {
+        .then(result => {
           emits('response', {
             error: false,
             msg: '投稿成功'
           })
-          console.log(editionId)
+          console.log(result.editionId, result.address)
           emits('success', {
             receiver: model.value.site || '',
-            editionId: editionId,
+            editionId: result.editionId,
+            address: result.address,
             code: model.value.code || '',
             title: model.value.title || '',
             penname: model.value.penname || '',

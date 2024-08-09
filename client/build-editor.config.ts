@@ -32,7 +32,7 @@ export default defineConfig(({ command, mode }) => {
       // sourcemap: true,
       // target: 'esnext',
       minify: false,
-      outDir: '../blog/editor', //输出文件名称
+      outDir: 'dist-editor', //输出文件名称
       lib: {
         entry: resolve(__dirname, 'src', 'editor', 'index.ts'), //指定组件编译入口文件
         name: 'tapenote-editor',
