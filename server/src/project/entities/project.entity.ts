@@ -1,6 +1,7 @@
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { Folder } from 'src/folder/entities/folder.entity'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
+import { Snapshot } from 'src/snapshot/entities/snapshot.entity'
 import { User } from 'src/user/entities/user.entity'
 import {
   AfterUpdate,
@@ -64,14 +65,18 @@ export class Project {
   @ManyToOne(() => Folder, folder => folder.projects)
   folder: Folder
 
+  @OneToMany(() => Snapshot, snapshot => snapshot.project)
+  snapshots: Snapshot[]
+
   @Column({
     type: 'varchar'
   })
   lib: LibraryEnum
 
   @Column({
-    type: 'int',
-    default: 0
+    type: 'varchar',
+    default: '0.0.1',
+    length: 18
   })
   eidtorVersion: string
 
@@ -89,19 +94,21 @@ export class Project {
   cover: string // 封面
 
   @Column({
-    type: 'text'
-    // default: '未命名文档'
+    type: 'varchar',
+    length: 255,
+    default: ''
   })
   title: string // 标题
 
   @Column({
     type: 'text'
-    // default: ''
   })
   content: string // 内容
 
   @Column({
-    type: 'text'
+    type: 'varchar',
+    length: 255,
+    default: ''
   })
   abbrev: string // 内容缩略
 
@@ -232,32 +239,32 @@ export class Project {
   @UpdateDateColumn()
   updateAt: Date
 
-  @Column({
-    type: 'simple-json',
-    nullable: true
-    // default: JSON.stringify({
-    //   version: 0,
-    //   date: new Date(),
-    //   remarks: ''
-    // })
-  })
-  snapshot: {
-    version: number // 版本号
-    date: Date // 版本时间
-    remarks: string // 备注
-  }
+  // @Column({
+  //   type: 'simple-json',
+  //   nullable: true
+  //   // default: JSON.stringify({
+  //   //   version: 0,
+  //   //   date: new Date(),
+  //   //   remarks: ''
+  //   // })
+  // })
+  // snapshot: {
+  //   version: number // 版本号
+  //   date: Date // 版本时间
+  //   remarks: string // 备注
+  // }
 
-  @Column({
-    type: 'boolean',
-    default: false
-  })
-  isSnapshot: boolean // 是否属于快照（快照不可编辑，且不会显示在项目列表中）
+  // @Column({
+  //   type: 'boolean',
+  //   default: false
+  // })
+  // isSnapshot: boolean // 是否属于快照（快照不可编辑，且不会显示在项目列表中）
 
-  @Column({
-    type: 'boolean',
-    default: false
-  })
-  isReplica: boolean // 是否属于快照的副本（快照副本可编辑，但不会显示在项目列表中）
+  // @Column({
+  //   type: 'boolean',
+  //   default: false
+  // })
+  // isReplica: boolean // 是否属于快照的副本（快照副本可编辑，但不会显示在项目列表中）
 
   /** 详情 */
   @Column({

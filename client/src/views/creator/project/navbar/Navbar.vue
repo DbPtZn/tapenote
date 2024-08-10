@@ -14,6 +14,7 @@ import { useSubmissionDialog } from './hooks/useSubmissionDialog'
 import { TooltipButton } from './private/_index'
 import { AutorenewOutlined, DownloadRound } from '@vicons/material'
 import { useDownloadDialog } from './hooks/useDownload'
+import SubmissionCard from './private/SubmissionCard.vue'
 const bridge = inject('bridge') as Bridge
 const shell = useShell<CreatorShell>()
 const props = defineProps<{
@@ -28,6 +29,7 @@ const dialog = useDialog()
 const message = useMessage()
 const { folderStore, projectStore, userListStore } = useStore()
 const data = computed(() => projectStore.get(props.id))
+const submissionHistory = computed(() => data.value?.submissionHistory.sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf()))
 const rootRef = ref()
 const subs: Subscription[] = []
 const state = reactive({
@@ -119,9 +121,7 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
 }
 const { handleExpandShareDialog  } = useSubmissionDialog()
 const { handleDownloadDialog } = useDownloadDialog()
-onMounted(() => {
-  // rootRef.value.innerHTML = '&#x1F601'
-})
+// onMounted(() => {})
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
 }) 
@@ -219,10 +219,12 @@ onUnmounted(() => {
           </n-space>
         </n-tab-pane>
         <!-- 投稿历史 -->
-        <n-tab-pane name="submitHistory" tab="投稿历史">
-          <div v-for="item in data?.submissionHistory || []" :key="item.key">
-            <a class="submission-adress" :href="item.address" target="_blank" rel="noopener noreferrer">{{ item.address }}</a>
-          </div>
+        <n-tab-pane v-if="lib !== LibraryEnum.PROCEDURE" name="submitHistory" tab="投稿历史">
+          <SubmissionCard
+            v-for="item in submissionHistory || []"
+            :key="item.key"
+            :data="item"
+          />
         </n-tab-pane>
       </n-tabs>
     </n-drawer-content>
@@ -268,10 +270,6 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
   }
-}
-
-.submission-adress {
-  color: var(--dpz-textColor);
 }
 
 @keyframes rotate {

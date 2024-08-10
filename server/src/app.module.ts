@@ -22,6 +22,7 @@ import { RequestScopedService } from './request-scoped/request-scoped.service'
 import { RequestScopedModule } from './request-scoped/request-scoped.module'
 import { SpeakerModule } from './speaker/speaker.module'
 import { parentPort } from 'worker_threads'
+import { SnapshotModule } from './snapshot/snapshot.module';
 @Module({
   imports: [
     UserModule,
@@ -106,7 +107,8 @@ import { parentPort } from 'worker_threads'
     UserLoggerModule,
     LoggerModule,
     RequestScopedModule,
-    SpeakerModule
+    SpeakerModule,
+    SnapshotModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestScopedService]
