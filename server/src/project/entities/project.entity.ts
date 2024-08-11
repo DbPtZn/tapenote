@@ -69,7 +69,8 @@ export class Project {
   snapshots: Snapshot[]
 
   @Column({
-    type: 'varchar'
+    type: 'varchar',
+    length: 18
   })
   lib: LibraryEnum
 
@@ -114,6 +115,7 @@ export class Project {
 
   @Column({
     type: 'varchar',
+    length: 12,
     default: RemovedEnum.NEVER
   })
   removed: RemovedEnum
@@ -127,7 +129,6 @@ export class Project {
   @Column({
     type: 'simple-array',
     nullable: true
-    // default: JSON.stringify([])
   })
   sequence: string[]
 
@@ -135,7 +136,6 @@ export class Project {
   @Column({
     type: 'simple-array',
     nullable: true
-    // default: JSON.stringify([])
   })
   removedSequence: string[]
 
@@ -149,23 +149,11 @@ export class Project {
   @Column({
     type: 'simple-json',
     nullable: true
-    // default: JSON.stringify({
-    //   human: '',
-    //   machine: ''
-    // })
   })
   speakerHistory: { human: string; machine: string } // 记录项目中最近使用的 speaker 仅在 procedure 模式下使用
 
   @Column({
     type: 'simple-json',
-    // default: JSON.stringify({
-    //   id: '',
-    //   picture: '',
-    //   name: '',
-    //   audio: '',
-    //   volumn: 1,
-    //   duration: 0
-    // }),
     nullable: true
   })
   bgm: ProjectBGM // 背景音乐, 一般会先查询项目本地的 bgm.audio, 如果没有，则通过 bgmid 到 bgm 库查询，如果都没有，则项目没有配置 bgm
@@ -238,33 +226,6 @@ export class Project {
 
   @UpdateDateColumn()
   updateAt: Date
-
-  // @Column({
-  //   type: 'simple-json',
-  //   nullable: true
-  //   // default: JSON.stringify({
-  //   //   version: 0,
-  //   //   date: new Date(),
-  //   //   remarks: ''
-  //   // })
-  // })
-  // snapshot: {
-  //   version: number // 版本号
-  //   date: Date // 版本时间
-  //   remarks: string // 备注
-  // }
-
-  // @Column({
-  //   type: 'boolean',
-  //   default: false
-  // })
-  // isSnapshot: boolean // 是否属于快照（快照不可编辑，且不会显示在项目列表中）
-
-  // @Column({
-  //   type: 'boolean',
-  //   default: false
-  // })
-  // isReplica: boolean // 是否属于快照的副本（快照副本可编辑，但不会显示在项目列表中）
 
   /** 详情 */
   @Column({

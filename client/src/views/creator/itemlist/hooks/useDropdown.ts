@@ -1,7 +1,7 @@
 import { EditorLocation } from '@/components'
 import useStore, { Subfile, Subfolder, TreeNode } from '@/store'
 import { Ref, nextTick, ref, h, reactive, computed, Component } from 'vue'
-import * as UUID from 'uuid'
+// import * as UUID from 'uuid'
 import { LibraryEnum } from '@/enums'
 import { NIcon, NInput, NTree, useDialog, useMessage } from 'naive-ui'
 import { DialogApiInjection } from 'naive-ui/es/dialog/src/DialogProvider'
@@ -89,7 +89,7 @@ export function useItemListDropDown() {
       // 移动
       {
         label: '移动到',
-        key: UUID.v4(),
+        key: 'move',
         show: dropdownState.type && dropdownState.type !== 'list',
         props: {
           onClick: () => {
@@ -101,7 +101,7 @@ export function useItemListDropDown() {
       // 复制
       {
         label: '复制',
-        key: UUID.v4(),
+        key: 'copy',
         show: dropdownState.type === 'file',
         props: {
           onClick: () => {
@@ -111,6 +111,7 @@ export function useItemListDropDown() {
           }
         }
       },
+
       // 剪切 (现有【移动】功能已经满足基本剪切功能，所以暂不实现剪切功能)
       // {
       //   label: '剪切',
@@ -127,7 +128,7 @@ export function useItemListDropDown() {
       // 粘贴
       {
         label: '粘贴',
-        key: UUID.v4(),
+        key: 'paste',
         disabled: !pastable,
         props: {
           onClick: () => {
@@ -140,7 +141,7 @@ export function useItemListDropDown() {
       // 重命名
       {
         label: '重命名',
-        key: UUID.v4(),
+        key: 'rename',
         show: dropdownState.type && dropdownState.type === 'folder',
         props: {
           onClick: () => {
@@ -151,7 +152,7 @@ export function useItemListDropDown() {
       // 生成微课
       {
         label: '生成课程项目',
-        key: UUID.v4(),
+        key: 'create-course',
         show: dropdownState.lib && dropdownState.lib === LibraryEnum.PROCEDURE && dropdownState.type === 'file',
         props: {
           onClick: () => {
@@ -163,12 +164,22 @@ export function useItemListDropDown() {
       // 创建微课编辑文件
       {
         label: '创建工程项目',
-        key: UUID.v4(),
+        key: 'create-procedure',
         show: dropdownState.lib && dropdownState.lib === LibraryEnum.NOTE && dropdownState.type === 'file',
         props: {
           onClick: () => {
             const file = dropdownState.target as Subfile
             createAdvancedProject(file.title, file.id, dropdownState.lib!)
+          }
+        }
+      },
+      {
+        label: '创建版本快照',
+        key: 'create-snapshot',
+        props: {
+          onClick: () => {
+            const file = dropdownState.target as Subfile
+            createSnapshot(file.id)
           }
         }
       },
@@ -188,7 +199,7 @@ export function useItemListDropDown() {
       // 移除
       {
         label: '移除',
-        key: UUID.v4(),
+        key: 'remove',
         show: dropdownState.type && dropdownState.type !== 'list',
         props: {
           onClick: () => {
@@ -333,6 +344,14 @@ export function useItemListDropDown() {
         }),
       maskClosable: true,
       action: () => ''
+    })
+  }
+
+  function createSnapshot(projectId: string) {
+    projectStore.createSnapshot(projectId, account.value, hostname.value).then(res => {
+      message.success('快照创建成功！')
+    }).catch(err => {
+      message.error('快照创建失败！')
     })
   }
 

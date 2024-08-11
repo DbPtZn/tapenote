@@ -9,12 +9,14 @@ import { FolderTreeSelect, UnallowUserTip } from '../../_common'
 import { CreatorShell } from '../../shell'
 import { useShell } from '@/renderer'
 import dayjs from 'dayjs'
-import { Flip, Subtitles, SubtitlesOff, Download, MoreHoriz, TextSharp, DpzButton } from '@/components'
+import { Flip, Subtitles, SubtitlesOff, MoreHoriz, TextSharp, DpzButton } from '@/components'
 import { useSubmissionDialog } from './hooks/useSubmissionDialog'
 import { TooltipButton } from './private/_index'
 import { AutorenewOutlined, DownloadRound } from '@vicons/material'
 import { useDownloadDialog } from './hooks/useDownload'
 import SubmissionCard from './private/SubmissionCard.vue'
+import SnapshotCard from './private/SnapshotCard.vue'
+type Snapshot = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['snapshots']>[0]
 const bridge = inject('bridge') as Bridge
 const shell = useShell<CreatorShell>()
 const props = defineProps<{
@@ -125,6 +127,42 @@ const { handleDownloadDialog } = useDownloadDialog()
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
 }) 
+
+function handleTabsUpdate(value: string) {
+  if(value === 'snapshot') {
+    projectStore.getSnapshots(props.id, props.account, props.hostname)
+  }
+}
+const snapshotMethods = {
+  handleApply: async (snapshot: Snapshot, isAutoSave: boolean) => {
+    try {
+      if(isAutoSave) await projectStore.createSnapshot(props.id, props.account, props.hostname)
+      await projectStore.applySnapshot(props.id, snapshot.id, props.account, props.hostname).then(content => {
+        // replaceContent 会触发 onChange 事件, 但后端的 content 是已经最新的
+        bridge.editor?.replaceContent(content)
+        if(data.value?.id) {
+          folderStore.updateCard(data.value.title, data.value?.id, 'title', data.value?.folderId)
+          folderStore.updateCard(content, data.value?.id, 'content', data.value?.folderId)
+          const timer = setTimeout(() => {
+            projectStore.get(props.id)!.isContentUpdating = false
+            clearTimeout(timer)
+          }, 500)
+        }
+      })
+    } catch (error) {
+      console.log(error)
+      message.error('应用历史快照时发生错误！')
+    } 
+  },
+  handleDetail: (snapshot: Snapshot) => {
+    projectStore.getSnapshot(snapshot.id, props.account, props.hostname).then(res => {
+      console.log(res)
+    })
+  },
+  handleDelete: (snapshot: Snapshot) => {
+    projectStore.deleteSnapshot(props.id, snapshot.id, props.account, props.hostname)
+  },
+}
 </script>
 
 <template>
@@ -134,7 +172,7 @@ onUnmounted(() => {
     </div>
     <div class="right-nav">
       <div class="saving">
-        <span class="saving-text">{{ state.isSaving ? '正在保存 ... ' : '' }}</span>
+        <span class="saving-text">{{ state.isSaving ? '正在保存 ... ' : `${ data?.isContentUpdating || data?.isTitleUpdating ? '未保存' : '' }` }}</span>
         <n-icon v-if="state.isSaving" class="rotate" :component="AutorenewOutlined" :size="22" />
       </div>
       <!-- <DpzButton v-if="lib !== LibraryEnum.COURSE" >
@@ -162,7 +200,7 @@ onUnmounted(() => {
   <!-- 设置 -->
   <n-drawer v-if="bridge.habit" v-model:show="state.isDrawShow" :width="320" placement="right"  :to="bridge.projectRef!" :disabled="state.isReadonly">
     <n-drawer-content :style="{ zIndex: '1000' }">
-      <n-tabs type="line" animated justify-content="space-evenly">
+      <n-tabs type="line" animated justify-content="space-evenly" @update:value="handleTabsUpdate">
         <n-tab-pane name="setting" tab="页面设置">
           <n-space vertical size="large">
             <n-space :justify="'space-between'" :align="'center'">
@@ -217,6 +255,16 @@ onUnmounted(() => {
             <FolderTreeSelect :lib="lib === LibraryEnum.PROCEDURE ? LibraryEnum.COURSE : LibraryEnum.PROCEDURE" @on-update-value="handleDirSelected" />
             <n-button block @click="handleCreate()">创建</n-button>
           </n-space>
+        </n-tab-pane>
+        <n-tab-pane name="snapshot" tab="历史快照">
+          <SnapshotCard
+            v-for="item in data?.snapshots || []"
+            :key="item.id"
+            :data="item"
+            @apply="snapshotMethods.handleApply"
+            @detail="snapshotMethods.handleDetail"
+            @delete="snapshotMethods.handleDelete"
+          />
         </n-tab-pane>
         <!-- 投稿历史 -->
         <n-tab-pane v-if="lib !== LibraryEnum.PROCEDURE" name="submitHistory" tab="投稿历史">

@@ -93,22 +93,22 @@ export class Snapshot {
   abbrev: string // 内容缩略
 
   /** ------------------------------------------ Procedure -------------------------------------------- */
-  @OneToMany(() => Fragment, fragment => fragment.project)
-  fragments: Fragment[]
+  // @OneToMany(() => Fragment, fragment => fragment.project)
+  // fragments: Fragment[]
 
   /** 文档中的正常片段的顺序 */
-  @Column({
-    type: 'simple-array',
-    nullable: true
-  })
-  sequence: string[]
+  // @Column({
+  //   type: 'simple-array',
+  //   nullable: true
+  // })
+  // sequence: string[]
 
   /** 文档中的被移除片段的顺序 */
-  @Column({
-    type: 'simple-array',
-    nullable: true
-  })
-  removedSequence: string[]
+  // @Column({
+  //   type: 'simple-array',
+  //   nullable: true
+  // })
+  // removedSequence: string[]
 
   /** ------------------------------------------ Procedure -------------------------------------------- */
   @Column({
@@ -168,12 +168,6 @@ export class Snapshot {
 
   /** ------------------------------------------  course  -------------------------------------------- */
 
-  @CreateDateColumn()
-  createAt: Date
-
-  @UpdateDateColumn()
-  updateAt: Date
-
   /** 详情 */
   @Column({
     type: 'simple-json',
@@ -187,12 +181,12 @@ export class Snapshot {
     filesize: number // 文件大小(包含音频文件、文本、图片)
   }
 
-  /** 预留字段 */
-  @Column({
-    type: 'varchar',
-    nullable: true
-  })
-  reserved: string
+
+  @CreateDateColumn()
+  createAt: Date
+
+  @UpdateDateColumn()
+  updateAt: Date
 
   /** 插入实体时设置创建时间 （仅在使用 save 方法进行更新时生效） */
   @BeforeInsert()

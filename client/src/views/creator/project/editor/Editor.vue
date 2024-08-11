@@ -72,6 +72,7 @@ useEditor({
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
       editor.onChange.subscribe(() => {
+        // console.log('content change')
         data.value!.isContentUpdating = true
       }),
       editor.onSave.subscribe(() => {
@@ -94,7 +95,14 @@ useEditor({
       editor.onChange.pipe(debounceTime(saveInterval.value)).subscribe(() => {
         if(props.readonly()) return
         const content = editor.getHTML()
+        // console.log(lastContent === content)
+        if(content === data.value!.content) {
+          // 当前内容与上次内容相同，无需保存（应用快照时不会再触发保存）
+          data.value!.isContentUpdating = false
+          return 
+        }
         if(lastContent === content) {
+          // console.log('内容未改变，无需保存')
           data.value!.isContentUpdating = false
           return
         }

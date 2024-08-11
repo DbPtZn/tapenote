@@ -7,6 +7,7 @@ import { folder } from './folder'
 import { trash } from './trash'
 import { fragment } from './fragment'
 import { project } from './project'
+import { snapshot } from './snapshot'
 import { synthesizer } from './synthesizer'
 import { timbre } from './timbre'
 import { bgm } from './bgm'
@@ -17,6 +18,7 @@ export class CreatorApi {
   user: ReturnType<typeof user>
   folder: ReturnType<typeof folder>
   project: ReturnType<typeof project>
+  snapshot: ReturnType<typeof snapshot>
   synthesizer: ReturnType<typeof synthesizer>
   fragment: ReturnType<typeof fragment>
   trash: ReturnType<typeof trash>
@@ -85,6 +87,7 @@ export class CreatorApi {
     this.timbre = timbre(caxios)
     this.speaker = speaker(caxios)
     this.bgm = bgm(caxios)
+    this.snapshot = snapshot(caxios)
   }
 }
 

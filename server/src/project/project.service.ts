@@ -20,7 +20,6 @@ import { LoggerService } from 'src/logger/logger.service'
 import { FolderService } from 'src/folder/folder.service'
 import { UpdateSpeakerHistoryDto } from './dto/update.dto'
 import { AddSubmissionHistoryDto } from './dto/add-submission.dts'
-import crypto from 'crypto'
 /** 继承数据 */
 interface InheritDto {
   title?: string

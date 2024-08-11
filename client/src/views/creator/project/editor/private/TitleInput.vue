@@ -13,7 +13,7 @@
       >
         {{ titleInput }}
       </div>
-      <div v-if="allowSticky" :class="['sticky', isSticky ? 'lock': '']" @click="handleSticky">
+      <div v-if="allowSticky" :class="['sticky', isSticky ? 'lock' : '']" @click="handleSticky">
         <NIcon :component="isSticky ? LockRound : LockOpenRound" :size="24" />
       </div>
     </div>
@@ -25,11 +25,12 @@ import { computed, Ref, ref } from 'vue'
 import { watchOnce } from '@vueuse/core'
 import { useMessage, useThemeVars } from 'naive-ui'
 import { LockRound, LockOpenRound } from '@vicons/material'
+import { watch } from 'vue'
 const themeVars = useThemeVars()
 const message = useMessage()
 const emits = defineEmits<{
-  input: [string], 
-  sticky: [boolean],
+  input: [string]
+  sticky: [boolean]
   enter: []
 }>()
 const props = defineProps({
@@ -59,8 +60,20 @@ const maxWidthVal = computed<string>(() => {
   return props.maxWidth
 })
 const textarea = ref()
-const titleInput: Ref<string> = ref(props.value)
-  const inputEvent = (ev: any) => {
+const titleInput = ref<string>(props.value)
+
+// 应用历史快照时监听变化
+watch(
+  () => props.value,
+  () => {
+    // console.log(props.value)
+    if (titleInput.value !== props.value) {
+      titleInput.value = props.value
+    }
+  }
+)
+
+const inputEvent = (ev: any) => {
   // .trim() 不能在输入的时候清理两段空白字符，这会导致光标跳回起始位置
   let inputVal = ev.target.innerText
   if (inputVal.length > 200) {
@@ -107,7 +120,7 @@ watchOnce(
 <style lang="scss" scoped>
 .title-Sticky {
   position: sticky;
-  top:0px;
+  top: 0px;
   z-index: 1;
   opacity: 0.8;
 }
@@ -123,7 +136,7 @@ watchOnce(
     padding: 18px 6px;
     // margin: 24px 0;
     // background-color: v-bind('themeVars.cardColor');
-    background-color:  v-bind('themeVars.bodyColor');
+    background-color: v-bind('themeVars.bodyColor');
     border-bottom: 1px solid v-bind('themeVars.dividerColor');
     .title-input {
       // width: 100%;
@@ -149,7 +162,7 @@ watchOnce(
   }
 }
 .lock {
-  opacity: 1!important;
+  opacity: 1 !important;
 }
 .sticky {
   opacity: 0;

@@ -2,7 +2,6 @@ import { creator, CreatorApi } from '@/api'
 import { defineStore } from 'pinia'
 import _ from 'lodash'
 import utils from '@/utils'
-import router from '@/router'
 import { LibraryEnum } from '@/enums'
 import useStore from '..'
 interface FragmentSpeaker {
@@ -55,6 +54,16 @@ interface SubmissionHistory {
   date: string
 }
 
+interface Snapshot {
+  id: string
+  cover: string
+  title: string
+  abbrev: string
+  duration: number
+  detail: any
+  createAt: string
+}
+
 export interface Project {
   account: string
   hostname: string
@@ -87,6 +96,8 @@ export interface Project {
 
   detial: Detial
   submissionHistory: SubmissionHistory[]
+
+  snapshots?: Snapshot[]
 
   createAt: string
   updateAt: string
@@ -178,6 +189,9 @@ export const useProjectStore = defineStore('projectStore', {
         }
       })
     },
+    fetch(id: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.get(id)
+    },
     set(data: any, account: string, hostname: string) {
       const item: Project = {
         account: account || '',
@@ -215,7 +229,12 @@ export const useProjectStore = defineStore('projectStore', {
         updateAt: data.updateAt || ''
       }
       // console.log(item)
-      this.data.push(item)
+      const index = this.data.findIndex(i => i.id === item.id && i.account === item.account && i.hostname === item.hostname)
+      if(index === -1) this.data.push(item)
+      else {
+        item.snapshots = this.data[index].snapshots
+        this.data[index] = item
+      }
       return item
     },
     fragmentSpeakerFilter(speaker: FragmentSpeaker, account: string, hostname: string) {
@@ -843,7 +862,64 @@ export const useProjectStore = defineStore('projectStore', {
         updateSequence,
         updateCollapsed
       }
-    }
+    },
+
+    /** ------------------------------- snapshot ------------------------------------------- */
+    /** 创建快照 */
+    createSnapshot(id: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).snapshot.create<Snapshot>(id).then(res => {
+        const index = this.data.findIndex(item => item.id === id)
+        if(index !== -1) {
+          if(!this.data[index].snapshots) this.data[index].snapshots = [res.data] 
+          else this.data[index].snapshots!.unshift(res.data)
+        }
+      })
+    },
+    /** 获取快照 */
+    getSnapshots(id: string, account: string, hostname: string) {
+      const project = this.get(id)
+      if(project && (!project.snapshots || project.snapshots.length === 0)) {
+        return this.creatorApi(account, hostname).snapshot.getAll<Snapshot[]>(id).then(res => {
+          const index = this.data.findIndex(item => item.id === id)
+          if(index !== -1) this.data[index].snapshots = res.data
+        })
+      }
+    },
+    /** 查看快照详情 */
+    getSnapshot(id: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).snapshot.get<Snapshot>(id)
+    },
+    
+    /** 应用快照 */
+    applySnapshot(projectId: string, snapshotId: string, account: string, hostname: string) {
+      return new Promise<string>((resolve, reject) => {
+        this.creatorApi(account, hostname).snapshot.apply(projectId, snapshotId).then(res => {
+          this.fetch(projectId, account, hostname).then(res => {
+            const project = this.set(res.data, account, hostname)
+            resolve(project.content)
+          }).catch(err => {
+            reject(err)
+          })
+        }).catch(err => {
+          reject(err)
+        })
+      })
+    },
+
+    /** 删除快照 */
+    deleteSnapshot(procedureId: string, snapshotId: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).snapshot.delete(snapshotId).then(res => {
+        const index = this.data.findIndex(item => item.id === procedureId)
+        if(index !== -1) {
+          const snapshots = this.data[index]?.snapshots
+          if(snapshots) {
+            const index = snapshots.findIndex(item => item.id === snapshotId)
+            if(index !== -1) snapshots.splice(index, 1)
+          }
+        }
+      })
+    },
+
   },
   getters: {}
 })
