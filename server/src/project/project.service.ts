@@ -21,6 +21,7 @@ import { LoggerService } from 'src/logger/logger.service'
 import { FolderService } from 'src/folder/folder.service'
 import { UpdateSpeakerHistoryDto } from './dto/update.dto'
 import { AddSubmissionHistoryDto } from './dto/add-submission.dts'
+import { SnapshotService } from 'src/snapshot/snapshot.service'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -59,6 +60,7 @@ export class ProjectService {
     private readonly dataSource: DataSource,
     private readonly storageService: StorageService,
     private readonly ffmpegService: FfmpegService,
+    private readonly snapshotService: SnapshotService,
     private readonly userlogger: UserLoggerService,
     private readonly logger: LoggerService
   ) {
@@ -174,6 +176,10 @@ export class ProjectService {
       _audiopath && (result.audio = _audiopath)
       if (!result) {
         throw new Error(`创建项目失败！`)
+      }
+      // 创建课程的时候会自动创建一个快照版本
+      if (lib === LibraryEnum.COURSE) {
+        await this.snapshotService.create(result.id, userId)
       }
       this.userlogger.log(`创建 [${lib}] 新项目成功，项目id：${result.id}`)
       return result
@@ -309,6 +315,13 @@ export class ProjectService {
       // console.log(content)
       // console.log(course)
       const result = await this.projectsRepository.save(course)
+      if (result) {
+        const snapshot = await this.snapshotService.create(result.id, userId)
+        if (snapshot) {
+          result.snapshotId = snapshot.id
+          await this.projectsRepository.save(result)
+        }
+      }
       result.audio = audiopath
       return result
     } catch (error) {

@@ -11,9 +11,9 @@ export class SnapshotController {
   @Post(`${REST.W}/:id`)
   async create(@Param('id') id: string, @Req() req, @Res() res) {
     try {
-      console.log(id)
+      // console.log(id)
       const snapshot = await this.snapshotService.create(id, req.user.id)
-      console.log(snapshot)
+      // console.log(snapshot)
       res.status(201).send(snapshot)
     } catch (error) {
       console.log(error)

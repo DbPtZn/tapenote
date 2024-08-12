@@ -3,13 +3,16 @@ import useStore from '@/store'
 import { DropdownOption, NCheckbox, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import dayjs from 'dayjs'
 import { MoreVertRound } from '@vicons/material'
-import { h } from 'vue';
+import { h } from 'vue'
+import { LibraryEnum } from '@/enums'
 type Snapshot = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['snapshots']>[0]
 const props = defineProps<{
+  lib: LibraryEnum
   data: Snapshot
+  current: boolean
 }>()
 const emits = defineEmits<{
-  detail: [Snapshot],
+  detail: [Snapshot]
   apply: [data: Snapshot, isAutoSave: boolean]
   delete: [Snapshot]
 }>()
@@ -20,6 +23,7 @@ const options: DropdownOption[] = [
   {
     label: '查看详情',
     key: 'detail',
+    disabled: true,
     props: {
       onClick: () => {
         // console.log('查看详情')
@@ -28,19 +32,25 @@ const options: DropdownOption[] = [
     }
   },
   {
-    label: '应用快照',
+    label: `${props.lib === LibraryEnum.COURSE ? '应用版本' : '应用快照'}`,
     key: 'apply',
     props: {
       onClick: () => {
-        let isAutoSave = true 
+        let isAutoSave = props.lib !== LibraryEnum.COURSE
         dialog.info({
           title: '确定应用快照？',
-          content: () => h('div', {}, [
-            // h('p', {}, ['注意：应用快照后会覆盖当前项目内容，想保留当前项目内容可以勾选下方选项']),
-            h(NCheckbox, { defaultChecked: isAutoSave, onUpdateChecked: (checked) => isAutoSave = checked  }, {
-              default: () => '自动为当前项目创建历史快照'
-            })
-          ]),
+          content: () =>
+            props.lib !== LibraryEnum.COURSE
+              ? h('div', {}, [
+                  h(
+                    NCheckbox,
+                    { defaultChecked: isAutoSave, onUpdateChecked: checked => (isAutoSave = checked) },
+                    {
+                      default: () => '自动为当前项目创建历史快照'
+                    }
+                  )
+                ])
+              : '',
           positiveText: '确定',
           negativeText: '取消',
           onPositiveClick: () => {
@@ -94,7 +104,10 @@ const options: DropdownOption[] = [
       <n-text class="content" :depth="3"> {{ data.abbrev }} </n-text>
     </template>
     <template #footer>
-      <n-text :class="['footer']" :depth="3">{{ dayjs(data.createAt).format('YY-MM-DD HH:mm:ss') }}</n-text>
+      <div class="footer">
+        <n-text :class="['date']" :depth="3">{{ dayjs(data.createAt).format('YY-MM-DD HH:mm:ss') }}</n-text>
+        <n-text :class="['current']" :depth="3">{{ current ? '当前版本' : '' }}</n-text>
+      </div>
     </template>
   </n-card>
 </template>
@@ -160,6 +173,9 @@ const options: DropdownOption[] = [
   font-size: 12px;
 }
 .footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   font-size: 12px;
 }
 </style>

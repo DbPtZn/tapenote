@@ -2,7 +2,7 @@
 import { LibraryEnum } from '@/enums'
 import useStore from '@/store'
 import { useThemeVars, useDialog, useMessage, NIcon } from 'naive-ui'
-import { computed, inject, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, h, inject, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { Bridge } from '../bridge'
 import { Subscription } from '@tanbo/stream'
 import { FolderTreeSelect, UnallowUserTip } from '../../_common'
@@ -125,9 +125,7 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
 }
 const { handleExpandShareDialog  } = useSubmissionDialog()
 const { handleDownloadDialog } = useDownloadDialog()
-// onMounted(() => {
-//   console.log(bridge.projectRef)
-// })
+// onMounted(() => {})
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
 }) 
@@ -155,6 +153,7 @@ const snapshotMethods = {
         //     clearTimeout(timer)
         //   }, 500)
         // }
+        // 重载 Editor 组件实现数据刷新
         bridge.handleEditorReload()
         if(data.value?.id) {
           folderStore.updateCard(data.value.title, data.value.id, 'title', data.value?.folderId)
@@ -178,14 +177,17 @@ const snapshotMethods = {
 function handleHistoryCourseClick(course: HistoryCourse) {
   dialog.create({
     title: '创建课程新版本',
-    content: '在目标课程中创建新版本？（旧版本自动保存为历史快照）',
+    content: () => h('div', null, [
+      h('p', null, ['是否在目标课程中创建新版本？']),
+      h('span', null, ['(旧版本可在目标课程版本列表中查看/切换)'])
+    ]),
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        // console.log(course)
-        await projectStore.createSnapshot(course.id, props.account, props.hostname)
+        // 后端创建 course 时会自动创建相应的 snapshot
         await projectStore.coverCourse(course.id, props.id, props.account, props.hostname)
+        shell.workbench.setById({ id: course.id, lib: LibraryEnum.COURSE, account: props.account, hostname: props.hostname })
       } catch (error) {
         message.error('创建课程新版本时发生错误！')
       }
@@ -301,11 +303,13 @@ function handleHistoryCourseClick(course: HistoryCourse) {
           </div>
 
         </n-tab-pane>
-        <n-tab-pane name="snapshot" tab="历史快照">
+        <n-tab-pane name="snapshot" :tab="lib === LibraryEnum.COURSE ? '版本' : '历史快照'">
           <SnapshotCard
             v-for="item in data?.snapshots || []"
             :key="item.id"
+            :lib="lib"
             :data="item"
+            :current="data?.snapshotId === item.id"
             @apply="snapshotMethods.handleApply"
             @detail="snapshotMethods.handleDetail"
             @delete="snapshotMethods.handleDelete"

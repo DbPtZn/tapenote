@@ -166,6 +166,12 @@ export class Project {
   fromProcedureId: string
 
   @Column({
+    type: 'uuid',
+    nullable: true
+  })
+  snapshotId: string // 当前版本
+
+  @Column({
     type: 'text',
     nullable: true
     // default: ''

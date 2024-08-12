@@ -93,12 +93,15 @@ export interface Project {
   content: string
   abbrev: string
 
+  fromNoteId?: string
   fragments: Fragment[]
   sequence: Array<string>
   removedSequence: Array<string>
   speakerRecorder: string[]
   speakerHistory: { human: string; machine: string }
 
+  fromProcedureId?: string
+  snapshotId?: string
   audio: string
   duration: number
   promoterSequence: Array<string>
@@ -240,6 +243,9 @@ export const useProjectStore = defineStore('projectStore', {
         annotations: data.annotations || [],
         detial: data.detial || { penname: '', email: '', homepage: '', wordage: 0, filesize: 0 },
         submissionHistory: data.submissionHistory || [],
+        fromNoteId: data.fromNoteId || '',
+        fromProcedureId: data.fromProcedureId || '',
+        snapshotId: data.snapshotId || '',
         createAt: data.createAt || '',
         updateAt: data.updateAt || ''
       }
@@ -247,7 +253,8 @@ export const useProjectStore = defineStore('projectStore', {
       const index = this.data.findIndex(i => i.id === item.id && i.account === item.account && i.hostname === item.hostname)
       if(index === -1) this.data.push(item)
       else {
-        item.snapshots = this.data[index].snapshots
+        // 存在则更新 (覆盖更新 course 的情况不需要复制 snapshots，这样打开 course 的时候可以重新获取 snapshots)
+        if(item.lib !== LibraryEnum.COURSE) item.snapshots = this.data[index].snapshots
         this.data[index] = item
       }
       return item
@@ -941,8 +948,15 @@ export const useProjectStore = defineStore('projectStore', {
         if(index !== -1) this.data[index].historyCourses = res.data
       })
     },
-    coverCourse(courseId: string, procedureId: string, account: string, hostname: string) {
-      return this.creatorApi(account, hostname).project.coverCourse(courseId, procedureId)
+    async coverCourse(courseId: string, procedureId: string, account: string, hostname: string) {
+      try {
+        await this.creatorApi(account, hostname).project.coverCourse(courseId, procedureId)
+        await this.fetch(courseId, account, hostname).then(res => {
+          this.set(res.data, account, hostname)
+        })
+      } catch (error) {
+        console.log(error)
+      }
     }
   },
   getters: {}

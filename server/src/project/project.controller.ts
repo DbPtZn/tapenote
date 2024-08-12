@@ -204,6 +204,7 @@ export class ProjectController {
   ) {
     try {
       const result = await this.projectService.coverCourse(courseId, procedureId, req.user.id, req.user.dirname)
+      result.audio = '/public' + result.audio.split('public')[1] || ''
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)

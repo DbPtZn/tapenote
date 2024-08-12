@@ -30,6 +30,7 @@ export class SnapshotService {
       snapshot.userId = project.userId
       snapshot.project = project
       snapshot.eidtorVersion = project.eidtorVersion
+      // snapshot.projectId = project.id
       snapshot.cover = project.cover
       snapshot.title = project.title
       snapshot.content = project.content
@@ -95,7 +96,7 @@ export class SnapshotService {
 
   async apply(projectId: string, snapshotId: string, userId: string) {
     try {
-      console.log(projectId, snapshotId, userId)
+      // console.log(projectId, snapshotId, userId)
       const project = await this.projectsRepository.findOne({
         where: { id: projectId, userId },
       })
@@ -106,7 +107,7 @@ export class SnapshotService {
       if (snapshot.project.id !== projectId) {
         throw new Error('快照 id 与项目 id 不匹配')
       }
-
+      
       project.cover = snapshot.cover
       project.title = snapshot.title
       project.content = snapshot.content

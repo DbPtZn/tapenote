@@ -9,6 +9,7 @@ import { UserLoggerModule } from 'src/user-logger/userLogger.module'
 import { FolderModule } from 'src/folder/folder.module'
 import { FragmentModule } from 'src/fragment/fragment.module'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
+import { SnapshotModule } from 'src/snapshot/snapshot.module'
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { Fragment } from 'src/fragment/entities/fragment.entity'
     // forwardRef(() => FragmentModule),
     StorageModule,
     FfmpegModule,
+    SnapshotModule,
     UserLoggerModule
   ],
   controllers: [ProjectController],

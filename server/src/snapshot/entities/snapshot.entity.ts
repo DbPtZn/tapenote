@@ -66,6 +66,12 @@ export class Snapshot {
   })
   eidtorVersion: string
 
+  // @Column({
+  //   type: 'varchar',
+  //   length: 18
+  // })
+  // lib: LibraryEnum
+
   @Column({
     type: 'varchar',
     length: 255,
