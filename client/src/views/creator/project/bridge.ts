@@ -33,7 +33,8 @@ export class Bridge {
   private sidenoteReadyEvent: Subject<any> = new Subject()
   onSidenoteReady: Observable<Editor> = this.sidenoteReadyEvent.asObservable()
 
-
+  private editorReloadEvent: Subject<any> = new Subject()
+  onEditorReload: Observable<Editor> = this.editorReloadEvent.asObservable()
 
   constructor() {
     this.habit = new Habit()
@@ -86,6 +87,10 @@ export class Bridge {
   handleAutoAnime() {
     const animeAutoProvider = this.editor?.get(AnimeAutoProvider)
     animeAutoProvider?.autoAdd()
+  }
+
+  handleEditorReload() {
+    this.editorReloadEvent.next('')
   }
 
   destory() {

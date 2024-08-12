@@ -92,6 +92,13 @@ export const project = (axios: AxiosInstance) => {
       return axios.delete<T>('/project/update/submission/remove' + id + '&' + key)
     },
 
+    getHistoryCourses<T>(id: string) {
+      return axios.get<T>('/project/read/historyCourses/' + id)
+    },
+    coverCourse<T>(courseId: string, procedureId: string) {
+      return axios.post<T>(`/project/write/coverCourse?courseId=${courseId}&procedureId=${procedureId}`)
+    }
+
     /** 批量投稿（待开发） */
     // submit<T>(dto: SubmitProjectDto) {
     //   return axios.post<T>('/project/submission', dto)

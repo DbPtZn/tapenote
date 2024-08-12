@@ -64,6 +64,20 @@ interface Snapshot {
   createAt: string
 }
 
+interface HistoryCourse {
+  id: string
+  cover: string
+  title: string
+  abbrev: string
+  duration: number
+  detail: any
+  createAt: string
+  folder: {
+    id: string
+    name: string
+  }
+}
+
 export interface Project {
   account: string
   hostname: string
@@ -98,6 +112,7 @@ export interface Project {
   submissionHistory: SubmissionHistory[]
 
   snapshots?: Snapshot[]
+  historyCourses?: HistoryCourse[]
 
   createAt: string
   updateAt: string
@@ -919,7 +934,16 @@ export const useProjectStore = defineStore('projectStore', {
         }
       })
     },
-
+    /** ------------------------------- history course ------------------------------------------- */
+    getHistoryCourses(id: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.getHistoryCourses<HistoryCourse[]>(id).then(res => {
+        const index = this.data.findIndex(item => item.id === id)
+        if(index !== -1) this.data[index].historyCourses = res.data
+      })
+    },
+    coverCourse(courseId: string, procedureId: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.coverCourse(courseId, procedureId)
+    }
   },
   getters: {}
 })

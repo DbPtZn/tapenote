@@ -231,7 +231,7 @@ const handleControlContextmenu = (ev: MouseEvent, node: FractalContainerConfig) 
     :data-name="item.name"
     :class="['custom-container', currentId === item.id ? 'custom-container-focus' : '', useAuxLines && 'custom-container-aux-lines', item.type === ContainerTypeEnum.UNRENDER && 'custom-container-unrender']"
     v-for="(item, index) in data.children"
-    :key="item.id"
+    :key="item.key ?? item.id"
     :style="{
       flexDirection: item.isRow ? 'row' : 'column',
       width: widthDistribute ? `${widthDistribute[index]}%` : 0,

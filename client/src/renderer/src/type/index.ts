@@ -1,6 +1,7 @@
 import { Component, VNode } from 'vue'
 export interface FractalContainerConfig {
   id: string // 最好使用UUID生成，id 属性会设置成容器对应的元素的 data-id
+  key?: string // 组件的 key 值，通过更新 key 值可以刷新组件（可选，如果不设置，默认使用 id 值作为组件 key 值）
   type?: ContainerType
   name?: string // 为容器添加一个名称
   cmpt?: Component | VNode | null // 渲染组件

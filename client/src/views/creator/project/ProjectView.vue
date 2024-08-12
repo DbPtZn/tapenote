@@ -31,7 +31,6 @@ const props = defineProps<{
   account: string
   hostname: string
 }>()
-
 const containerId = {
   wrapper: utils.randomString(),
   header: utils.randomString(),
@@ -40,6 +39,7 @@ const containerId = {
   studio: utils.randomString(),
   sidenote: utils.randomString(),
 }
+const editorKey = utils.randomString()
 const sidenote = ref<FractalContainerConfig>()
 const editor = ref<FractalContainerConfig>()
 const data = reactive<FractalContainerConfig>({
@@ -67,6 +67,7 @@ const data = reactive<FractalContainerConfig>({
       children: [
         (editor.value = {
           id: containerId.editor,
+          key: editorKey,
           type: 'component',
           name: `project-editor-${containerId.editor}`,
           cmpt: markRaw(h(Editor, { id: props.id, lib: props.lib, account: props.account, hostname: props.hostname, readonly: () => isReadonly.value })),
@@ -104,6 +105,10 @@ const data = reactive<FractalContainerConfig>({
 const subs = [
   bridge.onEditorReady.subscribe(() => {
     isReadonly.value = userStore.hostname !== projectStore.get(props.id!)?.hostname || userStore.account !== projectStore.get(props.id!)?.account
+  }),
+  bridge.onEditorReload.subscribe(() => {
+    console.log('editor reload')
+    editor.value!.key = utils.randomString()
   })
 ]
 
@@ -150,6 +155,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
+  bridge.destory()
   data.children.length = 0
   data.children = []
   if (implementRef.value) {

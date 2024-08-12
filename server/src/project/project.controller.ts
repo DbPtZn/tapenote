@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Res } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Res, Query } from '@nestjs/common'
 import { ProjectService } from './project.service'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { AuthGuard } from '@nestjs/passport'
@@ -182,6 +182,31 @@ export class ProjectController {
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error)
+    }
+  }
+
+  @Get(`${REST.R}/historyCourses/:id`)
+  async getHistoryCourses(@Param('id') id: string, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.findCourseByProcedureId(id, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error)
+    }
+  }
+
+  @Post(`${REST.W}/coverCourse`)
+  async coverCourse(
+    @Query('courseId') courseId: string,
+    @Query('procedureId') procedureId: string,
+    @Req() req, 
+    @Res() res
+  ) {
+    try {
+      const result = await this.projectService.coverCourse(courseId, procedureId, req.user.id, req.user.dirname)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error.message)
     }
   }
 }

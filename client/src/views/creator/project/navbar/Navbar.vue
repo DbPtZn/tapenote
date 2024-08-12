@@ -16,7 +16,9 @@ import { AutorenewOutlined, DownloadRound } from '@vicons/material'
 import { useDownloadDialog } from './hooks/useDownload'
 import SubmissionCard from './private/SubmissionCard.vue'
 import SnapshotCard from './private/SnapshotCard.vue'
+import HistoryCourseCard from './private/HistoryCourseCard.vue'
 type Snapshot = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['snapshots']>[0]
+type HistoryCourse = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['historyCourses']>[0]
 const bridge = inject('bridge') as Bridge
 const shell = useShell<CreatorShell>()
 const props = defineProps<{
@@ -123,7 +125,9 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
 }
 const { handleExpandShareDialog  } = useSubmissionDialog()
 const { handleDownloadDialog } = useDownloadDialog()
-// onMounted(() => {})
+// onMounted(() => {
+//   console.log(bridge.projectRef)
+// })
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
 }) 
@@ -132,6 +136,9 @@ function handleTabsUpdate(value: string) {
   if(value === 'snapshot') {
     projectStore.getSnapshots(props.id, props.account, props.hostname)
   }
+  if(value === 'create' && props.lib === LibraryEnum.PROCEDURE) {
+    projectStore.getHistoryCourses(props.id, props.account, props.hostname)
+  }
 }
 const snapshotMethods = {
   handleApply: async (snapshot: Snapshot, isAutoSave: boolean) => {
@@ -139,14 +146,19 @@ const snapshotMethods = {
       if(isAutoSave) await projectStore.createSnapshot(props.id, props.account, props.hostname)
       await projectStore.applySnapshot(props.id, snapshot.id, props.account, props.hostname).then(content => {
         // replaceContent 会触发 onChange 事件, 但后端的 content 是已经最新的
-        bridge.editor?.replaceContent(content)
+        // bridge.editor?.replaceContent(content)
+        // if(data.value?.id) {
+        //   folderStore.updateCard(data.value.title, data.value?.id, 'title', data.value?.folderId)
+        //   folderStore.updateCard(content, data.value?.id, 'content', data.value?.folderId)
+        //   const timer = setTimeout(() => {
+        //     data.value!.isContentUpdating = false
+        //     clearTimeout(timer)
+        //   }, 500)
+        // }
+        bridge.handleEditorReload()
         if(data.value?.id) {
-          folderStore.updateCard(data.value.title, data.value?.id, 'title', data.value?.folderId)
-          folderStore.updateCard(content, data.value?.id, 'content', data.value?.folderId)
-          const timer = setTimeout(() => {
-            projectStore.get(props.id)!.isContentUpdating = false
-            clearTimeout(timer)
-          }, 500)
+          folderStore.updateCard(data.value.title, data.value.id, 'title', data.value?.folderId)
+          folderStore.updateCard(content, data.value.id, 'content', data.value?.folderId)
         }
       })
     } catch (error) {
@@ -162,6 +174,26 @@ const snapshotMethods = {
   handleDelete: (snapshot: Snapshot) => {
     projectStore.deleteSnapshot(props.id, snapshot.id, props.account, props.hostname)
   },
+}
+function handleHistoryCourseClick(course: HistoryCourse) {
+  dialog.create({
+    title: '创建课程新版本',
+    content: '在目标课程中创建新版本？（旧版本自动保存为历史快照）',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        // console.log(course)
+        await projectStore.createSnapshot(course.id, props.account, props.hostname)
+        await projectStore.coverCourse(course.id, props.id, props.account, props.hostname)
+      } catch (error) {
+        message.error('创建课程新版本时发生错误！')
+      }
+    },
+    onNegativeClick: () => {
+      message.create('已取消')
+    }
+  })
 }
 </script>
 
@@ -181,10 +213,10 @@ const snapshotMethods = {
       <DpzButton v-if="lib !== LibraryEnum.COURSE" :active="state.isToolbarShow" :disabled="state.isReadonly" @click="handleToolbarCollapse" >
         <n-icon :component="TextSharp" :size="16" />
       </DpzButton>
-      <DpzButton class="top-nav-btn" v-if="lib === LibraryEnum.COURSE && state.isNoteShow" :active="state.isToolbarShow" :disabled="state.isReadonly" @click="handleSidenoteToolbarCollapse">
+      <!-- <DpzButton class="top-nav-btn" v-if="lib === LibraryEnum.COURSE && state.isNoteShow" :active="state.isToolbarShow" :disabled="state.isReadonly" @click="handleSidenoteToolbarCollapse">
         <n-icon :component="TextSharp" :size="16" />
-      </DpzButton>
-      <TooltipButton v-if="lib === LibraryEnum.COURSE" class="top-nav-btn" :icon="Flip" :tip="'笔记'" :active="state.isNoteShow" :disabled="state.isReadonly"  @click="handleFlip" />
+      </DpzButton> -->
+      <!-- <TooltipButton v-if="lib === LibraryEnum.COURSE" class="top-nav-btn" :icon="Flip" :tip="'笔记'" :active="state.isNoteShow" :disabled="state.isReadonly"  @click="handleFlip" /> -->
       <TooltipButton v-if="lib === LibraryEnum.COURSE" class="top-nav-btn" :icon="state.isSubtitleShow ? Subtitles : SubtitlesOff"  :disabled="state.isReadonly"  :tip="'字幕'" @click="handleSubtitle" />
       <n-button v-if="lib !== LibraryEnum.PROCEDURE" class="top-nav-btn" size="small" :disabled="state.isReadonly" @click="handleExpandShareDialog(props.id)">
         投稿
@@ -198,7 +230,7 @@ const snapshotMethods = {
     </div>
   </div>
   <!-- 设置 -->
-  <n-drawer v-if="bridge.habit" v-model:show="state.isDrawShow" :width="320" placement="right"  :to="bridge.projectRef!" :disabled="state.isReadonly">
+  <n-drawer v-if="bridge.habit" v-model:show="state.isDrawShow"  :width="320" placement="right"  :to="bridge.projectRef!" :disabled="state.isReadonly">
     <n-drawer-content :style="{ zIndex: '1000' }">
       <n-tabs type="line" animated justify-content="space-evenly" @update:value="handleTabsUpdate">
         <n-tab-pane name="setting" tab="页面设置">
@@ -255,6 +287,19 @@ const snapshotMethods = {
             <FolderTreeSelect :lib="lib === LibraryEnum.PROCEDURE ? LibraryEnum.COURSE : LibraryEnum.PROCEDURE" @on-update-value="handleDirSelected" />
             <n-button block @click="handleCreate()">创建</n-button>
           </n-space>
+          <div v-if="lib === LibraryEnum.PROCEDURE">
+            <n-divider />
+            <p>检测到此项目创建过相关课程：</p>
+            <div>
+              <HistoryCourseCard
+                v-for="item in data?.historyCourses || []"
+                :key="item.id"
+                :data="item"
+                @click="handleHistoryCourseClick(item)"
+              />
+            </div>
+          </div>
+
         </n-tab-pane>
         <n-tab-pane name="snapshot" tab="历史快照">
           <SnapshotCard

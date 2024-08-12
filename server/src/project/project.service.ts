@@ -15,6 +15,7 @@ import path from 'path'
 import fs from 'fs'
 import fsx from 'fs-extra'
 import * as UUID from 'uuid'
+import randomstring from 'randomstring'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { FolderService } from 'src/folder/folder.service'
@@ -244,7 +245,7 @@ export class ProjectService {
       const { filepath, filename } = this.storageService.createFilePath({
         dirname: [userDirname, projectDirname],
         category: 'audio',
-        originalname: courseId,
+        originalname: `${randomstring.generate(3)}${new Date().getTime()}`,
         extname: '.wav'
       })
       // console.log(group.audioFragments)
@@ -264,6 +265,9 @@ export class ProjectService {
       console.log(`合成音频时长：${duration}, 片段总时长：${accumDuration}`)
       // throw '测试'
       return {
+        title: procedure.title,
+        content: procedure.content,
+        abbrev: procedure.abbrev,
         audio: filename,
         duration,
         promoterSequence,
@@ -272,6 +276,41 @@ export class ProjectService {
         subtitleKeyframeSequence,
         audiopath: filepath
       }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async coverCourse(courseId: string, procedureId: string, userId: string, dirname: string) {
+    try {
+      const course = await this.projectsRepository.findOne({ where: { id: courseId, userId } })
+      if(!course) throw new Error(`课程项目不存在！`)
+      const {
+        title,
+        content,
+        abbrev,
+        audio,
+        audiopath,
+        duration,
+        promoterSequence,
+        keyframeSequence,
+        subtitleSequence,
+        subtitleKeyframeSequence
+      } = await this.generateCourse(courseId, procedureId, dirname, course.dirname)
+      course.title = title
+      course.content = content
+      course.abbrev = abbrev
+      course.audio = audio || ''
+      course.duration = duration || 0
+      course.promoterSequence = promoterSequence || []
+      course.keyframeSequence = keyframeSequence || []
+      course.subtitleSequence = subtitleSequence || []
+      course.subtitleKeyframeSequence = subtitleKeyframeSequence || []
+      // console.log(content)
+      // console.log(course)
+      const result = await this.projectsRepository.save(course)
+      result.audio = audiopath
+      return result
     } catch (error) {
       throw error
     }
@@ -430,6 +469,29 @@ export class ProjectService {
         return item
       })
       return data
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async findCourseByProcedureId(id: string, userId: string) {
+    try {
+      // const courses = await this.projectsRepository.find({
+      //   where: { fromProcedureId: id, lib: LibraryEnum.COURSE, userId },
+      //   relations: ['folder'],
+      //   select: {}
+      // })
+      const courses = await this.projectsRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.folder', 'folder')
+        .select(['project.id', 'project.cover', 'project.title', 'project.abbrev', 'project.duration', 'project.detail', 'project.createAt', 'folder.id', 'folder.name'])
+        .where('project.fromProcedureId = :id', { id })
+        .andWhere('project.lib = :lib', { lib: LibraryEnum.COURSE })
+        .andWhere('project.userId = :userId', { userId })
+        .getMany()
+      
+      console.log(courses)
+      return courses
     } catch (error) {
       throw error
     }

@@ -96,11 +96,11 @@ useEditor({
         if(props.readonly()) return
         const content = editor.getHTML()
         // console.log(lastContent === content)
-        if(content === data.value!.content) {
-          // 当前内容与上次内容相同，无需保存（应用快照时不会再触发保存）
-          data.value!.isContentUpdating = false
-          return 
-        }
+        // if(content === data.value!.content) {
+        //   // 当前内容与上次内容相同，无需保存（应用快照时不会再触发保存）
+        //   data.value!.isContentUpdating = false
+        //   return 
+        // }
         if(lastContent === content) {
           // console.log('内容未改变，无需保存')
           data.value!.isContentUpdating = false
@@ -237,10 +237,6 @@ onUnmounted(() => {
   try {
     subs.forEach(sub => sub.unsubscribe())
     subs.length = 0
-
-    console.log('bridge destory')
-    bridge.destory()
-    console.log('editor destory')
     editor?.destroy()
   } catch (error) {
     console.error(error)

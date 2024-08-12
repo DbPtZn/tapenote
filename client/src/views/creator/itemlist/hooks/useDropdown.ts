@@ -176,6 +176,7 @@ export function useItemListDropDown() {
       {
         label: '创建版本快照',
         key: 'create-snapshot',
+        show: dropdownState.lib && dropdownState.lib !== LibraryEnum.COURSE,
         props: {
           onClick: () => {
             const file = dropdownState.target as Subfile
