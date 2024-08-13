@@ -262,6 +262,7 @@ export class FolderTree {
               title: '新建分支',
               content: () =>
                 h(FolderForm, {
+                  belong: node.label,
                   lib: lib,
                   isCloud: node.isCloud,
                   submit: (res) => {

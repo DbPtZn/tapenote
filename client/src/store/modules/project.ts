@@ -208,7 +208,7 @@ export const useProjectStore = defineStore('projectStore', {
       })
     },
     fetch(id: string, account: string, hostname: string) {
-      return this.creatorApi(account, hostname).project.get(id)
+      return this.creatorApi(account, hostname).project.get<Project>(id)
     },
     set(data: any, account: string, hostname: string) {
       const item: Project = {

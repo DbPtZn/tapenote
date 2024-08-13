@@ -1,21 +1,26 @@
 import { FolderOpenFilled, CoffeeMaker, Notebook, PlayLesson } from '@/components'
 import { LibraryEnum } from '@/enums'
 import { DeleteRound, LockClockRound } from '@vicons/material'
-import useStore from '@/store'
+import useStore, { Subfolder } from '@/store'
 import { NIcon, NText, useDialog, useMessage } from 'naive-ui'
 import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import { Component, h, nextTick, reactive, ref } from 'vue'
 import { CreatorShell } from '../../shell'
 import { useShell } from '@/renderer'
 import { FolderForm } from '../../form'
-import { Subject } from '@tanbo/stream'
+import { Subject, retry } from '@tanbo/stream'
 import { DialogApiInjection } from 'naive-ui/es/dialog/src/DialogProvider'
-import { SettingsFilled, BrowserUpdatedFilled, LogOutFilled, FolderRound, NoteRound, CreateNewFolderFilled  } from '@vicons/material'
-
+import { SettingsFilled, OutputFilled, BrowserUpdatedFilled, LogOutFilled, FolderRound, NoteRound, CreateNewFolderFilled } from '@vicons/material'
+import FolderTreeCheck from '../private/FolderTreeCheck.vue'
+import { pack } from '../../_utils'
+import JSZip from 'jszip'
+import dayjs from 'dayjs'
+import { result } from 'lodash'
+type Folder = ReturnType<typeof useStore>['folderStore']['$state']
 const createFolderEvent = new Subject<LibraryEnum>()
 const onCreateFolder = createFolderEvent.asObservable()
 export function useSidebarDropDown() {
-  const { userListStore, userStore, folderStore } = useStore()
+  const { userListStore, userStore, folderStore, folderTreeStore, projectStore } = useStore()
   const dialog = useDialog()
   const message = useMessage()
   const shell = useShell<CreatorShell>()
@@ -35,10 +40,10 @@ export function useSidebarDropDown() {
   /** 用户按钮 */
   function handleUserDropdown(ev: MouseEvent) {
     const target = ev.target as HTMLElement
-    if (current === target)  {
+    if (current === target) {
       dropdownState.showArrowRef = false
       current = null
-      return 
+      return
     }
     current = target
     const rect = target.getBoundingClientRect()
@@ -80,6 +85,189 @@ export function useSidebarDropDown() {
         }
       },
       {
+        label: '导入',
+        key: 'input',
+        icon: () => h(NIcon, { component: SettingsFilled, size: 24 }),
+        props: {
+          onClick: () => {
+            const jszip = new JSZip()
+            const input = document.createElement('input')
+            input.type = 'file'
+            input.click()
+            input.oninput = e => {
+              // console.log(e)
+              if (!input.files || input.files.length === 0) {
+                alert('请先选择一个文件。')
+                return
+              }
+              const file = input.files[0]
+              // console.log(file)
+
+              const reader = new FileReader()
+              reader.onload = e => {
+                // console.log(e)
+                const arrayBuffer = e.target?.result as string
+
+                jszip.loadAsync(arrayBuffer).then(zip => {
+                  console.log(zip)
+                  function traverseZipEntries(zip, basePath: string) {
+                    console.log(zip)
+                    if (!zip.files) {
+                      return
+                    }
+                    zip.forEach((relativePath, file) => {
+                      const fullPath = basePath + relativePath
+                      const isFolder = file.dir
+                      const isJsonFile = /\.json$/i.test(relativePath)
+
+                      if (isFolder) {
+                        console.log('文件夹名称:', fullPath)
+                        traverseZipEntries(file, fullPath + '/')
+                      } else if (isJsonFile) {
+                        file.async('string').then(jsonStr => {
+                          try {
+                            const jsonObj = JSON.parse(jsonStr)
+                            console.log('JSON对象:', jsonObj)
+                          } catch (error) {
+                            console.error('解析 JSON 时出错:', error)
+                          }
+                        })
+                      } else {
+                        console.log('其它类型文件')
+                      }
+                    })
+                  }
+                  traverseZipEntries(zip, '')
+                })
+              }
+
+              reader.readAsArrayBuffer(file)
+            }
+          }
+        }
+      },
+      {
+        label: '导出',
+        key: 'output',
+        icon: () => h(NIcon, { component: OutputFilled, size: 24 }),
+        // show: false,
+        props: {
+          onClick: () => {
+            let checkedKeys: Array<string> = []
+            dialog.create({
+              title: '导出',
+              content: () =>
+                h(FolderTreeCheck, {
+                  lib: LibraryEnum.NOTE,
+                  onChecked: value => {
+                    checkedKeys = value
+                  }
+                }),
+              positiveText: '确定',
+              negativeText: '取消',
+              onPositiveClick: async () => {
+                const zip = new JSZip()
+                console.log(userStore.dir)
+                const treenodes = await folderTreeStore.fetchFirstLevel(userStore.dir.note, LibraryEnum.NOTE)
+                const folders: Folder[] = []
+                for (let i = 0; i < treenodes.length; i++) {
+                  if (treenodes[i].id) {
+                    await folderStore.fetch(treenodes[i].id!).then(res => {
+                      folders[i] = res.data
+                    })
+                  }
+                }
+                console.log(folders)
+                async function traverseOutput(folders: Folder[], basePath: string) {
+                  for (let i = 0; i < folders.length; i++) {
+                    const fullPath = basePath + folders[i].name
+                    console.log(fullPath)
+                    if (typeof folders[i].subfiles === 'object') {
+                      for (let j = 0; j < folders[i].subfiles!.length; j++) {
+                        try {
+                          const subfile = folders[i].subfiles![j]
+                          const project = await projectStore.fetch(subfile.id, userStore.account, userStore.hostname).then(res => res.data)
+                          const content = (await pack.getContent(project.content)).content
+                          const data = {
+                            lib: project.lib,
+                            title: project.title,
+                            content: content
+                          }
+                          const jsonString = JSON.stringify(data)
+                          zip.file(`${fullPath}/${subfile.title}.json`, jsonString)
+                        } catch (error) {
+                          message.error('项目 folders[i][j] 获取失败')
+                        }
+                      }
+                    }
+                    if (typeof folders[i].subfolders === 'object') {
+                      const subfolders: Folder[] = []
+                      for (let j = 0; j < folders[i].subfolders!.length; j++) {
+                        await folderStore.fetch(folders[i].subfolders![j].id).then(res => {
+                          subfolders[j] = res.data
+                        })
+                      }
+                      await traverseOutput(subfolders, `${fullPath}/`)
+                    }
+                    // return
+                    // zip.file(`${basePath} + ${folders[i].name}/${}`)
+                  }
+                }
+                await traverseOutput(folders, '')
+                // let folders: Folder[] = []
+                // for (let i = 0; i < checkedKeys.length; i++) {
+                //   await folderStore.fetch(checkedKeys[i]).then(res => {
+                //     folders[i] = res.data
+                //   })
+                // }
+                // console.log(folders)
+                // for (let i = 0; i < folders.length; i++) {
+                //   if (typeof folders[i].subfiles === 'object') {
+                //     for (let j = 0; j < folders[i].subfiles!.length; j++) {
+                //       try {
+                //         const id = folders[i].subfiles![j].id
+                //         const project = await projectStore.fetch(id, userStore.account, userStore.hostname).then(res => res.data)
+                //         const content = (await pack.getContent(project.content)).content
+                //         const data = {
+                //           lib: project.lib,
+                //           title: project.title,
+                //           content: content
+                //         }
+                //         const jsonString = JSON.stringify(data)
+                //         // const blob = new Blob([jsonString], { type: 'application/json' })
+                //         zip.folder(`${folders[i].name}`)?.file(`${data.title}.json`, jsonString)
+                //       } catch (error) {
+                //         message.error('项目 folders[i][j] 获取失败')
+                //       }
+                //     }
+                //   }
+                // }
+                zip
+                  .generateAsync({ type: 'blob' })
+                  .then(blob => {
+                    // 创建 URL 对象
+                    const url = URL.createObjectURL(blob)
+                    // 创建 <a> 标签并设置其属性
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.download = `${dayjs(Date.now()).format('YYMMDDHHmmss')}.zip` // 设置下载的文件名
+                    // 模拟点击 <a> 标签以触发下载
+                    link.click()
+                    // 清理 URL 对象
+                    URL.revokeObjectURL(url)
+                  })
+                  .catch(error => {
+                    console.error('Error generating ZIP:', error)
+                  })
+              },
+              onNegativeClick: () => {
+                message.create('取消')
+              }
+            })
+          }
+        }
+      },
+      {
         label: '检查与更新',
         disabled: true,
         show: false,
@@ -106,10 +294,10 @@ export function useSidebarDropDown() {
   /** 主按钮 */
   function handleMasterDropdown(ev: MouseEvent) {
     const target = ev.target as HTMLElement
-    if (current === target)  {
+    if (current === target) {
       dropdownState.showArrowRef = false
       current = null
-      return 
+      return
     }
     current = target
     const rect = target.getBoundingClientRect()
@@ -149,10 +337,10 @@ export function useSidebarDropDown() {
   /** 最近编辑 */
   function handleRecentContextmenu(ev: MouseEvent) {
     const target = ev.target as HTMLElement
-    if (current === target)  {
+    if (current === target) {
       dropdownState.showArrowRef = false
       current = null
-      return 
+      return
     }
     current = target
     // const rect = target.getBoundingClientRect()
@@ -219,10 +407,10 @@ export function useSidebarDropDown() {
   /** 更多 */
   function handleMoreDropdown(ev: MouseEvent) {
     const target = ev.target as HTMLElement
-    if (current === target)  {
+    if (current === target) {
       dropdownState.showArrowRef = false
       current = null
-      return 
+      return
     }
     current = target
     const rect = target.getBoundingClientRect()
@@ -262,10 +450,10 @@ export function useSidebarDropDown() {
   /** 折叠面板按钮 */
   function handleCollapseDropdown(ev: MouseEvent, lib: LibraryEnum) {
     const target = ev.target as HTMLElement
-    if (current === target)  {
+    if (current === target) {
       dropdownState.showArrowRef = false
       current = null
-      return 
+      return
     }
     current = target
     const rect = target.getBoundingClientRect()
@@ -297,7 +485,7 @@ export function useSidebarDropDown() {
             createNewFolder(dialog, lib)
           }
         }
-      },
+      }
       // {
       //   key: 'count',
       //   label: '统计',
@@ -311,8 +499,6 @@ export function useSidebarDropDown() {
 
   /** 树形节点按钮 */
   // 绑定在树形组件内部，暂不抽离处理
-
-
 
   function renderIcon(component: Component) {
     return () => h(NIcon, { component: component, size: 24 })

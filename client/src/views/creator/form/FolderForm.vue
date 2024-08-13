@@ -26,6 +26,7 @@ const model = ref<ModelType>({
   lib: props.lib || LibraryEnum.NOTE,
   // isCloud: true
 })
+const regex = /[!"#&$'()*./:<>?\^`|\s]/g
 /** 表单规则 */
 const rules: FormRules = {
   name: [
@@ -38,7 +39,14 @@ const rules: FormRules = {
       message: '文件夹名称长度不能超过18个字符',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: string) => {
-        return value.length < 18
+        return value.length <= 18
+      }
+    },
+    {
+      message: '文件夹名称不能包含特殊英文标点符号或空格',
+      trigger: 'blur',
+      validator: (rule: FormItemRule, value: string) => {
+        return !regex.test(value)
       }
     }
   ],

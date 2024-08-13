@@ -92,6 +92,7 @@ export const useFolderTreeStore = defineStore('folderTreeStore', {
               this.procedureTree = sortByCreateAt(data, true)
               break
           }
+          return data
         })
     },
     fetchChildren(id: string) {

@@ -72,10 +72,17 @@ watch(
     }
   }
 )
-
+// const regex = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~\s]/g;
+const regex = /[!"#&$'()*./:<>?\^`|\s]/g;
 const inputEvent = (ev: any) => {
   // .trim() 不能在输入的时候清理两段空白字符，这会导致光标跳回起始位置
   let inputVal = ev.target.innerText
+  if (regex.test(inputVal)) {
+    // 特殊标点符号如 "/" 可能会导致导出时将部分标题解析成目录
+    message.warning('标题中不应包含特殊英文符号或空格')
+    inputVal = inputVal.replace(regex, '')
+    textarea.value.innerText = inputVal
+  }
   if (inputVal.length > 200) {
     message.warning('标题不应大于 200 个字符')
     // 截取前500个字符重新赋值给文本框

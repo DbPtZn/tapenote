@@ -18,27 +18,27 @@ import jszip from 'jszip'
 import dayjs from 'dayjs'
 // import ejs from 'ejs'
 import { Resources } from '@textbus/platform-browser'
-// interface ProductInfo {
-//   // -- 作品信息
-//   type: 'course' | 'note'
-//   site: string
-//   code: string
-//   penname: string
-//   email: string // 邮箱
-//   blog: string // 博客地址
-//   msg: string // 提交时的备注信息
-// }
-// interface ProductContent {
-//   // -- 作品内容
-//   title: string
-//   content: string
-//   audio?: string[]
-//   duration?: number
-//   promoterSequence?: Array<string>
-//   keyframeSequence?: Array<number>
-//   subtitleSequence?: Array<string>
-//   subtitleKeyframeSequence?: Array<number>
-// }
+interface ProductInfo {
+  // -- 作品信息
+  type: 'course' | 'note'
+  site: string
+  code: string
+  penname: string
+  email: string // 邮箱
+  blog: string // 博客地址
+  msg: string // 提交时的备注信息
+}
+interface ProductContent {
+  // -- 作品内容
+  title: string
+  content: string
+  audio?: string[]
+  duration?: number
+  promoterSequence?: Array<string>
+  keyframeSequence?: Array<number>
+  subtitleSequence?: Array<string>
+  subtitleKeyframeSequence?: Array<number>
+}
 
 // type PackData = ProductInfo & ProductContent
 
