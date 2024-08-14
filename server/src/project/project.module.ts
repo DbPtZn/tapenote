@@ -10,10 +10,11 @@ import { FolderModule } from 'src/folder/folder.module'
 import { FragmentModule } from 'src/fragment/fragment.module'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
 import { SnapshotModule } from 'src/snapshot/snapshot.module'
+import { User } from 'src/user/entities/user.entity'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project]),
+    TypeOrmModule.forFeature([Project, User]),
     forwardRef(() => FolderModule),
     // forwardRef(() => FragmentModule),
     StorageModule,

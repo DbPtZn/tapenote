@@ -35,25 +35,27 @@ const widthVal = ref(0)
 //   /**
 //    * 这里 getInfo 在 Login 登录页面就会执行，如果无法获得用户信息会返回 401，强制跳转至登录页
 //    * 但后续登录成功后不会再一次执行该代码，因此如果是上述情况，无法再通过此代码获取用户信息
-//    * 因此在 sidebarview 中我们要再次调用 getInfo 
+//    * 因此在 sidebarview 中我们要再次调用 getInfo
 //    */
 //   // userStore.getInfo()
 // })
 </script>
 <template>
   <n-config-provider :theme="settingStore.theme" :theme-overrides="settingStore.theme ? darkThemeOverrides : lightThemeOverrides">
-    <n-dialog-provider>
-      <n-message-provider>
-        <n-layout>
-          <div ref="rootRef" class="root-page" :data-theme="[settingStore.theme ? 'dark-theme' : 'light-theme' ]">
-              <GlobalNavView @collapse="ev => widthVal = ev" />
+    <n-modal-provider>
+      <n-dialog-provider>
+        <n-message-provider>
+          <n-layout>
+            <div ref="rootRef" class="root-page" :data-theme="[settingStore.theme ? 'dark-theme' : 'light-theme']">
+              <GlobalNavView @collapse="ev => (widthVal = ev)" />
               <div class="router-view" :style="{ width: `calc(100% - ${widthVal}px)` }">
                 <router-view />
               </div>
-          </div>
-        </n-layout>
-      </n-message-provider>
-    </n-dialog-provider>
+            </div>
+          </n-layout>
+        </n-message-provider>
+      </n-dialog-provider>
+    </n-modal-provider>
   </n-config-provider>
 </template>
 

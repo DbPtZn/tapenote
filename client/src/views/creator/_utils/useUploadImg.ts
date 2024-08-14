@@ -1,5 +1,6 @@
 import axios from 'axios'
-export function useUploadImg(uploadImgUrl: string, hostname: string, accessToken: string) {
+export function useUploadImg(uploadImgUrl: string, account: string, hostname: string) {
+  const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
   const axiosInstance = axios.create({
     method: 'post',
     baseURL: hostname,

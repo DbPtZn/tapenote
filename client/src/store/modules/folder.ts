@@ -91,9 +91,12 @@ export const useFolderStore = defineStore('folderStore', {
         this.$reset()
       }
     },
+    create(params: Parameters<typeof CreatorApi.prototype.folder.create>[0]) {
+      return this.creatorApi().folder.create<FolderState>(params)
+    },
     /** 创建文件夹并设置状态 */
     createAndSet(params: Parameters<typeof CreatorApi.prototype.folder.create>[0]): Promise<TreeNode> {
-      return this.creatorApi().folder.create<FolderState>(params).then((res) => {
+      return this.create(params).then((res) => {
         // const data = folderDataTranslator(res.data)
         const data = res.data
         this.set(data)

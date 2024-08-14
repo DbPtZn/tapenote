@@ -9,7 +9,7 @@ import {
   LinkJumpTipPlugin
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
-import { useUploadImg } from '../../editor/hooks/useUploadImg'
+import { useUploadImg } from '../../../_utils'
 export function getSidenoteConfig(args: {
   account: string,
   hostname: string,

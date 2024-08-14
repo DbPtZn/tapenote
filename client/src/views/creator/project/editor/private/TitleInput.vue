@@ -73,7 +73,7 @@ watch(
   }
 )
 // const regex = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~\s]/g;
-const regex = /[!"#&$'()*./:<>?\^`|\s]/g;
+const regex = /[!"#&$'()*./:<>?\^`|\s]/g
 const inputEvent = (ev: any) => {
   // .trim() 不能在输入的时候清理两段空白字符，这会导致光标跳回起始位置
   let inputVal = ev.target.innerText

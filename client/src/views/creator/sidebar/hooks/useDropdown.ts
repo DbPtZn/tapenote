@@ -2,7 +2,7 @@ import { FolderOpenFilled, CoffeeMaker, Notebook, PlayLesson } from '@/component
 import { LibraryEnum } from '@/enums'
 import { DeleteRound, LockClockRound } from '@vicons/material'
 import useStore, { Subfolder } from '@/store'
-import { NIcon, NText, useDialog, useMessage } from 'naive-ui'
+import { NFlex, NIcon, NText, useDialog, useMessage, useModal } from 'naive-ui'
 import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import { Component, h, nextTick, reactive, ref } from 'vue'
 import { CreatorShell } from '../../shell'
@@ -11,17 +11,42 @@ import { FolderForm } from '../../form'
 import { Subject, retry } from '@tanbo/stream'
 import { DialogApiInjection } from 'naive-ui/es/dialog/src/DialogProvider'
 import { SettingsFilled, OutputFilled, BrowserUpdatedFilled, LogOutFilled, FolderRound, NoteRound, CreateNewFolderFilled } from '@vicons/material'
-import FolderTreeCheck from '../private/FolderTreeCheck.vue'
+import FolderTreeCheck from '../../_common/FolderTreeCheck.vue'
+import FolderTreeSelect from '../../_common/FolderTreeSelect.vue'
 import { pack } from '../../_utils'
 import JSZip from 'jszip'
 import dayjs from 'dayjs'
 import { result } from 'lodash'
+import { useParser } from '../../_utils/parse'
 type Folder = ReturnType<typeof useStore>['folderStore']['$state']
 const createFolderEvent = new Subject<LibraryEnum>()
 const onCreateFolder = createFolderEvent.asObservable()
+function convertFlatToTree(flatStructure) {
+  const treeStructure = {}
+
+  for (const key in flatStructure) {
+    const path = key.split('/')
+    let currentNode = treeStructure
+
+    for (let i = 0; i < path.length - 1; i++) {
+      const folder = path[i]
+      if (!currentNode[folder]) {
+        // 如果当前节点下没有该文件夹，则创建一个空对象
+        currentNode[folder] = {}
+      }
+      currentNode = currentNode[folder] // 移动到下一级目录
+    }
+
+    const filename = path[path.length - 1]
+    currentNode[filename] = flatStructure[key]
+  }
+
+  return treeStructure
+}
 export function useSidebarDropDown() {
   const { userListStore, userStore, folderStore, folderTreeStore, projectStore } = useStore()
   const dialog = useDialog()
+  const modal = useModal()
   const message = useMessage()
   const shell = useShell<CreatorShell>()
   let current: HTMLElement | null = null
@@ -90,55 +115,102 @@ export function useSidebarDropDown() {
         icon: () => h(NIcon, { component: SettingsFilled, size: 24 }),
         props: {
           onClick: () => {
+            const targetFolderId = userStore.dir.note // 设置导入的根目录
             const jszip = new JSZip()
+            const regex = /[^/]+(?=\/(?:[^/]+)*$)/ // 提取目录名正则
+            const { parseContent } = useParser(userStore.account, userStore.hostname)
             const input = document.createElement('input')
             input.type = 'file'
             input.click()
             input.oninput = e => {
-              // console.log(e)
               if (!input.files || input.files.length === 0) {
                 alert('请先选择一个文件。')
                 return
               }
+              const tip = ref<string[]>([])
+              modal.create({
+                maskClosable: false,
+                title: '正在导入文件...',
+                preset: 'dialog',
+                content: () => h(NFlex, { vertical: true }, {
+                  // TODO style: { maxHeight: '200px', height: '100px', overflowY: 'auto' } 待优化，新增记录时滚动并保持滚动至最底部
+                  default: () => tip.value.map(txt => h(NText, null, { default: () => txt || '' }))
+                }),
+              })
               const file = input.files[0]
-              // console.log(file)
 
               const reader = new FileReader()
+
               reader.onload = e => {
-                // console.log(e)
                 const arrayBuffer = e.target?.result as string
 
-                jszip.loadAsync(arrayBuffer).then(zip => {
-                  console.log(zip)
-                  function traverseZipEntries(zip, basePath: string) {
-                    console.log(zip)
-                    if (!zip.files) {
-                      return
-                    }
-                    zip.forEach((relativePath, file) => {
-                      const fullPath = basePath + relativePath
-                      const isFolder = file.dir
-                      const isJsonFile = /\.json$/i.test(relativePath)
+                jszip
+                  .loadAsync(arrayBuffer)
+                  .then(async zip => {
+                    // console.log(zip)
+                    // zip.files 是扁平化的结构，通过 convertFlatToTree 转换为树形结构
+                    const tree = convertFlatToTree(zip.files)
+                    // console.log(tree)
+                    /** 递归解析文件树 */
+                    async function traverseZipEntries(tree: JSZip.JSZipFileOptions, folderId: string) {
+                      const entries = Object.keys(tree)
+                      for(const entry of entries) {
+                        if(!entry) continue
+                        const file = tree[entry]
+                        const relativePath = entry // 目录/文件的名称
+                        const isFolder = file[""]?.dir || false
+                        const isJsonFile = /\.json$/i.test(relativePath)
+                        if (isFolder) {
+                          let foldername = relativePath ? relativePath : '未命名'
+                          // 创建文件夹
+                          tip.value.push(`正在创建目录 ${foldername}...`)
+                          const { data } = await folderStore.create({
+                            name: foldername,
+                            lib: LibraryEnum.NOTE,
+                            desc: '',
+                            parentId: folderId
+                          })
+                          await traverseZipEntries(file, data.id)
+                        } else if (isJsonFile) {
 
-                      if (isFolder) {
-                        console.log('文件夹名称:', fullPath)
-                        traverseZipEntries(file, fullPath + '/')
-                      } else if (isJsonFile) {
-                        file.async('string').then(jsonStr => {
-                          try {
-                            const jsonObj = JSON.parse(jsonStr)
-                            console.log('JSON对象:', jsonObj)
-                          } catch (error) {
-                            console.error('解析 JSON 时出错:', error)
-                          }
-                        })
-                      } else {
-                        console.log('其它类型文件')
+                          tip.value.push(`正在解析文件 ${relativePath} ...`)
+
+                          await file.async('string').then(async jsonStr => {
+                            try {
+                      
+                              const jsonObj = JSON.parse(jsonStr)
+                              // console.log('JSON对象:', jsonObj)
+                              tip.value.push(`正在转换文本 ...`)
+                              const { content, cover } = await parseContent(jsonObj.content)
+                              const data = {
+                                folderId,
+                                lib: jsonObj.lib,
+                                title: jsonObj.title,
+                                content,
+                                cover
+                              }
+                              tip.value.push(`正在创建文件 ${data.title} ...`)
+                              await projectStore.input(data, userStore.account, userStore.hostname)
+                            } catch (error) {
+                              console.error('解析 JSON 时出错:', error)
+                            }
+                          })
+                        } else {
+                          console.log('其它类型文件')
+                        }
                       }
+                    }
+
+                    await traverseZipEntries(tree, targetFolderId).then(() => {
+                      message.success('导入成功！')
+                      tip.value.push('导入完成！')
+                      // modal.destroyAll()
                     })
-                  }
-                  traverseZipEntries(zip, '')
-                })
+                  })
+                  .catch(error => {
+                    console.error('解析 ZIP 文件时出错:', error.message)
+                    alert('目标文件无法匹配，导入失败！')
+                  })
               }
 
               reader.readAsArrayBuffer(file)
@@ -156,18 +228,19 @@ export function useSidebarDropDown() {
             let checkedKeys: Array<string> = []
             dialog.create({
               title: '导出',
-              content: () =>
-                h(FolderTreeCheck, {
-                  lib: LibraryEnum.NOTE,
-                  onChecked: value => {
-                    checkedKeys = value
-                  }
-                }),
+              content: '确定导出全部笔记吗？(目前只提供笔记导出功能)',
+              // content: () =>
+              //   h(FolderTreeCheck, {
+              //     lib: LibraryEnum.NOTE,
+              //     onChecked: value => {
+              //       checkedKeys = value
+              //     }
+              //   }),
               positiveText: '确定',
               negativeText: '取消',
               onPositiveClick: async () => {
                 const zip = new JSZip()
-                console.log(userStore.dir)
+                // console.log(userStore.dir)
                 const treenodes = await folderTreeStore.fetchFirstLevel(userStore.dir.note, LibraryEnum.NOTE)
                 const folders: Folder[] = []
                 for (let i = 0; i < treenodes.length; i++) {
@@ -194,7 +267,7 @@ export function useSidebarDropDown() {
                             content: content
                           }
                           const jsonString = JSON.stringify(data)
-                          zip.file(`${fullPath}/${subfile.title}.json`, jsonString)
+                          zip.folder(basePath)?.file(`${folders[i].name}/${subfile.title}.json`, jsonString, { binary: true })
                         } catch (error) {
                           message.error('项目 folders[i][j] 获取失败')
                         }

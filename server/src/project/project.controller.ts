@@ -8,6 +8,7 @@ import { UpdateContentDto } from './dto/update-content.dto'
 import { UpdateSidenoteContentDto } from './dto/update-sidenote-content.dto'
 import { UpdateSpeakerHistoryDto } from './dto/update.dto'
 import { AddSubmissionHistoryDto } from './dto/add-submission.dts'
+import { InputProjectDto } from './dto/input-project.dto'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('project')
@@ -208,6 +209,17 @@ export class ProjectController {
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)
+    }
+  }
+
+  @Post(`${REST.W}/input`)
+  async input(@Body() dto: InputProjectDto, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.input(dto, req.user.id, req.user.dirname)
+      res.status(200).send(result)
+    } catch (error) {
+      console.log(error)
+      res.status(400).send(error)
     }
   }
 }

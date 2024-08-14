@@ -185,6 +185,9 @@ export const useProjectStore = defineStore('projectStore', {
       })
 
     },
+    input(params: Parameters<typeof CreatorApi.prototype.project.input>[0], account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.input(params)
+    },
     fetchAndSet(id: string, account: string, hostname: string) {
       // console.log('fetchAndSet')
       // console.log([id, account, hostname])

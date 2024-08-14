@@ -48,6 +48,13 @@ interface AddSubmissionHistoryDto {
   date: string
 }
 
+interface InputDto {
+  lib: LibraryEnum
+  title: string
+  content: string
+  cover: string
+}
+
 
 export const project = (axios: AxiosInstance) => {
   return {
@@ -97,6 +104,9 @@ export const project = (axios: AxiosInstance) => {
     },
     coverCourse<T>(courseId: string, procedureId: string) {
       return axios.post<T>(`/project/write/coverCourse?courseId=${courseId}&procedureId=${procedureId}`)
+    },
+    input<T>(dto: InputDto) {
+      return axios.post<T>('/project/write/input', dto)
     }
 
     /** 批量投稿（待开发） */

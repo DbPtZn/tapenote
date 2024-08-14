@@ -22,6 +22,8 @@ import { FolderService } from 'src/folder/folder.service'
 import { UpdateSpeakerHistoryDto } from './dto/update.dto'
 import { AddSubmissionHistoryDto } from './dto/add-submission.dts'
 import { SnapshotService } from 'src/snapshot/snapshot.service'
+import { InputProjectDto } from './dto/input-project.dto'
+import { User } from 'src/user/entities/user.entity'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -51,6 +53,8 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private projectsRepository: Repository<Project>,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
     // @InjectRepository(Fragment)
     // private fragmentsRepository: Repository<Fragment>,
     // @Inject(forwardRef(() => FragmentService))
@@ -329,6 +333,45 @@ export class ProjectService {
     }
   }
 
+  async input(dto: InputProjectDto, userId: string, dirname: string) {
+    try {
+      const { lib, title, content, cover, penname, email, homepage } = dto
+      checkTitle(title)
+      const user = await this.usersRepository.findOneBy({ id: userId })
+      console.log(dto.folderId)
+      const folderId = dto.folderId ? dto.folderId : user.dir[lib]
+      const folder = await this.folderService.findOneById(folderId, userId)
+      const project = new Project()
+      // if(!Object.values(LibraryEnum).includes(lib as LibraryEnum))
+      const txt = content.replace(/<[^>]+>/g, '')
+      project.folderId = folderId
+      project.folder = folder
+      project.userId = userId
+      project.user = user
+      project.lib = lib as LibraryEnum
+      project.title = title
+      project.content = content
+      project.abbrev = txt ? txt.slice(0, 100) : ''
+      project.cover = cover
+      project.dirname = await this.generateDirname(dirname)
+      project.removed = RemovedEnum.NEVER
+
+      project.detail = {
+        penname: penname || '佚名',
+        homepage: homepage || '',
+        email: email || '',
+        wordage: txt.length,
+        filesize: 0
+      }
+
+      project.submissionHistory = []
+      const result = await this.projectsRepository.save(project)
+      return result.id
+    } catch (error) {
+      throw error
+    }
+  }
+
   /** -------------------------------- 查询 ------------------------------------ */
   /** 找到指向项目于： 包含片段、音频完整路径等信息 */
   async findOne(id: string, userId: string, dirname: string, relations = [], isGetFullSpeakerAvatar = true) {
@@ -516,6 +559,7 @@ export class ProjectService {
   async updateTitle(updateprojectTitleDto: UpdateTitleDto, userId: string) {
     const { id, title } = updateprojectTitleDto
     try {
+      checkTitle(title)
       const project = await this.findOneById(id, userId)
       project.title = title
       const newproject = await this.projectsRepository.save(project)
@@ -1131,6 +1175,14 @@ function subtitleProcessing(transcriptGroup: string[][], fragmentDurationGroup: 
     subtitleKeyframeGroup.push(sliceKeyFrameGroup)
   })
   return { subtitleGroup, subtitleKeyframeGroup }
+}
+
+/** 检查标题是否合规 */
+function checkTitle(title: string) {
+  const regex = /[!"#&$'()*./:<>?\^`|\s]/
+  if (regex.test(title)) {
+    throw new Error('标题中包含非法字符')
+  }
 }
 
 // async copyFragment(args: {

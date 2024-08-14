@@ -10,7 +10,7 @@
  */
 
 import { Editor, createEditor } from '@textbus/editor'
-import { getEditorConfig } from './exportEditorConfig'
+import { getEditorConfig } from './outputEditorConfig'
 import { Img2base64Service } from '@/editor'
 import utils from '@/utils'
 import axios from 'axios'

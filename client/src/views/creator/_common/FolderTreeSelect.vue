@@ -19,6 +19,7 @@ function treeSelectOptionFormatter(option: TreeNode): TreeSelectOption {
 }
 const emits = defineEmits<{
   onUpdateValue: [string]
+  select: [string]
 }>()
 function handleUpdateValue(value: string) {
   emits('onUpdateValue', value)
