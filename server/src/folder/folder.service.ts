@@ -3,7 +3,7 @@ import { CreateFolderDto } from './dto/create-folder.dto'
 import { DropPosition, MoveFolderDto } from './dto/move-folder.dto'
 import { Folder } from './entities/folder.entity'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Not, Repository } from 'typeorm'
+import { DataSource, Not, Repository } from 'typeorm'
 import { UserService } from 'src/user/user.service'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { GetRecentlyDto } from './dto/get-recently.dto'
@@ -20,7 +20,8 @@ export class FolderService {
     private readonly projectService: ProjectService,
     private readonly userService: UserService,
     private readonly userLogger: UserLoggerService,
-    private readonly logger: LoggerService
+    private readonly logger: LoggerService,
+    private readonly dataSource: DataSource
   ) {}
 
   /** 新建根目录 */
@@ -221,9 +222,11 @@ export class FolderService {
   }
 
   async findTrash(userId: string) {
+    // where: { userId, removed: Not(RemovedEnum.NEVER) },\
     const folders = await this.foldersRepository.find({
-      where: { userId, removed: Not(RemovedEnum.NEVER) },
-      select: ['id', 'name', 'parentId', 'removed', 'lib', 'isCloud', 'updateAt', 'createAt']
+      where: { userId, removed: RemovedEnum.ACTIVE },
+      select: ['id', 'name', 'userId', 'parentId', 'removed', 'lib', 'isCloud', 'updateAt', 'createAt'],
+      order: { updateAt: 'DESC' }
     })
     return folders
   }
@@ -351,17 +354,51 @@ export class FolderService {
   /** 彻底删除文件夹（仅删除该文件夹与其中的文件，暂不考虑递归删除子文件夹） */
   async delete(id: string, userId: string, dirname: string) {
     try {
-      const folder = await this.foldersRepository.findOne({
+  
+      const entity = await this.foldersRepository.findOne({
         where: { id, userId },
-        relations: ['projects']
+        relations: ['children', 'projects']
       })
-      // 删除文件夹下的所有文件(不包括其子文件夹,也不包括其中已被移除的文件)
-      folder.projects.forEach(async project => {
-        await this.projectService.delete(project.id, userId, dirname)
-      })
-      await this.foldersRepository.remove(folder)
-      this.userLogger.log(`彻底删除文件夹[${folder.name}],id:[${id}]成功`)
+      console.log(entity)
+      if(!entity) {
+        console.log('该目录已被删除！')
+        return
+      }
+      const that = this
+      // 使用事务来确保所有操作要么全部成功，要么全部撤销
+      const queryRunner = this.dataSource.createQueryRunner()
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+      async function traverseDelete(folder: Folder) {
+        if(!folder) return
+        if(folder.children) {
+          if(folder.children.length > 0) {
+            for(let child of folder.children) {
+              const _child = await queryRunner.manager.findOne(Folder, { where: { id: child.id }, relations: ['children', 'projects'] })
+              if (_child) await traverseDelete(_child).catch(err => console.log(err))
+            }
+          }
+        }
+        // 删除文件夹下的所有文件(不包括其子文件夹,也不包括其中已被移除的文件)
+        for(let project of folder.projects) {
+          await that.projectService.delete(project.id, userId, dirname).catch(err => console.log('remove project',err))
+        }
+        folder && await queryRunner.manager.remove(folder).catch(err => console.log('remove folder', err))
+      }
+
+      try {
+        await traverseDelete(entity)
+        await queryRunner.commitTransaction()
+        this.userLogger.log(`彻底删除文件夹[${entity?.name}],id:[${id}]成功`)
+      } catch (error) {
+        console.log('删除目录失败：' + error.message)
+        await queryRunner.rollbackTransaction()
+        throw error
+      } finally {
+        await queryRunner.release()
+      }
     } catch (error) {
+      console.log(error)
       this.userLogger.error(`彻底删除文件夹id:[${id}]失败`, error)
       throw error
     }

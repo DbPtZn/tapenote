@@ -11,6 +11,6 @@ export class TrashController {
 
   @Get(`${REST.R}/:trash`)
   findAll(@Param('trash') trashName: TrashName, @Req() req) {
-    return this.trashService.findAll(trashName, req.user._id)
+    return this.trashService.findAll(trashName, req.user.id)
   }
 }

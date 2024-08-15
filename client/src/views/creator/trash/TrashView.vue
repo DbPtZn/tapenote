@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Component, h, onMounted, ref } from 'vue'
+import { Component, h, onMounted, reactive, ref } from 'vue'
 import { NButton, NIcon, NSpace, useDialog, useMessage } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
 import { Main, Header } from '@/components'
@@ -238,6 +238,19 @@ const methods = {
     return true
   }
 }
+const paginationReactive = reactive({
+  page: 1,
+  pageSize: 12,
+  // showSizePicker: true,
+  // pageSizes: [3, 5, 7],
+  onChange: (page: number) => {
+    paginationReactive.page = page
+  },
+  onUpdatePageSize: (pageSize: number) => {
+    paginationReactive.pageSize = pageSize
+    paginationReactive.page = 1
+  }
+})
 </script>
 
 <template>
@@ -246,16 +259,16 @@ const methods = {
       <n-card title="回收站" style="height: 100%; margin-bottom: 16px; border-radius: 0">
         <n-tabs type="line" :value="tabsVal" animated @update:value="methods.handleUpdateValue">
           <n-tab-pane :name="'folder'" tab="文件夹">
-            <n-data-table :columns="createColumns()" :data="trashStore.folders" :pagination="false" :bordered="false" :titleAlign="'center'" />
+            <n-data-table :columns="createColumns()" :data="trashStore.folders" :pagination="paginationReactive" :bordered="false" :titleAlign="'center'" />
           </n-tab-pane>
           <n-tab-pane :name="'note'" tab="笔记">
-            <n-data-table :columns="createColumns()" :data="trashStore.notes" :pagination="false" :bordered="false" :titleAlign="'center'" />
+            <n-data-table :columns="createColumns()" :data="trashStore.notes" :pagination="paginationReactive" :bordered="false" :titleAlign="'center'" />
           </n-tab-pane>
           <n-tab-pane :name="'course'" tab="课程">
-            <n-data-table :columns="createColumns()" :data="trashStore.courses" :pagination="false" :bordered="false" :titleAlign="'center'" />
+            <n-data-table :columns="createColumns()" :data="trashStore.courses" :pagination="paginationReactive" :bordered="false" :titleAlign="'center'" />
           </n-tab-pane>
           <n-tab-pane :name="'procedure'" tab="工程">
-            <n-data-table :columns="createColumns()" :data="trashStore.procedures" :pagination="false" :bordered="false" :titleAlign="'center'" />
+            <n-data-table :columns="createColumns()" :data="trashStore.procedures" :pagination="paginationReactive" :bordered="false" :titleAlign="'center'" />
           </n-tab-pane>
         </n-tabs>
       </n-card>

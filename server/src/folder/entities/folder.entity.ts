@@ -11,7 +11,8 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   Tree,
-  UpdateDateColumn
+  UpdateDateColumn,
+  DeleteDateColumn
 } from 'typeorm'
 
 @Entity()
@@ -79,6 +80,9 @@ export class Folder {
 
   @UpdateDateColumn()
   updateAt: Date // 更新时间
+
+  @DeleteDateColumn()
+  deleteAt: Date
 
   /** 插入实体时设置创建时间 */
   @BeforeInsert()

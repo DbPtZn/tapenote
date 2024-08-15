@@ -9,6 +9,7 @@ import {
   BeforeUpdate,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   ManyToOne,
   OneToMany,
@@ -232,6 +233,9 @@ export class Project {
 
   @UpdateDateColumn()
   updateAt: Date
+
+  @DeleteDateColumn()
+  deleteAt: Date
 
   /** 详情 */
   @Column({

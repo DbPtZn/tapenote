@@ -8,6 +8,7 @@ import {
   BeforeInsert,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   Generated,
   ManyToOne,
@@ -169,6 +170,9 @@ export class User {
 
   @UpdateDateColumn()
   updateAt: Date // 更新时间
+
+  @DeleteDateColumn()
+  deleteAt: Date
 
   /** 预留字段 */
   @Column({

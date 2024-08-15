@@ -2,7 +2,7 @@ import { FolderOpenFilled, CoffeeMaker, Notebook, PlayLesson } from '@/component
 import { LibraryEnum } from '@/enums'
 import { DeleteRound, LockClockRound } from '@vicons/material'
 import useStore, { Subfolder } from '@/store'
-import { NFlex, NIcon, NText, useDialog, useMessage, useModal } from 'naive-ui'
+import { NFlex, NIcon, NLog, NText, useDialog, useMessage, useModal } from 'naive-ui'
 import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import { Component, h, nextTick, reactive, ref } from 'vue'
 import { CreatorShell } from '../../shell'
@@ -127,23 +127,25 @@ export function useSidebarDropDown() {
                 alert('请先选择一个文件。')
                 return
               }
-              const tip = ref<string[]>([])
+              const logRef = ref()
+              const log = ref<string[]>([])
+              function addLog(txt: string) {
+                log.value.push(txt)
+                logRef.value?.scrollTo({ position: 'bottom', silent: true })
+              }
               modal.create({
                 maskClosable: false,
-                title: '正在导入文件...',
+                title: '正在导入文件,请不要关闭该窗口...',
                 preset: 'dialog',
-                content: () => h(NFlex, { vertical: true }, {
-                  // TODO style: { maxHeight: '200px', height: '100px', overflowY: 'auto' } 待优化，新增记录时滚动并保持滚动至最底部
-                  default: () => tip.value.map(txt => h(NText, null, { default: () => txt || '' }))
-                }),
+                content: () => h(NLog, { ref: logRef, rows: 10, trim: true, log: log.value.join('\n') }),
               })
+              // default: () => tip.value.map(txt => h(NText, null, { default: () => txt || '' }))
               const file = input.files[0]
 
               const reader = new FileReader()
 
               reader.onload = e => {
                 const arrayBuffer = e.target?.result as string
-
                 jszip
                   .loadAsync(arrayBuffer)
                   .then(async zip => {
@@ -163,7 +165,7 @@ export function useSidebarDropDown() {
                         if (isFolder) {
                           let foldername = relativePath ? relativePath : '未命名'
                           // 创建文件夹
-                          tip.value.push(`正在创建目录 ${foldername}...`)
+                          addLog(`正在创建目录 ${foldername}`)
                           const { data } = await folderStore.create({
                             name: foldername,
                             lib: LibraryEnum.NOTE,
@@ -173,14 +175,14 @@ export function useSidebarDropDown() {
                           await traverseZipEntries(file, data.id)
                         } else if (isJsonFile) {
 
-                          tip.value.push(`正在解析文件 ${relativePath} ...`)
+                          addLog(`正在解析文件 ${relativePath}`)
 
                           await file.async('string').then(async jsonStr => {
                             try {
                       
                               const jsonObj = JSON.parse(jsonStr)
                               // console.log('JSON对象:', jsonObj)
-                              tip.value.push(`正在转换文本 ...`)
+                              addLog(`正在转换文本 :::`)
                               const { content, cover } = await parseContent(jsonObj.content)
                               const data = {
                                 folderId,
@@ -189,7 +191,7 @@ export function useSidebarDropDown() {
                                 content,
                                 cover
                               }
-                              tip.value.push(`正在创建文件 ${data.title} ...`)
+                              addLog(`正在创建文件 ${data.title}`)
                               await projectStore.input(data, userStore.account, userStore.hostname)
                             } catch (error) {
                               console.error('解析 JSON 时出错:', error)
@@ -203,13 +205,16 @@ export function useSidebarDropDown() {
 
                     await traverseZipEntries(tree, targetFolderId).then(() => {
                       message.success('导入成功！')
-                      tip.value.push('导入完成！')
+                      addLog('导入完成！')
                       // modal.destroyAll()
                     })
                   })
                   .catch(error => {
                     console.error('解析 ZIP 文件时出错:', error.message)
-                    alert('目标文件无法匹配，导入失败！')
+                    dialog.error({
+                      title: '导入失败',
+                      content: '无法正确解析目标文件！'
+                    })
                   })
               }
 

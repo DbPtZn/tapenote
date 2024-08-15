@@ -5,6 +5,7 @@ import {
   BeforeInsert,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -104,6 +105,9 @@ export class Fragment {
   @CreateDateColumn() createAt: Date
   /** 更新时间 */
   @UpdateDateColumn() updateAt: Date
+  /** 软删除时间 */
+  @DeleteDateColumn()
+  deleteAt: Date
 
   /** 插入实体时设置创建时间 */
   @BeforeInsert()

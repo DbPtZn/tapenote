@@ -72,12 +72,14 @@ watch(
     }
   }
 )
-// const regex = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~\s]/g;
-const regex = /[!"#&$'()*./:<>?\^`|\s]/g
+// const regex = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~\s]/g
+// 不能在检查时禁止英文单引号 ' ，因为输入法输入时会产生单引号
+const regexg = /[!"#&$()*./:<>?\^`|]/g
+const regex = /[!"#&$()*./:<>?\^`|]/
 const inputEvent = (ev: any) => {
   // .trim() 不能在输入的时候清理两段空白字符，这会导致光标跳回起始位置
   let inputVal = ev.target.innerText
-  if (regex.test(inputVal)) {
+  if (regexg.test(inputVal)) {
     // 特殊标点符号如 "/" 可能会导致导出时将部分标题解析成目录
     message.warning('标题中不应包含特殊英文符号或空格')
     inputVal = inputVal.replace(regex, '')

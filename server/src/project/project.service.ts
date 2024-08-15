@@ -481,6 +481,7 @@ export class ProjectService {
         where: { userId, lib: lib, removed: Not(RemovedEnum.NEVER) },
         select: ['id', 'title', 'abbrev', 'folderId', 'updateAt', 'createAt']
       })
+      console.log(projects)
       return projects
     } catch (error) {
       throw error
