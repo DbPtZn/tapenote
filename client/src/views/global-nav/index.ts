@@ -1,2 +1,3 @@
 import GlobalNavView from "./GlobalNavView.vue"
-export { GlobalNavView }
+import ManageView from './ManageView.vue'
+export { GlobalNavView, ManageView }

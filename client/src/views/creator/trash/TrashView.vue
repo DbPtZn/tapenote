@@ -9,7 +9,7 @@ import utils from '@/utils'
 import { Delete, RestoreFromTrash } from '@/components'
 import { FolderTreeSelect } from '../_common'
 import SelectOtherFolder from './private/SelectOtherFolder.vue'
-type File = typeof trashStore.folders[0]
+type File = (typeof trashStore.folders)[0]
 type TrashName = Parameters<typeof trashStore.fetchAndSet>[0]
 const { trashStore, folderStore, folderTreeStore, projectStore, userStore } = useStore()
 const message = useMessage()
@@ -95,7 +95,10 @@ const createColumns = (): DataTableColumns<File> => {
                   onClick: () => {
                     dialog.create({
                       title: '是否彻底删除？',
-                      content: tabsVal.value == 'folder' ? '此操作将永久删除该文件夹及其中的文件（但不包括子文件夹及子文件夹中的文件），是否继续？' : '此操作将永久删除该文件，是否继续？',
+                      content:
+                        tabsVal.value == 'folder'
+                          ? '此操作将永久删除该文件夹及其中的文件（包括子文件夹及子文件夹中的文件），是否继续？'
+                          : '此操作将永久删除该文件，是否继续？',
                       icon: () => renderIcon(Delete),
                       positiveText: '确定',
                       negativeText: '取消',
@@ -103,7 +106,7 @@ const createColumns = (): DataTableColumns<File> => {
                         methods.handleDelete(rowData, rowIndex)
                       },
                       onNegativeClick: () => {
-                        message.error('取消')
+                        message.info('取消')
                       }
                     })
                   }
@@ -206,14 +209,18 @@ const methods = {
     })
   },
   handleDelete(rowData: File, rowIndex: number) {
-    if (tabsVal.value === 'folder') {
-      folderTreeStore.delete(rowData.id).then(res => {
-        updateTrashState(rowIndex, 'delete')
-      })
-    } else {
-      projectStore.delete(rowData.id, userStore.account, userStore.hostname).then(() => {
-        updateTrashState(rowIndex, 'delete')
-      })
+    try {
+      if (tabsVal.value === 'folder') {
+        folderTreeStore.delete(rowData.id).then(res => {
+          updateTrashState(rowIndex, 'delete')
+        })
+      } else {
+        projectStore.delete(rowData.id, userStore.account, userStore.hostname).then(() => {
+          updateTrashState(rowIndex, 'delete')
+        })
+      }
+    } catch (error) {
+      message.error('删除失败')
     }
   },
   handleUpdateValue(value: TrashName) {
@@ -259,16 +266,40 @@ const paginationReactive = reactive({
       <n-card title="回收站" style="height: 100%; margin-bottom: 16px; border-radius: 0">
         <n-tabs type="line" :value="tabsVal" animated @update:value="methods.handleUpdateValue">
           <n-tab-pane :name="'folder'" tab="文件夹">
-            <n-data-table :columns="createColumns()" :data="trashStore.folders" :pagination="paginationReactive" :bordered="false" :titleAlign="'center'" />
+            <n-data-table
+              :columns="createColumns()"
+              :data="trashStore.folders"
+              :pagination="paginationReactive"
+              :bordered="false"
+              :titleAlign="'center'"
+            />
           </n-tab-pane>
           <n-tab-pane :name="'note'" tab="笔记">
-            <n-data-table :columns="createColumns()" :data="trashStore.notes" :pagination="paginationReactive" :bordered="false" :titleAlign="'center'" />
+            <n-data-table
+              :columns="createColumns()"
+              :data="trashStore.notes"
+              :pagination="paginationReactive"
+              :bordered="false"
+              :titleAlign="'center'"
+            />
           </n-tab-pane>
           <n-tab-pane :name="'course'" tab="课程">
-            <n-data-table :columns="createColumns()" :data="trashStore.courses" :pagination="paginationReactive" :bordered="false" :titleAlign="'center'" />
+            <n-data-table
+              :columns="createColumns()"
+              :data="trashStore.courses"
+              :pagination="paginationReactive"
+              :bordered="false"
+              :titleAlign="'center'"
+            />
           </n-tab-pane>
           <n-tab-pane :name="'procedure'" tab="工程">
-            <n-data-table :columns="createColumns()" :data="trashStore.procedures" :pagination="paginationReactive" :bordered="false" :titleAlign="'center'" />
+            <n-data-table
+              :columns="createColumns()"
+              :data="trashStore.procedures"
+              :pagination="paginationReactive"
+              :bordered="false"
+              :titleAlign="'center'"
+            />
           </n-tab-pane>
         </n-tabs>
       </n-card>

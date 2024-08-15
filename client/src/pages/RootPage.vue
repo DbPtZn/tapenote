@@ -72,6 +72,7 @@ const widthVal = ref(0)
   display: flex;
   flex-direction: row;
   overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   width: 100%;
   height: 100%;

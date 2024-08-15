@@ -481,7 +481,6 @@ export class ProjectService {
         where: { userId, lib: lib, removed: Not(RemovedEnum.NEVER) },
         select: ['id', 'title', 'abbrev', 'folderId', 'updateAt', 'createAt']
       })
-      console.log(projects)
       return projects
     } catch (error) {
       throw error
@@ -671,6 +670,7 @@ export class ProjectService {
         }
         await queryRunner.manager.remove(project)
         await queryRunner.commitTransaction()
+        console.log('project had delete')
       } catch (error) {
         console.log('删除项目失败：' + error.message)
         await queryRunner.rollbackTransaction()

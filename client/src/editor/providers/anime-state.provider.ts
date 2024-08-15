@@ -102,13 +102,13 @@ export class AnimeStateProvider {
       const dataSerial = element.dataset.serial!
       const dataEffect = element.dataset.effect!
       const dataState = element.dataset.state!
-      const title = element.title
+      const dataTitle = element.dataset.title!
       this.commander.applyFormat(animeFormatter, {
         dataId: state.id !== undefined ? state.id : dataId,
         dataSerial: state.serial !== undefined ? state.serial.toString() : dataSerial,
         dataEffect: state.effect !== undefined ? state.effect : dataEffect ,
         dataState: state.state !== undefined ? state.state : dataState,
-        title: title
+        dataTitle: state.title !== undefined ? state.title : dataTitle
       })
       /** 设置完成后向后移动光标——>取消选区 */
       this.selection.toNext()

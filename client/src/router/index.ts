@@ -16,11 +16,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/home',
     redirect: RouteNameEnum.HOME
   },
-  // {
-  //   path: RoutePathEnum.MANAGER,
-  //   name: RouteNameEnum.MANAGER,
-  //   component: () => import(/* webpackChunkName: "about" */ '../pages/modules/ManagerPage.vue'),
-  // },
+  {
+    path: RoutePathEnum.MANAGER,
+    name: RouteNameEnum.MANAGER,
+    component: () => import(/* webpackChunkName: "about" */ '../pages/modules/ManagePage .vue'),
+  },
   {
     path: RoutePathEnum.DEFAULT,
     name: RouteNameEnum.DEFAULT,
@@ -36,10 +36,10 @@ const routes: Array<RouteRecordRaw> = [
     name: RouteNameEnum.LOGIN,
     component: () => import(/* webpackChunkName: "about" */ '../pages/modules/LoginPage.vue'),
     // 访问该路由之前执行：
-    beforeEnter(to, from, next) {
-      const token = sessionStorage.getItem('accessToken')
-      token ? next(RoutePathEnum.HOME) : next()
-    }
+    // beforeEnter(to, from, next) {
+    //   const token = sessionStorage.getItem('accessToken')
+    //   token ? next(RoutePathEnum.HOME) : next()
+    // }
   },
   {
     path: RoutePathEnum.REGISTER,

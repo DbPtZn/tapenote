@@ -332,7 +332,6 @@ export class FolderService {
   async updateRemovedRecursive(folderId: string, removeMode: RemovedEnum, userId: string, removedIds?: string[]) {
     try {
       removedIds && removedIds.push(folderId)
-      this.foldersRepository.find
       const parent = await this.foldersRepository.findOne({
         where: { id: folderId, userId },
         relations: ['children']
@@ -359,7 +358,6 @@ export class FolderService {
         where: { id, userId },
         relations: ['children', 'projects']
       })
-      console.log(entity)
       if(!entity) {
         console.log('该目录已被删除！')
         return
@@ -388,6 +386,7 @@ export class FolderService {
 
       try {
         await traverseDelete(entity)
+        // 注意，走到这一步文件夹下的所有项目已经删除完成，因为 projectService.delete 的事务是独立的
         await queryRunner.commitTransaction()
         this.userLogger.log(`彻底删除文件夹[${entity?.name}],id:[${id}]成功`)
       } catch (error) {

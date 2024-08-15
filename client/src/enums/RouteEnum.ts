@@ -1,6 +1,6 @@
 export enum RouteNameEnum {
   HOME = 'home',
-  MANAGER ='manager',
+  MANAGER ='manage',
   DEFAULT = 'default',
   LOGIN = 'login',
   REGISTER = 'register',
@@ -14,7 +14,7 @@ export enum RouteNameEnum {
 
 export enum RoutePathEnum {
   HOME = '/',
-  MANAGER ='/manager',
+  MANAGER ='/manage',
   DEFAULT = '/default',
   LOGIN = '/login',
   REGISTER = '/register',
