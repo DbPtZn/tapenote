@@ -29,7 +29,7 @@ export class SnapshotService {
       const snapshot = new Snapshot()
       snapshot.userId = project.userId
       snapshot.project = project
-      snapshot.eidtorVersion = project.eidtorVersion
+      snapshot.editorVersion = project.editorVersion
       // snapshot.projectId = project.id
       snapshot.cover = project.cover
       snapshot.title = project.title

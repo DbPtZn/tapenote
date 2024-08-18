@@ -80,7 +80,7 @@ export class Project {
     default: '0.0.1',
     length: 18
   })
-  eidtorVersion: string
+  editorVersion: string
 
   @Column({
     type: 'varchar',

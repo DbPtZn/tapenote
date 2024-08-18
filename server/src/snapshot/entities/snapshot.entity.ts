@@ -64,7 +64,7 @@ export class Snapshot {
     length: 18,
     nullable: true
   })
-  eidtorVersion: string
+  editorVersion: string
 
   // @Column({
   //   type: 'varchar',

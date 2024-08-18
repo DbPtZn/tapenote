@@ -656,7 +656,7 @@ export class ProjectService {
     try {
       const project = await this.projectsRepository.findOne({
         where: { id, userId },
-        relations: { fragments: true }
+        relations: ['fragments', 'snapshots']
       })
 
       // 使用事务来确保所有操作要么全部成功，要么全部撤销
@@ -665,12 +665,16 @@ export class ProjectService {
       await queryRunner.startTransaction()
 
       try {
+        // 删除片段
         for (const fragment of project.fragments) {
           await queryRunner.manager.remove(fragment)
         }
+        // 删除快照
+        for (const snapshot of project.snapshots) {
+          await queryRunner.manager.remove(snapshot)
+        }
         await queryRunner.manager.remove(project)
         await queryRunner.commitTransaction()
-        console.log('project had delete')
       } catch (error) {
         console.log('删除项目失败：' + error.message)
         await queryRunner.rollbackTransaction()
