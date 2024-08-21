@@ -95,9 +95,8 @@ export class UserLoggerService implements LoggerService {
     const dirname = this.requestScopedService.getData()?.dirname || 'errorlogs'
     // console.log(dirname)
     return this.storageService.getFilePath({
-      dirname: dirname,
+      dirname: [dirname, 'logs'],
       filename: `log-${date ? date : new Date().toISOString().slice(0, 10)}.txt`,
-      category: 'logs',
       prv: true
     })
   }

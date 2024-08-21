@@ -13,7 +13,6 @@ export class SpeakerController {
   async create(@Body() createSpeakerDto: CreateSpeakerDto, @Req() req, @Res() res) {
     try {
       const speaker = await this.speakerService.create(createSpeakerDto, req.user.id, req.user.dirname)
-      speaker.avatar = '/public' + speaker.avatar.split('public')[1]
       res.status(200).send(speaker)
     } catch (error) {
       res.status(400).send('创建 Speaker 失败:' + error.message)
@@ -24,9 +23,6 @@ export class SpeakerController {
   async findAll(@Req() req, @Res() res) {
     try {
       const speakers = await this.speakerService.findAll(req.user.id, req.user.dirname)
-      speakers.forEach(speaker => {
-        speaker.avatar = '/public' + speaker.avatar.split('public')[1]
-      })
       res.status(200).send(speakers)
     } catch (error) {
       res.status(400).send('获取 Speakers 失败:' + error.message)
@@ -46,9 +42,8 @@ export class SpeakerController {
   @Get(`${REST.R}/test/:role`)
   async testTts(@Param('role') role: number, @Req() req, @Res() res) {
     try {
-      const filepath = await this.speakerService.testTts(Number(role))
-      const url = '/public' + filepath.split('public')[1]
-      res.status(200).send(url)
+      const filepath = await this.speakerService.testTts(Number(role), 1)
+      res.status(200).send(filepath)
     } catch (error) {
       res.status(400).send('测试语音合成失败:' + error.message)
     }

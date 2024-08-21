@@ -6,63 +6,101 @@ import { UploadFile } from './entities/file.entity'
 // import { Worker } from 'worker_threads'
 import child_process from 'child_process'
 import * as UUID from 'uuid'
-
+import { BucketService } from 'src/bucket/bucket.service'
+import { basename, extname } from 'path'
+import { ConfigService } from '@nestjs/config'
+import { commonConfig } from 'src/config'
+import * as fs from 'fs'
+export interface LocalUploadFile extends Partial<Express.Multer.File> {
+  filename: string
+  path: string
+  mimetype: 'image/jpeg' | 'image/png' | 'audio/wav'
+  // md5: string
+  // size: number
+}
 @Injectable()
 export class UploadService {
+  private common: ReturnType<typeof commonConfig>
   constructor(
     @InjectRepository(UploadFile)
     private uploadFilesRepository: MongoRepository<UploadFile>,
-    private readonly storageService: StorageService
-  ) {}
-  async uploadImage(args: { sourcePath: string; extname: string; dirname: string; userId: string }) {
-    const { sourcePath, extname, dirname, userId } = args
-    // console.log(sourcePath, extname, dirname, userId)
-    return new Promise((resolve, reject) => {
-      // console.log('开始上传图片')
-      // console.log(sourcePath)
-      this.calculateFileStats(sourcePath)
-        .then(async stats => {
-          const { size, md5 } = stats
-          const file = await this.uploadFilesRepository.findOneBy({ md5, size, userId })
-          if (file) {
-            // console.log('用户上传的图片已存在，直接返回图片路径!')
-            // console.log(file.id)
-            // console.log(file.path)
-            resolve(file.path)
-            return
-          }
-          this.storageService
-            .saveImage({ sourcePath, extname, dirname })
-            .then(async ({ filename, filepath }) => {
-              // console.log('图片保存成功，开始计算图片信息')
-              console.log([filename, filepath])
-              const image = new UploadFile()
-              // image.id = UUID.v4()
-              image.name = filename
-              image.path = filepath
-              image.userId = userId
-              image.type = extname
-              image.md5 = md5
-              image.size = size
-              image.quote = []
-              await this.uploadFilesRepository.save(image)
-              resolve(filepath)
-            })
-            .catch(error => {
-              console.log('警告！保存图片失败，未能成功创建图片数据对象，源图片地址:' + sourcePath)
-              reject(error)
-            })
-        })
-        .catch(async error => {
-          const { filepath } = await this.storageService.saveImage({ sourcePath, extname, dirname })
-          console.log('警告！计算图片相关信息失败,该图片未能被数据库记录，图片地址：' + filepath)
-          resolve(filepath)
-        })
-    })
+    private readonly storageService: StorageService,
+    private readonly configService: ConfigService,
+    private readonly bucketService: BucketService
+  ) {
+    this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
   }
 
-  async calculateFileStats(filePath: string): Promise<{ md5: string; size: number }> {
-    return new Promise<{ md5: string; size: number }>((resolve, reject) => {
+  // async upload(file: any, filename: string, dirname: string) {
+  //   console.log(file)
+  //   console.log(filename)
+  //   return this.bucketService.uploadFile(file, filename, dirname)
+  // }
+
+  async upload(file: LocalUploadFile, userId: string, dirname: string) {
+    try {
+      const md5 = await this.calculateFileStats(file.path).catch(err => {
+        throw new Error('计算图片md5失败')
+      })
+      if(!file.size) {
+        file.size = fs.statSync(file.path).size
+      }
+      const uploadfile = await this.uploadFilesRepository.findOneBy({ md5, userId })
+      if (uploadfile) {
+        console.log('用户上传的图片已存在，直接返回图片路径!')
+        return uploadfile.path
+      }
+      const filepath = await this.storageService.save(file, dirname).catch(err => {
+        throw new Error('保存图片失败')
+      })
+      const upload = new UploadFile()
+      upload.name = basename(filepath)
+      upload.path = filepath
+      upload.userId = userId
+      upload.mimetype = file.mimetype
+      upload.md5 = md5
+      upload.size = file.size
+      upload.quote = []
+      await this.uploadFilesRepository.save(upload)
+      return this.common.enableCOS ? filepath : `${this.common.staticPrefix}/${filepath.split(this.common.publicDir)[1]}`
+    } catch (error) {
+      console.log(error)
+      throw error
+    }
+  }
+
+  // async localUpload(file: LocalUploadFile, userId: string, dirname: string) {
+  //   try {
+  //     const md5 = await this.calculateFileStats(file.path).catch(err => {
+  //       throw new Error('计算图片md5失败')
+  //     })
+  //     const size = fs.statSync(file.path).size
+  //     const uploadfile = await this.uploadFilesRepository.findOneBy({ md5, userId })
+  //     if (uploadfile) {
+  //       console.log('用户上传的图片已存在，直接返回图片路径!')
+  //       return uploadfile.path
+  //     }
+  //     const filepath = await this.storageService.save(file, dirname).catch(err => {
+  //       throw new Error('保存图片失败')
+  //     })
+  //     const upload = new UploadFile()
+  //     upload.name = basename(filepath)
+  //     upload.path = filepath
+  //     upload.userId = userId
+  //     upload.mimetype = file.mimetype
+  //     upload.md5 = md5
+  //     upload.size = size
+  //     upload.quote = []
+  //     await this.uploadFilesRepository.save(upload)
+  //     return this.common.enableCOS ? filepath : `${this.common.staticPrefix}/${filepath.split(this.common.publicDir)[1]}`
+  //   } catch (error) {
+  //     console.log(error)
+  //     throw error
+  //   }
+  // }
+
+  async calculateFileStats(filePath: string) {
+    return new Promise<string>((resolve, reject) => {
       // 创建子线程
       const child = child_process.fork('workers/md5-worker.mjs')
 

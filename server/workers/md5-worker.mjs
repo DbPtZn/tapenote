@@ -16,6 +16,6 @@ process.on('message', msg => {
 function calculateFileStats(filePath) {
   const data = fs.readFileSync(filePath)
   const md5 = crypto.createHash('md5').update(data).digest('hex')
-  const size = fs.statSync(filePath).size
-  return { md5, size }
+  // const size = fs.statSync(filePath).size
+  return md5
 }

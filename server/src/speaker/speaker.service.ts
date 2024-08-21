@@ -6,14 +6,17 @@ import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { UserService } from 'src/user/user.service'
 import { Repository } from 'typeorm'
 import { LoggerService } from 'src/logger/logger.service'
-import path from 'path'
+import path, { basename } from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { SherpaService } from 'src/sherpa/sherpa.service'
 import { ConfigService } from '@nestjs/config'
 import * as UUID from 'uuid'
+import { commonConfig } from 'src/config'
+import randomstring from 'randomstring'
 
 @Injectable()
 export class SpeakerService {
+  private readonly common: ReturnType<typeof commonConfig>
   constructor(
     @InjectRepository(Speaker)
     private speakersRepository: Repository<Speaker>,
@@ -23,7 +26,9 @@ export class SpeakerService {
     private readonly configService: ConfigService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
-  ) {}
+  ) {
+    this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
+  }
 
   async create(createSpeakerDto: CreateSpeakerDto, userId: string, dirname: string) {
     const { role, name, avatar, changer } = createSpeakerDto
@@ -41,27 +46,25 @@ export class SpeakerService {
           : this.configService.get('sherpa.model.tts')
       speaker.role = role
       speaker.name = name
-      speaker.avatar = path.basename(avatar)
+      speaker.avatar = this.common.enableCOS ? avatar : basename(avatar)
       speaker.changer = changer ? changer : 0
       if (speaker.type === 'machine') {
         try {
           const txt = '哈库拉玛塔塔'
-          const { filepath, filename } = this.storageService.createFilePath({
+          const filepath = this.storageService.createFilePath({
             dirname: dirname,
-            category: 'audio',
-            originalname: speaker.id,
-            extname: '.wav'
+            filename: `${speaker.id}.wav`
           })
           this.sherpaService.tts(txt, filepath, role, 1)
-          speaker.audio = filename
+          speaker.audio = filepath
         } catch (error) {
           this.userLogger.error(`创建快速测试音频失败`, error.message)
           throw error
         }
       }
       const result = await this.speakersRepository.save(speaker)
-      delete speaker.user
-      result.avatar = avatar
+      delete result.user
+      result.avatar = this.common.enableCOS ? avatar : `${this.common.staticPrefix}/${dirname}/${result.avatar}`
       return result
     } catch (error) {
       this.userLogger.error(`创建 speaker 失败`, error.message)
@@ -91,13 +94,8 @@ export class SpeakerService {
       const speakers = await this.speakersRepository.find({
         where: { userId }
       })
-      speakers.forEach((speaker, index, arr) => {
-        const filepath = this.storageService.getFilePath({
-          dirname,
-          filename: speaker.avatar,
-          category: 'image'
-        })
-        arr[index].avatar = filepath
+      this.common.enableCOS && speakers.forEach((speaker, index, arr) => {
+        arr[index].avatar = `${this.common.staticPrefix}/${dirname}/${speaker.avatar}`
       })
       this.userLogger.log(`查询 speakers 成功`)
       return speakers
@@ -120,13 +118,13 @@ export class SpeakerService {
   async testTts(speakerId: number, speed = 1) {
     try {
       const txt = '哈库拉玛塔塔'
-      const { filepath } = this.storageService.createFilePath({
+      const filename = `${randomstring.generate(8)}.wav`
+      const filepath= this.storageService.createFilePath({
         dirname: 'temp',
-        extname: '.wav',
-        category: 'audio'
+        filename
       })
       await this.sherpaService.tts(txt, filepath, speakerId, speed)
-      return filepath
+      return `${this.common.staticPrefix}/temp/${filename}`
     } catch (error) {
       throw error
     }
@@ -134,11 +132,9 @@ export class SpeakerService {
 
   async clearTemp(url: string) {
     try {
-      const originalname = path.basename(url)
       const filepath = this.storageService.getFilePath({
         dirname: 'temp',
-        filename: originalname,
-        category: 'audio'
+        filename: path.basename(url)
       })
       this.storageService.deleteSync(filepath)
     } catch (error) {

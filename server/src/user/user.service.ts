@@ -16,19 +16,26 @@ import { LoggerService } from 'src/logger/logger.service'
 import { LibraryEnum } from 'src/enum'
 import { Folder } from 'src/folder/entities/folder.entity'
 import { UserModule } from './user.module'
+import { ConfigService } from '@nestjs/config'
+import { commonConfig } from 'src/config'
+import randomstring from 'randomstring'
 
-const __rootdirname = process.cwd()
+// const __rootdirname = process.cwd()
 @Injectable()
 export class UserService {
+  private readonly common: ReturnType<typeof commonConfig>
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private readonly dataSource: DataSource,
     private readonly storageService: StorageService,
+    private readonly configService: ConfigService,
     private readonly bcrtptService: BcryptService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
-  ) {}
+  ) {
+    this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
+  }
 
   /** 创建新用户 */
   async create(createUserDto: CreateUserDto) {
@@ -169,19 +176,15 @@ export class UserService {
       this.userLogger.log(`正在查询用户信息...`)
       const user = await this.usersRepository.findOneBy({ id })
       this.userLogger.log(`查询用户信息成功!`)
+      if(!this.common.enableCOS) {
+        user.avatar = user.avatar ? this.common.staticPrefix + user.avatar.split(this.common.publicDir)[1] : ''
+      }
       // console.log(user)
       return {
         account: user.account,
         nickname: user.nickname,
         email: user.email,
-        avatar: user.avatar
-          ? this.storageService.getFilePath({
-              filename: user.avatar,
-              dirname,
-              category: 'image',
-              prv: false
-            })
-          : '',
+        avatar: user.avatar,
         phone: user.phone,
         homepage: user.homepage,
         desc: user.desc,
@@ -202,13 +205,18 @@ export class UserService {
     return user.account
   }
 
-  async updateInfo(updateUserDto: UpdateUserDto, id: string) {
+  async updateInfo(updateUserDto: UpdateUserDto, id: string, dirname: string) {
     this.userLogger.log(`正在更新用户信息...`)
     const { avatar, nickname, desc, email, phone, homepage } = updateUserDto
     const user = await this.findOneById(id)
-    const filename = path.basename(avatar)
+    // const filename = path.basename(avatar)
     if (user) {
-      user.avatar = filename
+      if(/^https?:\/\//i.test(avatar) || this.common.enableCOS) {
+        user.avatar = avatar
+      } else {
+        user.avatar = this.common.fullPublicDir + '/' + dirname + '/' + avatar
+        console.log(user.avatar)
+      }
       user.nickname = nickname
       user.desc = desc
       user.email = email
@@ -268,7 +276,7 @@ export class UserService {
     try {
       this.userLogger.log(`正在添加投稿配置...`)
       const user = await this.findOneById(id)
-      console.log(user)
+      // console.log(user)
       const config = new SubmissionConfig()
       config.id = UUID.v4()
       config.name = ''
@@ -400,31 +408,32 @@ export class UserService {
 
   /** 生成用户私有目录的地址 */
   async generateDirname() {
-    let dirname = generateRandomStr()
+    let dirname = randomstring.generate(8)
     let users = await this.usersRepository.find({ where: { dirname } })
     // 校验该地址是否已经存在
-    let fullPath1 = path.join(__rootdirname, 'public', dirname)
-    let fullPath2 = path.join(__rootdirname, 'private', dirname)
-    while (users.length > 0 || fs.existsSync(fullPath1) || fs.existsSync(fullPath2)) {
+    // let fullPath1 = path.join(__rootdirname, 'public', dirname)
+    // let fullPath2 = path.join(__rootdirname, 'private', dirname)
+    //  || fs.existsSync(fullPath1) || fs.existsSync(fullPath2)
+    while (users.length > 0) {
       // console.log('该用户文件夹已存在，重新生成')
-      dirname = generateRandomStr()
+      dirname = randomstring.generate(8)
       users = await this.usersRepository.find({ where: { dirname } })
-      fullPath1 = path.join(__rootdirname, 'public', dirname)
-      fullPath2 = path.join(__rootdirname, 'private', dirname)
+      // fullPath1 = path.join(__rootdirname, 'public', dirname)
+      // fullPath2 = path.join(__rootdirname, 'private', dirname)
     }
     return dirname
   }
 }
 
 /** 生成随机字符串 */
-function generateRandomStr(num = 8) {
-  const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  let result = ''
+// function generateRandomStr(num = 8) {
+//   const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+//   let result = ''
 
-  for (let i = 0; i < num; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length)
-    result += characters.charAt(randomIndex)
-  }
+//   for (let i = 0; i < num; i++) {
+//     const randomIndex = Math.floor(Math.random() * characters.length)
+//     result += characters.charAt(randomIndex)
+//   }
 
-  return result
-}
+//   return result
+// }

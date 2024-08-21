@@ -12,18 +12,9 @@ import { UpdateUserPwdDto } from './dto/update-pwd.dto'
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
-
-  // @Post(`${REST.W}/create`)
-  // create(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
-  //   try {
-  //     this.userService.create(createUserDto).then(user => {
-  //       res.status(201).send('笔记业务系统用户注册成功')
-  //     })
-  //   } catch (error) {
-  //     res.status(400).send(error)
-  //   }
-  // }
+  constructor(
+    private readonly userService: UserService,
+    ) {}
 
   @UseGuards(AuthGuard('jwt'))
   @Get(`${REST.R}/dir`)
@@ -41,7 +32,7 @@ export class UserController {
     try {
       // console.log(req.user.account)
       const info = await this.userService.getInfoById(req.user.id, req.user.dirname)
-      info.avatar = info.avatar ? '/public' + info.avatar.split('public')[1] : ''
+      // info.avatar = info.avatar ? '/public' + info.avatar.split('public')[1] : ''
       // console.log(info)
       return res.status(200).send(info)
     } catch (error) {
@@ -55,7 +46,7 @@ export class UserController {
     // console.log('更新用户数据：')
     // console.log(updateUserDto)
     try {
-      const updateAt = await this.userService.updateInfo(updateUserDto, req.user.id)
+      const updateAt = await this.userService.updateInfo(updateUserDto, req.user.id, req.user.dirname)
       res.status(200).send(updateAt)
     } catch (error) {
       res.status(400).send(error.message)

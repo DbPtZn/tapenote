@@ -8,6 +8,7 @@ import { LoggerService } from './logger/logger.service'
 import portfinder from 'portfinder'
 import { ConfigService } from '@nestjs/config'
 import { parentPort, workerData } from 'worker_threads'
+import { commonConfig } from './config'
 async function bootstrap() {
   let dotenvPath = []
   switch (process.env.NODE_ENV) {
@@ -60,13 +61,14 @@ async function bootstrap() {
   // 开放静态资源
   // console.log(process.env.NODE_ENV)
   const configService = app.get(ConfigService)
-  const __rootdirname = process.cwd()
-  const appDir = configService.get('common.appDir')
-  const userDir = configService.get('common.userDir')
-  const publicDir = configService.get('common.publicDir')
-  const staticPrefix = configService.get('common.staticPrefix')
+  const common = configService.get<ReturnType<typeof commonConfig>>('common')
+  // const __rootdirname = process.cwd()
+  // const appDir = configService.get('common.appDir')
+  // const userDir = configService.get('common.userDir')
+  // const publicDir = configService.get('common.publicDir')
+  // const staticPrefix = configService.get('common.staticPrefix')
   // console.log(path.join(__rootdirname, userDir, publicDir), staticPrefix)
-  app.useStaticAssets(path.join(appDir ? appDir : __rootdirname, userDir, publicDir), { prefix: staticPrefix })
+  app.useStaticAssets(common.fullPublicDir, { prefix: common.staticPrefix })
 
   /** 接口文档(待完善) */
   // const options = new DocumentBuilder()

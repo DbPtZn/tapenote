@@ -11,19 +11,17 @@ export class UploadController {
   @UseGuards(AuthGuard('jwt'))
   @Post(`/img`)
   @UseInterceptors(FileInterceptor('file'))
-  async uploadImg(@UploadedFile() file, @Body() formData, @Req() req, @Res() res) {
+  async uploadImg(@UploadedFile() file: Express.Multer.File, @Body() formData, @Req() req, @Res() res) {
     try {
-      // console.log(file)
+      console.log(file)
       // console.log(formData.dirname) // 暂不考虑该方案
-      const filePath = await this.uploadService.uploadImage({
-        sourcePath: file.path,
-        extname: extname(file.originalname),
-        dirname: req.user.dirname,
-        userId: req.user.id
-      })
-      const path = '/public' + (filePath as string).split('public')[1]
+      // await this.uploadService.upload(file, file.originalname, req.user.dirname)
+      // const path = `https://pic.tapenote.cn/${req.user.dirname}/${file.originalname}`
       // console.log(path)
-      res.status(200).send(path)
+      const filePath = await this.uploadService.upload(file, req.user.id, req.user.dirname)
+      // const path = '/public' + (filePath as string).split('public')[1]
+      // console.log(path)
+      res.status(200).send(filePath)
     } catch (error) {
       console.log(error)
       res.status(400).send(error)

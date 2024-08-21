@@ -33,7 +33,7 @@ export class UploadFile {
     type: 'varchar',
     length: 24
   })
-  type: string // 文件类型
+  mimetype: string // 文件类型
 
   @Column({
     type: 'varchar',

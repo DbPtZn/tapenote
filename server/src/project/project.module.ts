@@ -11,12 +11,15 @@ import { FragmentModule } from 'src/fragment/fragment.module'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
 import { SnapshotModule } from 'src/snapshot/snapshot.module'
 import { User } from 'src/user/entities/user.entity'
+import { UploadFile } from 'src/upload/entities/file.entity'
+import { UploadModule } from 'src/upload/upload.module'
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Project, User]),
     forwardRef(() => FolderModule),
     // forwardRef(() => FragmentModule),
+    UploadModule,
     StorageModule,
     FfmpegModule,
     SnapshotModule,

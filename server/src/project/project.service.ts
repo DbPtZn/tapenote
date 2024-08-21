@@ -11,7 +11,7 @@ import { UpdateTitleDto } from './dto/update-title.dto'
 import { UpdateContentDto } from './dto/update-content.dto'
 import { UpdateSidenoteContentDto } from './dto/update-sidenote-content.dto'
 import { FfmpegService } from 'src/ffmpeg/ffmpeg.service'
-import path from 'path'
+import path, { basename } from 'path'
 import fs from 'fs'
 import fsx from 'fs-extra'
 import * as UUID from 'uuid'
@@ -24,6 +24,9 @@ import { AddSubmissionHistoryDto } from './dto/add-submission.dts'
 import { SnapshotService } from 'src/snapshot/snapshot.service'
 import { InputProjectDto } from './dto/input-project.dto'
 import { User } from 'src/user/entities/user.entity'
+import { commonConfig } from 'src/config'
+import { ConfigService } from '@nestjs/config'
+import { UploadService } from 'src/upload/upload.service'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -50,6 +53,7 @@ interface InheritDto {
 const __rootdirname = process.cwd()
 @Injectable()
 export class ProjectService {
+  private readonly common: ReturnType<typeof commonConfig>
   constructor(
     @InjectRepository(Project)
     private projectsRepository: Repository<Project>,
@@ -65,9 +69,12 @@ export class ProjectService {
     private readonly storageService: StorageService,
     private readonly ffmpegService: FfmpegService,
     private readonly snapshotService: SnapshotService,
+    private readonly configService: ConfigService,
     private readonly userlogger: UserLoggerService,
-    private readonly logger: LoggerService
+    private readonly logger: LoggerService,
+    private readonly uploadService: UploadService
   ) {
+    this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
     // 测试校验功能
     // this.checkAndCorrectFragmentSquence(new string('65f9c02f6c5a54c1b4b249a0'))
   }
@@ -141,7 +148,6 @@ export class ProjectService {
       }
       project.submissionHistory = []
 
-      let _audiopath = ''
       switch (lib) {
         case LibraryEnum.NOTE:
           //
@@ -158,17 +164,9 @@ export class ProjectService {
           procedureId && (project.fromProcedureId = procedureId)
           project.sidenote = data.sidenote || ''
           project.annotations = data.annotations || []
-          const {
-            audio,
-            audiopath,
-            duration,
-            promoterSequence,
-            keyframeSequence,
-            subtitleSequence,
-            subtitleKeyframeSequence
-          } = await this.generateCourse(project.id, project.fromProcedureId, dirname, project.dirname)
-          _audiopath = audiopath
-          project.audio = audio || ''
+          const { audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } =
+            await this.generateCourse(project.id, project.fromProcedureId, dirname, project.dirname, userId)
+          project.audio = this.common.enableCOS ? audio : basename(audio) || ''
           project.duration = duration || 0
           project.promoterSequence = promoterSequence || []
           project.keyframeSequence = keyframeSequence || []
@@ -177,7 +175,7 @@ export class ProjectService {
           break
       }
       const result = await this.projectsRepository.save(project)
-      _audiopath && (result.audio = _audiopath)
+      result.audio = this.storageService.getResponsePath(result.audio, `${dirname}/${result.dirname}`)
       if (!result) {
         throw new Error(`创建项目失败！`)
       }
@@ -193,7 +191,13 @@ export class ProjectService {
   }
 
   /** 生成微课数据 */
-  async generateCourse(courseId: string, procedureId: string, userDirname: string, projectDirname: string) {
+  async generateCourse(
+    courseId: string,
+    procedureId: string,
+    userDirname: string,
+    projectDirname: string,
+    userId: string
+  ) {
     try {
       const procedure = await this.projectsRepository.findOne({ where: { id: procedureId }, relations: ['fragments'] })
       // 片段排序
@@ -207,11 +211,11 @@ export class ProjectService {
           return order.indexOf(a.id) - order.indexOf(b.id)
         })
         .map(fragment => {
-          fragment.audio = this.storageService.getFilePath({
-            dirname: [userDirname, procedure.dirname],
-            filename: fragment.audio,
-            category: 'audio'
-          })
+          this.common.enableCOS &&
+            (fragment.audio = this.storageService.getFilePath({
+              dirname: [userDirname, procedure.dirname],
+              filename: fragment.audio
+            }))
           return fragment
         })
 
@@ -252,18 +256,19 @@ export class ProjectService {
       subtitleKeyframeSequence = subtitleKeyframeGroup.flat()
 
       // 拼接音频片段
-      const { filepath, filename } = this.storageService.createFilePath({
-        dirname: [userDirname, projectDirname],
-        category: 'audio',
-        originalname: `${randomstring.generate(3)}${new Date().getTime()}`,
-        extname: '.wav'
-      })
+      // const filepath = this.storageService.createFilePath({
+      //   dirname: [userDirname, projectDirname],
+      //   filename: `${randomstring.generate(3)}${new Date().getTime()}.wav`,
+      // })
+      // 创建临时地址
+      const tempPath = this.storageService.createTempFilePath('.wav')
+
       // console.log(group.audioFragments)
       await this.ffmpegService
-        .concatAudio(group.audioFragments, filepath)
+        .concatAudio(group.audioFragments, tempPath)
         .then(() => {
           console.log('拼接成功！')
-          console.log(filepath)
+          console.log(tempPath)
         })
         .catch(err => {
           console.log(err)
@@ -271,20 +276,31 @@ export class ProjectService {
         })
 
       /** 计算合成音频的时长 */
-      const duration = await this.ffmpegService.calculateDuration(filepath)
+      const duration = await this.ffmpegService.calculateDuration(tempPath)
       console.log(`合成音频时长：${duration}, 片段总时长：${accumDuration}`)
+
+      /** 存储到数据库/上传音频文件 */
+      const filepath = await this.uploadService.upload(
+        {
+          filename: basename(tempPath),
+          path: tempPath,
+          mimetype: 'audio/wav'
+        },
+        userId,
+        `${userDirname}/${projectDirname}`
+      )
+
       // throw '测试'
       return {
         title: procedure.title,
         content: procedure.content,
         abbrev: procedure.abbrev,
-        audio: filename,
+        audio: filepath,
         duration,
         promoterSequence,
         keyframeSequence,
         subtitleSequence,
-        subtitleKeyframeSequence,
-        audiopath: filepath
+        subtitleKeyframeSequence
       }
     } catch (error) {
       throw error
@@ -294,23 +310,22 @@ export class ProjectService {
   async coverCourse(courseId: string, procedureId: string, userId: string, dirname: string) {
     try {
       const course = await this.projectsRepository.findOne({ where: { id: courseId, userId } })
-      if(!course) throw new Error(`课程项目不存在！`)
+      if (!course) throw new Error(`课程项目不存在！`)
       const {
         title,
         content,
         abbrev,
         audio,
-        audiopath,
         duration,
         promoterSequence,
         keyframeSequence,
         subtitleSequence,
         subtitleKeyframeSequence
-      } = await this.generateCourse(courseId, procedureId, dirname, course.dirname)
+      } = await this.generateCourse(courseId, procedureId, dirname, course.dirname, userId)
       course.title = title
       course.content = content
       course.abbrev = abbrev
-      course.audio = audio || ''
+      course.audio = this.common.enableCOS ? audio : basename(audio) || ''
       course.duration = duration || 0
       course.promoterSequence = promoterSequence || []
       course.keyframeSequence = keyframeSequence || []
@@ -326,7 +341,7 @@ export class ProjectService {
           await this.projectsRepository.save(result)
         }
       }
-      result.audio = audiopath
+      result.audio = this.storageService.getResponsePath(result.audio, `${dirname}/${result.dirname}`)
       return result
     } catch (error) {
       throw error
@@ -381,38 +396,39 @@ export class ProjectService {
         where: { id, userId, removed: RemovedEnum.NEVER },
         relations: relations
       })
-      switch (project.lib) {
-        case LibraryEnum.NOTE:
-          //
-          break
-        case LibraryEnum.PROCEDURE:
-          // 补全片段音频路径
-          if (!dirname) throw new Error('未指定 dirname！')
-          project.fragments = project.fragments.map(fragment => {
-            fragment.audio = this.storageService.getFilePath({
-              dirname: [dirname, project.dirname],
-              filename: fragment.audio,
-              category: 'audio'
-            })
-            if (isGetFullSpeakerAvatar) {
-              fragment.speaker.avatar = this.storageService.getFilePath({
+      // 本地存储时需要补全路径
+      if (!this.common.enableCOS) {
+        switch (project.lib) {
+          case LibraryEnum.NOTE:
+            //
+            break
+          case LibraryEnum.PROCEDURE:
+            // 补全片段音频路径
+            if (!dirname) throw new Error('未指定 dirname！')
+            project.fragments = project.fragments.map(fragment => {
+              fragment.audio = this.storageService.getFilePath({
                 dirname: [dirname, project.dirname],
-                category: 'image',
-                filename: fragment.speaker.avatar
+                filename: fragment.audio
               })
-            }
-            return fragment
-          })
-          break
-        case LibraryEnum.COURSE:
-          // 补全音频路径
-          if (!dirname) throw new Error('未指定 dirname！')
-          project.audio = this.storageService.getFilePath({
-            dirname: [dirname, project.dirname],
-            filename: project.audio,
-            category: 'audio'
-          })
-          break
+              if (isGetFullSpeakerAvatar) {
+                // TODO
+                fragment.speaker.avatar = this.storageService.getFilePath({
+                  dirname: [dirname, project.dirname],
+                  filename: fragment.speaker.avatar
+                })
+              }
+              return fragment
+            })
+            break
+          case LibraryEnum.COURSE:
+            // 补全音频路径
+            if (!dirname) throw new Error('未指定 dirname！')
+            project.audio = this.storageService.getFilePath({
+              dirname: [dirname, project.dirname],
+              filename: project.audio
+            })
+            break
+        }
       }
       // console.log(project.sequence)
       return project
@@ -433,17 +449,17 @@ export class ProjectService {
   async findProcudureById(id: string, userId: string, dirname: string) {
     try {
       const procedure = await this.projectsRepository.findOneBy({ id, userId })
-      // 补全音频路径
-      if (!dirname) throw new Error('未指定 dirname！')
-      procedure.fragments = procedure.fragments.map(fragment => {
-        const filePath = this.storageService.getFilePath({
-          dirname,
-          filename: fragment.audio,
-          category: 'audio'
+      if(!this.common.enableCOS) {
+        // 补全音频路径
+        if (!dirname) throw new Error('未指定 dirname！')
+        procedure.fragments = procedure.fragments.map(fragment => {
+          fragment.audio = this.storageService.getFilePath({
+            dirname,
+            filename: fragment.audio
+          })
+          return fragment
         })
-        fragment.audio = filePath
-        return fragment
-      })
+      }
       return procedure
     } catch (error) {
       throw error
@@ -454,12 +470,13 @@ export class ProjectService {
     try {
       const course = await this.projectsRepository.findOneBy({ id, userId })
       if (!course) throw new NotFoundException(`课程项目于不存在！项目id: ${id}`)
-      if (!dirname) throw new Error('未指定 dirname！')
-      course.audio = this.storageService.getFilePath({
-        dirname: [dirname, course.dirname],
-        filename: course.audio,
-        category: 'audio'
-      })
+      if(!this.common.enableCOS) {
+        if (!dirname) throw new Error('未指定 dirname！')
+        course.audio = this.storageService.getFilePath({
+          dirname: [dirname, course.dirname],
+          filename: course.audio,
+        })
+      }
       return course
     } catch (error) {
       throw error
@@ -540,12 +557,22 @@ export class ProjectService {
       const courses = await this.projectsRepository
         .createQueryBuilder('project')
         .leftJoinAndSelect('project.folder', 'folder')
-        .select(['project.id', 'project.cover', 'project.title', 'project.abbrev', 'project.duration', 'project.detail', 'project.createAt', 'folder.id', 'folder.name'])
+        .select([
+          'project.id',
+          'project.cover',
+          'project.title',
+          'project.abbrev',
+          'project.duration',
+          'project.detail',
+          'project.createAt',
+          'folder.id',
+          'folder.name'
+        ])
         .where('project.fromProcedureId = :id', { id })
         .andWhere('project.lib = :lib', { lib: LibraryEnum.COURSE })
         .andWhere('project.userId = :userId', { userId })
         .getMany()
-      
+
       console.log(courses)
       return courses
     } catch (error) {
@@ -682,47 +709,42 @@ export class ProjectService {
       } finally {
         await queryRunner.release()
       }
-      
-      const dir = this.storageService.getDocDir({ dir: [dirname, project.dirname] })
-      try {
-        fsx.removeSync(dir)
-      } catch (error) {
-        console.log(`删除项目目录时发生错误` + error)
-        this.userlogger.error(`删除项目[${project.id}]的目录:[${dir}]时发生错误`, error.message)
-        throw error
-      }
-      // 注：因为现在我改成将 project 相关的文件放在 project.dirname 下，所以当项目彻底删除时只需要删除 project.dirname 目录即可
-      // 如果是 course，应当删除对应的音频文件
-      // if (project.lib === LibraryEnum.COURSE) {
-      //   const filepath = this.storageService.getFilePath({
-      //     filename: project.audio,
-      //     dirname: [dirname, project.dirname],
-      //     category: 'audio'
-      //   })
-      //   try {
-      //     this.storageService.deleteSync(filepath)
-      //   } catch (error) {
-      //     console.log(`删除'audio'文件时发生错误` + error)
-      //     this.userlogger.error(`删除项目[${project.id}]的'audio':[${filepath}]时发生错误`, error.message)
-      //   }
+
+      // const dir = this.storageService.getDir([dirname, project.dirname])
+      // try {
+      //   fsx.removeSync(dir)
+      // } catch (error) {
+      //   console.log(`删除项目目录时发生错误` + error)
+      //   this.userlogger.error(`删除项目[${project.id}]的目录:[${dir}]时发生错误`, error.message)
+      //   throw error
       // }
+      // 注：因为现在我改成将 project 相关的文件放在 project.dirname 下，所以当项目彻底删除时只需要删除 project.dirname 目录即可
+      
+      // 如果是 course，应当删除对应的音频文件
+      if (project.lib === LibraryEnum.COURSE) {
+        // const filepath = this.storageService.getFilePath({
+        //   filename: project.audio,
+        //   dirname: [dirname, project.dirname],
+        // })
+        try {
+          this.storageService.deleteSync(`${dirname}/${project.dirname}/${project.audio}`)
+        } catch (error) {
+          console.log(`删除'audio'文件时发生错误` + error)
+          this.userlogger.error(`删除项目[${project.id}]的'audio':[${project.audio}]时发生错误`, error.message)
+        }
+      }
 
       // 如果是 Procedure ，则找到所有片段并删除对应的音频文件
-      // if (project.lib === LibraryEnum.PROCEDURE) {
-      //   for (const fragment of project.fragments) {
-      //     const filepath = this.storageService.getFilePath({
-      //       filename: fragment.audio,
-      //       dirname: [dirname, project.dirname],
-      //       category: 'audio'
-      //     })
-      //     try {
-      //       this.storageService.deleteSync(filepath)
-      //     } catch (error) {
-      //       console.log(`删除片段对应的音频时发送错误` + error)
-      //       this.userlogger.error(`删除项目[${project.id}]的'fragment.audio':[${filepath}]时发生错误`, error.message)
-      //     }
-      //   }
-      // }
+      if (project.lib === LibraryEnum.PROCEDURE) {
+        for (const fragment of project.fragments) {
+          try {
+            this.storageService.deleteSync(`${dirname}/${project.dirname}/${fragment.audio}`)
+          } catch (error) {
+            console.log(`删除片段对应的音频时发送错误` + error)
+            this.userlogger.error(`删除项目[${project.id}]的'fragment.audio':[${fragment.audio}]时发生错误`, error.message)
+          }
+        }
+      }
       return { msg: '删除成功！', date: new Date() }
     } catch (error) {
       throw error
@@ -790,7 +812,7 @@ export class ProjectService {
 
           // 建立新的实体关系
           newFragment.project = target
-          
+
           // 复制音频文件
           const { filename, filepath } = this.storageService.createFilePath({
             dirname: [dirname, target.dirname],
@@ -819,11 +841,11 @@ export class ProjectService {
             // 获取移除片段在源项目中的排序位置
             const index = target.removedSequence.findIndex(item => item === fragment.id)
             if (index !== -1) target.removedSequence[index] = newFragment.id
-            else this.userlogger.error(`替换片段的排序时出错，被替换片段[${fragment.id}]在 removedSequence 列表中不存在！`)
+            else
+              this.userlogger.error(`替换片段的排序时出错，被替换片段[${fragment.id}]在 removedSequence 列表中不存在！`)
           }
           return newFragment
         })
-
 
         // 复制片段的 speaker 头像文件
         const sourceSpeakerDirPath = this.storageService.getDocDir({
@@ -862,7 +884,7 @@ export class ProjectService {
         await queryRunner.commitTransaction()
       } catch (error) {
         await queryRunner.rollbackTransaction()
-        await fsx.remove(this.storageService.getDocDir({ dir: [dirname, target.dirname]}))
+        await fsx.remove(this.storageService.getDocDir({ dir: [dirname, target.dirname] }))
         this.userlogger.error(`保存克隆实体失败,项目id:${projectId}`, error.message)
         throw error
       } finally {
@@ -917,8 +939,7 @@ export class ProjectService {
       const result = await this.projectsRepository.save(project)
       this.userlogger.log(`删除投稿历史记录成功,项目id:${id}`)
       return { updateAt: result.updateAt }
-    }
-    catch (error) {
+    } catch (error) {
       this.userlogger.error(`删除投稿历史记录失败,项目id:${id}`, error.message)
       throw error
     }
@@ -973,7 +994,9 @@ export class ProjectService {
         case 'delete':
           if (index === -1) {
             // eslint-disable-next-line prettier/prettier
-            this.userlogger.error(`彻底删除片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的'removeSequence'中！`)
+            this.userlogger.error(
+              `彻底删除片段[${fragmentId}]出现异常，片段不在项目[${procedureId}]的'removeSequence'中！`
+            )
             return
           }
           procedure.removedSequence.splice(index, 1)
@@ -989,8 +1012,12 @@ export class ProjectService {
           }
           if (index !== oldIndex || procedure.sequence[oldIndex] !== fragmentId) {
             // eslint-disable-next-line prettier/prettier
-            this.userlogger.error(`移动片段[${fragmentId}]出现异常，片段在项目[${procedureId}]的'sequence'中的位置与参数'oldIndex'不符！`)
-            this.userlogger.error(`移动片段时的异常状态：${procedure.sequence.join('|')}, index:${index}, oldIndex:${oldIndex}, fragmentId:${fragmentId}, oldIndexFragmentId:${procedure.sequence[oldIndex]}`)
+            this.userlogger.error(
+              `移动片段[${fragmentId}]出现异常，片段在项目[${procedureId}]的'sequence'中的位置与参数'oldIndex'不符！`
+            )
+            this.userlogger.error(
+              `移动片段时的异常状态：${procedure.sequence.join('|')}, index:${index}, oldIndex:${oldIndex}, fragmentId:${fragmentId}, oldIndexFragmentId:${procedure.sequence[oldIndex]}`
+            )
             return
           }
           procedure.sequence.splice(oldIndex, 1)
@@ -1056,7 +1083,9 @@ export class ProjectService {
       // 移除片段
       const removedFragments = project.fragments.filter(fragment => fragment.removed !== RemovedEnum.NEVER)
       // eslint-disable-next-line prettier/prettier
-      this.userlogger.log(`项目[${id}]的片段序列状态：正常片段数量：${fragments.length},移除片段数量：${removedFragments.length},正常排序长度：${project.sequence.length},移除排序长度：${project.removedSequence.length}`)
+      this.userlogger.log(
+        `项目[${id}]的片段序列状态：正常片段数量：${fragments.length},移除片段数量：${removedFragments.length},正常排序长度：${project.sequence.length},移除排序长度：${project.removedSequence.length}`
+      )
       // 正常片段是否全包含于正常序列中
       fragments.forEach(fragment => {
         const isInclude = project.sequence.some(id => id === fragment.id)
