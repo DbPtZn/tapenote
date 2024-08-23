@@ -4,6 +4,7 @@ import { TrashController } from './trash.controller'
 import { FolderModule } from 'src/folder/folder.module'
 import { StorageModule } from 'src/storage/storage.module'
 import { ProjectModule } from 'src/project/project.module'
+import { UserLoggerModule } from 'src/user-logger/userLogger.module'
 
 @Module({
   imports: [StorageModule, FolderModule, ProjectModule],

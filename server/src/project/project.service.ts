@@ -130,7 +130,7 @@ export class ProjectService {
       const project = new Project()
       project.id = UUID.v4()
       project.lib = lib
-      project.dirname = await this.generateDirname(dirname)
+      // project.dirname = await this.generateDirname(dirname)
       project.folderId = folderId
       project.folder = folder
       project.userId = userId
@@ -165,8 +165,8 @@ export class ProjectService {
           project.sidenote = data.sidenote || ''
           project.annotations = data.annotations || []
           const { audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } =
-            await this.generateCourse(project.id, project.fromProcedureId, dirname, project.dirname, userId)
-          project.audio = this.common.enableCOS ? audio : basename(audio) || ''
+            await this.generateCourse(project.id, project.fromProcedureId, dirname, userId)
+          project.audio = basename(audio) || ''
           project.duration = duration || 0
           project.promoterSequence = promoterSequence || []
           project.keyframeSequence = keyframeSequence || []
@@ -175,7 +175,7 @@ export class ProjectService {
           break
       }
       const result = await this.projectsRepository.save(project)
-      result.audio = this.storageService.getResponsePath(result.audio, `${dirname}/${result.dirname}`)
+      result.audio = this.storageService.getResponsePath(result.audio, dirname)
       if (!result) {
         throw new Error(`创建项目失败！`)
       }
@@ -194,8 +194,7 @@ export class ProjectService {
   async generateCourse(
     courseId: string,
     procedureId: string,
-    userDirname: string,
-    projectDirname: string,
+    dirname: string,
     userId: string
   ) {
     try {
@@ -211,11 +210,7 @@ export class ProjectService {
           return order.indexOf(a.id) - order.indexOf(b.id)
         })
         .map(fragment => {
-          this.common.enableCOS &&
-            (fragment.audio = this.storageService.getFilePath({
-              dirname: [userDirname, procedure.dirname],
-              filename: fragment.audio
-            }))
+          fragment.audio = this.storageService.getFilePath(fragment.audio, dirname)
           return fragment
         })
 
@@ -287,7 +282,7 @@ export class ProjectService {
           mimetype: 'audio/wav'
         },
         userId,
-        `${userDirname}/${projectDirname}`
+        dirname
       )
 
       // throw '测试'
@@ -307,6 +302,7 @@ export class ProjectService {
     }
   }
 
+  /** 在制定 course 上创建新版本时，自动覆盖原 course */
   async coverCourse(courseId: string, procedureId: string, userId: string, dirname: string) {
     try {
       const course = await this.projectsRepository.findOne({ where: { id: courseId, userId } })
@@ -321,11 +317,11 @@ export class ProjectService {
         keyframeSequence,
         subtitleSequence,
         subtitleKeyframeSequence
-      } = await this.generateCourse(courseId, procedureId, dirname, course.dirname, userId)
+      } = await this.generateCourse(courseId, procedureId, dirname, userId)
       course.title = title
       course.content = content
       course.abbrev = abbrev
-      course.audio = this.common.enableCOS ? audio : basename(audio) || ''
+      course.audio = basename(audio) || ''
       course.duration = duration || 0
       course.promoterSequence = promoterSequence || []
       course.keyframeSequence = keyframeSequence || []
@@ -341,19 +337,20 @@ export class ProjectService {
           await this.projectsRepository.save(result)
         }
       }
-      result.audio = this.storageService.getResponsePath(result.audio, `${dirname}/${result.dirname}`)
+      result.audio = this.storageService.getResponsePath(result.audio, `${dirname}`)
       return result
     } catch (error) {
       throw error
     }
   }
 
+  /** 导入项目（目前仅实现笔记导入） */
   async input(dto: InputProjectDto, userId: string, dirname: string) {
     try {
       const { lib, title, content, cover, penname, email, homepage } = dto
       checkTitle(title)
       const user = await this.usersRepository.findOneBy({ id: userId })
-      console.log(dto.folderId)
+      // console.log(dto.folderId)
       const folderId = dto.folderId ? dto.folderId : user.dir[lib]
       const folder = await this.folderService.findOneById(folderId, userId)
       const project = new Project()
@@ -368,7 +365,6 @@ export class ProjectService {
       project.content = content
       project.abbrev = txt ? txt.slice(0, 100) : ''
       project.cover = cover
-      project.dirname = await this.generateDirname(dirname)
       project.removed = RemovedEnum.NEVER
 
       project.detail = {
@@ -388,49 +384,33 @@ export class ProjectService {
   }
 
   /** -------------------------------- 查询 ------------------------------------ */
-  /** 找到指向项目于： 包含片段、音频完整路径等信息 */
-  async findOne(id: string, userId: string, dirname: string, relations = [], isGetFullSpeakerAvatar = true) {
+  /** 查询项目：返回项目信息包含提供给客户端使用的文件相对路径 */
+  async findOne(id: string, userId: string, dirname: string) {
     try {
-      relations.includes('fragments') ? '' : relations.push('fragments') // fragments 是默认必选
       const project = await this.projectsRepository.findOne({
         where: { id, userId, removed: RemovedEnum.NEVER },
-        relations: relations
+        relations: ['fragments']
       })
-      // 本地存储时需要补全路径
-      if (!this.common.enableCOS) {
-        switch (project.lib) {
-          case LibraryEnum.NOTE:
-            //
-            break
-          case LibraryEnum.PROCEDURE:
-            // 补全片段音频路径
-            if (!dirname) throw new Error('未指定 dirname！')
-            project.fragments = project.fragments.map(fragment => {
-              fragment.audio = this.storageService.getFilePath({
-                dirname: [dirname, project.dirname],
-                filename: fragment.audio
-              })
-              if (isGetFullSpeakerAvatar) {
-                // TODO
-                fragment.speaker.avatar = this.storageService.getFilePath({
-                  dirname: [dirname, project.dirname],
-                  filename: fragment.speaker.avatar
-                })
-              }
-              return fragment
-            })
-            break
-          case LibraryEnum.COURSE:
-            // 补全音频路径
-            if (!dirname) throw new Error('未指定 dirname！')
-            project.audio = this.storageService.getFilePath({
-              dirname: [dirname, project.dirname],
-              filename: project.audio
-            })
-            break
-        }
+      // 补全路径
+      switch (project.lib) {
+        case LibraryEnum.NOTE:
+          //
+          break
+        case LibraryEnum.PROCEDURE:
+          // 补全片段音频路径
+          if (!dirname) throw new Error('未指定 dirname！')
+          project.fragments = project.fragments.map(fragment => {
+            fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
+            fragment.speaker.avatar = this.storageService.getResponsePath(fragment.speaker.avatar, dirname)
+            return fragment
+          })
+          break
+        case LibraryEnum.COURSE:
+          // 补全音频路径
+          if (!dirname) throw new Error('未指定 dirname！')
+          project.audio = this.storageService.getResponsePath(project.audio, dirname)
+          break
       }
-      // console.log(project.sequence)
       return project
     } catch (error) {
       throw error
@@ -449,17 +429,12 @@ export class ProjectService {
   async findProcudureById(id: string, userId: string, dirname: string) {
     try {
       const procedure = await this.projectsRepository.findOneBy({ id, userId })
-      if(!this.common.enableCOS) {
-        // 补全音频路径
-        if (!dirname) throw new Error('未指定 dirname！')
-        procedure.fragments = procedure.fragments.map(fragment => {
-          fragment.audio = this.storageService.getFilePath({
-            dirname,
-            filename: fragment.audio
-          })
-          return fragment
-        })
-      }
+      // 补全音频路径
+      if (!dirname) throw new Error('未指定 dirname！')
+      procedure.fragments = procedure.fragments.map(fragment => {
+        fragment.audio = this.storageService.getFilePath(fragment.audio, dirname)
+        return fragment
+      })
       return procedure
     } catch (error) {
       throw error
@@ -470,13 +445,8 @@ export class ProjectService {
     try {
       const course = await this.projectsRepository.findOneBy({ id, userId })
       if (!course) throw new NotFoundException(`课程项目于不存在！项目id: ${id}`)
-      if(!this.common.enableCOS) {
-        if (!dirname) throw new Error('未指定 dirname！')
-        course.audio = this.storageService.getFilePath({
-          dirname: [dirname, course.dirname],
-          filename: course.audio,
-        })
-      }
+      if (!dirname) throw new Error('未指定 dirname！')
+      course.audio = this.storageService.getFilePath(course.audio, dirname)
       return course
     } catch (error) {
       throw error
@@ -709,25 +679,13 @@ export class ProjectService {
       } finally {
         await queryRunner.release()
       }
-
-      // const dir = this.storageService.getDir([dirname, project.dirname])
-      // try {
-      //   fsx.removeSync(dir)
-      // } catch (error) {
-      //   console.log(`删除项目目录时发生错误` + error)
-      //   this.userlogger.error(`删除项目[${project.id}]的目录:[${dir}]时发生错误`, error.message)
-      //   throw error
-      // }
-      // 注：因为现在我改成将 project 相关的文件放在 project.dirname 下，所以当项目彻底删除时只需要删除 project.dirname 目录即可
       
+      // 删除文件失败不影响删除项目，缺点是可能会产生一些文件残余，但不会影响到用户体验
+
       // 如果是 course，应当删除对应的音频文件
       if (project.lib === LibraryEnum.COURSE) {
-        // const filepath = this.storageService.getFilePath({
-        //   filename: project.audio,
-        //   dirname: [dirname, project.dirname],
-        // })
         try {
-          this.storageService.deleteSync(`${dirname}/${project.dirname}/${project.audio}`)
+          await this.storageService.deleteFile(project.audio, project.id, userId, dirname)
         } catch (error) {
           console.log(`删除'audio'文件时发生错误` + error)
           this.userlogger.error(`删除项目[${project.id}]的'audio':[${project.audio}]时发生错误`, error.message)
@@ -738,13 +696,14 @@ export class ProjectService {
       if (project.lib === LibraryEnum.PROCEDURE) {
         for (const fragment of project.fragments) {
           try {
-            this.storageService.deleteSync(`${dirname}/${project.dirname}/${fragment.audio}`)
+            await this.storageService.deleteFile(fragment.audio, fragment.id, userId, dirname)
           } catch (error) {
             console.log(`删除片段对应的音频时发送错误` + error)
             this.userlogger.error(`删除项目[${project.id}]的'fragment.audio':[${fragment.audio}]时发生错误`, error.message)
           }
         }
       }
+
       return { msg: '删除成功！', date: new Date() }
     } catch (error) {
       throw error
@@ -767,7 +726,12 @@ export class ProjectService {
 
   async copy(projectId: string, folderId: string, userId: string, dirname: string) {
     try {
-      const source = await this.findOne(projectId, userId, dirname, ['folder', 'user'], false)
+      // const source = await this.findOne(projectId, userId, dirname, ['folder', 'user'], false)
+      const source = await this.projectsRepository.findOne({
+        where: { id: projectId, userId, removed: RemovedEnum.NEVER },
+        relations: ['folder', 'fragments', 'user'],
+      })
+
       if (!source) throw new Error('找不到目标文件！')
 
       // 先进行克隆
@@ -783,51 +747,23 @@ export class ProjectService {
         target.folder = newFolder
       }
 
-      // 设置目标项目目录
-      target.dirname = await this.generateDirname(dirname)
-
-      // 如果是 course ，则应该生成新的音频文件，并且需要更新 audio
-      if (target.lib === LibraryEnum.COURSE) {
-        // 创建新的音频文件
-        const { filename, filepath } = this.storageService.createFilePath({
-          dirname: [dirname, target.dirname],
-          category: 'audio',
-          originalname: target.id,
-          extname: '.wav'
-        })
-        // 复制文件
-        await fsx.copyFile(source.audio, filepath)
-        target.audio = filename
-      }
+      // 如果是 course ，直接复制 audio
+      if (target.lib === LibraryEnum.COURSE) target.audio = source.audio
 
       // 如果是工程，则应该复制 fragments 中的音频，并且每一个 fragment 都要重新生成
       // 相应的 sequence 和 removeSequence 都要重写
       if (target.lib === LibraryEnum.PROCEDURE) {
-        target.fragments = target.fragments.map(fragment => {
-          // 克隆 fragment 实体
+        target.fragments = [] // 将 target fragments 清空
+        for(const fragment of source.fragments) {
+          // 先将全部片段信息复制到新片段上（再修改需要变更的内容）
           const newFragment = Object.assign(new Fragment(), fragment)
-
           // 赋予新 uuid
           newFragment.id = UUID.v4()
-
           // 建立新的实体关系
-          newFragment.project = target
-
-          // 复制音频文件
-          const { filename, filepath } = this.storageService.createFilePath({
-            dirname: [dirname, target.dirname],
-            category: 'audio',
-            originalname: newFragment.id,
-            extname: '.wav'
-          })
-          try {
-            fsx.copyFileSync(fragment.audio, filepath)
-          } catch (error) {
-            this.userlogger.error(`复制音频文件时出错，被复制音频文件[${fragment.audio}]不存在！`)
-            newFragment.transcript.push('该片段音频文件已丢失！')
-          }
-          newFragment.audio = filename
-
+          // newFragment.project = target
+          // 复制文件路径
+          newFragment.audio = fragment.audio
+          // 复制移除状态
           newFragment.removed = fragment.removed
 
           // 处理排序信息
@@ -844,20 +780,10 @@ export class ProjectService {
             else
               this.userlogger.error(`替换片段的排序时出错，被替换片段[${fragment.id}]在 removedSequence 列表中不存在！`)
           }
-          return newFragment
-        })
 
-        // 复制片段的 speaker 头像文件
-        const sourceSpeakerDirPath = this.storageService.getDocDir({
-          dir: [dirname, source.dirname],
-          category: 'image'
-        })
-        const targetSpeakerDirPath = this.storageService.getDocDir({
-          dir: [dirname, target.dirname],
-          category: 'image'
-        })
-        await fsx.copy(sourceSpeakerDirPath, targetSpeakerDirPath)
-
+          target.fragments.push(newFragment)
+        }
+  
         // 校验 sequence 长度和内容是否完成替换
         if (target.sequence.length === source.sequence.length) {
           target.sequence.some(item => source.sequence.includes(item))
@@ -877,14 +803,48 @@ export class ProjectService {
       await queryRunner.startTransaction()
 
       try {
-        await queryRunner.manager.save(target) // 保存新的实体
-        for (const fragment of target.fragments) {
+        const newProject = await queryRunner.manager.save(target) // 保存新的实体
+        console.log('newProject.fragments.length:', newProject.fragments.length)
+        for (const fragment of newProject.fragments) {
+          // 建立新的实体关系
+          fragment.project = newProject
           await queryRunner.manager.save(fragment) // 保存新的子实体
         }
         await queryRunner.commitTransaction()
+
+        // 复制项目创建成功以后再复制文件
+
+        // 添加 course 音频文件的引用记录
+        if (newProject.lib === LibraryEnum.COURSE) {
+          try {
+            await this.storageService.copyFile(newProject.audio, newProject.id, userId)
+          } catch (error) {
+            throw new Error('复制音频文件时发生错误')
+          }
+        }
+
+        // 添加音频文件复制记录
+        if (newProject.lib === LibraryEnum.PROCEDURE) {
+          for(const fragment of newProject.fragments) {
+            // 添加片段的 audio 文件引用记录
+            try {
+              await this.storageService.copyFile(fragment.audio, fragment.id, userId)
+            } catch (error) {
+              this.userlogger.error(`复制音频文件时出错，被复制音频文件[${fragment.audio}]不存在！`)
+              // fragment.transcript.push('该片段音频文件已丢失！')
+            }
+            // 添加片段的 speaker 头像文件引用记录 (此类图片永不删除，不需要考虑引用问题)
+            // try {
+            //   this.storageService.copyFile(fragment.speaker.avatar, fragment.id, userId, dirname)
+            // } catch (error) {
+            //   console.log(`复制'speaker'头像文件时发生错误` + error)
+            //   this.userlogger.error(`复制'speaker'头像文件时出错，被复制文件[${fragment.speaker.avatar}]不存在！`)
+            // }
+          }
+        }
+
       } catch (error) {
         await queryRunner.rollbackTransaction()
-        await fsx.remove(this.storageService.getDocDir({ dir: [dirname, target.dirname] }))
         this.userlogger.error(`保存克隆实体失败,项目id:${projectId}`, error.message)
         throw error
       } finally {
@@ -903,11 +863,6 @@ export class ProjectService {
   }
 
   /** -------------------------------- 版本控制 ------------------------------------ */
-  /** 版本快照 */
-  // snapshot(id: string, userId: string) {
-  //   const project = this.projectsRepository.findOneBy({ id, userId })
-  //   project
-  // }
 
   /** -------------------------------- 投稿 -------------------------------- */
   /** 添加投稿历史记录 */
@@ -1135,35 +1090,35 @@ export class ProjectService {
   /** -------------------------------- 片段 ------------------------------------ */
 
   /** 生成项目专用目录的地址 */
-  async generateDirname(userDirname: string) {
-    let dirname = generateRandomStr()
-    let projects = await this.projectsRepository.find({ where: { dirname } })
-    // 校验该地址是否已经存在
-    let fullPath1 = path.join(__rootdirname, 'public', userDirname, dirname)
-    let fullPath2 = path.join(__rootdirname, 'private', userDirname, dirname)
-    while (projects.length > 0 || fs.existsSync(fullPath1) || fs.existsSync(fullPath2)) {
-      // console.log('该用户文件夹已存在，重新生成')
-      dirname = generateRandomStr()
-      projects = await this.projectsRepository.find({ where: { dirname } })
-      fullPath1 = path.join(__rootdirname, 'public', userDirname, dirname)
-      fullPath2 = path.join(__rootdirname, 'private', userDirname, dirname)
-    }
-    return dirname
-  }
+  // async generateDirname(userDirname: string) {
+  //   let dirname = generateRandomStr()
+  //   let projects = await this.projectsRepository.find({ where: { dirname } })
+  //   // 校验该地址是否已经存在
+  //   let fullPath1 = path.join(__rootdirname, 'public', userDirname, dirname)
+  //   let fullPath2 = path.join(__rootdirname, 'private', userDirname, dirname)
+  //   while (projects.length > 0 || fs.existsSync(fullPath1) || fs.existsSync(fullPath2)) {
+  //     // console.log('该用户文件夹已存在，重新生成')
+  //     dirname = generateRandomStr()
+  //     projects = await this.projectsRepository.find({ where: { dirname } })
+  //     fullPath1 = path.join(__rootdirname, 'public', userDirname, dirname)
+  //     fullPath2 = path.join(__rootdirname, 'private', userDirname, dirname)
+  //   }
+  //   return dirname
+  // }
 }
 
 /** 生成随机字符串 */
-function generateRandomStr(num = 8) {
-  const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  let result = ''
+// function generateRandomStr(num = 8) {
+//   const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+//   let result = ''
 
-  for (let i = 0; i < num; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length)
-    result += characters.charAt(randomIndex)
-  }
+//   for (let i = 0; i < num; i++) {
+//     const randomIndex = Math.floor(Math.random() * characters.length)
+//     result += characters.charAt(randomIndex)
+//   }
 
-  return result
-}
+//   return result
+// }
 
 /** 生成片段的关键帧序列 */
 function generateFragmentKeyframeSquence(fragment: Fragment, accumDuration: number): number[] {

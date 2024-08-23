@@ -5,10 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Snapshot } from './entities/snapshot.entity';
 import { Project } from 'src/project/entities/project.entity';
 import { StorageModule } from 'src/storage/storage.module';
-import { UserLoggerModule } from 'src/user-logger/userLogger.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Snapshot, Project]), StorageModule, UserLoggerModule],
+  imports: [TypeOrmModule.forFeature([Snapshot, Project]), StorageModule],
   controllers: [SnapshotController],
   providers: [SnapshotService],
   exports: [SnapshotService],

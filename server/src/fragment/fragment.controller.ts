@@ -41,24 +41,25 @@ export class FragmentController {
     try {
       const fragment = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname)
       // console.log(fragment.audio)
-      if (fragment.speaker.avatar) {
-        fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
-      }
-      const data = {
-        key: createTTSFragmentDto.key, // 返回的信息中添加 key 值标识
-        id: fragment.id,
-        audio: '/public' + fragment.audio.split('public')[1],
-        duration: fragment.duration,
-        txt: fragment.txt,
-        transcript: fragment.transcript,
-        tags: fragment.tags,
-        promoters: fragment.promoters,
-        timestamps: fragment.timestamps,
-        speaker: fragment.speaker,
-        collapsed: fragment.collapsed,
-        removed: fragment.removed
-      }
-      res.send(data)
+      // if (fragment.speaker.avatar) {
+      //   fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
+      // }
+      // const data = {
+      //   key: createTTSFragmentDto.key, // 返回的信息中添加 key 值标识
+      //   id: fragment.id,
+      //   audio: '/public' + fragment.audio.split('public')[1],
+      //   duration: fragment.duration,
+      //   txt: fragment.txt,
+      //   transcript: fragment.transcript,
+      //   tags: fragment.tags,
+      //   promoters: fragment.promoters,
+      //   timestamps: fragment.timestamps,
+      //   speaker: fragment.speaker,
+      //   collapsed: fragment.collapsed,
+      //   removed: fragment.removed
+      // }
+      fragment['key'] = createTTSFragmentDto.key
+      res.send(fragment)
     } catch (error) {
       // console.log(error)
       res.status(400).send(error.message)
@@ -80,24 +81,25 @@ export class FragmentController {
         req.user.dirname
       )
       // console.log(formData)
-      if (fragment.speaker.avatar) {
-        fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
-      }
-      const data = {
-        key: formData.key, // 返回的信息中添加 key 值标识
-        id: fragment.id,
-        audio: '/public' + fragment.audio.split('public')[1],
-        duration: fragment.duration,
-        txt: fragment.txt,
-        transcript: fragment.transcript,
-        tags: fragment.tags,
-        promoters: fragment.promoters,
-        timestamps: fragment.timestamps,
-        speaker: fragment.speaker,
-        collapsed: fragment.collapsed,
-        removed: fragment.removed
-      }
-      res.send(data)
+      // if (fragment.speaker.avatar) {
+      //   fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
+      // }
+      // const data = {
+      //   key: formData.key, // 返回的信息中添加 key 值标识
+      //   id: fragment.id,
+      //   audio: '/public' + fragment.audio.split('public')[1],
+      //   duration: fragment.duration,
+      //   txt: fragment.txt,
+      //   transcript: fragment.transcript,
+      //   tags: fragment.tags,
+      //   promoters: fragment.promoters,
+      //   timestamps: fragment.timestamps,
+      //   speaker: fragment.speaker,
+      //   collapsed: fragment.collapsed,
+      //   removed: fragment.removed
+      // }
+      fragment['key'] = formData.key
+      res.send(fragment)
     } catch (error) {
       console.log(error)
       res.status(400).send(error.message)
@@ -108,20 +110,20 @@ export class FragmentController {
   async createBlank(@Body() dto: CreateBlankFragmentDto, @Req() req, @Res() res) {
     try {
       const fragment = await this.fragmentService.createBlank(dto, req.user.id, req.user.dirname)
-      const data = {
-        id: fragment.id,
-        audio: '/public' + fragment.audio.split('public')[1],
-        duration: fragment.duration,
-        txt: fragment.txt,
-        transcript: fragment.transcript,
-        tags: fragment.tags,
-        promoters: fragment.promoters,
-        timestamps: fragment.timestamps,
-        speaker: fragment.speaker,
-        collapsed: fragment.collapsed,
-        removed: fragment.removed
-      }
-      res.send(data)
+      // const data = {
+      //   id: fragment.id,
+      //   audio: '/public' + fragment.audio.split('public')[1],
+      //   duration: fragment.duration,
+      //   txt: fragment.txt,
+      //   transcript: fragment.transcript,
+      //   tags: fragment.tags,
+      //   promoters: fragment.promoters,
+      //   timestamps: fragment.timestamps,
+      //   speaker: fragment.speaker,
+      //   collapsed: fragment.collapsed,
+      //   removed: fragment.removed
+      // }
+      res.send(fragment)
     } catch (error) {
       console.log(error)
       res.status(400).send(error.message)
@@ -265,8 +267,8 @@ export class FragmentController {
   async copy(@Body() dto: CopyFragmentDto, @Req() req, @Res() res) {
     try {
       const fragment = await this.fragmentService.copy(dto, req.user.id, req.user.dirname)
-      fragment.audio = '/public' + fragment.audio.split('public')[1]
-      fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
+      // fragment.audio = '/public' + fragment.audio.split('public')[1]
+      // fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
       delete fragment.project
       res.status(200).send({ updateAt: fragment.updateAt, fragment })
     } catch (error) {

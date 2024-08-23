@@ -13,6 +13,9 @@ import { Fragment } from './entities/fragment.entity'
 import { SpeakerModule } from 'src/speaker/speaker.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { commonConfig } from 'src/config'
+import randomstring from 'randomstring'
+import { UserLoggerModule } from 'src/user-logger/userLogger.module'
+import { UploadModule } from 'src/upload/upload.module'
 const __rootdirname = process.cwd()
 @Module({
   imports: [
@@ -37,17 +40,17 @@ const __rootdirname = process.cwd()
       inject: [ConfigService],
       useFactory(configService: ConfigService) {
         const common = configService.get<ReturnType<typeof commonConfig>>('common')
-        const dest = common.appDir ? `${common.appDir}/assets/temp/images` : join(__rootdirname, 'temp', 'audios')
+        // const dest = common.appDir ? `${common.appDir}/assets/temp/images` : join(__rootdirname, 'temp', 'audios')
         return {
           storage: diskStorage({
-            destination: dest,
+            destination: common.fullTempDir,
             filename: (req, file, cb) => {
               let filename = ''
               const extension = extname(file.originalname)
               if (extension) {
-                filename = `${Date.now()}${extension}`
+                filename = `${randomstring.generate(5)}-${new Date().getTime()}${extension}`
               } else {
-                filename = `${Date.now()}.${file.mimetype.split('/')[file.mimetype.split('/').length - 1]}`
+                filename = `${randomstring.generate(5)}-${new Date().getTime()}.${file.mimetype.split('/')[file.mimetype.split('/').length - 1]}`
               }
               cb(null, filename)
             }
@@ -60,7 +63,8 @@ const __rootdirname = process.cwd()
     SpeakerModule,
     FfmpegModule,
     StorageModule,
-    SherpaModule
+    SherpaModule,
+    UploadModule,
   ],
   controllers: [FragmentController],
   providers: [FragmentService],

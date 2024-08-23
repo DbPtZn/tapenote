@@ -11,6 +11,7 @@ type State = UserState
 export const useUserStore = defineStore('userStore', {
   state(): State {
     return {
+      resourceDomain: '',
       hostname: '',
       account: '',
       nickname: '',

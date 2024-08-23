@@ -6,13 +6,14 @@ import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { UserService } from 'src/user/user.service'
 import { Repository } from 'typeorm'
 import { LoggerService } from 'src/logger/logger.service'
-import path, { basename } from 'path'
+import path, { basename, dirname } from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { SherpaService } from 'src/sherpa/sherpa.service'
 import { ConfigService } from '@nestjs/config'
 import * as UUID from 'uuid'
 import { commonConfig } from 'src/config'
 import randomstring from 'randomstring'
+import fsx from 'fs-extra'
 
 @Injectable()
 export class SpeakerService {
@@ -46,15 +47,12 @@ export class SpeakerService {
           : this.configService.get('sherpa.model.tts')
       speaker.role = role
       speaker.name = name
-      speaker.avatar = this.common.enableCOS ? avatar : basename(avatar)
+      speaker.avatar = basename(avatar)
       speaker.changer = changer ? changer : 0
       if (speaker.type === 'machine') {
         try {
           const txt = '哈库拉玛塔塔'
-          const filepath = this.storageService.createFilePath({
-            dirname: dirname,
-            filename: `${speaker.id}.wav`
-          })
+          const filepath = this.storageService.createLocalFilePath( `${speaker.id}.wav`, dirname)
           this.sherpaService.tts(txt, filepath, role, 1)
           speaker.audio = filepath
         } catch (error) {
@@ -64,7 +62,7 @@ export class SpeakerService {
       }
       const result = await this.speakersRepository.save(speaker)
       delete result.user
-      result.avatar = this.common.enableCOS ? avatar : `${this.common.staticPrefix}/${dirname}/${result.avatar}`
+      result.avatar = this.storageService.getResponsePath(result.avatar, dirname)
       return result
     } catch (error) {
       this.userLogger.error(`创建 speaker 失败`, error.message)
@@ -77,12 +75,6 @@ export class SpeakerService {
       const speaker = await this.speakersRepository.findOne({
         where: { id, userId }
       })
-      // const filepath = this.storageService.getFilePath({
-      //   dirname,
-      //   filename: speaker.avatar,
-      //   category: 'image'
-      // })
-      // speaker.avatar = filepath
       return speaker
     } catch (error) {
       throw error
@@ -94,8 +86,8 @@ export class SpeakerService {
       const speakers = await this.speakersRepository.find({
         where: { userId }
       })
-      this.common.enableCOS && speakers.forEach((speaker, index, arr) => {
-        arr[index].avatar = `${this.common.staticPrefix}/${dirname}/${speaker.avatar}`
+      speakers.forEach((speaker, index, arr) => {
+        arr[index].avatar = this.storageService.getResponsePath(speaker.avatar, dirname)
       })
       this.userLogger.log(`查询 speakers 成功`)
       return speakers
@@ -119,12 +111,9 @@ export class SpeakerService {
     try {
       const txt = '哈库拉玛塔塔'
       const filename = `${randomstring.generate(8)}.wav`
-      const filepath= this.storageService.createFilePath({
-        dirname: 'temp',
-        filename
-      })
+      const filepath= this.storageService.createLocalFilePath(filename ,'temp')
       await this.sherpaService.tts(txt, filepath, speakerId, speed)
-      return `${this.common.staticPrefix}/temp/${filename}`
+      return `${this.common.staticResourcePrefix}/temp/${filename}`
     } catch (error) {
       throw error
     }
@@ -132,11 +121,8 @@ export class SpeakerService {
 
   async clearTemp(url: string) {
     try {
-      const filepath = this.storageService.getFilePath({
-        dirname: 'temp',
-        filename: path.basename(url)
-      })
-      this.storageService.deleteSync(filepath)
+      const filepath = `${this.storageService.getDir('temp')}/${basename(url)}`
+      fsx.removeSync(filepath)
     } catch (error) {
       throw error
     }

@@ -26,10 +26,13 @@ import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
 import fs from 'fs'
+import fsx from 'fs-extra'
 import { Speaker } from 'src/speaker/entities/speaker.entity'
 import { SpeakerService } from 'src/speaker/speaker.service'
 // import sharp from 'sharp'
 import Jimp from 'jimp'
+import { basename } from 'path'
+import { UploadService } from 'src/upload/upload.service'
 
 @Injectable()
 export class FragmentService {
@@ -40,6 +43,7 @@ export class FragmentService {
     private readonly projectService: ProjectService,
     private readonly speakerService: SpeakerService,
     private readonly storageService: StorageService,
+    private readonly uploadService: UploadService,
     private readonly ffmpegService: FfmpegService,
     private readonly sherpaService: SherpaService,
     private readonly userlogger: UserLoggerService,
@@ -50,8 +54,7 @@ export class FragmentService {
     speakerId: string,
     type: 'human' | 'machine',
     userId: string,
-    dirname: string,
-    projectDirname: string
+    dirname: string
   ) {
     try {
       let fragmentSpeaker: FragmentSpeaker
@@ -59,42 +62,11 @@ export class FragmentService {
         const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
         // console.log('speaker', speaker)
         if (speaker) {
-          const filepath = this.storageService.getFilePath({
-            dirname: [dirname, projectDirname],
-            filename: speakerId + '.png',
-            category: 'image'
-          })
-          if (fs.existsSync(filepath)) {
-            fragmentSpeaker = {
-              type,
-              name: speaker.name,
-              avatar: speakerId + '.png',
-              role: speaker.role
-            }
-          } else {
-            const avatarpath = this.storageService.getFilePath({
-              dirname,
-              filename: speaker.avatar,
-              category: 'image'
-            })
-            const { filepath, filename } = this.storageService.createFilePath({
-              dirname: [dirname, projectDirname],
-              category: 'image',
-              originalname: speakerId,
-              extname: '.png'
-            })
-            // 复制图片并压缩，统一成 png 格式
-            // await sharp(avatarpath).toFormat('png').png({ quality: 50 }).toFile(filepath)
-            await Jimp.read(avatarpath, async (err, lenna) => {
-              if (err) throw err
-              await lenna.quality(50).writeAsync(filepath)
-            })
-            fragmentSpeaker = {
-              type,
-              name: speaker.name,
-              avatar: filename,
-              role: speaker.role
-            }
+          fragmentSpeaker = {
+            type,
+            name: speaker.name,
+            avatar: speaker.avatar,
+            role: speaker.role
           }
         } else {
           fragmentSpeaker = {
@@ -129,23 +101,24 @@ export class FragmentService {
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
 
-      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname, procudure.dirname)
+      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname)
 
       const text = txt.replace(/\s*/g, '')
       const fragmentId = UUID.v4()
 
       // 创建音频存储地址
-      const { filepath, filename } = this.storageService.createFilePath({
-        dirname: [dirname, procudure.dirname],
-        category: 'audio',
-        originalname: fragmentId,
-        extname: '.wav'
-      })
+      // const { filepath, filename } = this.storageService.createFilePath({
+      //   dirname: [dirname, procudure.dirname],
+      //   category: 'audio',
+      //   originalname: fragmentId,
+      //   extname: '.wav'
+      // })
+      const filepath = this.storageService.createTempFilePath('.wav')
       const fragment = new Fragment()
       fragment.id = fragmentId
       fragment.userId = userId
       fragment.project = procudure
-      fragment.audio = filename
+      fragment.audio = basename(filepath)
       fragment.duration = 0
       fragment.txt = text
       fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
@@ -201,6 +174,11 @@ export class FragmentService {
           if (filepath && fragment.duration !== 0) {
             // console.log(fragment)
             await this.fragmentsRepository.save(fragment)
+            await this.uploadService.upload({
+              filename: fragment.audio,
+              path: filepath,
+              mimetype: 'audio/wav'
+            }, userId, dirname, fragment.id)
           }
         })
         .catch(async error => {
@@ -210,12 +188,8 @@ export class FragmentService {
         })
       // console.log(fragment)
       this.userlogger.log(`合成语音创建片段成功！`)
-      fragment.audio = filepath // 替换成完整地址返回给前端
-      fragment.speaker.avatar = this.storageService.getFilePath({
-        dirname: [dirname, procudure.dirname],
-        category: 'image',
-        filename: fragmentSpeaker.avatar
-      })
+      fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
+      fragment.speaker.avatar = this.storageService.getResponsePath(fragmentSpeaker.avatar, dirname)
       return fragment
     } catch (error) {
       console.log(`创建片段失败：${error.message}`)
@@ -242,7 +216,7 @@ export class FragmentService {
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
 
-      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname, procudure.dirname)
+      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname)
 
       const fragmentId = UUID.v4()
       const fragment = new Fragment()
@@ -273,13 +247,14 @@ export class FragmentService {
       // console.log([d1, d2])
 
       // 创建音频地址
-      const { filename, filepath } = this.storageService.createFilePath({
-        dirname: [dirname, procudure.dirname],
-        category: 'audio',
-        originalname: fragmentId,
-        extname: '.wav'
-      })
-      fragment.audio = filename
+      // const { filename, filepath } = this.storageService.createFilePath({
+      //   dirname: dirname,
+      //   category: 'audio',
+      //   originalname: fragmentId,
+      //   extname: '.wav'
+      // })
+      const filepath = this.storageService.createTempFilePath('.wav')
+      fragment.audio = basename(filepath)
 
       // 格式化音频文件
       await this.ffmpegService.audioformat(temppath, filepath)
@@ -306,25 +281,28 @@ export class FragmentService {
             fragment.promoters = new Array(length)
           }
           if (filepath && fragment.transcript.length !== 0 && fragment.duration !== 0) {
+            // TODO 这里应该用事务确保音频文件上传成功，否则应该回滚
             await this.fragmentsRepository.save(fragment)
+            // 确定创建片段成功后再上传文件
+            await this.uploadService.upload({
+              filename: fragment.audio,
+              path: filepath,
+              mimetype: 'audio/wav'
+            }, userId, dirname, fragment.id)
           } else {
-            this.storageService.deleteSync(filepath)
+            fsx.removeSync(filepath)
             throw new Error('语音识别失败！')
           }
         })
         .catch(async error => {
           console.log(`语音识别失败：${error.message}`)
           this.userlogger.log(`语音识别失败，错误原因：${error.message} `)
-          this.storageService.deleteSync(filepath)
+          fsx.removeSync(filepath)
           await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
           throw error
         })
-      fragment.audio = filepath
-      fragment.speaker.avatar = this.storageService.getFilePath({
-        dirname: [dirname, procudure.dirname],
-        category: 'image',
-        filename: fragmentSpeaker.avatar
-      })
+      fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
+      fragment.speaker.avatar = this.storageService.getResponsePath(fragmentSpeaker.avatar, dirname)
       return fragment
     } catch (error) {
       this.userlogger.error(`创建片段失败，错误原因：${error.message} `)
@@ -366,12 +344,13 @@ export class FragmentService {
       fragment.removed = RemovedEnum.NEVER
 
       // 指定生成文件的位置
-      const { filename, filepath } = this.storageService.createFilePath({
-        dirname: [dirname, procudure.dirname],
-        category: 'audio',
-        originalname: fragment.id,
-        extname: '.wav'
-      })
+      // const { filename, filepath } = this.storageService.createFilePath({
+      //   dirname: [dirname, procudure.dirname],
+      //   category: 'audio',
+      //   originalname: fragment.id,
+      //   extname: '.wav'
+      // })
+      const filepath = this.storageService.createTempFilePath('.wav')
 
       // 执行FFmpeg命令
       try {
@@ -381,16 +360,24 @@ export class FragmentService {
         await this.ffmpegService.createBlankAudio(duration, filepath)
       } catch (error) {
         console.error('执行FFmpeg命令出错:', error)
-        this.storageService.deleteSync(filepath)
+        // this.storageService.deleteSync(filepath)
+        fsx.removeSync(filepath)
         throw new Error('空白音频生成失败！')
       }
 
-      fragment.audio = filename
+      fragment.audio = basename(filepath)
 
       const result = await this.fragmentsRepository.save(fragment)
+      await this.uploadService.upload({
+        filename: fragment.audio,
+        path: filepath,
+        mimetype: 'audio/wav'
+      }, userId, dirname, result.id)
+
+
       this.userlogger.log(`创建空白片段成功，片段ID为：${result.id}`)
       await this.projectService.updateSequence({ procedureId, fragmentId: fragment.id, userId, type: 'add' })
-      result.audio = filepath
+      result.audio = this.storageService.getResponsePath(result.audio, dirname)
       return result
     } catch (error) {
       console.log(error)
@@ -520,18 +507,19 @@ export class FragmentService {
   async delete(deleteFragmentDto: DeleteFragmentDto, userId: string, dirname: string) {
     const { procedureId, fragmentId } = deleteFragmentDto
     try {
-      const procedure = await this.projectService.findOneById(procedureId, userId)
+      // const procedure = await this.projectService.findOneById(procedureId, userId)
       const fragment = await this.fragmentsRepository.findOneBy({ id: fragmentId, userId })
-      const authname = fragment.audio
+      // const authname = fragment.audio
       await this.fragmentsRepository.remove(fragment)
       // 删除片段对应的音频文件
-      const filepath = this.storageService.getFilePath({
-        filename: authname,
-        dirname: [dirname, procedure.dirname],
-        category: 'audio'
-      })
-      this.storageService.deleteSync(filepath)
+      // const filepath = this.storageService.getFilePath({
+      //   filename: authname,
+      //   dirname: [dirname, procedure.dirname],
+      //   category: 'audio'
+      // })
+      // this.storageService.deleteSync(filepath)
       await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'delete' })
+      await this.storageService.deleteFile(fragment.audio, fragment.id, userId, dirname)
     } catch (error) {
       this.userlogger.error(`删除片段[${fragmentId}]失败`, error.message)
       throw error
@@ -605,7 +593,7 @@ export class FragmentService {
       })
 
       // 原项目目录
-      const sourceProjectDirname = sourceFragment.project.dirname
+      // const sourceProjectDirname = sourceFragment.project.dirname
 
       // 剪切的情况
       if (type === 'cut') {
@@ -652,48 +640,52 @@ export class FragmentService {
           sourceFragment.promoters.fill(null)
           sourceFragment.tags.fill(null)
 
+          // 更新音频文件数据库引用记录
+          await this.storageService.updateQuote(sourceFragment.audio, sourceFragment.id, targetFragmentId, userId)
+
           // 移动音频文件
-          const audiopath = this.storageService.getFilePath({
-            filename: sourceFragment.audio,
-            dirname: [dirname, sourceProjectDirname],
-            category: 'audio'
-          })
-          const { filename, filepath } = this.storageService.createFilePath({
-            dirname: [dirname, targetProject.dirname],
-            category: 'audio',
-            originalname: sourceFragment.id,
-            extname: '.wav'
-          })
-          this.userlogger.log(`片段剪切：源音频位置：${audiopath}, 目标音频位置${filepath}`)
-          fs.renameSync(audiopath, filepath)
-          sourceFragment.audio = filename
+          // const audiopath = this.storageService.getFilePath({
+          //   filename: sourceFragment.audio,
+          //   dirname: dirname,
+          // })
+          // const { filename, filepath } = this.storageService.createFilePath({
+          //   dirname: [dirname, targetProject.dirname],
+          //   category: 'audio',
+          //   originalname: sourceFragment.id,
+          //   extname: '.wav'
+          // })
+          // this.userlogger.log(`片段剪切：源音频位置：${audiopath}, 目标音频位置${filepath}`)
+          // fs.renameSync(audiopath, filepath)
+          // sourceFragment.audio = filename
 
           // 复制 speaker avatar 文件
-          const sourceAvatarPath = this.storageService.getFilePath({
-            filename: sourceFragment.speaker.avatar,
-            dirname: [dirname, sourceProjectDirname],
-            category: 'image'
-          })
-          const targetAvatarPath = this.storageService.getFilePath({
-            filename: sourceFragment.speaker.avatar,
-            dirname: [dirname, targetProject.dirname],
-            category: 'image'
-          })
-          if (!fs.existsSync(targetAvatarPath)) {
-            fs.copyFileSync(sourceAvatarPath, targetAvatarPath)
-          }
+          // const sourceAvatarPath = this.storageService.getFilePath({
+          //   filename: sourceFragment.speaker.avatar,
+          //   dirname: [dirname, sourceProjectDirname],
+          //   category: 'image'
+          // })
+          // const targetAvatarPath = this.storageService.getFilePath({
+          //   filename: sourceFragment.speaker.avatar,
+          //   dirname: [dirname, targetProject.dirname],
+          //   category: 'image'
+          // })
+          // if (!fs.existsSync(targetAvatarPath)) {
+          //   fs.copyFileSync(sourceAvatarPath, targetAvatarPath)
+          // }
         }
         const result = await this.fragmentsRepository.save(sourceFragment)
-        result.audio = this.storageService.getFilePath({
-          filename: sourceFragment.audio,
-          dirname: [dirname, sourceFragment.project.dirname], // 如果是非相同项目的情况下，实体关系已经变成 sourceFragment.project ==>> targetProject
-          category: 'audio'
-        })
-        result.speaker.avatar = this.storageService.getFilePath({
-          dirname: [dirname, sourceFragment.project.dirname], // 如果是非相同项目的情况下，实体关系已经变成 sourceFragment.project ==>> targetProject
-          category: 'image',
-          filename: result.speaker.avatar
-        })
+        result.audio = this.storageService.getResponsePath(result.audio, dirname)
+        result.speaker.avatar = this.storageService.getResponsePath(result.speaker.avatar, dirname)
+        // result.audio = this.storageService.getFilePath({
+        //   filename: sourceFragment.audio,
+        //   dirname: [dirname, sourceFragment.project.dirname], // 如果是非相同项目的情况下，实体关系已经变成 sourceFragment.project ==>> targetProject
+        //   category: 'audio'
+        // })
+        // result.speaker.avatar = this.storageService.getFilePath({
+        //   dirname: [dirname, sourceFragment.project.dirname], // 如果是非相同项目的情况下，实体关系已经变成 sourceFragment.project ==>> targetProject
+        //   category: 'image',
+        //   filename: result.speaker.avatar
+        // })
         this.userlogger.log(`剪切片段[${sourceFragmentId}]成功！`)
         return result
       } else {
@@ -704,9 +696,9 @@ export class FragmentService {
         newFragment.id = UUID.v4()
         newFragment.promoters.fill(null)
         newFragment.tags.fill(null)
-
+      
         // 建立实体关系并更新排序信息
-        let targetProjectDirname = ''
+        // let targetProjectDirname = ''
         if (sourceProjectId === targetProjectId) {
           newFragment.project = project
           await this.projectService.updateSequence({
@@ -717,7 +709,7 @@ export class FragmentService {
             insertFragmentId: newFragment.id,
             insertPosition: position
           })
-          targetProjectDirname = project.dirname
+          // targetProjectDirname = project.dirname
         } else {
           const targetProject = await this.projectService.findOneById(targetProjectId, userId)
           newFragment.project = targetProject
@@ -729,45 +721,52 @@ export class FragmentService {
             insertFragmentId: newFragment.id,
             insertPosition: position
           })
-          targetProjectDirname = targetProject.dirname
+
+          // 复制文件/添加引用记录
+          newFragment.audio = audio
+          await this.storageService.copyFile(audio, newFragment.id, userId)
+
+          // targetProjectDirname = targetProject.dirname
 
           // 复制 speaker avatar 文件
-          const sourceAvatarPath = this.storageService.getFilePath({
-            filename: sourceFragment.speaker.avatar,
-            dirname: [dirname, sourceProjectDirname],
-            category: 'image'
-          })
-          const targetAvatarPath = this.storageService.getFilePath({
-            filename: newFragment.speaker.avatar,
-            dirname: [dirname, targetProject.dirname],
-            category: 'image'
-          })
-          if (!fs.existsSync(targetAvatarPath)) {
-            fs.copyFileSync(sourceAvatarPath, targetAvatarPath)
-          }
+          // const sourceAvatarPath = this.storageService.getFilePath({
+          //   filename: sourceFragment.speaker.avatar,
+          //   dirname: [dirname, sourceProjectDirname],
+          //   category: 'image'
+          // })
+          // const targetAvatarPath = this.storageService.getFilePath({
+          //   filename: newFragment.speaker.avatar,
+          //   dirname: [dirname, targetProject.dirname],
+          //   category: 'image'
+          // })
+          // if (!fs.existsSync(targetAvatarPath)) {
+          //   fs.copyFileSync(sourceAvatarPath, targetAvatarPath)
+          // }
         }
 
         // 复制音频
-        const audioPath = this.storageService.getFilePath({
-          dirname: [dirname, sourceProjectDirname],
-          filename: audio,
-          category: 'audio'
-        })
-        const { filename: newAudioName, filepath: newAudioPath } = this.storageService.createFilePath({
-          dirname: [dirname, targetProjectDirname],
-          originalname: newFragment.id,
-          category: 'audio',
-          extname: '.wav'
-        })
-        this.storageService.copyFileSync(audioPath, newAudioPath)
-        newFragment.audio = newAudioName
+        // const audioPath = this.storageService.getFilePath({
+        //   dirname: [dirname, sourceProjectDirname],
+        //   filename: audio,
+        //   category: 'audio'
+        // })
+        // const { filename: newAudioName, filepath: newAudioPath } = this.storageService.createFilePath({
+        //   dirname: [dirname, targetProjectDirname],
+        //   originalname: newFragment.id,
+        //   category: 'audio',
+        //   extname: '.wav'
+        // })
+        // this.storageService.copyFileSync(audioPath, newAudioPath)
+        // newFragment.audio = newAudioName
         const result = await this.fragmentsRepository.save(newFragment)
-        result.audio = newAudioPath
-        result.speaker.avatar = this.storageService.getFilePath({
-          dirname: [dirname, targetProjectDirname],
-          category: 'image',
-          filename: result.speaker.avatar
-        })
+        // result.audio = newAudioPath
+        result.audio = this.storageService.getResponsePath(result.audio, dirname)
+        result.speaker.avatar = this.storageService.getResponsePath(result.speaker.avatar, dirname)
+        // result.speaker.avatar = this.storageService.getFilePath({
+        //   dirname: [dirname, targetProjectDirname],
+        //   category: 'image',
+        //   filename: result.speaker.avatar
+        // })
         this.userlogger.log(`复制片段[${sourceFragmentId}]成功！`)
         return result
       }

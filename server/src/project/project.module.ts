@@ -13,17 +13,19 @@ import { SnapshotModule } from 'src/snapshot/snapshot.module'
 import { User } from 'src/user/entities/user.entity'
 import { UploadFile } from 'src/upload/entities/file.entity'
 import { UploadModule } from 'src/upload/upload.module'
+import { BucketModule } from 'src/bucket/bucket.module'
+import { ConfigModule } from '@nestjs/config'
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Project, User]),
     forwardRef(() => FolderModule),
     // forwardRef(() => FragmentModule),
-    UploadModule,
     StorageModule,
     FfmpegModule,
     SnapshotModule,
-    UserLoggerModule
+    BucketModule,
+    UploadModule
   ],
   controllers: [ProjectController],
   providers: [ProjectService],

@@ -6,6 +6,7 @@ import { Speaker } from './entities/speaker.entity'
 import { UserModule } from 'src/user/user.module'
 import { StorageModule } from 'src/storage/storage.module'
 import { SherpaModule } from 'src/sherpa/sherpa.module'
+import { ConfigModule } from '@nestjs/config'
 
 @Module({
   imports: [TypeOrmModule.forFeature([Speaker]), UserModule, StorageModule, SherpaModule],

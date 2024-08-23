@@ -11,13 +11,15 @@ interface ModelType {
 }
 type Response = ModelType & Record<string, unknown>
 // const message = useMessage()
-const { speakerStore } = useStore()
+const { speakerStore, userListStore } = useStore()
 const props = defineProps<{
   account: string
   hostname: string
   type:  'human' | 'machine'
   submit: (res: Response) => void
 }>()
+const ResourceDomain = localStorage.getItem(`ResourceDomain:${props.hostname}`) as string
+console.log('ResourceDomain:', ResourceDomain)
 const formRef = ref<FormInst | null>(null)
 /** 表单数据 */
 const model = ref<ModelType>({
@@ -98,7 +100,7 @@ const rules: FormRules = {
     }
   ]
 }
-const accessToken = computed(() => sessionStorage.getItem(`User:${props.account}&${props.hostname}`))
+const accessToken = computed(() => sessionStorage.getItem(`User:${props.account}&${props.hostname}`)) 
 /** 提交 */
 function handleSubmit(e: MouseEvent) {
   e.preventDefault()
@@ -113,7 +115,7 @@ function handleSubmit(e: MouseEvent) {
 function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
   if (args.event) {
     // console.log(args.event.currentTarget)
-    const path = props.hostname + (args.event.currentTarget as XMLHttpRequest).response
+    const path = ResourceDomain + (args.event.currentTarget as XMLHttpRequest).response
     // console.log(path)
     model.value.avatar = path
   }
@@ -133,7 +135,7 @@ function handleTest(role: number) {
   }
   isLoading.value = true
   speakerStore.testTts(role, props.account, props.hostname).then(res => {
-    const url = props.hostname + res.data as string
+    const url = ResourceDomain + res.data as string
     const audio = new Audio(url)
     isLoading.value = false
     audio.oncanplay =() => {

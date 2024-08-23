@@ -42,26 +42,26 @@ export class ProjectController {
       // console.log(id)
       await this.projectService.checkAndCorrectFragmentSquence(id) // 确保片段顺序正确
       const project = await this.projectService.findOne(id, req.user.id, req.user.dirname)
-      switch (project.lib) {
-        case LibraryEnum.NOTE:
-          //
-          break
-        case LibraryEnum.PROCEDURE:
-          // 替换片段音频路径
-          project.fragments = project.fragments.map(fragment => {
-            fragment['id'] = fragment.id // 用于前端的 id
-            fragment.audio = '/public' + fragment.audio.split('public')[1]
-            if (fragment.speaker.avatar) {
-              fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
-            }
-            return fragment
-          }) as any
-          break
-        case LibraryEnum.COURSE:
-          // 替换音频路径
-          project.audio = '/public' + project.audio.split('public')[1] || ''
-          break
-      }
+      // switch (project.lib) {
+      //   case LibraryEnum.NOTE:
+      //     //
+      //     break
+      //   case LibraryEnum.PROCEDURE:
+      //     // 替换片段音频路径
+      //     project.fragments = project.fragments.map(fragment => {
+      //       fragment['id'] = fragment.id // 用于前端的 id
+      //       fragment.audio = '/public' + fragment.audio.split('public')[1]
+      //       if (fragment.speaker.avatar) {
+      //         fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
+      //       }
+      //       return fragment
+      //     }) as any
+      //     break
+      //   case LibraryEnum.COURSE:
+      //     // 替换音频路径
+      //     project.audio = '/public' + project.audio.split('public')[1] || ''
+      //     break
+      // }
       // console.log(project)
       res.status(200).send(project)
     } catch (error) {
@@ -205,7 +205,6 @@ export class ProjectController {
   ) {
     try {
       const result = await this.projectService.coverCourse(courseId, procedureId, req.user.id, req.user.dirname)
-      result.audio = '/public' + result.audio.split('public')[1] || ''
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error.message)

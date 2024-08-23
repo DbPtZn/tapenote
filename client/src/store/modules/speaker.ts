@@ -45,7 +45,8 @@ export const useSpeakerStore = defineStore('speakerStore', {
         if (speaker) {
           speaker.account = account
           speaker.hostname = hostname
-          speaker.avatar = hostname + speaker.avatar
+          const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
+          speaker.avatar = ResourceDomain + speaker.avatar
           this.data.push(speaker)
         }
         console.log(this.data)
@@ -65,10 +66,11 @@ export const useSpeakerStore = defineStore('speakerStore', {
       return this.creatorApi(account, hostname).speaker.getAll<T>()
     },
     set(data: Speaker[], account: string, hostname: string) {
+      const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
       const state = data.map(speaker => {
         speaker.account = account
         speaker.hostname = hostname
-        speaker.avatar = hostname + speaker.avatar
+        speaker.avatar = ResourceDomain + speaker.avatar
         return speaker
       })
       state.unshift(this.getDefault('human', account, hostname))
@@ -99,9 +101,9 @@ export const useSpeakerStore = defineStore('speakerStore', {
           hostname: hostname,
           id: '',
           type: 'human',
-          avatar: user.avatar,
+          avatar: user?.avatar || '',
           audio: '',
-          name: user.nickname,
+          name: user?.nickname || '',
           role: 10000,
           changer: 0
         }

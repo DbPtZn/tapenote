@@ -7,31 +7,41 @@ import { ConfigService } from '@nestjs/config'
 import { commonConfig } from 'src/config'
 import { BucketService } from 'src/bucket/bucket.service'
 import { LocalUploadFile } from 'src/upload/upload.service'
+import { InjectRepository } from '@nestjs/typeorm'
+import { UploadFile } from 'src/upload/entities/file.entity'
+import { DataSource, Repository } from 'typeorm'
+import { UserLoggerService } from 'src/user-logger/userLogger.service'
 // type Category = 'audio' | 'image' | 'bgm' | 'logs'
+/**
+ * 1. 对于一般文件，服务端不会返回完整的文件地址，只会返回相对路径，需要依据规则在客户端完成拼接
+ * 2. 对于一般文件，如果需要在服务端进行加工，通过 getDir 、getFilePath 获取文件路径, 会根据配置自动获取本地或 cos 文件路径
+ * 3. 对于一般文件，如果明确需要获取服务端本地路径，可以使用 getLocalFilePath 获取本地路径
+ */
+
+
 const __rootdirname = process.cwd()
 @Injectable()
 export class StorageService {
   private common: ReturnType<typeof commonConfig>
   constructor(
+    @InjectRepository(UploadFile)
+    private uploadFilesRepository: Repository<UploadFile>,
     private readonly configService: ConfigService,
-    private readonly bucketService: BucketService
+    private readonly bucketService: BucketService,
+    private readonly dataSource: DataSource
   ) {
     this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
   }
-  /**
-   * 获取用户目录（不存在时自动创建）
-   * @param dirname 用户目录名称
-   * @param prv 是否为私密文件夹
-   * @returns 文件存储目录
-   */
-  getDir(dir: string | string[], prv?: boolean) {
+
+  /** 获取本地目录 */
+  getLocalDir(dirname: string, prv?: boolean) {
     // console.log('getUserDir:' + process.env.NODE_ENV)
     const common = this.common
     const dirPath = path.join(
       common.systemDir ? common.systemDir : __rootdirname,
       common.appDir,
       prv === true ? common.privateDir : common.publicDir,
-      typeof dir === 'string' ? dir : dir.join('/')
+      dirname
     )
     // console.log(dirPath)
     if (!fs.existsSync(dirPath)) {
@@ -40,35 +50,49 @@ export class StorageService {
     return dirPath
   }
 
-  getFilePath(args: { filename: string; dirname: string | string[]; prv?: boolean }) {
-    const { dirname, filename, prv } = args
-    const dir = typeof dirname === 'string' ? dirname : dirname.join('/')
-    const dirPath = this.getDir(dir, prv)
+  /**
+   * 根据给定信息创建文件路径 (本地文件系统路径)
+   */
+  createLocalFilePath(filename: string, dirname: string, prv = false) {
+    // const filename = path.basename(sourcePath)
+    const dirPath = this.getLocalDir(dirname, prv)
+    const filepath = `${dirPath}/${filename}`
+    return filepath
+  }
+
+  /** 获取本地路径 */
+  getLocalFilePath(filename: string, dirname: string, prv = false) {
+    const dirPath = this.getLocalDir(dirname, prv)
     return `${dirPath}/${filename}`
   }
 
   /**
-   * 根据给定信息创建文件路径 (本地文件系统路径)
+   * 获取目录（本地模式时，若目录不存在会自动创建目录）
+   * @param dirname 用户目录名称
+   * @param prv 是否为私密文件夹
+   * @returns 文件存储目录
    */
-  createFilePath(
-    args: {
-      filename: string
-      dirname: string | string[]
-    },
-    prv = false
-  ) {
-    const { dirname, filename } = args
-    // const filename = path.basename(sourcePath)
-    const dir =
-      typeof dirname === 'string'
-        ? dirname
-        : dirname
-            .map(s => s.trim()) // 去除包含空白字符在内的空字符串
-            .filter(s => s)
-            .join('/')
-    const dirPath = this.getDir(dir, prv)
-    const filepath = dirPath + '/' + filename
-    return filepath
+  getDir(dirname: string, prv = false) {
+    if (this.common.enableCOS) {
+      return `${this.common.proxyDomain}/${dirname}`
+    }
+    const common = this.common
+    const dirPath = path.join(
+      common.systemDir ? common.systemDir : __rootdirname,
+      common.appDir,
+      prv === true ? common.privateDir : common.publicDir,
+      dirname
+    )
+    // console.log(dirPath)
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true })
+    }
+    return dirPath
+  }
+
+  getFilePath(filename: string, dirname: string, prv = false) {
+    const dirPath = this.getDir(dirname, prv)
+    return `${dirPath}/${filename}`
   }
 
   save(file: LocalUploadFile, dirname: string) {
@@ -89,7 +113,7 @@ export class StorageService {
             reject(err)
           })
       } else {
-        const targetPath = this.createFilePath({ filename: path.basename(file.path), dirname })
+        const targetPath = this.createLocalFilePath(path.basename(file.path), dirname)
         // 移动文件
         fs.rename(file.path, targetPath, err => {
           if (err) {
@@ -105,43 +129,127 @@ export class StorageService {
   /** 参数： 拓展名， 如 '.wav' */
   createTempFilePath(extname: string) {
     const extWithoutDot = extname.charAt(0) === '.' ? extname.slice(1) : extname
-    return path.join(os.tmpdir(), `tempfile-${Date.now()}.${extWithoutDot}`)
+    return path.join(os.tmpdir(), `${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`)
   }
 
-  createCOSPath(path: string, dirname: string) {
-    if(this.common.enableCOS) {
-      return `${this.common.proxyDomain}/${dirname}/${basename(path)}`
+  createCOSPath(pathOrName: string, dirname: string) {
+    if (this.common.enableCOS) {
+      return `${this.common.proxyDomain}/${dirname}/${basename(pathOrName)}`
     } else {
-      return basename(path)
+      return basename(pathOrName)
     }
   }
 
-  getResponsePath(path: string, dirname: string) {
-    return this.common.enableCOS ? path :`${this.common.staticPrefix}/${dirname}/${basename(path)}`
+  getResponsePath(filename: string, dirname: string) {
+    return `${this.common.staticPrefix}/${dirname}/${filename}`
   }
 
   /**
    * 删除文件
-   * @param relativePath 相对路径 userDirname/projectDirname/filename
+   * @param filename 文件名称
+   * @param quoteId 引用 id
+   * @param userId 用户 id
+   * @param dirname 目录名称
    * @param prv 是否私有 默认false，仅本地存储时有效
    */
-  async deleteSync(relativePath: string, prv = false) {
+  async deleteFile(filename: string, quoteId: string, userId: string, dirname: string, prv = false) {
     // TODO 还应删除对应数据库中的对象
+    const uploadfile = await this.uploadFilesRepository.findOne({
+      where: {
+        userId,
+        name: filename
+      }
+    })
+    if (!uploadfile) throw new Error('数据库未记录该文件信息')
+    // 如果引用中包含项目id，则将该 id 从引用中移除
+    const index = uploadfile.quote.indexOf(quoteId)
+    if (index !== -1) uploadfile.quote.splice(index, 1)
+
     try {
-      if(this.common.enableCOS) {
-        await this.bucketService.deleteObject(relativePath)
+      // 删除数据库中的记录
+      if (uploadfile.quote.length !== 0) {
+        // 如果尚有引用，则更新记录
+        await this.uploadFilesRepository.save(uploadfile)
       } else {
-        // const path = this.getFilePath({ dirname, filename, prv })
-        const common = this.common
-        const filepath = path.join(
-          common.systemDir ? common.systemDir : __rootdirname,
-          common.appDir,
-          prv === true ? common.privateDir : common.publicDir,
-          relativePath
-        )
-        fs.unlinkSync(filepath)
+        // 如果没有引用，则移除记录, 并删除具体文件
+        await this.uploadFilesRepository.remove(uploadfile)
+        // 删除具体文件
+        try {
+          if (this.common.enableCOS) {
+            await this.bucketService.deleteObject(`${dirname}/${filename}`)
+          } else {
+            const filepath = this.getFilePath(filename, dirname, prv)
+            fs.unlinkSync(filepath)
+          }
+        } catch (error) {
+          console.log('移除文件数据库记录成功，但删除具体文件失败')
+          // this.userLoggerService.error('移除文件数据库记录成功，但删除具体文件失败', error.message)
+        }
       }
     } catch (error) {
+      throw error
+    }
+  }
+
+  /**
+   * 复制文件 (等价于 addQuote)
+   * @param filename 
+   * @param copyTargetId 
+   * @param userId 
+   */
+  async copyFile(filename: string, copyTargetId: string, userId: string) {
+    return this.addQuote(filename, copyTargetId, userId)
+  }
+  /**
+   * 添加引用 (等价于 copyFile)
+   * @param filename 
+   * @param copyTargetId 
+   * @param userId 
+   * @returns 
+   */
+  async addQuote(filename: string, copyTargetId: string, userId: string) {
+    try {
+      const uploadfile = await this.uploadFilesRepository.findOneBy({
+        userId,
+        name: filename
+      })
+      if (!uploadfile) throw new Error('数据库未记录该文件信息')
+      uploadfile.quote.push(copyTargetId)
+      await this.uploadFilesRepository.save(uploadfile)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  /**
+   * 剪贴文件 (等价于 updateQuote)
+   * @param filename 文件名
+   * @param sourceQuoteId 源引用
+   * @param targetQuoteId 目标引用
+   * @param userId 用户 id
+   */
+  async cutFile(filename: string, sourceQuoteId: string, targetQuoteId: string, userId: string) {
+    this.updateQuote(filename, sourceQuoteId, targetQuoteId, userId)
+  }
+
+  /**
+   * 更新引用 (等价于 cutFile)
+   * @param filename 文件名
+   * @param sourceQuoteId 源引用
+   * @param targetQuoteId 目标引用
+   * @param userId 用户 id
+   */
+  async updateQuote(filename: string, sourceQuoteId: string, targetQuoteId: string, userId: string) {
+    try {
+      const uploadfile = await this.uploadFilesRepository.findOneBy({
+        userId,
+        name: filename
+      })
+      if (!uploadfile) throw new Error('数据库未记录该文件信息')
+      const index = uploadfile.quote.indexOf(sourceQuoteId)
+      if (index !== -1) uploadfile.quote.splice(index, 1, targetQuoteId)
+      await this.uploadFilesRepository.save(uploadfile)
+    } catch (error){
       throw error
     }
   }

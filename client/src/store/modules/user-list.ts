@@ -18,6 +18,7 @@ export interface SubscriptionConfig {
   desc: string
 }
 export interface User {
+  resourceDomain: string
   account: string
   nickname: string
   avatar: string
@@ -138,7 +139,7 @@ export const useUserListStore = defineStore('userListStore', {
         const key = `User:${account}&${hostname}`
         const token = sessionStorage.getItem(key)
         const userStateStr = localStorage.getItem(key)
-        // 第二优先：使用缓存种的用户信息
+        // 第二优先：使用缓存中的用户信息
         if (token) {
           if (userStateStr) {
             const state = JSON.parse(userStateStr) as UserState
@@ -170,9 +171,9 @@ export const useUserListStore = defineStore('userListStore', {
         .get<User>()
         .then(res => {
           // 补全头像地址
-          if (res.data.avatar) {
-            res.data.avatar = hostname + res.data.avatar
-          }
+          // if (res.data.avatar) {
+          //   res.data.avatar = hostname + res.data.avatar
+          // }
           return {
             hostname: hostname,
             ...res.data
@@ -188,11 +189,14 @@ export const useUserListStore = defineStore('userListStore', {
         })
     },
     set(data: UserState) {
+      const resourceDomain = data.resourceDomain ? data.resourceDomain : data.hostname
+      console.log('resourceDomain:', resourceDomain)
       const state: UserState = {
+        resourceDomain: resourceDomain,
         hostname: data.hostname,
         account: data.account,
         nickname: data.nickname,
-        avatar: data.avatar || '',
+        avatar: data.avatar ? resourceDomain + data.avatar : '',
         desc: data.desc || '',
         email: data.email || '',
         homepage: data.homepage || '',
@@ -222,7 +226,8 @@ export const useUserListStore = defineStore('userListStore', {
       this.setCache(state)
     },
     get(account: string, hostname: string) {
-      return this.data[this.data.findIndex(item => item.account === account && item.hostname === hostname)]
+      const index = this.data.findIndex(item => item.account === account && item.hostname === hostname)
+      if (index !== -1) return this.data[index]
     },
     fillInfo() {
       /** 补全排序信息 */
@@ -283,6 +288,9 @@ export const useUserListStore = defineStore('userListStore', {
         folderStore.getCache(userStore.account, userStore.hostname)
       }
     },
+    getResourceDomain(account: string, hostname: string) {
+      return this.get(account, hostname)?.resourceDomain
+    },
     checkCaches() {
       Object.keys(localStorage).map(key => {
         const prefix = key.substring(0, 5)
@@ -302,6 +310,8 @@ export const useUserListStore = defineStore('userListStore', {
     setCache(data: UserState) {
       if (data.account === '' || data.hostname === '') return
       localStorage.setItem(`User:${data.account}&${data.hostname}`, JSON.stringify(data))
+      localStorage.setItem(`ResourceDomain:${data.hostname}`, data.resourceDomain) // 缓存资源域名(会被覆盖，不会移除)
+      // const ResourceDomain = localStorage.getItem(`ResourceDomain:${props.hostname}`) as string
     },
      /** 移除缓存 */
     removeCache(account: string, hostname: string) {

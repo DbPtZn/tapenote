@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { StorageService } from 'src/storage/storage.service'
-import { MongoRepository } from 'typeorm'
+import { MongoRepository, Repository } from 'typeorm'
 import { UploadFile } from './entities/file.entity'
 // import { Worker } from 'worker_threads'
 import child_process from 'child_process'
@@ -14,7 +14,7 @@ import * as fs from 'fs'
 export interface LocalUploadFile extends Partial<Express.Multer.File> {
   filename: string
   path: string
-  mimetype: 'image/jpeg' | 'image/png' | 'audio/wav'
+  mimetype: 'image/jpeg' | 'image/png' | 'audio/wav' | string
   // md5: string
   // size: number
 }
@@ -23,7 +23,7 @@ export class UploadService {
   private common: ReturnType<typeof commonConfig>
   constructor(
     @InjectRepository(UploadFile)
-    private uploadFilesRepository: MongoRepository<UploadFile>,
+    private uploadFilesRepository: Repository<UploadFile>,
     private readonly storageService: StorageService,
     private readonly configService: ConfigService,
     private readonly bucketService: BucketService
@@ -37,7 +37,7 @@ export class UploadService {
   //   return this.bucketService.uploadFile(file, filename, dirname)
   // }
 
-  async upload(file: LocalUploadFile, userId: string, dirname: string) {
+  async upload(file: LocalUploadFile, userId: string, dirname: string, quoteId?: string) {
     try {
       const md5 = await this.calculateFileStats(file.path).catch(err => {
         throw new Error('计算图片md5失败')
@@ -48,21 +48,23 @@ export class UploadService {
       const uploadfile = await this.uploadFilesRepository.findOneBy({ md5, userId })
       if (uploadfile) {
         console.log('用户上传的图片已存在，直接返回图片路径!')
-        return uploadfile.path
+        return this.storageService.getResponsePath(uploadfile.name, dirname)
       }
       const filepath = await this.storageService.save(file, dirname).catch(err => {
         throw new Error('保存图片失败')
       })
       const upload = new UploadFile()
       upload.name = basename(filepath)
+      upload.dirname = dirname
       upload.path = filepath
       upload.userId = userId
       upload.mimetype = file.mimetype
       upload.md5 = md5
       upload.size = file.size
-      upload.quote = []
+      upload.quote = quoteId ? [quoteId] : []
       await this.uploadFilesRepository.save(upload)
-      return this.common.enableCOS ? filepath : `${this.common.staticPrefix}/${filepath.split(this.common.publicDir)[1]}`
+      // return `${this.common.staticPrefix}/${dirname}/${upload.name}`
+      return this.storageService.getResponsePath(upload.name, dirname)
     } catch (error) {
       console.log(error)
       throw error

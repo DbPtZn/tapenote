@@ -82,11 +82,11 @@ export class Project {
   })
   editorVersion: string
 
-  @Column({
-    type: 'varchar',
-    length: 18
-  })
-  dirname: string // 文件夹路径
+  // @Column({
+  //   type: 'varchar',
+  //   length: 18
+  // })
+  // dirname: string // 文件夹路径
 
   @Column({
     type: 'varchar',

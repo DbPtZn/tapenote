@@ -19,6 +19,12 @@ export class UploadFile {
   userId: string // 用户ID
 
   @Column({
+    type: 'varchar',
+    length: 18,
+  })
+  dirname: string
+
+  @Column({
     type: 'varchar'
   })
   md5: string // 文件MD5

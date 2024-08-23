@@ -11,6 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { commonConfig } from 'src/config'
 import { BucketModule } from 'src/bucket/bucket.module'
 import randomstring from 'randomstring'
+import { UserLoggerModule } from 'src/user-logger/userLogger.module'
 @Module({
   imports: [
     TypeOrmModule.forFeature([UploadFile]),
@@ -35,9 +36,10 @@ import randomstring from 'randomstring'
       }
     }),
     StorageModule,
-    BucketModule
+    BucketModule,
   ],
   controllers: [UploadController],
-  providers: [UploadService]
+  providers: [UploadService],
+  exports: [UploadService]
 })
 export class UploadModule {}

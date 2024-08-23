@@ -64,7 +64,7 @@ export class ImgToUrlService {
   // 处理队列中的上传任务(当前上传任务大于 this.maxConcurrency 时会进入等待)
   private processQueue() {
     if (this.queue.length > 0 && this.isRunning < this.maxConcurrency) {
-      console.log('this.isRunning', this.isRunning)
+      // console.log('this.isRunning', this.isRunning)
       const task = this.queue.shift()
       this.isRunning++
       task &&

@@ -6,20 +6,14 @@ export default registerAs('common', () => ({
   systemDir: process.env.SYSTEM_DIR || '', // 系统目录
   appDir: process.env.APP_DIR || '',  // 应用目录
   publicDir: process.env.PUBLIC_DIR || '', // 公共目录
-  staticPrefix: process.env.STATIC_RESOURCE_PREFIX || `${process.env.PUBLIC_DIR}`,
   privateDir: process.env.PRIVATE_DIR || '', // 私有目录
   logDir: process.env.LOG_DIR || '', // 日志目录
   logOpen: process.env.LOG_OPEN === 'true', // 是否开启系统日志
 
-
-  // /** 本地公开静态资源地址 */
-  // localFullPublicDir: path.join(process.env.SYSTEM_DIR ? process.env.SYSTEM_DIR : process.cwd(), process.env.APP_DIR, process.env.PUBLIC_DIR),
-  // /** 本地私有静态资源地址 */
-  // localFullPrivateDir: path.join(process.env.SYSTEM_DIR ? process.env.SYSTEM_DIR : process.cwd(), process.env.APP_DIR, process.env.PRIVATE_DIR),
-  // /** 本地临时静态资源地址 */
-  // localFullTempDir: path.join(process.env.SYSTEM_DIR ? process.env.SYSTEM_DIR : process.cwd(), process.env.APP_DIR, process.env.TEMP_DIR),
-  // /** 本地日志地址 */
-  // localFullLogDir: path.join(process.env.SYSTEM_DIR ? process.env.SYSTEM_DIR : process.cwd(), process.env.APP_DIR, process.env.LOG_DIR),
+  // 本地静态资源请求前缀 (保留，请求一些临时资源时可能需要该选项)
+  staticResourcePrefix: process.env.STATIC_RESOURCE_PREFIX || process.env.PUBLIC_DIR,
+  // 本地资源请求前缀（启动 cos 时自动将该选项设置为空字符串）
+  staticPrefix: process.env.ENABLE_COS === 'true' ? '' : (process.env.STATIC_RESOURCE_PREFIX || process.env.PUBLIC_DIR),
 
   // 基于环境自动补全目录路径
   /** 本地公开静态资源地址 */
@@ -30,10 +24,6 @@ export default registerAs('common', () => ({
   fullTempDir: join(process.env.SYSTEM_DIR ? process.env.SYSTEM_DIR : process.cwd(), process.env.APP_DIR, process.env.TEMP_DIR),
   /** 本地日志地址 */
   fullLogDir: join(process.env.SYSTEM_DIR ? process.env.SYSTEM_DIR : process.cwd(), process.env.APP_DIR, process.env.LOG_DIR),
-
-  // getResponsePath(path: string, dirname: string) {
-  //   return process.env.ENABLE_COS === 'true' ? path :`${process.env.STATIC_RESOURCE_PREFIX}/${dirname}/${basename(path)}`
-  // },
 
   // 对象存储相关配置
   enableCOS: process.env.ENABLE_COS === 'true',

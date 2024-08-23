@@ -7,7 +7,7 @@ import { DataSource, Repository } from 'typeorm'
 import { BcryptService } from 'src/bcrypt/bcrypt.service'
 import { UpdateUserPwdDto } from './dto/update-pwd.dto'
 import fs from 'fs'
-import path from 'path'
+import path, { basename } from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { UpdateUserConfigDto, UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
 import * as UUID from 'uuid'
@@ -176,11 +176,10 @@ export class UserService {
       this.userLogger.log(`正在查询用户信息...`)
       const user = await this.usersRepository.findOneBy({ id })
       this.userLogger.log(`查询用户信息成功!`)
-      if(!this.common.enableCOS) {
-        user.avatar = user.avatar ? this.common.staticPrefix + user.avatar.split(this.common.publicDir)[1] : ''
-      }
+      user.avatar = this.storageService.getResponsePath(user.avatar, dirname)
       // console.log(user)
       return {
+        resourceDomain: this.common.enableCOS ? this.common.proxyDomain : '', // 代理文件地址
         account: user.account,
         nickname: user.nickname,
         email: user.email,
@@ -209,14 +208,8 @@ export class UserService {
     this.userLogger.log(`正在更新用户信息...`)
     const { avatar, nickname, desc, email, phone, homepage } = updateUserDto
     const user = await this.findOneById(id)
-    // const filename = path.basename(avatar)
     if (user) {
-      if(/^https?:\/\//i.test(avatar) || this.common.enableCOS) {
-        user.avatar = avatar
-      } else {
-        user.avatar = this.common.fullPublicDir + '/' + dirname + '/' + avatar
-        console.log(user.avatar)
-      }
+      user.avatar = basename(avatar)
       user.nickname = nickname
       user.desc = desc
       user.email = email

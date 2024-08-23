@@ -138,33 +138,35 @@ export const useProjectStore = defineStore('projectStore', {
       return creator.getCreatorApi(account, hostname)!
     },
     create(folderId: string, lib: LibraryEnum, account: string, hostname: string) {
-      const { userStore } = useStore()
-      const author = { penname: userStore.nickname, email: userStore.email, homepage: userStore.homepage }
+      const { userListStore } = useStore()
+      const user = userListStore.get(hostname, account)!
+      const author = { penname: user.nickname, email: user.email, homepage: user.homepage }
       // console.log(author)
       return this.creatorApi(account, hostname).project.create<Project>({ folderId, lib, ...author }).then(res => {
         // 这里不能设置state，否则在创建后自动切换页面时不会更新state，因为它已经存在
         res.data.account = account
         res.data.hostname = hostname
-        res.data.audio = res.data.audio ? hostname + res.data.audio : ''
+        res.data.audio = res.data.audio ? user.resourceDomain + res.data.audio : ''
         res.data.fragments?.forEach(fragment => {
-          fragment.audio = hostname + fragment.audio
+          fragment.audio = user.resourceDomain + fragment.audio
         })
         return res.data
       })
     },
     createBy(args : {folderId: string, sourceId: string, lib: LibraryEnum, account: string, hostname: string}) {
       const { folderId, sourceId, lib, account, hostname } = args
-      const { userStore } = useStore()
-      const author = { penname: userStore.nickname, email: userStore.email, homepage: userStore.homepage }
+      const { userListStore } = useStore()
+      const user = userListStore.get(hostname, account)!
+      const author = { penname: user.nickname, email: user.email, homepage: user.homepage }
       return new Promise<Project>((resolve, reject) => {
         if (lib === LibraryEnum.NOTE) {
           const noteId = sourceId
           return this.creatorApi(account, hostname).project.create<Project>({ folderId, noteId, lib: LibraryEnum.PROCEDURE, ...author }).then(res => {
             res.data.account = account
             res.data.hostname = hostname
-            res.data.audio = res.data.audio ? hostname + res.data.audio : ''
+            res.data.audio = res.data.audio ? user.resourceDomain + res.data.audio : ''
             res.data.fragments?.forEach(fragment => {
-              fragment.audio = hostname + fragment.audio
+              fragment.audio = user.resourceDomain + fragment.audio
             })
             resolve(res.data)
           }).catch(err => reject(err))
@@ -175,9 +177,9 @@ export const useProjectStore = defineStore('projectStore', {
           return this.creatorApi(account, hostname).project.create<Project>({ folderId, procedureId, lib: LibraryEnum.COURSE, ...author }).then(res => {
             res.data.account = account
             res.data.hostname = hostname
-            res.data.audio = res.data.audio ? hostname + res.data.audio : ''
+            res.data.audio = res.data.audio ? user.resourceDomain + res.data.audio : ''
             res.data.fragments?.forEach(fragment => {
-              fragment.audio = hostname + fragment.audio
+              fragment.audio = user.resourceDomain + fragment.audio
             })
             resolve(res.data)
           }).catch(err => reject(err))
@@ -214,6 +216,7 @@ export const useProjectStore = defineStore('projectStore', {
       return this.creatorApi(account, hostname).project.get<Project>(id)
     },
     set(data: any, account: string, hostname: string) {
+      const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
       const item: Project = {
         account: account || '',
         hostname: hostname || '',
@@ -228,7 +231,7 @@ export const useProjectStore = defineStore('projectStore', {
         content: data.content || '',
         abbrev: data.abbrev || '',
         fragments: data.fragments?.map(fragment => {
-          fragment.audio = hostname + fragment.audio
+          fragment.audio = ResourceDomain + fragment.audio
           fragment.speaker = this.fragmentSpeakerFilter(fragment.speaker, account, hostname)
           return fragment
         }) || [],
@@ -236,7 +239,7 @@ export const useProjectStore = defineStore('projectStore', {
         removedSequence: data.removedSequence || [],
         speakerRecorder: data.speakerRecorder || [],
         speakerHistory: data.speakerHistory || { human: '', machine: '' },
-        audio: data.audio ? hostname + data.audio : '',
+        audio: data.audio ? ResourceDomain + data.audio : '',
         duration: data.duration || 0,
         promoterSequence: data.promoterSequence || [],
         keyframeSequence: data.keyframeSequence || [],
@@ -263,6 +266,7 @@ export const useProjectStore = defineStore('projectStore', {
       return item
     },
     fragmentSpeakerFilter(speaker: FragmentSpeaker, account: string, hostname: string) {
+      const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
       switch(speaker.type) {
         case 'human':
           if (speaker.role === 10000) {
@@ -273,14 +277,14 @@ export const useProjectStore = defineStore('projectStore', {
               speaker.avatar = userInfoMap.get(avatarkey)
             } else {
               const { userListStore } = useStore()
-              const user = userListStore.get(account, hostname)
+              const user = userListStore.get(account, hostname)!
               userInfoMap.set(`${account}&${hostname}:name`, user.nickname)
               userInfoMap.set(`${account}&${hostname}:avatar`, user.avatar)
               speaker.name = user.nickname
               speaker.avatar = user.avatar
             }
           } else {
-            speaker.avatar = hostname + speaker.avatar
+            speaker.avatar = ResourceDomain + speaker.avatar
           }
           break
         case 'machine':
@@ -288,7 +292,7 @@ export const useProjectStore = defineStore('projectStore', {
             speaker.name = '默认'
             speaker.avatar = './robot.png'
           } else {
-            speaker.avatar = hostname + speaker.avatar
+            speaker.avatar = ResourceDomain + speaker.avatar
           }
           break
       }
@@ -477,10 +481,11 @@ export const useProjectStore = defineStore('projectStore', {
     },
     pasteFragment(params: Parameters<typeof CreatorApi.prototype.fragment.copyFragment>[0], account: string, hostname: string) {
       console.log(params)
+      const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
       return this.creatorApi(account, hostname).fragment.copyFragment<{ fragment: Fragment, updateAt: string }>(params).then(res => {
         const { fragment, updateAt } = res.data
-        fragment.audio = hostname + fragment.audio
-        fragment.speaker.avatar = hostname + fragment.speaker.avatar
+        fragment.audio = ResourceDomain + fragment.audio
+        fragment.speaker.avatar = ResourceDomain + fragment.speaker.avatar
         const { sourceFragmentId, targetFragmentId, sourceProjectId, targetProjectId, type, position } = params
         const source = this.get(sourceProjectId)!
         const target = this.get(targetProjectId)!
@@ -589,6 +594,7 @@ export const useProjectStore = defineStore('projectStore', {
       /** 通过文本创建片段 */
       const createByText = (params: Parameters<typeof CreatorApi.prototype.fragment.createByText>[0]) => {
         const { speakerStore } = useStore()
+        const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
         const speaker = speakerStore.get(params.speakerId, account!, hostname!, 'machine')!
         const key = utils.randomString()
         const txt = params.txt.replace(/\s*/g, '')
@@ -619,8 +625,8 @@ export const useProjectStore = defineStore('projectStore', {
         sequence?.push(key) // 用 key 占位
         return this.creatorApi(account!, hostname!).fragment.createByText<Fragment>(params).then(res => {
           const data = res.data
-          data.audio = hostname + data.audio
-          if (params.speakerId !== '')  data.speaker.avatar = hostname + data.speaker.avatar
+          data.audio = ResourceDomain + data.audio
+          if (params.speakerId !== '')  data.speaker.avatar = ResourceDomain + data.speaker.avatar
           else data.speaker = fragment.speaker
           if(data.key) {
             // 用片段 id 替换排序信息中的占位 key
@@ -666,6 +672,7 @@ export const useProjectStore = defineStore('projectStore', {
       /** 通过音频创建片段 */
       const createByAudio = (params: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0]) => {
         const { speakerStore } = useStore()
+        const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
         const speaker = speakerStore.get(params.speakerId, account!, hostname!, 'human')!
         
         const key = utils.randomString()
@@ -696,8 +703,8 @@ export const useProjectStore = defineStore('projectStore', {
         sequence?.push(key) // 用 key 占位
         return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment>(params).then(res => {
           const data = res.data
-          data.audio = hostname + data.audio
-          if (params.speakerId !== '')  data.speaker.avatar = hostname + data.speaker.avatar
+          data.audio = ResourceDomain + data.audio
+          if (params.speakerId !== '')  data.speaker.avatar = ResourceDomain + data.speaker.avatar
           else data.speaker = fragment.speaker
           if(data.key) {
             // 用片段 id 替换排序信息中的占位 key
@@ -737,10 +744,11 @@ export const useProjectStore = defineStore('projectStore', {
       }
       /** 创建空白片段 */
       const createBlank = (params: Parameters<typeof CreatorApi.prototype.fragment.createBlank>[0]) => {
+        const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
         params.procedureId = procedureId
         return this.creatorApi(account!, hostname!).fragment.createBlank<Fragment>(params).then(res => {
           const data = res.data
-          data.audio = hostname + data.audio
+          data.audio = ResourceDomain + data.audio
           get()?.push(data)
           sequence?.push(data.id)
         })

@@ -14,7 +14,7 @@ interface ModelType {
   desc: string
 }
 
-const { userStore, userListStore } = useStore()
+const { userStore } = useStore()
 const message = useMessage()
 /** 表单数据 */
 const model = ref<ModelType>({
@@ -63,7 +63,7 @@ const formRef = ref<FormInst | null>(null)
 function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
   if (args.event) {
     console.log(args.event.currentTarget)
-    const path = userStore.hostname + (args.event.currentTarget as XMLHttpRequest).response
+    const path = userStore.resourceDomain + (args.event.currentTarget as XMLHttpRequest).response
     console.log(path)
     model.value.avatar = path
   }

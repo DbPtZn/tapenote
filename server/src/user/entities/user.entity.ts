@@ -143,7 +143,6 @@ export class User {
   @Column({
     type: 'varchar',
     length: 18,
-    nullable: false
   })
   dirname: string
 
