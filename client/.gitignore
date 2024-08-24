@@ -11,7 +11,7 @@ node_modules
 dist
 dist-ssr
 dist-electron
-editor-dist
+dist-editor
 release
 *.local
 database
