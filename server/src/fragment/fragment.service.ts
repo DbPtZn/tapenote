@@ -140,6 +140,7 @@ export class FragmentService {
       await this.useTTS({
         txt: text,
         filepath: temppath1,
+        speakerId: fragmentSpeaker.role,
         speed: speed | 1
       })
         .then(async () => {
@@ -722,10 +723,6 @@ export class FragmentService {
             insertPosition: position
           })
 
-          // 复制文件/添加引用记录
-          newFragment.audio = audio
-          await this.storageService.copyFile(audio, newFragment.id, userId)
-
           // targetProjectDirname = targetProject.dirname
 
           // 复制 speaker avatar 文件
@@ -743,6 +740,10 @@ export class FragmentService {
           //   fs.copyFileSync(sourceAvatarPath, targetAvatarPath)
           // }
         }
+
+        // 复制文件/添加引用记录
+        newFragment.audio = audio
+        await this.storageService.copyFile(audio, newFragment.id, userId)
 
         // 复制音频
         // const audioPath = this.storageService.getFilePath({

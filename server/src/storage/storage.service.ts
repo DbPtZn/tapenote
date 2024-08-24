@@ -101,12 +101,12 @@ export class StorageService {
         this.bucketService
           .uploadFile(file, dirname)
           .then(res => {
-            console.log(file.filename)
-            console.log(file.originalname)
-            console.log(file.path)
+            console.log('file.filename:', file.filename)
+            console.log('file.originalname:', file.originalname)
+            console.log('file.path', file.path)
             const url = this.common.proxyDomain + '/' + dirname + '/' + basename(file.path)
             fs.unlinkSync(file.path)
-            console.log(url)
+            console.log('cos url:', url)
             resolve(url)
           })
           .catch(err => {

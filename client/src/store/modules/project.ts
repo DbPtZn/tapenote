@@ -139,7 +139,8 @@ export const useProjectStore = defineStore('projectStore', {
     },
     create(folderId: string, lib: LibraryEnum, account: string, hostname: string) {
       const { userListStore } = useStore()
-      const user = userListStore.get(hostname, account)!
+      const user = userListStore.get(account, hostname)!
+      console.log(user)
       const author = { penname: user.nickname, email: user.email, homepage: user.homepage }
       // console.log(author)
       return this.creatorApi(account, hostname).project.create<Project>({ folderId, lib, ...author }).then(res => {
@@ -156,7 +157,7 @@ export const useProjectStore = defineStore('projectStore', {
     createBy(args : {folderId: string, sourceId: string, lib: LibraryEnum, account: string, hostname: string}) {
       const { folderId, sourceId, lib, account, hostname } = args
       const { userListStore } = useStore()
-      const user = userListStore.get(hostname, account)!
+      const user = userListStore.get(account, hostname)!
       const author = { penname: user.nickname, email: user.email, homepage: user.homepage }
       return new Promise<Project>((resolve, reject) => {
         if (lib === LibraryEnum.NOTE) {
@@ -480,12 +481,23 @@ export const useProjectStore = defineStore('projectStore', {
       }
     },
     pasteFragment(params: Parameters<typeof CreatorApi.prototype.fragment.copyFragment>[0], account: string, hostname: string) {
-      console.log(params)
+      // console.log(params)
       const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
       return this.creatorApi(account, hostname).fragment.copyFragment<{ fragment: Fragment, updateAt: string }>(params).then(res => {
         const { fragment, updateAt } = res.data
         fragment.audio = ResourceDomain + fragment.audio
         fragment.speaker.avatar = ResourceDomain + fragment.speaker.avatar
+        if(fragment.speaker.role === 0) {
+          const { speakerStore } = useStore()
+          const speaker = speakerStore.get('', account, hostname, 'machine')
+          fragment.speaker.avatar = speaker?.avatar || ''
+        }
+        if(fragment.speaker.role === 10000) {
+          const { speakerStore } = useStore()
+          const speaker = speakerStore.get('', account, hostname, 'human')
+          fragment.speaker.avatar = speaker?.avatar || ''
+        }
+        console.log(fragment.speaker.avatar)
         const { sourceFragmentId, targetFragmentId, sourceProjectId, targetProjectId, type, position } = params
         const source = this.get(sourceProjectId)!
         const target = this.get(targetProjectId)!

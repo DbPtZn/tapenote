@@ -68,7 +68,7 @@ async function bootstrap() {
   // const publicDir = configService.get('common.publicDir')
   // const staticPrefix = configService.get('common.staticPrefix')
   // console.log(path.join(__rootdirname, userDir, publicDir), staticPrefix)
-  app.useStaticAssets(common.fullPublicDir, { prefix: common.staticPrefix })
+  app.useStaticAssets(common.fullPublicDir, { prefix: common.staticResourcePrefix })
 
   /** 接口文档(待完善) */
   // const options = new DocumentBuilder()

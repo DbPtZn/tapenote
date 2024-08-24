@@ -49,13 +49,13 @@ export const useSpeakerStore = defineStore('speakerStore', {
           speaker.avatar = ResourceDomain + speaker.avatar
           this.data.push(speaker)
         }
-        console.log(this.data)
+        // console.log(this.data)
       })
     },
     fetchAndSet(account: string, hostname: string) {
       if(this.data.length === 0 || this.account !== account || this.hostname !== hostname) {
         return this.fetch<Speaker[]>(account, hostname).then(res => {
-          console.log(res.data)
+          // console.log(res.data)
           this.account = account
           this.hostname = hostname
           return this.set(res.data, account, hostname)
@@ -76,7 +76,7 @@ export const useSpeakerStore = defineStore('speakerStore', {
       state.unshift(this.getDefault('human', account, hostname))
       state.unshift(this.getDefault('machine', account, hostname))
       this.data = state
-      console.log(state)
+      // console.log(state)
       return state
     },
     get(id: string, account: string, hostname: string, type?: 'human' | 'machine') {

@@ -46,7 +46,7 @@ const state = reactive({
   isNoteShow: false,
 })
 
-const username = userListStore.get(props.account, props.hostname).nickname // 获取用户名信息
+const username = userListStore.get(props.account, props.hostname)!.nickname // 获取用户名信息
 const { handleToolbarCollapse, handleFlip, handleSidenoteToolbarCollapse, handleSubtitle }  = {
   handleToolbarCollapse() {
     state.isToolbarShow = !state.isToolbarShow

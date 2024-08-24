@@ -11,7 +11,7 @@ interface ModelType {
 }
 type Response = ModelType & Record<string, unknown>
 // const message = useMessage()
-const { speakerStore, userListStore } = useStore()
+const { speakerStore } = useStore()
 const props = defineProps<{
   account: string
   hostname: string
@@ -135,7 +135,9 @@ function handleTest(role: number) {
   }
   isLoading.value = true
   speakerStore.testTts(role, props.account, props.hostname).then(res => {
-    const url = ResourceDomain + res.data as string
+    // const url = ResourceDomain + res.data as string
+    const url = props.hostname + res.data as string // 临时音频文件从服务器端读取
+    console.log('url:', url)
     const audio = new Audio(url)
     isLoading.value = false
     audio.oncanplay =() => {

@@ -139,6 +139,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
    * -当发现启动子关联的动画块已经被移除时，相应的启动子也会被移除
    */
   function checkPromoter() {
+    // console.log(bridge)
     const container = bridge.editor!.get(VIEW_DOCUMENT)
     projectStore.fragment(procedureId).getBySort().forEach((fragment, index, arr) => {
       fragment.promoters.forEach((promoter, subscript) => {
@@ -177,7 +178,9 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
    * - 所有动画块（不区分formatter和component）的状态校验: 用于校验已激活的动画块是否有正确绑定启动子，如果绑定的启动子不存在，取消动画块激活状态
    */
   function checkAnimeState() {
-    const container = bridge.editor!.get(VIEW_DOCUMENT)
+    // console.log(bridge)
+    const container = bridge.editor?.get(VIEW_DOCUMENT)
+    if(!container) return
     const elements = container.querySelectorAll(ANIME + ',' + ANIME_COMPONENT) as NodeListOf<HTMLElement>
     elements.forEach((element) => {
       // 找到激活态的 AnimeComponent

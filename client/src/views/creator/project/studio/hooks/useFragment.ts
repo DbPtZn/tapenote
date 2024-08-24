@@ -10,7 +10,8 @@ import { Player } from '@/editor'
 import { Subscription } from '@tanbo/stream'
 import { SortableEvent } from 'vue-draggable-plus'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
-export function useFragment(projectId: string, bridge: Bridge) {
+export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: () => void, handleReorder: () => void) {
+  console.log('useFragment：', bridge)
   const { projectStore, clipboardStore } = useStore()
   const isShowName = ref(false)
   const isShowOrder = ref(false)
@@ -18,7 +19,7 @@ export function useFragment(projectId: string, bridge: Bridge) {
   const message = useMessage()
   let player: Player | undefined = undefined
   const subs: Subscription[] = []
-  const { checkAnimeState, handleReorder } = usePromoter(projectId, bridge)
+  // const { checkAnimeState, handleReorder } = usePromoter(projectId, bridge) // bridge 透传无法同步更新，只传入当前值
   const selectedFragments = ref<Fragment[]>([])
   const dropdownState = reactive({
     x: 0,
@@ -117,27 +118,6 @@ export function useFragment(projectId: string, bridge: Bridge) {
             if (targetIndex === -1) return
             const includeFragments = allFragments.slice(targetIndex)
             applyPlay(includeFragments)
-            dropdownState.isShow = false
-          }
-        }
-      },
-      {
-        key: 'remove',
-        label: '移除',
-        show: !!fragment,
-        props: {
-          onClick: () => {
-            const removeQueue = fragments.map(fragment => {
-              return applyRemove(fragment.id)
-            })
-            Promise.all(removeQueue)
-              .then(() => {
-                checkAnimeState() // 移除片段之后，进行动画状态校验
-              })
-              .catch(err => {
-                console.error(err)
-                message.error('部分片段移除失败！')
-              })
             dropdownState.isShow = false
           }
         }
@@ -268,6 +248,27 @@ export function useFragment(projectId: string, bridge: Bridge) {
           }
         }
       },
+      {
+        key: 'remove',
+        label: '移除',
+        show: !!fragment,
+        props: {
+          onClick: () => {
+            const removeQueue = fragments.map(fragment => {
+              return applyRemove(fragment.id)
+            })
+            Promise.all(removeQueue)
+              .then(() => {
+                checkAnimeState() // 移除片段之后，进行动画状态校验
+              })
+              .catch(err => {
+                console.error(err)
+                message.error('部分片段移除失败！')
+              })
+            dropdownState.isShow = false
+          }
+        }
+      },
     ]
   }
 
@@ -348,11 +349,15 @@ export function useFragment(projectId: string, bridge: Bridge) {
   let aud: HTMLAudioElement | null = null 
   function handlePlay(fragment: Fragment) {
     if (!aud) {
-      aud = new Audio(fragment.audio)
-      aud.play()
-      aud.addEventListener('ended', () => {
-        aud = null
-      })
+      try {
+        aud = new Audio(fragment.audio)
+        aud.play()
+        aud.addEventListener('ended', () => {
+          aud = null
+        })
+      } catch (error) {
+        message.error('音频播放失败,请检查音频路径')
+      }
       return
     }
     if (aud.played) {
@@ -396,7 +401,7 @@ export function useFragment(projectId: string, bridge: Bridge) {
   }
   /** 移动片段 */
   function handleMove(event: SortableEvent) {
-    console.log(event)
+    // console.log(event)
     const oldIndex = event.oldIndex
     const newIndex = event.newIndex
     const fragmentId = event.item.id
@@ -460,7 +465,7 @@ export function useFragment(projectId: string, bridge: Bridge) {
         }, 300)
         subs.push(
           player!.onPlayOver.subscribe(() => {
-            console.log(parsedata)
+            // console.log(parsedata)
             playerState.isPlaying = false
             playerState.currentTime = 0
             clearInterval(timer)

@@ -182,9 +182,9 @@ const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
     })
   }
 }
+const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, checkAnimeState, checkPromoter, handleReorder } = usePromoter(props.id, bridge)
+const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, isShowOrder, handleContextmenu, handleExpand, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge, checkAnimeState, handleReorder)
 
-const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, isShowOrder, handleContextmenu, handleExpand, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge)
-const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, checkAnimeState, checkPromoter } = usePromoter(props.id, bridge)
 const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort())
 const fragmentsLength = computed(() => fragments.value.length)
 watch(() => projectStore.fragment(props.id).getBySort(), (fragmentsData) => {
