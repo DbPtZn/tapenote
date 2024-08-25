@@ -3,7 +3,6 @@ import { AppModule } from './app.module'
 import * as dotenv from 'dotenv'
 import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import path from 'path'
 import { LoggerService } from './logger/logger.service'
 import portfinder from 'portfinder'
 import { ConfigService } from '@nestjs/config'
@@ -62,6 +61,7 @@ async function bootstrap() {
   // console.log(process.env.NODE_ENV)
   const configService = app.get(ConfigService)
   const common = configService.get<ReturnType<typeof commonConfig>>('common')
+  console.log('common.fullPublicDir:', common.fullPublicDir)
   // const __rootdirname = process.cwd()
   // const appDir = configService.get('common.appDir')
   // const userDir = configService.get('common.userDir')

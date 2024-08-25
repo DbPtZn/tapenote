@@ -14,7 +14,7 @@ import * as fs from 'fs'
 export interface LocalUploadFile extends Partial<Express.Multer.File> {
   filename: string
   path: string
-  mimetype: 'image/jpeg' | 'image/png' | 'audio/wav' | string
+  mimetype: 'image/jpeg' | 'image/png' | 'image/gif' | 'audio/wav' | 'audio/ogg' | string
   // md5: string
   // size: number
 }
@@ -40,18 +40,18 @@ export class UploadService {
   async upload(file: LocalUploadFile, userId: string, dirname: string, quoteId?: string) {
     try {
       const md5 = await this.calculateFileStats(file.path).catch(err => {
-        throw new Error('计算图片md5失败')
+        throw new Error('计算文件md5失败')
       })
       if(!file.size) {
         file.size = fs.statSync(file.path).size
       }
       const uploadfile = await this.uploadFilesRepository.findOneBy({ md5, userId })
       if (uploadfile) {
-        console.log('用户上传的图片已存在，直接返回图片路径!')
+        console.log('用户上传的文件已存在，直接返回文件路径!')
         return this.storageService.getResponsePath(uploadfile.name, dirname)
       }
       const filepath = await this.storageService.save(file, dirname).catch(err => {
-        throw new Error('保存图片失败')
+        throw new Error('保存文件失败')
       })
       const upload = new UploadFile()
       upload.name = basename(filepath)
@@ -74,16 +74,16 @@ export class UploadService {
   // async localUpload(file: LocalUploadFile, userId: string, dirname: string) {
   //   try {
   //     const md5 = await this.calculateFileStats(file.path).catch(err => {
-  //       throw new Error('计算图片md5失败')
+  //       throw new Error('计算文件md5失败')
   //     })
   //     const size = fs.statSync(file.path).size
   //     const uploadfile = await this.uploadFilesRepository.findOneBy({ md5, userId })
   //     if (uploadfile) {
-  //       console.log('用户上传的图片已存在，直接返回图片路径!')
+  //       console.log('用户上传的文件已存在，直接返回文件路径!')
   //       return uploadfile.path
   //     }
   //     const filepath = await this.storageService.save(file, dirname).catch(err => {
-  //       throw new Error('保存图片失败')
+  //       throw new Error('保存文件失败')
   //     })
   //     const upload = new UploadFile()
   //     upload.name = basename(filepath)
@@ -120,7 +120,7 @@ export class UploadService {
         // console.log('child msg' + msg)
         if (msg.error) {
           // console.log(data.error)
-          console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)
+          console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:' + filePath)
           reject(msg.error)
         } else {
           resolve(msg)
@@ -132,7 +132,7 @@ export class UploadService {
       // 监听子线程的错误
       child.on('error', error => {
         console.log(error)
-        console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)
+        console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:' + filePath)
         clearTimeout(timer)
         child.kill()
         reject(error)
@@ -154,7 +154,7 @@ export class UploadService {
 
   //     worker.on('message', data => {
   //       if (data.error) {
-  //         console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)
+  //         console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:' + filePath)
   //         reject(new Error(data.error))
   //       } else {
   //         resolve(data)
@@ -164,7 +164,7 @@ export class UploadService {
   //     })
 
   //     worker.on('error', error => {
-  //       console.log('警告！计算图片相关信息失败，未能成功创建图片数据对象，图片地址:' + filePath)
+  //       console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:' + filePath)
   //       worker.terminate()
   //       clearTimeout(timer)
   //       reject(error)

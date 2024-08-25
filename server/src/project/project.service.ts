@@ -257,10 +257,9 @@ export class ProjectService {
       // })
       // 创建临时地址
       const tempPath = this.storageService.createTempFilePath('.wav')
-
       // console.log(group.audioFragments)
       await this.ffmpegService
-        .concatAudio(group.audioFragments, tempPath)
+        .concatAudioToOgg(group.audioFragments, tempPath)
         .then(() => {
           console.log('拼接成功！')
           console.log(tempPath)
@@ -269,7 +268,7 @@ export class ProjectService {
           console.log(err)
           throw new Error('拼接音频失败！')
         })
-
+      
       /** 计算合成音频的时长 */
       const duration = await this.ffmpegService.calculateDuration(tempPath)
       console.log(`合成音频时长：${duration}, 片段总时长：${accumDuration}`)
@@ -279,13 +278,12 @@ export class ProjectService {
         {
           filename: basename(tempPath),
           path: tempPath,
-          mimetype: 'audio/wav'
+          mimetype: 'audio/ogg'
         },
         userId,
         dirname
       )
 
-      // throw '测试'
       return {
         title: procedure.title,
         content: procedure.content,

@@ -8,7 +8,7 @@ import FfmpegModule from '@ffmpeg-installer/ffmpeg'
 @Injectable()
 export class FfmpegService {
   constructor(private readonly storageService: StorageService) {
-    console.log(FfmpegModule.path)
+    // console.log(FfmpegModule.path)
     ffmpeg.setFfmpegPath(FfmpegModule.path)
   }
   // async test() {
@@ -20,6 +20,23 @@ export class FfmpegService {
   //   const d2 = await this.calculateDuration(audio)
   //   console.log([d1, d2])
   // }
+
+  /** 将音频文件转换成 ogg 格式 (转 mp3 格式会出现输出音频时长不一致的问题) */
+  async convertToOgg(source: string, target: string) {
+    return new Promise<string>((resolve, reject) => {
+      ffmpeg(source)
+        .toFormat('ogg')
+        .save(target)
+        .on('error', function (err) {
+          console.log('An error occurred: ' + err.message)
+          reject(err)
+        })
+        .on('end', function () {
+          // console.log('Processing finished successfully')
+          resolve(target)
+        })
+    })
+  }
 
   createBlankAudio(duration: number, outputPath: string) {
     console.log('创建空白音频')
@@ -107,6 +124,33 @@ export class FfmpegService {
       command
         .concat(outputPath)
         .on('end', function () {
+          // console.log('finished processing')
+          resolve(outputPath)
+        })
+        .on('error', error => {
+          console.log(error)
+          reject(error)
+        })
+    })
+  }
+
+   /**
+   * 拼接音频文件
+   * @param audioPathGroup 音频文件路径数组
+   * @param outputPath 拼接结果保存地址
+   */
+   concatAudioToOgg(audioPathGroup: string[], outputPath: string) {
+    return new Promise<string>((resolve, reject) => {
+      const wav = this.storageService.createTempFilePath('.wav')
+      const command = ffmpeg()
+
+      audioPathGroup.forEach(path => {
+        command.input(path)
+      })
+
+      command
+        .concat(outputPath)
+        .on('end', () => {
           // console.log('finished processing')
           resolve(outputPath)
         })

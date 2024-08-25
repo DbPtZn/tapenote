@@ -9,7 +9,7 @@ import Components from 'unplugin-vue-components/vite'
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
-    base: env.VITE_ASSETS_BASE,
+    base: env.VITE_ASSETS_BASE ? env.VITE_ASSETS_BASE : '',
     plugins: [
       vue(),
       // eslintPlugin({
