@@ -76,22 +76,27 @@ export const useUserListStore = defineStore('userListStore', {
         auth
           .login(params, hostname)
           .then(res => {
+            // console.log(res)
             if (!res.data) reject('登录失败')
-            // 存储 token
-            sessionStorage.setItem(`User:${params.account}&${hostname}`, res.data as string)
+            
+            if(res.data.type === 'sso') {
+              sessionStorage.setItem(`SSO:${params.account}&${hostname}`, res.data.token as string)
+            } else {
+              // 存储 token
+              sessionStorage.setItem(`User:${params.account}&${hostname}`, res.data as string)
+            }
+     
             // 创建用户请求实例
             creator.createCreatorApi(params.account, hostname)
             this.fetch(params.account, hostname).then(state => {
-              if(state) {
-                this.set(state)
-                this.addSequence(params.account, hostname)
-                userStore.$patch(state)
-                folderTreeStore.$reset() // 新登录用户时重置文件夹目录
-                folderStore.$reset() // 新登录用户时重置文件夹
-              }
-              resolve(state?.avatar)
+              this.set(state)
+              this.addSequence(params.account, hostname)
+              userStore.$patch(state)
+              folderTreeStore.$reset() // 新登录用户时重置文件夹目录
+              folderStore.$reset() // 新登录用户时重置文件夹
               loginStateChangeEvent.next({ type: 'login', account: params.account, hostname })
-            })
+              resolve(state?.avatar)
+            }).catch(err => reject(err))
           })
           .catch(err => {
             reject(err)
@@ -104,11 +109,13 @@ export const useUserListStore = defineStore('userListStore', {
       const index = this.data.findIndex(item => item.account === account && item.hostname === hostname)
       this.data.splice(index, 1)
       // 登出时清理缓存
+      const ssoKey = `SSO:${account}&${hostname}`
       const userkey = `User:${account}&${hostname}`
       const folderTreeKey = `FolderTree:${account}&${hostname}`
       const folderKey = `Folder:${account}&${hostname}`
-      localStorage.removeItem(userkey)
-      sessionStorage.removeItem(userkey)
+      localStorage.removeItem(userkey) // 这个存的是用户信息
+      sessionStorage.removeItem(ssoKey)
+      sessionStorage.removeItem(userkey) // 这个存的是用户 token
       localStorage.removeItem(folderTreeKey)
       localStorage.removeItem(folderKey)
       projectStore.cleanCacheByUser(account, hostname)
@@ -166,14 +173,11 @@ export const useUserListStore = defineStore('userListStore', {
       })
     },
     /** 请求用户信息（token 存在的情况下才会生效） */
-    fetch(account: string, hostname: string): Promise<UserState | null> {
+    fetch(account: string, hostname: string): Promise<UserState> {
       return this.creatorApi(account, hostname).user
         .get<User>()
         .then(res => {
-          // 补全头像地址
-          // if (res.data.avatar) {
-          //   res.data.avatar = hostname + res.data.avatar
-          // }
+          console.log('请求用户数据成功')
           return {
             hostname: hostname,
             ...res.data
@@ -183,9 +187,9 @@ export const useUserListStore = defineStore('userListStore', {
           if (err.status === 401) {
             sessionStorage.removeItem(`User:${account}&${hostname}`)
             loginStateChangeEvent.next({ type: 'logout', account, hostname })
-            console.warn('token 已过期')
+            console.warn('token 无效')
           }
-          return null
+          throw err
         })
     },
     set(data: UserState) {

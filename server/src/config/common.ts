@@ -37,5 +37,14 @@ export default registerAs('common', () => {
     secretKey: process.env.SecretKey,
     bucket: process.env.Bucket,
     region:process.env.Region,
+
+    // SSO 单点登录相关配置
+    ssoEnable: process.env.SSO_ENABLE === 'true',
+    ssoDomain: process.env.SSO_DOMAIN,
+    // ssoClientId: process.env.SSO_CLIENT_ID,
+    // ssoClientSecret: process.env.SSO_CLIENT_SECRET,
+    // ssoRedirectUri: process.env.SSO_REDIRECT_URI,
+    // ssoLogoutUri: process.env.SSO_LOGOUT_URI,
+    // ssoTokenUri: process.env.SSO_TOKEN_URI,
   }
 })

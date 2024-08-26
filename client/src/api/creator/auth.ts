@@ -16,7 +16,7 @@ export const auth = {
     return axios({
       method: 'post',
       baseURL: hostname,
-      url: '/auth/write/register',
+      url: '/auth/register',
       data: data
     })
   },
@@ -32,7 +32,7 @@ export const auth = {
     return axios({
       method: 'post',
       baseURL: hostname,
-      url: '/auth/read/login',
+      url: '/auth/login',
       data: data
     })
   }

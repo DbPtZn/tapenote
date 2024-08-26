@@ -1,4 +1,4 @@
-// calculate md5 and size
+// calculate md5
 import * as fs from 'fs'
 import * as crypto from 'crypto'
 
@@ -16,6 +16,5 @@ process.on('message', msg => {
 function calculateFileStats(filePath) {
   const data = fs.readFileSync(filePath)
   const md5 = crypto.createHash('md5').update(data).digest('hex')
-  const size = fs.statSync(filePath).size
-  return { md5, size }
+  return md5
 }

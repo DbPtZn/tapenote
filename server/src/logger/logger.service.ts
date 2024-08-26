@@ -8,7 +8,7 @@ export class LoggerService {
   logger: winston.Logger
   constructor(private readonly configService: ConfigService) {
     const common = this.configService.get<ReturnType<typeof commonConfig>>('common')
-    const dirname = common.appDir ? `${common.appDir}/${common.logDir}` : common.logDir
+    const dirname = common.fullLogDir
     console.log('公共日志目录:' + dirname)
     this.logger = winston.createLogger({
       level: 'info',

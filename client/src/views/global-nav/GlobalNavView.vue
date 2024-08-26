@@ -55,16 +55,18 @@ onUnmounted(() => {
 
 /** 订阅登录状态改变的事件 */
 userListStore.onloginStateChange().subscribe(operate => {
+  // console.log('用户登录状态改变：', operate.type)
+  // console.log(userListStore.getData.length)
   // const shell = useShell<CreatorShell>()
   if (userListStore.getData.length === 0) {
-    // shell.useLogin()
-    router.push(RoutePathEnum.LOGIN)
+    console.log('无登录用户，跳转至登录页面')
+    router.push('/login')
   }
   if (operate.type === 'login') {
     message.success('登录成功')
   }
   if (operate.type === 'logout') {
-    message.success('登出成功')
+    message.create('已登出')
   }
 })
 

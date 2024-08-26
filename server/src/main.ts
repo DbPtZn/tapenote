@@ -6,7 +6,7 @@ import { NestExpressApplication } from '@nestjs/platform-express'
 import { LoggerService } from './logger/logger.service'
 import portfinder from 'portfinder'
 import { ConfigService } from '@nestjs/config'
-import { parentPort, workerData } from 'worker_threads'
+import { parentPort } from 'worker_threads'
 import { commonConfig } from './config'
 async function bootstrap() {
   let dotenvPath = []
@@ -62,12 +62,6 @@ async function bootstrap() {
   const configService = app.get(ConfigService)
   const common = configService.get<ReturnType<typeof commonConfig>>('common')
   console.log('common.fullPublicDir:', common.fullPublicDir)
-  // const __rootdirname = process.cwd()
-  // const appDir = configService.get('common.appDir')
-  // const userDir = configService.get('common.userDir')
-  // const publicDir = configService.get('common.publicDir')
-  // const staticPrefix = configService.get('common.staticPrefix')
-  // console.log(path.join(__rootdirname, userDir, publicDir), staticPrefix)
   app.useStaticAssets(common.fullPublicDir, { prefix: common.staticResourcePrefix })
 
   /** 接口文档(待完善) */

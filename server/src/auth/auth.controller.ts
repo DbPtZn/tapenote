@@ -12,7 +12,7 @@ import { CreateUserDto } from 'src/user/dto/_api'
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post(`${REST.W}/register`)
+  @Post(`/register`)
   register(@Body() createUserDto: CreateUserDto, @Res() res) {
     try {
       // console.log(createUserDto)
@@ -33,7 +33,7 @@ export class AuthController {
   /** 登录请求 */
   // @UseGuards(AuthGuard('local'))
   @UseGuards(LocalAuthGuard)
-  @Post(`${REST.R}/login`)
+  @Post(`/login`)
   async login(@Body() loginDto: LoginDto, @Req() req, @Res() res) {
     // console.log(loginDto)
     // console.log('验证码：' + this.authService.validateCode(loginDto.code, loginDto.hashCode))
@@ -45,6 +45,32 @@ export class AuthController {
       res.status(401).send('登录验证失败')
     }
   }
+
+  @Get(`/identify`)
+  async identify(@Req() req, @Res() res) {
+    try {
+      console.log(`req.headers.authorization:`, req.headers.authorization)
+      const authorization = req.headers.authorization.substring(7).trim();
+      const token = await this.authService.identify(authorization)
+      res.status(200).send({ code: 200, token })
+    } catch (error) {
+      res.status(400).send(error.message)
+    }
+  }
+
+  // @Get('/tokenLogin')
+  // async tokenLogin(@Req() req, @Res() res) {
+  //   try {
+  //     const token = await this.authService.tokenLogin(req.user)
+  //     if (token) {
+  //       res.status(200).send(token)
+  //     } else {
+  //       res.status(401).send('登录验证失败')
+  //     }
+  //   } catch (error) {
+  //     res.status(401).send(error)
+  //  }
+  // }
 
   @Post(`${REST.W}/dir/:id`)
   async createUserRoot(@Param('id') id: string, @Req() req, @Res() res) {

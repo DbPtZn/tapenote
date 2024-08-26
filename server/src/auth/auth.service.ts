@@ -9,17 +9,23 @@ import { FolderService } from 'src/folder/folder.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { ConfigService } from '@nestjs/config'
+import { HttpService } from '@nestjs/axios'
+import { commonConfig } from 'src/config'
 
 @Injectable()
 export class AuthService {
+  private readonly common: ReturnType<typeof commonConfig>
   constructor(
     private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly bcrtptService: BcryptService,
     private readonly folderService: FolderService,
+    private httpService: HttpService,
     private readonly logger: LoggerService
-  ) {}
+  ) {
+    this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
+  }
   /** 注册 */
   register(createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto)
@@ -31,6 +37,7 @@ export class AuthService {
 
   /** 登录：生成 token */
   async login(user: User) {
+    console.log('login')
     try {
       if (!user) {
         this.logger.error('用户登录失败！邮箱或密码错误！')
@@ -47,6 +54,29 @@ export class AuthService {
     } catch (error) {
       this.logger.log(`${user.account} 用户登录失败！原因： ${error.message}`)
       return error
+    }
+  }
+
+  async identify(token: string) {
+    try {
+      return new Promise<string>((resolve, reject) => {
+        const resp = this.httpService.get(`${this.common.ssoDomain}/auth/identify`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        resp.subscribe(async res => {
+          // console.log(res)
+          const account = res.data.account
+          console.log('account:', account)
+          const user = await this.userService.findOneByAccount(account)
+          console.log('user:', user)
+          const token = this.jwtService.sign({ userId: user.id, account: user.account, dirname: user.dirname })
+          resolve(token)
+        })
+      })
+    } catch (error) {
+      throw error
     }
   }
 

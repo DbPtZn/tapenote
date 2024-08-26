@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { databaseConfig, jwtConfig, commonConfig, sherpaDevConfig, sherpaProdConfig } from './config'
@@ -24,6 +24,7 @@ import { SpeakerModule } from './speaker/speaker.module'
 import { parentPort } from 'worker_threads'
 import { SnapshotModule } from './snapshot/snapshot.module';
 import { BucketModule } from './bucket/bucket.module';
+import { ProxyMiddleware } from './proxy/proxy.middleware'
 @Module({
   imports: [
     UserModule,
@@ -117,6 +118,9 @@ import { BucketModule } from './bucket/bucket.module';
 })
 export class AppModule {
   // configure(consumer: MiddlewareConsumer) {
-  //   consumer.apply(HttpLoggerMiddleware).forRoutes('*') // 为所有路由应用中间件
+  //   consumer.apply(ProxyMiddleware).forRoutes({
+  //     path: '*',
+  //     method: RequestMethod.ALL
+  //   })
   // }
 }

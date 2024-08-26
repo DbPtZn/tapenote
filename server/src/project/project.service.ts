@@ -346,7 +346,7 @@ export class ProjectService {
   async input(dto: InputProjectDto, userId: string, dirname: string) {
     try {
       const { lib, title, content, cover, penname, email, homepage } = dto
-      checkTitle(title)
+      // checkTitle(title)
       const user = await this.usersRepository.findOneBy({ id: userId })
       // console.log(dto.folderId)
       const folderId = dto.folderId ? dto.folderId : user.dir[lib]

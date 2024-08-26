@@ -104,8 +104,14 @@ function handleRegister(e: MouseEvent) {
           router.push(RoutePathEnum.LOGIN)
         })
         .catch(err => {
-          const msg = err?.response?.data || '注册失败！'
-          message.error(msg)
+          const data = err?.response?.data || '注册失败！'
+          console.log(data.message)
+          if(data) {
+            if(typeof data === 'string') return message.error(data)
+            if(Array.isArray(data.message)) return data.message.forEach(msg => message.error(msg))
+            message.error('注册失败！')
+          }
+         
           // console.log(err)
         })
     } else {

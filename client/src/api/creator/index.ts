@@ -1,5 +1,5 @@
 /** creator */
-import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios'
 // import { auth } from './auth'
 export * from './auth'
 import { user } from './user'
@@ -27,14 +27,16 @@ async function refreshToken(account: string, hostname: string) {
   // https://www.bilibili.com/video/BV1oK421e7cr 无感刷新详细讲解
   if (promise) return promise
   promise = new Promise(async resolve => {
-    const resp = await axios.get('', {
-      baseURL: import.meta.env.VITE_SSO_URL,
+    const resp = await axios.get('/auth/identify', {
+      baseURL: hostname,
       headers: {
-        Authorization: `Bearer ${getSsoToken(account, hostname)}`
+        Authorization: `Bearer ${getSsoToken(account, hostname)}`,
       },
       __isRefreshToken: true
     } as any)
-  
+    if(resp.data.token) {
+      sessionStorage.setItem(`User:${account}&${hostname}`, resp.data.token)
+    }
     // 看约定，比如刷新成功后返回一个 code 200
     resolve(resp.data.code === 200)
   })
@@ -47,10 +49,10 @@ async function refreshToken(account: string, hostname: string) {
 }
 
 function isRefreshRequest(config: any) {
+  console.log('config:', config)
+  console.log('isRefreshToken:', config.__isRefreshToken, config.headers.__isRefreshToken)
   return !!config.__isRefreshToken
 }
-
-const openSSO = import.meta.env.VITE_SSO_OPEN === 'true'
 
 export class CreatorApi {
   user: ReturnType<typeof user>
@@ -84,32 +86,51 @@ export class CreatorApi {
         // 对响应数据做点什么
 
         // 启动 sso 单点登录模式的情况
-        if(openSSO) {
-          if(response.data.code === 401 && isRefreshRequest(response.config)) {
+        // if(response.data.code === 401 && isRefreshRequest(response.config)) {
             
-            // 刷新 token
-            const isSuccess = await refreshToken(account, hostname)
-            if (isSuccess) {
-              // 重新请求
-              response.config.headers.Authorization = `Bearer ${getSsoToken(account, hostname)}`
-              const resp = await caxios.request(response.config)
-              return resp
-            } else {
-              // 跳转到登录页面
-              const { userListStore } = useStore()
-              userListStore.logout(account, hostname)
-              return response
-            }
-          }
-        }
+        //   // 刷新 token
+        //   const isSuccess = await refreshToken(account, hostname)
+        //   if (isSuccess) {
+        //     // 重新请求
+        //     response.config.headers.Authorization = `Bearer ${getSsoToken(account, hostname)}`
+        //     const resp = await caxios.request(response.config)
+        //     return resp
+        //   } else {
+        //     // 跳转到登录页面
+        //     const { userListStore } = useStore()
+        //     userListStore.logout(account, hostname)
+        //     return response
+        //   }
+        // }
 
         return response
       },
-      err => {
+      async (err: AxiosError<any>) => {
         if (err.response?.status) {
           const authorization = err.response.config.headers.Authorization as string
           switch (err.response?.status) {
             case 401:
+              console.log('ssoToke:', getSsoToken(account, hostname))
+              if(getSsoToken(account, hostname)) {
+                const response = err.response
+                console.log('refreshToken:', isRefreshRequest(response.config))
+                if(!isRefreshRequest(response.config)) {
+                  // 刷新 token
+                  const isSuccess = await refreshToken(account, hostname)
+                  if (isSuccess) {
+                    // 重新请求
+                    response.config.headers.Authorization = `Bearer ${getSsoToken(account, hostname)}`
+                    const resp = await caxios.request(response.config)
+                    return resp
+                  } else {
+                    // 跳转到登录页面
+                    const { userListStore } = useStore()
+                    userListStore.logout(account, hostname)
+                    return response
+                  }
+                }
+        
+              }
               // Token 错误或者过期的情况
               if (authorization) {
                 const { userListStore } = useStore()
