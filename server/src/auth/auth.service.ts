@@ -11,6 +11,7 @@ import { LoggerService } from 'src/logger/logger.service'
 import { ConfigService } from '@nestjs/config'
 import { HttpService } from '@nestjs/axios'
 import { commonConfig } from 'src/config'
+import randomstring from 'randomstring'
 
 @Injectable()
 export class AuthService {
@@ -21,7 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly bcrtptService: BcryptService,
     private readonly folderService: FolderService,
-    private httpService: HttpService,
+    private readonly httpService: HttpService,
     private readonly logger: LoggerService
   ) {
     this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
@@ -31,9 +32,9 @@ export class AuthService {
     return this.userService.create(createUserDto)
   }
 
-  createUserRoot(id: string) {
-    return this.folderService.createUserRoot(id)
-  }
+  // createUserRoot(id: string) {
+  //   return this.folderService.createUserRoot(id)
+  // }
 
   /** 登录：生成 token */
   async login(user: User) {
@@ -42,11 +43,6 @@ export class AuthService {
       if (!user) {
         this.logger.error('用户登录失败！邮箱或密码错误！')
         throw new UnauthorizedException('用户邮箱或密码错误！')
-      }
-      this.logger.log(`${user.account} 用户正在登录...`)
-      if (!user.dir || Object.keys(user.dir).length === 0 || user.dir?.note === '') {
-        this.logger.warn('该用户未创建根目录，正在为该用户创建根目录！')
-        await this.folderService.createUserRoot(user.id)
       }
       const token = this.jwtService.sign({ userId: user.id, account: user.account, dirname: user.dirname })
       this.logger.log(`${user.account} 用户登录成功！`)
@@ -57,26 +53,56 @@ export class AuthService {
     }
   }
 
+  /** sso 单点登录模式的认证鉴权 */
   async identify(token: string) {
-    try {
-      return new Promise<string>((resolve, reject) => {
-        const resp = this.httpService.get(`${this.common.ssoDomain}/auth/identify`, {
-          headers: {
-            Authorization: `Bearer ${token}`
+    return new Promise<string>(async (resolve, reject) => {
+      await this.httpService.axiosRef.get(`${this.common.ssoDomain}/auth/identify`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }).then(async resp => {
+        if(resp.status === 200) {
+          const account = resp.data.account as string
+          // console.log('account:', account)
+          let user = await this.userService.findOneByAccount(account)
+          // 用户不存在,说明是新用户第一次登录,创建新用户
+          if(!user) {
+            try {
+              console.log('新用户:', account)
+              user = await this.userService.create({
+                nickname: `新用户-${randomstring.generate(5)}`,
+                account: account,
+                password: randomstring.generate(12)
+              })
+            } catch (error) {
+              this.logger.error(`为 ${account} 创建新用户失败, ${error.message}`)
+              throw new Error('首次登录, 创建新用户失败!')
+            }
           }
-        })
-        resp.subscribe(async res => {
-          // console.log(res)
-          const account = res.data.account
-          console.log('account:', account)
-          const user = await this.userService.findOneByAccount(account)
-          console.log('user:', user)
-          const token = this.jwtService.sign({ userId: user.id, account: user.account, dirname: user.dirname })
-          resolve(token)
-        })
+          // rfh：刷新时间
+          const rfh = this.configService.get('jwt.refreshIn')
+          const serverToken = this.jwtService.sign({ userId: user.id, account: user.account, dirname: user.dirname, rfh: (Math.floor(Date.now()/1000)) + rfh })
+          resolve(serverToken)
+        }
+      }).catch(err => {
+        if(err.status === 401) {
+          reject('sso-token 失效')
+        } else {
+          reject(err)
+        }
       })
-    } catch (error) {
-      throw error
+    })
+  }
+
+  async refreshToken(id: string) {
+    try {
+      const user = await this.userService.findOneById(id)
+      if (!user) throw new UnauthorizedException('用户不存在')
+      const rfh = this.configService.get('jwt.refreshIn')
+      const token = this.jwtService.sign({ userId: user.id, account: user.account, dirname: user.dirname, rfh: (Math.floor(Date.now()/1000)) + rfh })
+      return token
+    } catch (err) {
+      throw err
     }
   }
 

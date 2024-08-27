@@ -11,10 +11,9 @@ import { FolderModule } from 'src/folder/folder.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
 import { RequestScopedModule } from 'src/request-scoped/request-scoped.module'
-import { ProxyMiddleware } from 'src/proxy/proxy.middleware'
 import { commonConfig } from 'src/config'
-import { REST } from 'src/enum'
 import { HttpModule } from '@nestjs/axios'
+import { AuthMiddleware } from './auth.middleware'
 @Module({
   imports: [
     UserModule,
@@ -33,6 +32,7 @@ import { HttpModule } from '@nestjs/axios'
             secret: configService.get('jwt.secret') // 加密密钥
           }
         }
+        console.log(configService.get('jwt.expiresIn'))
         return {
           secret: configService.get('jwt.secret'), // 加密密钥
           signOptions: { expiresIn: configService.get('jwt.expiresIn') } // 配置： 保存时间
@@ -52,9 +52,10 @@ export class AuthModule {
     const common = this.configService.get<ReturnType<typeof commonConfig>>('common')
     // console.log('common.ssoDomain:', common.ssoDomain)
     // 开启 sso 单点登录的时候，会拦截 login | register 请求
-    common.ssoEnable && consumer.apply(ProxyMiddleware).forRoutes(
+    common.ssoEnable && consumer.apply(AuthMiddleware).forRoutes(
       { path: `/auth/login`, method: RequestMethod.POST },
       { path: `/auth/register`, method: RequestMethod.POST },
+      { path: `/auth/refresh`, method: RequestMethod.GET },
       // { path: `/auth/identify`, method: RequestMethod.GET },
     )
   }

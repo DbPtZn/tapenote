@@ -14,45 +14,7 @@ import { bgm } from './bgm'
 import useStore from '@/store'
 import { speaker } from './speaker'
 
-function getSsoToken(account: string, hostname: string) {
-  return sessionStorage.getItem(`SSO:${account}&${hostname}`)
-}
 
-function getAccessToken(account: string, hostname: string) {
-  return sessionStorage.getItem(`User:${account}&${hostname}`)
-}
-
-let promise: Promise<any> | null // 确保当多次请求刷新 token 时，只发起一次请求
-async function refreshToken(account: string, hostname: string) {
-  // https://www.bilibili.com/video/BV1oK421e7cr 无感刷新详细讲解
-  if (promise) return promise
-  promise = new Promise(async resolve => {
-    const resp = await axios.get('/auth/identify', {
-      baseURL: hostname,
-      headers: {
-        Authorization: `Bearer ${getSsoToken(account, hostname)}`,
-      },
-      __isRefreshToken: true
-    } as any)
-    if(resp.data.token) {
-      sessionStorage.setItem(`User:${account}&${hostname}`, resp.data.token)
-    }
-    // 看约定，比如刷新成功后返回一个 code 200
-    resolve(resp.data.code === 200)
-  })
-
-  promise.finally(() => {
-    promise = null
-  })
-
-  return promise
-}
-
-function isRefreshRequest(config: any) {
-  console.log('config:', config)
-  console.log('isRefreshToken:', config.__isRefreshToken, config.headers.__isRefreshToken)
-  return !!config.__isRefreshToken
-}
 
 export class CreatorApi {
   user: ReturnType<typeof user>
@@ -65,88 +27,43 @@ export class CreatorApi {
   timbre: ReturnType<typeof timbre>
   speaker: ReturnType<typeof speaker>
   bgm: ReturnType<typeof bgm>
+
+  private promise: Promise<any> | null = null // 确保当多次请求刷新 token 时，只发起一次请求
+  private caxios: AxiosInstance
   constructor(account: string, hostname: string) {
     // 为该用户创建请求体实例
-    const caxios = axios.create({
+    this.caxios = axios.create({
       baseURL: hostname,
       headers: {
-        Authorization: `Bearer ${getAccessToken(account, hostname)}`
+        Authorization: `Bearer ${this.getServerToken(account, hostname)}`
       }
     })
-    caxios.interceptors.request.use(config => {
+    this.caxios.interceptors.request.use(config => {
       if (!config?.headers) {
         throw new Error(`Expected 'config' and 'config.headers' not to be undefined`)
       }
       // 拦截请求，添加 token
-      config.headers.Authorization = `Bearer ${getAccessToken(account, hostname)}`
+      config.headers.Authorization = `Bearer ${this.getServerToken(account, hostname)}`
       return config
     })
-    caxios.interceptors.response.use(
+    this.caxios.interceptors.response.use(
       async (response: AxiosResponse) => {
         // 对响应数据做点什么
-
-        // 启动 sso 单点登录模式的情况
-        // if(response.data.code === 401 && isRefreshRequest(response.config)) {
-            
-        //   // 刷新 token
-        //   const isSuccess = await refreshToken(account, hostname)
-        //   if (isSuccess) {
-        //     // 重新请求
-        //     response.config.headers.Authorization = `Bearer ${getSsoToken(account, hostname)}`
-        //     const resp = await caxios.request(response.config)
-        //     return resp
-        //   } else {
-        //     // 跳转到登录页面
-        //     const { userListStore } = useStore()
-        //     userListStore.logout(account, hostname)
-        //     return response
-        //   }
-        // }
-
         return response
       },
       async (err: AxiosError<any>) => {
         if (err.response?.status) {
-          const authorization = err.response.config.headers.Authorization as string
           switch (err.response?.status) {
             case 401:
-              console.log('ssoToke:', getSsoToken(account, hostname))
-              if(getSsoToken(account, hostname)) {
-                const response = err.response
-                console.log('refreshToken:', isRefreshRequest(response.config))
-                if(!isRefreshRequest(response.config)) {
-                  // 刷新 token
-                  const isSuccess = await refreshToken(account, hostname)
-                  if (isSuccess) {
-                    // 重新请求
-                    response.config.headers.Authorization = `Bearer ${getSsoToken(account, hostname)}`
-                    const resp = await caxios.request(response.config)
-                    return resp
-                  } else {
-                    // 跳转到登录页面
-                    const { userListStore } = useStore()
-                    userListStore.logout(account, hostname)
-                    return response
-                  }
-                }
-        
-              }
+              // console.log('ssoToke:', this.getSsoToken(account, hostname))
+              const resp = await this.refreshTokenAndRequestAgain(err.response, account, hostname)
+              if(resp) return resp  // 返回重新请求的结果
+
               // Token 错误或者过期的情况
+              const authorization = err.response.config.headers.Authorization as string
               if (authorization) {
                 const { userListStore } = useStore()
                 userListStore.logout(account, hostname)
-
-                // const token = authorization.substring(7)
-                // Object.keys(sessionStorage).map(key => {
-                //   if(sessionStorage.getItem(key) === token) {
-                //     const { userListStore } = useStore()
-                //     const arr = key.substring(5).split('&')
-                //     const account = arr[0]
-                //     const hostname = arr[1]
-                //     userListStore.logout(account, hostname)
-                //     console.warn(`${key} Token 错误或者过期，用户自动退出！`)
-                //   }
-                // })
               } else {
                 const { userListStore } = useStore()
                 userListStore.checkCaches()
@@ -162,16 +79,89 @@ export class CreatorApi {
       }
     )
     // 配置请求
-    this.user = user(caxios)
-    this.folder = folder(caxios)
-    this.fragment = fragment(caxios)
-    this.trash = trash(caxios)
-    this.project = project(caxios)
-    this.synthesizer = synthesizer(caxios)
-    this.timbre = timbre(caxios)
-    this.speaker = speaker(caxios)
-    this.bgm = bgm(caxios)
-    this.snapshot = snapshot(caxios)
+    this.user = user(this.caxios)
+    this.folder = folder(this.caxios)
+    this.fragment = fragment(this.caxios)
+    this.trash = trash(this.caxios)
+    this.project = project(this.caxios)
+    this.synthesizer = synthesizer(this.caxios)
+    this.timbre = timbre(this.caxios)
+    this.speaker = speaker(this.caxios)
+    this.bgm = bgm(this.caxios)
+    this.snapshot = snapshot(this.caxios)
+  }
+
+  /** sso 模式下：请求 server 失败返回 401 （server-token 无效）时调用，通过 sso-token 重新更新 server-token */
+  async refreshTokenAndRequestAgain(response: AxiosResponse,account: string, hostname: string) {
+    // console.log('ssoToke:', this.getSsoToken(account, hostname))
+    // 判断 sso-token 是否存在
+    if(this.getSsoToken(account, hostname)) {
+      // 判断是否属于 sso-token 的响应，否则可能陷入无限循环
+      if(!this.isRefreshRequest(response.config)) {
+        // 刷新 token
+        const isSuccess = await this.refreshToken(account, hostname)
+        // 刷新 server-token 成功后重新发送此前的请求
+        if (isSuccess) {
+          // 更新 server-token 并重新发送请求
+          response.config.headers.Authorization = `Bearer ${this.getServerToken(account, hostname)}`
+          const resp = await this.caxios.request(response.config)
+          return resp
+        } else {
+          // 跳转到登录页面
+          console.log('sso-token 失效，登出用户')
+          const { userListStore } = useStore()
+          userListStore.logout(account, hostname)
+          return response
+        }
+      }
+    }
+    return undefined
+  }
+
+  getSsoToken(account: string, hostname: string) {
+    return sessionStorage.getItem(`SSO:${account}&${hostname}`)
+  }
+  
+  getServerToken(account: string, hostname: string) {
+    return sessionStorage.getItem(`User:${account}&${hostname}`)
+  }
+  
+  async refreshToken(account: string, hostname: string) {
+    // https://www.bilibili.com/video/BV1oK421e7cr 无感刷新详细讲解
+    // console.log('refreshToken:', this.getSsoToken(account, hostname))
+    if (this.promise) return this.promise
+    this.promise = new Promise(async resolve => {
+      await axios.get('/auth/identify', {
+        baseURL: hostname,
+        headers: {
+          Authorization: `Bearer ${this.getSsoToken(account, hostname)}`,
+        },
+        __isRefreshToken: true
+      } as any).then(resp => {
+        console.log('resp:', resp)
+        if(resp?.data?.token) {
+          // 刷新成功，重新设置 server-token
+          console.log('刷新成功，重新设置 server-token')
+          sessionStorage.setItem(`User:${account}&${hostname}`, resp.data.token)
+        }
+        // 约定: 比如刷新成功后返回一个值来判断是否刷新成功
+        resolve(resp?.data?.type === 'server')
+      }).catch(err => {
+        resolve(false)
+      })
+    })
+  
+    this.promise.finally(() => {
+      this.promise = null
+    })
+  
+    return this.promise
+  }
+  
+  isRefreshRequest(config: any) {
+    // console.log('config:', config)
+    // console.log('isRefreshToken:', config.__isRefreshToken)
+    return !!config.__isRefreshToken
   }
 }
 
@@ -186,7 +176,6 @@ function createCreatorApi(account: string, hostname: string) {
 }
 
 function removeCreatorApi(account: string, hostname: string) {
-  // console.log(2)
   const key = account + '&' + hostname
   creatorApiMap.delete(key)
 }
@@ -205,3 +194,14 @@ export const creator = {
   removeCreatorApi
 }
 
+// const token = authorization.substring(7)
+// Object.keys(sessionStorage).map(key => {
+//   if(sessionStorage.getItem(key) === token) {
+//     const { userListStore } = useStore()
+//     const arr = key.substring(5).split('&')
+//     const account = arr[0]
+//     const hostname = arr[1]
+//     userListStore.logout(account, hostname)
+//     console.warn(`${key} Token 错误或者过期，用户自动退出！`)
+//   }
+// })

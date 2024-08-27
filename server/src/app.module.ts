@@ -22,9 +22,8 @@ import { RequestScopedService } from './request-scoped/request-scoped.service'
 import { RequestScopedModule } from './request-scoped/request-scoped.module'
 import { SpeakerModule } from './speaker/speaker.module'
 import { parentPort } from 'worker_threads'
-import { SnapshotModule } from './snapshot/snapshot.module';
-import { BucketModule } from './bucket/bucket.module';
-import { ProxyMiddleware } from './proxy/proxy.middleware'
+import { SnapshotModule } from './snapshot/snapshot.module'
+import { BucketModule } from './bucket/bucket.module'
 @Module({
   imports: [
     UserModule,

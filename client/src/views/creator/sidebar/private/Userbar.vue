@@ -1,7 +1,7 @@
 <!-- eslint-disable prettier/prettier -->
 <template>
   <div class="sidebar-userbar">
-    <n-avatar class="sidebar-userbar-item-avatar" size="medium" :src="avatar" :fallback-src="'./default.png'" />
+    <n-avatar class="sidebar-userbar-item-avatar" size="medium" :src="avatar" :fallback-src="'./avatar03.png'" />
     <div class="sidebar-userbar-item-label">
       <span>{{ nickName }}</span>
     </div>

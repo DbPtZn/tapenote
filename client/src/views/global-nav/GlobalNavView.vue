@@ -32,6 +32,7 @@ const state = reactive({
 })
 // 移除 sessionStorage 以外的所有缓存（刷新页面等意外退出时，无法及时保存缓存，会导致缓存与实际数据不一致）
 // FIXME  不建议在这里清理所有 localStorage ，这会导致刷新以后的所有 localStorage 都被清理掉。
+// 这不是优雅的解决方案，如果后续有其它地方需要用到 localstorage,会导致那些缓存也失效
 localStorage.clear()
 
 onMounted(() => {
@@ -233,7 +234,7 @@ function handleManager() {
 
 function handleError(ev: Event) {
   const target = ev.target as HTMLImageElement
-  target.src = './default.png'
+  target.src = './avatar03.png'
 }
 
 function handleCacheVisible() {

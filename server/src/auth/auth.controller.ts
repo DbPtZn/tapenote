@@ -1,16 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Req, Session, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Body, Res, Req, UseGuards } from '@nestjs/common'
 import { AuthService } from './auth.service'
-import { UserService } from 'src/user/user.service'
 import { LoginDto } from './dto/login.dto'
-import { JwtAuthGuard, LocalAuthGuard } from './auth.guard'
+import { LocalAuthGuard } from './auth.guard'
 import { AuthGuard } from '@nestjs/passport'
-import { REST } from 'src/enum'
 import { CreateUserDto } from 'src/user/dto/_api'
+import { ConfigService } from '@nestjs/config'
 
-// @UseGuards(JwtAuthGuard)
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post(`/register`)
   register(@Body() createUserDto: CreateUserDto, @Res() res) {
@@ -40,7 +41,7 @@ export class AuthController {
     // if (!this.authService.validateCode(loginDto.code, loginDto.hashCode)) return res.status(400).send('验证码错误！')
     const token = await this.authService.login(req.user)
     if (token) {
-      res.status(200).send(token)
+      res.status(200).send({ type: 'server', token })
     } else {
       res.status(401).send('登录验证失败')
     }
@@ -49,44 +50,44 @@ export class AuthController {
   @Get(`/identify`)
   async identify(@Req() req, @Res() res) {
     try {
-      console.log(`req.headers.authorization:`, req.headers.authorization)
+      // console.log(`req.headers.authorization:`, req.headers.authorization)
       const authorization = req.headers.authorization.substring(7).trim();
       const token = await this.authService.identify(authorization)
-      res.status(200).send({ code: 200, token })
+      // console.log(`token:`, token)
+      res.status(200).send({ type: 'server', token })
+    } catch (error) {
+      res.status(401).send(error.message)
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get(`/refresh`)
+  async refreshToken(@Req() req, @Res() res) {
+    try {
+      // console.log(`/refresh`)
+      const token = await this.authService.refreshToken(req.user.id)
+      res.status(200).send({ type: 'server', token: token })
     } catch (error) {
       res.status(400).send(error.message)
     }
   }
 
-  // @Get('/tokenLogin')
-  // async tokenLogin(@Req() req, @Res() res) {
-  //   try {
-  //     const token = await this.authService.tokenLogin(req.user)
-  //     if (token) {
-  //       res.status(200).send(token)
-  //     } else {
-  //       res.status(401).send('登录验证失败')
-  //     }
-  //   } catch (error) {
-  //     res.status(401).send(error)
-  //  }
-  // }
 
-  @Post(`${REST.W}/dir/:id`)
-  async createUserRoot(@Param('id') id: string, @Req() req, @Res() res) {
-    try {
-      this.authService
-        .createUserRoot(id)
-        .then(msg => {
-          res.status(200).send(msg)
-        })
-        .catch(err => {
-          res.status(400).send(err)
-        })
-    } catch (error) {
-      throw error
-    }
-  }
+  // @Post(`${REST.W}/dir/:id`)
+  // async createUserRoot(@Param('id') id: string, @Req() req, @Res() res) {
+  //   try {
+  //     this.authService
+  //       .createUserRoot(id)
+  //       .then(msg => {
+  //         res.status(200).send(msg)
+  //       })
+  //       .catch(err => {
+  //         res.status(400).send(err)
+  //       })
+  //   } catch (error) {
+  //     throw error
+  //   }
+  // }
 
   /** 获取验证码请求 */
   // @Get(`${REST.R}/code`)

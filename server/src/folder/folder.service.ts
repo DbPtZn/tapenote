@@ -25,47 +25,47 @@ export class FolderService {
   ) {}
 
   /** 新建根目录 */
-  async createUserRoot(userId: string) {
-    this.userLogger.log(`正在创建用户根目录...`)
-    try {
-      const user = await this.userService.findOneById(userId)
-      if (!user) return
-      const dir = {
-        note: null,
-        course: null,
-        procedure: null
-      }
-      if (!user.dir || !user.dir.note) dir.note = await this.createRoot(LibraryEnum.NOTE, userId)
-      if (!user.dir || !user.dir.course) dir.course = await this.createRoot(LibraryEnum.COURSE, userId)
-      if (!user.dir || !user.dir.procedure) dir.procedure = await this.createRoot(LibraryEnum.PROCEDURE, userId)
-      // console.log(dir)
-      this.userLogger.log(`创建根目录成功, 正在存入用户数据对象...`)
-      await this.userService.createUserRoot(dir, userId)
-      this.userLogger.log(`创建用户根目录成功！`)
-    } catch (error) {
-      this.userLogger.error(`创建用户根目录失败！原因：${error.message}`)
-      throw error
-    }
-  }
+  // async createUserRoot(userId: string) {
+  //   this.userLogger.log(`正在创建用户根目录...`)
+  //   try {
+  //     const user = await this.userService.findOneById(userId)
+  //     if (!user) return
+  //     const dir = {
+  //       note: null,
+  //       course: null,
+  //       procedure: null
+  //     }
+  //     if (!user.dir || !user.dir.note) dir.note = await this.createRoot(LibraryEnum.NOTE, userId)
+  //     if (!user.dir || !user.dir.course) dir.course = await this.createRoot(LibraryEnum.COURSE, userId)
+  //     if (!user.dir || !user.dir.procedure) dir.procedure = await this.createRoot(LibraryEnum.PROCEDURE, userId)
+  //     // console.log(dir)
+  //     this.userLogger.log(`创建根目录成功, 正在存入用户数据对象...`)
+  //     await this.userService.createUserRoot(dir, userId)
+  //     this.userLogger.log(`创建用户根目录成功！`)
+  //   } catch (error) {
+  //     this.userLogger.error(`创建用户根目录失败！原因：${error.message}`)
+  //     throw error
+  //   }
+  // }
 
   /** 创建根目录 */
-  async createRoot(lib: LibraryEnum, userId: string) {
-    try {
-      const folder = new Folder()
-      folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
-      folder.desc = 'Root Folder'
-      folder.lib = lib
-      folder.isCloud = false
-      folder.userId = userId
-      folder.parentId = null
-      const result = await this.foldersRepository.save(folder)
-      this.userLogger.log(`创建'${lib}'根目录[${result.id}]成功`)
-      return result.id
-    } catch (error) {
-      this.userLogger.error(`创建'${lib}'根目录失败`, error.message)
-      throw error
-    }
-  }
+  // async createRoot(lib: LibraryEnum, userId: string) {
+  //   try {
+  //     const folder = new Folder()
+  //     folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
+  //     folder.desc = 'Root Folder'
+  //     folder.lib = lib
+  //     folder.isCloud = false
+  //     folder.userId = userId
+  //     folder.parentId = null
+  //     const result = await this.foldersRepository.save(folder)
+  //     this.userLogger.log(`创建'${lib}'根目录[${result.id}]成功`)
+  //     return result.id
+  //   } catch (error) {
+  //     this.userLogger.error(`创建'${lib}'根目录失败`, error.message)
+  //     throw error
+  //   }
+  // }
 
   /** 新建文件夹 */
   async create(createFolderDto: CreateFolderDto, userId: string) {

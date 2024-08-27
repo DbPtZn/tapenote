@@ -20,13 +20,13 @@ export const auth = {
       data: data
     })
   },
-  createRootDir(userId: string, hostname: string) {
-    return axios({
-      method: 'post',
-      baseURL: hostname,
-      url: '/auth/write/dir/' + userId,
-    })
-  },
+  // createRootDir(userId: string, hostname: string) {
+  //   return axios({
+  //     method: 'post',
+  //     baseURL: hostname,
+  //     url: '/auth/write/dir/' + userId,
+  //   })
+  // },
   /** 登录 */
   login<T>(data: LoginDto, hostname: string) {
     return axios({
@@ -35,5 +35,5 @@ export const auth = {
       url: '/auth/login',
       data: data
     })
-  }
+  },
 }

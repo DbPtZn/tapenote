@@ -37,6 +37,10 @@ export class UserService {
     this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
   }
 
+  quertExistsByAccount(account: string) {
+    return this.usersRepository.existsBy({ account })
+  }
+
   /** 创建新用户 */
   async create(createUserDto: CreateUserDto) {
     try {
@@ -119,21 +123,21 @@ export class UserService {
   }
 
   /** 创建用户根目录 */
-  async createUserRoot(dir: { note: string; course: string; procedure: string }, userId: string) {
-    try {
-      const user = await this.usersRepository.findOneBy({ id: userId })
-      const { note, course, procedure } = dir
-      if (!user.dir || Object.keys(user.dir).length === 0 || user.dir?.note) user.dir = new Dir()
-      if (!user.dir.note && note) user.dir.note = note
-      if (!user.dir.course && course) user.dir.course = course
-      if (!user.dir.procedure && procedure) user.dir.procedure = procedure
-      // console.log(user)
-      await this.usersRepository.save(user)
-      return 'successful!'
-    } catch (error) {
-      throw error
-    }
-  }
+  // async createUserRoot(dir: { note: string; course: string; procedure: string }, userId: string) {
+  //   try {
+  //     const user = await this.usersRepository.findOneBy({ id: userId })
+  //     const { note, course, procedure } = dir
+  //     if (!user.dir || Object.keys(user.dir).length === 0 || user.dir?.note) user.dir = new Dir()
+  //     if (!user.dir.note && note) user.dir.note = note
+  //     if (!user.dir.course && course) user.dir.course = course
+  //     if (!user.dir.procedure && procedure) user.dir.procedure = procedure
+  //     // console.log(user)
+  //     await this.usersRepository.save(user)
+  //     return 'successful!'
+  //   } catch (error) {
+  //     throw error
+  //   }
+  // }
 
   /** 通过账号查询用户 */
   async findOneByAccount(account: string) {
