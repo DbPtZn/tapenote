@@ -217,7 +217,7 @@ export class Pack {
       // 5.获取音频文件
       if (audio) {
         await fetch(audio).then(response => response.blob()).then(blob => {
-          zip.file('audio.wav', blob)
+          zip.file(`audio.${getAudioExtension(audio)}`, blob)
         })
       }
       // 6.打包课程所需的元数据
@@ -265,11 +265,11 @@ export class Pack {
         const audioBlob = audioIndex === -1 ? null : files[audioIndex].file
         // const file = new File([product], 'product_' + Date.now() + '.json', { type: 'application/json' })
         // const blob = new Blob([file], { type: 'application/octet-stream' })
-        const { site, type, editionId, title, abbrev, code, penname, email, blog, msg, duration, wordage } = data
+        const { site, type, editionId, title, abbrev, audio, code, penname, email, blog, msg, duration, wordage } = data
 
         const formData = new FormData()
         jsonBlob && formData.append('jsonDocs', jsonBlob, 'document.json')
-        audioBlob && formData.append('audios', audioBlob, 'audio.wav')
+        audioBlob && formData.append('audios', audioBlob, `audio.${getAudioExtension(audio)}`)
 
         formData.append('type', type)
         formData.append('editionId', editionId)
@@ -308,6 +308,11 @@ export class Pack {
       })
     })
   }
+}
+
+function getAudioExtension(audio: string) {
+  const parts = audio.split('.')
+  return parts.length > 1 ? parts.pop() : 'ogg'
 }
 
 export const pack = new Pack()

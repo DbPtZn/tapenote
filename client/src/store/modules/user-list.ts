@@ -213,6 +213,19 @@ export const useUserListStore = defineStore('userListStore', {
         submissionConfig: data.submissionConfig || [],
         subscriptionConfig: data.subscriptionConfig || []
       }
+
+      // 添加默认投稿配置
+      const defaultSubmissionConfig = {
+        id: 'Tapenote@Offical',
+        name: import.meta.env.VITE_OFFICAL_SUBMIT_NAME,
+        site: import.meta.env.VITE_OFFICAL_SUBMIT_SITE,
+        code: import.meta.env.VITE_OFFICAL_SUBMIT_CODE,
+        desc: import.meta.env.VITE_OFFICAL_SUBMIT_DESC
+      }
+      if(state.submissionConfig[0].id !== defaultSubmissionConfig.id) {
+        state.submissionConfig.unshift(defaultSubmissionConfig)
+      }
+
       // 特殊情况处理：
       // 1. 如果 hostname 为空
       if (!state.hostname) throw console.warn('未设置主机名')

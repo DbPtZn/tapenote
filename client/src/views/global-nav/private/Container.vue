@@ -9,8 +9,10 @@ const themeVars = useThemeVars()
 const isCollapse = ref(false)
 const collapseVisible = ref(false)
 const widthVal = ref(64)
+const isDefaultCollape = import.meta.env.VITE_COLLAPSE_SIDER === 'true'
 onMounted(() => {
   if(!isCollapse.value) emits('collapse', widthVal.value)
+  isDefaultCollape && handleCollapse()
 })
 function handleCollapse(){
   isCollapse.value = !isCollapse.value

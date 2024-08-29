@@ -56,6 +56,7 @@ export class AuthModule {
       { path: `/auth/login`, method: RequestMethod.POST },
       { path: `/auth/register`, method: RequestMethod.POST },
       { path: `/auth/refresh`, method: RequestMethod.GET },
+      { path: `/auth/sendCode/:email`, method: RequestMethod.GET },
       // { path: `/auth/identify`, method: RequestMethod.GET },
     )
   }

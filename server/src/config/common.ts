@@ -2,10 +2,10 @@ import { registerAs } from '@nestjs/config'
 import { join } from 'path'
 
 export default registerAs('common', () => {
-  console.log(process.env.SYSTEM_DIR)
-  console.log(process.cwd())
-  console.log(process.env.APP_DIR)
-  console.log(join(process.env.SYSTEM_DIR ? process.env.SYSTEM_DIR : process.cwd(), process.env.APP_DIR, process.env.PUBLIC_DIR))
+  // console.log(process.env.SYSTEM_DIR)
+  // console.log(process.cwd())
+  // console.log(process.env.APP_DIR)
+  // console.log(join(process.env.SYSTEM_DIR ? process.env.SYSTEM_DIR : process.cwd(), process.env.APP_DIR, process.env.PUBLIC_DIR))
   return {
     openValidateCode: process.env.V_CODE_OPEN === 'true', // 是否开启验证码
     systemDir: process.env.SYSTEM_DIR || '', // 系统目录

@@ -72,7 +72,7 @@ function handleSubmit(e: MouseEvent) {
   <div class="subscription-config">
     <!-- <Header :height="34"></Header> -->
     <Main :flex="1">
-        <n-card title="投稿配置" style="height: 100%; margin-bottom: 16px; border-radius: 0">
+        <n-card title="订阅博客" style="height: 100%; margin-bottom: 16px; border-radius: 0">
           <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
             <!-- 配置名称 -->
             <n-form-item path="name" label="名称">
@@ -84,11 +84,11 @@ function handleSubmit(e: MouseEvent) {
             </n-form-item>
             <!-- 订阅码 -->
             <n-form-item path="code" label="订阅码">
-              <n-input v-model:value="model.code" type="text" placeholder="订阅码" maxlength="18" show-count />
+              <n-input v-model:value="model.code" type="text" placeholder="订阅码" maxlength="32" show-count />
             </n-form-item>
             <!-- 用户简介 -->
             <n-form-item path="desc" label="描述">
-              <n-input v-model:value="model.desc" type="textarea" placeholder="描述" maxlength="64" show-count />
+              <n-input v-model:value="model.desc" type="textarea" placeholder="描述" maxlength="255" show-count />
             </n-form-item>
           </n-form>
           <n-space :justify="'end'">

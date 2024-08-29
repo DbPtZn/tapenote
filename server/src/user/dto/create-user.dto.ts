@@ -1,8 +1,9 @@
-import { IsString, Length } from 'class-validator'
+import { IsOptional, IsString, Length } from 'class-validator'
 
 export class CreateUserDto {
   // 昵称
   @IsString()
+  @IsOptional()
   nickname: string
 
   // account 账号

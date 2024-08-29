@@ -19,6 +19,7 @@ export class AuthMiddleware implements NestMiddleware {
   }
   use(req: Request, res: Response, next: NextFunction) {
     // TODO 无法拦截修改响应结果，改为手动发送请求
+    // console.log('ProxyMiddleware')
     // if (req.originalUrl === '/auth/identify') {
     //   console.log('ProxyMiddleware')
     //   proxy(this.common.ssoDomain, {
@@ -42,6 +43,12 @@ export class AuthMiddleware implements NestMiddleware {
     //     }
     //   })(req, res, next)
     // }
-    return proxy(this.common.ssoDomain)(req, res, next)
+    console.log(this.common.ssoDomain)
+    return proxy(this.common.ssoDomain, {
+      userResDecorator: function (proxyRes, proxyResData, req, res) {
+        // console.log(JSON.parse(proxyResData.toString('utf8')))
+        return proxyResData
+      }
+    })(req, res, next)
   }
 }

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { RendererElement, RendererNode, VNode, computed, onMounted, onUnmounted, ref } from 'vue'
+import { VNode, computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import useStore from '@/store'
 import {
@@ -23,10 +23,13 @@ import { KeyboardArrowDownRound, KeyboardArrowUpRound } from '@vicons/material'
 import ValidateCode from './ValidateCode.vue'
 import LoginInfoCard from './private/LoginInfoCard.vue'
 import { Subscription, fromEvent } from '@tanbo/stream'
+import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
+import axios from 'axios'
 interface ModelType {
   hostname: string
   account: string
   password: string
+  code: string
 }
 const inElectron = !!window.electronAPI
 // electron 环境下向主进程询问本地服务的端口号
@@ -42,20 +45,15 @@ const router = useRouter()
 const { userListStore } = useStore()
 const message = useMessage()
 const dialog = useDialog()
-// const props = defineProps<{
-//   default?: {
-//     hostname: string
-//     account: string
-//     password: string
-//   }
-// }>()
 const tip = import.meta.env.VITE_LOGIN_TIP || ''
+const loginMode = ref<'loginByPass' | 'loginByEmail'>('loginByPass')
 const formRef = ref<FormInst | null>(null)
 const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true' // 是否开放注册入口
 const model = ref<ModelType>({
   hostname: import.meta.env.VITE_BASE_URL || '',
   account: import.meta.env.VITE_ACCOUNT || '',
-  password: import.meta.env.VITE_PASSWORD || ''
+  password: import.meta.env.VITE_PASSWORD || '',
+  code: ''
 })
 
 const rules: FormRules = {
@@ -82,6 +80,15 @@ const rules: FormRules = {
       required: true,
       message: '请输入密码'
     }
+  ],
+  code: [
+    {
+      message: '未填写验证码',
+      trigger: 'blur',
+      validator: (rule: FormItemRule, value: string) => {
+        if (value.length === 0 && loginMode.value === 'loginByEmail') return false
+      }
+    }
   ]
 }
 function handleLogin() {
@@ -89,6 +96,10 @@ function handleLogin() {
 }
 
 const submit = () => {
+  if (isQuerying.value) return message.loading('正在连接服务器...')
+  if (!isHostValid.value) return message.error('服务器地址不可用！')
+  const isLoginByEmail = loginMode.value === 'loginByEmail'
+  if (!hadSendCode && isLoginByEmail) return message.error('请先获取验证码！')
   formRef.value?.validate(async errors => {
     if (!errors) {
       // 先判断是否已经登录
@@ -104,7 +115,8 @@ const submit = () => {
         .login(
           {
             account: model.value.account,
-            password: model.value.password
+            password: isLoginByEmail ? ' ' : model.value.password,
+            code: isLoginByEmail ? model.value.code : ''
           },
           model.value.hostname
         )
@@ -114,7 +126,10 @@ const submit = () => {
           router.push(RoutePathEnum.HOME)
         })
         .catch(err => {
-          message.error('登录失败！')
+          console.log(err)
+          // console.log(err?.response?.data?.message)
+          const msg = err?.response?.data?.message
+          message.error(msg ? msg : '登录失败！')
         })
     } else {
       message.error('表单校验失败！')
@@ -127,7 +142,7 @@ let sub: Subscription
 onMounted(() => {
   sub = fromEvent<KeyboardEvent>(loginRef.value, 'keypress').subscribe(ev => {
     // console.log(ev)
-    if(ev.key === "Enter") {
+    if (ev.key === 'Enter') {
       submit()
     }
   })
@@ -136,36 +151,38 @@ onUnmounted(() => {
   sub.unsubscribe()
 })
 
-function validateCode() {
-  return new Promise<boolean>((resolve, reject) => {
-    const dia = dialog.create({
-      title: '验证码',
-      content: () =>
-        h(ValidateCode, {
-          onConfirm: result => {
-            dia.destroy()
-            resolve(result)
-          }
-        }),
-      onMaskClick: () => {
-        dia.destroy()
-        resolve(false)
-      }
-    })
-  })
-}
+// function validateCode() {
+//   return new Promise<boolean>((resolve, reject) => {
+//     const dia = dialog.create({
+//       title: '验证码',
+//       content: () =>
+//         h(ValidateCode, {
+//           onConfirm: result => {
+//             dia.destroy()
+//             resolve(result)
+//           }
+//         }),
+//       onMaskClick: () => {
+//         dia.destroy()
+//         resolve(false)
+//       }
+//     })
+//   })
+// }
 
 function handleToRegister() {
   router.push(RoutePathEnum.REGISTER)
 }
-
 
 const recordAccount = ref(false)
 const recordPassword = ref(false)
 
 function setLoginStorage(avatar?: string) {
   if (recordAccount.value) {
-    window.electronAPI.setLoginInfo(`Record:${model.value.account}&${model.value.hostname}`, { pwd: recordPassword.value ? model.value.password : '', avatar: avatar || '' })
+    window.electronAPI.setLoginInfo(`Record:${model.value.account}&${model.value.hostname}`, {
+      pwd: recordPassword.value ? model.value.password : '',
+      avatar: avatar || ''
+    })
   }
 }
 
@@ -187,6 +204,7 @@ function handleMenuShow() {
 let loginInfoData: Awaited<ReturnType<typeof getLoginInfoData>> = []
 const loginData = ref<Awaited<ReturnType<typeof getLoginInfoData>>>([])
 const options = ref<(DropdownOption | DropdownGroupOption)[]>([])
+
 onMounted(async () => {
   /** In Electron */
   if (inElectron) {
@@ -233,7 +251,7 @@ async function getLoginInfoData() {
       const hostname = arr[1]
       option.account = account
       option.hostname = hostname
-      if(item.value) {
+      if (item.value) {
         option.pwd = item.value.pwd || ''
         option.avatar = item.value.avatar || ''
       }
@@ -244,17 +262,18 @@ async function getLoginInfoData() {
   return options
 }
 
+/** In Electron */
 function renderOption(props: { node: VNode; option: DropdownOption | DropdownGroupOption | SelectOption | SelectGroupOption }) {
   const { option } = props
   return h(LoginInfoCard, {
-    avatar: option.avatar as string || './avatar03.png',
+    avatar: (option.avatar as string) || './avatar03.png',
     account: option.value as string,
     hostname: option.hostname as string,
     onSelected: (account, hostname) => {
       // console.log(account, hostname)
       model.value.account = account
       // 本地登录时，原历史记录的端口可能被占用了, 所以自动替换成默认端口
-      if(localhost !== '' && hostname !== localhost && hostname.includes('localhost')) {
+      if (localhost !== '' && hostname !== localhost && hostname.includes('localhost')) {
         model.value.hostname = localhost
       } else {
         model.value.hostname = hostname
@@ -269,9 +288,9 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
       const key = `Record:${account}&${hostname}`
       // console.log(window.electronAPI.removeLoginInfo)
       window.electronAPI.removeLoginInfo(key).then(result => {
-        if(result) {
+        if (result) {
           options.value.some((item, index, arr) => {
-            if(item.key === key) {
+            if (item.key === key) {
               arr.splice(index, 1)
               return true
             }
@@ -282,21 +301,24 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
   })
 }
 
+/** ------------------------------- 桌面客户端 --------------------------- */
 const autoCompleteOptions = computed(() => {
-  return loginData.value.filter(item => {
-    if(item.account.startsWith(model.value.account)) {
-      return true
-    }
-  }).map(item => {
-    return {
-      label: item.account,
-      value: item.account,
-      key: item.key,
-      avatar: item.avatar,
-      hostname: item.hostname,
-      pwd: item.pwd
-    }
-  })
+  return loginData.value
+    .filter(item => {
+      if (item.account.startsWith(model.value.account)) {
+        return true
+      }
+    })
+    .map(item => {
+      return {
+        label: item.account,
+        value: item.account,
+        key: item.key,
+        avatar: item.avatar,
+        hostname: item.hostname,
+        pwd: item.pwd
+      }
+    })
 })
 const isAutoCompleteOptionsShow = ref(false)
 function handleShow(value: string) {
@@ -306,11 +328,75 @@ function handleBlur() {
   isAutoCompleteOptionsShow.value = false
 }
 function handleUpdate(value: string | null) {
-  if(value && value.length > 0) {
+  if (value && value.length > 0) {
     isAutoCompleteOptionsShow.value = true
   } else {
     isAutoCompleteOptionsShow.value = false
   }
+}
+
+/** ------------------------------- 服务器 验证 --------------------------- */
+const isQuerying = ref(false)
+const isHostValid = ref(false) // 服务器是否有效
+const isEnableEmailVerify = ref(false) // 是否开启邮箱验证
+onMounted(() => {
+  // 默认自动获取焦点
+  isQuerying.value = true
+  axios
+    .get<boolean>(`${model.value.hostname}/hello`)
+    .then(res => {
+      isEnableEmailVerify.value = res.data
+      isHostValid.value = true
+    })
+    .catch(err => {
+      isHostValid.value = false
+    })
+    .finally(() => {
+      isQuerying.value = false
+    })
+})
+
+function handleHostInputBlur() {
+  isQuerying.value = true
+  axios
+    .get<boolean>(`${model.value.hostname}/hello`)
+    .then(res => {
+      isEnableEmailVerify.value = res.data
+      isHostValid.value = true
+    })
+    .catch(err => {
+      isHostValid.value = false
+    })
+    .finally(() => {
+      isQuerying.value = false
+    })
+}
+
+/** ------------------------------- 邮箱 验证 --------------------------- */
+const codeTxt = ref('获取验证码')
+let hadSendCode = false // 是否已经发出验证码
+function handleSendCode() {
+  if (isQuerying.value) return message.loading('正在连接服务器...')
+  if (!isHostValid.value) return message.error('服务器地址不可用！')
+  // TODO: 发送验证码
+  console.log(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
+  axios
+    .get(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
+    .then(res => {
+      // message.success('验证码已发送！')
+      hadSendCode = true
+      let count = 60
+      const timer = setInterval(() => {
+        codeTxt.value = `${--count}秒后重发`
+        if (count <= 0) {
+          clearInterval(timer)
+          codeTxt.value = '获取验证码'
+        }
+      }, 1000)
+    })
+    .catch(err => {
+      message.error('验证码发送失败！')
+    })
 }
 </script>
 
@@ -320,78 +406,111 @@ function handleUpdate(value: string | null) {
       {{ tip }}
     </div>
     <n-card class="login">
-      <n-space vertical>
-        <div class="title">登录</div>
-        <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
-          <n-form-item path="hostname" label="服务器地址">
-            <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" clearable />
-          </n-form-item>
-          <n-form-item path="account" label="账号">
-            <n-auto-complete
-              class="form-input"
-              v-model:value="model.account"
-              placeholder="帐号"
-              :get-show="handleShow"
-              :options="autoCompleteOptions"
-              :render-option="renderOption"
-              @blur="handleBlur"
-              @update:value="handleUpdate"
-              @select="isAutoCompleteOptionsShow = false"
-            >
-              <template #suffix>
-                <n-dropdown
-                  v-if="inElectron"
-                  trigger="click"
-                  :show="isMenuShow && options.length > 0"
-                  :options="options"
+      <n-tabs :value="loginMode" size="large" animated justify-content="space-evenly" @update:value="loginMode = $event">
+        <n-tab-pane name="loginByPass" tab="密码登录">
+          <n-space style="paddingTop: 18px" vertical>
+            <!-- <div class="title">登录</div> -->
+            <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
+              <n-form-item path="hostname" label="服务器地址">
+                <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
+                  <template #suffix>
+                    <n-icon
+                      :color="isHostValid ? '' : 'red'"
+                      :component="isHostValid ? CheckCircleOutlineOutlined : DoNotDisturbAltOutlined"
+                      :size="18"
+                    />
+                  </template>
+                </n-input>
+              </n-form-item>
+              <n-form-item path="account" label="账号">
+                <n-auto-complete
+                  class="form-input"
+                  v-model:value="model.account"
+                  placeholder="帐号"
+                  :get-show="handleShow"
+                  :options="autoCompleteOptions"
                   :render-option="renderOption"
-                  :animated="false"
-                  :placement="'bottom-end'"
-                  :style="{ marginRight: '-12px', marginTop: '9px' }"
-                  :width="280"
-                  @clickoutside="isMenuShow = false"
+                  @blur="handleBlur"
+                  @update:value="handleUpdate"
+                  @select="isAutoCompleteOptionsShow = false"
                 >
-                  <div class="input-suffix" @click.stop.prevent="handleMenuShow">
-                    <n-icon :component="KeyboardArrowUpRound" v-if="isMenuShow" size="18" />
-                    <n-icon :component="KeyboardArrowDownRound" v-else size="18" />
-                  </div>
-                </n-dropdown>
+                  <template #suffix>
+                    <n-dropdown
+                      v-if="inElectron"
+                      trigger="click"
+                      :show="isMenuShow && options.length > 0"
+                      :options="options"
+                      :render-option="renderOption"
+                      :animated="false"
+                      :placement="'bottom-end'"
+                      :style="{ marginRight: '-12px', marginTop: '9px' }"
+                      :width="280"
+                      @clickoutside="isMenuShow = false"
+                    >
+                      <div class="input-suffix" @click.stop.prevent="handleMenuShow">
+                        <n-icon :component="KeyboardArrowUpRound" v-if="isMenuShow" size="18" />
+                        <n-icon :component="KeyboardArrowDownRound" v-else size="18" />
+                      </div>
+                    </n-dropdown>
+                  </template>
+                </n-auto-complete>
+              </n-form-item>
+              <n-form-item path="password" label="密码">
+                <n-input class="form-input" v-model:value="model.password" type="password" placeholder="密码" clearable />
+              </n-form-item>
+              <n-flex v-if="inElectron" justify="space-between">
+                <n-checkbox v-model:checked="recordAccount" :on-update:checked="handleRecordAccount"> 记住账号 </n-checkbox>
+                <n-checkbox :disabled="!inElectron" v-model:checked="recordPassword" :on-update:checked="handleRecordPassword"> 记住密码 </n-checkbox>
+              </n-flex>
+            </n-form>
+            <n-button class="confirm" @click="handleLogin">登录</n-button>
+            <div class="footer">
+              <span v-if="allowRegister">没有帐号？<a @click="handleToRegister">去注册</a></span>
+            </div>
+          </n-space>
+        </n-tab-pane>
+        <n-tab-pane name="loginByEmail" tab="邮箱登录">
+          <n-space style="paddingTop: 18px" vertical>
+            <!-- <div class="title">登录</div> -->
+            <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
+              <n-form-item path="hostname" label="服务器地址">
+                <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
+                  <template #suffix>
+                    <n-icon
+                      :color="isHostValid ? '' : 'red'"
+                      :component="isHostValid ? CheckCircleOutlineOutlined : DoNotDisturbAltOutlined"
+                      :size="18"
+                    />
+                  </template>
+                </n-input>
+              </n-form-item>
+              <n-form-item path="account" label="账号">
+                <n-auto-complete v-model:value="model.account" :options="autoCompleteOptions" placeholder="请输入邮箱" />
+              </n-form-item>
+              <n-form-item path="code" label="验证码">
+                <n-input class="form-input" v-model:value="model.code" :type="'text'" placeholder="验证码">
+                  <template #suffix>
+                    <n-button :disabled="!isEnableEmailVerify" :size="'small'" @click="handleSendCode">{{ codeTxt }}</n-button>
+                  </template>
+                </n-input>
+              </n-form-item>
+              <n-flex v-if="inElectron" justify="space-between">
+                <n-checkbox v-model:checked="recordAccount" :on-update:checked="handleRecordAccount"> 记住账号 </n-checkbox>
+                <n-checkbox :disabled="!inElectron" v-model:checked="recordPassword" :on-update:checked="handleRecordPassword"> 记住密码 </n-checkbox>
+              </n-flex>
+            </n-form>
+            <n-tooltip :disabled="isEnableEmailVerify"  trigger="hover">
+              <template #trigger>
+                <n-button :disabled="!isEnableEmailVerify" class="confirm" @click="handleLogin">登录</n-button>
               </template>
-            </n-auto-complete>
-            <!-- <n-input class="form-input" v-model:value="model.account" placeholder="帐号">
-              <template #suffix>
-                <n-dropdown
-                  v-if="inElectron"
-                  trigger="click"
-                  :show="isMenuShow && options.length > 0"
-                  :options="options"
-                  :render-option="renderOption"
-                  :animated="false"
-                  :placement="'bottom-end'"
-                  :style="{ marginRight: '-12px', marginTop: '9px' }"
-                  :width="280"
-                >
-                  <div class="input-suffix" @click="handleMenuShow">
-                    <n-icon :component="KeyboardArrowUpRound" v-if="isMenuShow" size="18" />
-                    <n-icon :component="KeyboardArrowDownRound" v-else size="18" />
-                  </div>
-                </n-dropdown>
-              </template>
-            </n-input> -->
-          </n-form-item>
-          <n-form-item path="password" label="密码">
-            <n-input class="form-input" v-model:value="model.password" type="password" placeholder="密码" clearable/>
-          </n-form-item>
-          <n-flex v-if="inElectron" justify="space-between">
-            <n-checkbox v-model:checked="recordAccount" :on-update:checked="handleRecordAccount"> 记住账号 </n-checkbox>
-            <n-checkbox :disabled="!inElectron" v-model:checked="recordPassword" :on-update:checked="handleRecordPassword"> 记住密码 </n-checkbox>
-          </n-flex>
-        </n-form>
-        <n-button class="confirm" @click="handleLogin">登录</n-button>
-        <div class="footer">
-          <span v-if="allowRegister">没有帐号？<a @click="handleToRegister">去注册</a></span>
-        </div>
-      </n-space>
+              目标服务器不支持邮箱验证码登录
+            </n-tooltip>
+            <div class="footer">
+              <span v-if="allowRegister">没有帐号？<a @click="handleToRegister">去注册</a></span>
+            </div>
+          </n-space>
+        </n-tab-pane>
+      </n-tabs>
     </n-card>
   </div>
 </template>

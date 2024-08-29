@@ -42,10 +42,10 @@ const rules: FormRules = {
       trigger: 'blur'
     },
     {
-      message: '描述长度不能超过60个字符',
+      message: '描述长度不能超过255个字符',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: string) => {
-        return value.length < 60
+        return value.length < 255
       }
     }
   ]
@@ -84,11 +84,11 @@ function handleSubmit(e: MouseEvent) {
             </n-form-item>
             <!-- 授权码 -->
             <n-form-item path="code" label="授权码">
-              <n-input v-model:value="model.code" type="text" placeholder="授权码" maxlength="18" show-count />
+              <n-input v-model:value="model.code" type="text" placeholder="授权码" maxlength="24" show-count />
             </n-form-item>
             <!-- 用户简介 -->
             <n-form-item path="desc" label="描述">
-              <n-input v-model:value="model.desc" type="textarea" placeholder="描述" maxlength="64" show-count />
+              <n-input v-model:value="model.desc" type="textarea" placeholder="描述" maxlength="255" show-count />
             </n-form-item>
           </n-form>
           <n-space :justify="'end'">

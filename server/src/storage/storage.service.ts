@@ -78,9 +78,7 @@ export class StorageService {
     }
     const common = this.common
     const dirPath = path.join(
-      common.systemDir ? common.systemDir : __rootdirname,
-      common.appDir,
-      prv === true ? common.privateDir : common.publicDir,
+      prv === true ? common.fullPrivateDir : common.fullPublicDir,
       dirname
     )
     // console.log(dirPath)
@@ -101,9 +99,9 @@ export class StorageService {
         this.bucketService
           .uploadFile(file, dirname)
           .then(res => {
-            console.log('file.filename:', file.filename)
-            console.log('file.originalname:', file.originalname)
-            console.log('file.path', file.path)
+            // console.log('file.filename:', file.filename)
+            // console.log('file.originalname:', file.originalname)
+            // console.log('file.path', file.path)
             const url = this.common.proxyDomain + '/' + dirname + '/' + basename(file.path)
             fs.unlinkSync(file.path)
             console.log('cos url:', url)

@@ -53,7 +53,7 @@ const subscriptionConfig = useSubscriptionConfig()
             </n-tabs>
           </n-tab-pane>
           <!-- 订阅博客 -->
-          <n-tab-pane name="subscription" tab="订阅博客">
+          <n-tab-pane name="subscription" tab="订阅博客" disabled>
             <n-tabs
               v-model:value="subscriptionConfig.valueRef.value"
               type="card"

@@ -12,11 +12,7 @@ export class LoginDto {
   })
   password: string
 
-  // // 验证码
-  // @IsString()
-  // code: string
-
-  // // 加密验证码
-  // @IsString()
-  // hashCode: string
+  // 邮箱验证码
+  @IsString()
+  code: string
 }

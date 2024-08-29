@@ -256,7 +256,7 @@ export class ProjectService {
       //   filename: `${randomstring.generate(3)}${new Date().getTime()}.wav`,
       // })
       // 创建临时地址
-      const tempPath = this.storageService.createTempFilePath('.wav')
+      const tempPath = this.storageService.createTempFilePath('.ogg')
       // console.log(group.audioFragments)
       await this.ffmpegService
         .concatAudioToOgg(group.audioFragments, tempPath)

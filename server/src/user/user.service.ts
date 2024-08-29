@@ -62,7 +62,7 @@ export class UserService {
       const user = new User()
       // user.id = UUID.v4()
       user.account = account
-      user.nickname = nickname
+      user.nickname = nickname ? nickname : `新用户-${randomstring.generate(5)}`
       user.encryptedPassword = encryptedPassword
       user.dirname = dirname
 

@@ -26,7 +26,7 @@ const router = useRouter()
 const footerRef = ref()
 const { userStore, userListStore, folderTreeStore, folderStore, settingStore } = useStore()
 const state = reactive({
-  userOption: import.meta.env.VITE_VIEW_USER === 'true',
+  userOption: true,
   blogOption: import.meta.env.VITE_VIEW_BLOG === 'true',
   managerOption: import.meta.env.VITE_VIEW_MANAGER === 'true'
 })
