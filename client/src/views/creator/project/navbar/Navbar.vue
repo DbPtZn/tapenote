@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { LibraryEnum } from '@/enums'
 import useStore from '@/store'
-import { useThemeVars, useDialog, useMessage, NIcon } from 'naive-ui'
+import { useThemeVars, useDialog, useMessage, NIcon, useNotification, NButton } from 'naive-ui'
 import { computed, h, inject, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { Bridge } from '../bridge'
 import { Subscription } from '@tanbo/stream'
@@ -31,6 +31,7 @@ const props = defineProps<{
 const themeVars = useThemeVars()
 const dialog = useDialog()
 const message = useMessage()
+const notification = useNotification()
 const { folderStore, projectStore, userListStore } = useStore()
 const data = computed(() => projectStore.get(props.id))
 const submissionHistory = computed(() => data.value?.submissionHistory.sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf()))
@@ -86,7 +87,7 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
     if (!configure.folderId) return
     dialog.create({
       title: '创建',
-      content: `${props.lib === LibraryEnum.NOTE ? '确定创建工程项目并跳转？' : '确定创建课程项目并跳转？'}`,
+      content: `${props.lib === LibraryEnum.NOTE ? '确定创建工程项目？' : '确定创建课程项目？'}`,
       positiveText: '确定',
       negativeText: '取消',
       onPositiveClick: () => {
@@ -99,8 +100,29 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
           hostname: props.hostname
         }).then(res => {
           const toLib = props.lib === LibraryEnum.NOTE ? LibraryEnum.PROCEDURE : LibraryEnum.COURSE
-          shell.workbench.setById({ id: res.id, lib: toLib, account: props.account, hostname: props.hostname })
           folderStore.addSubFile(res, configure.folderId, toLib)
+          const n = notification.success({
+            title: `创建${props.lib === LibraryEnum.NOTE ? '工程项目' : '课程动画'}成功！`,
+            // content: '',
+            duration: 10000,
+            meta: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+            action: () => h(
+              NButton,
+              {
+                text: true,
+                type: 'primary',
+                onClick: () => {
+                  shell.workbench.setById({ id: res.id, lib: toLib, account: props.account, hostname: props.hostname })
+                  n.destroy()
+                }
+              },
+              {
+                default: () => '跳转'
+              }
+            ),
+          })
+        }).catch(err => {
+          message.error(`创建${props.lib === LibraryEnum.NOTE ? '工程项目' : '课程动画'}失败！`)
         })
       },
       onNegativeClick: () => {
@@ -187,7 +209,25 @@ function handleHistoryCourseClick(course: HistoryCourse) {
       try {
         // 后端创建 course 时会自动创建相应的 snapshot
         await projectStore.coverCourse(course.id, props.id, props.account, props.hostname)
-        shell.workbench.setById({ id: course.id, lib: LibraryEnum.COURSE, account: props.account, hostname: props.hostname })
+        const n = notification.success({
+          title: `创建新版本成功！`,
+          duration: 10000,
+          meta: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+          action: () => h(
+            NButton,
+            {
+              text: true,
+              type: 'primary',
+              onClick: () => {
+                shell.workbench.setById({ id: course.id, lib: LibraryEnum.COURSE, account: props.account, hostname: props.hostname })
+                n.destroy()
+              }
+            },
+            {
+              default: () => '跳转'
+            }
+          )
+        })
       } catch (error) {
         message.error('创建课程新版本时发生错误！')
       }

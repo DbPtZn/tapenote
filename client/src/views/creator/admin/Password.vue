@@ -11,7 +11,7 @@ interface ModelType {
   confirmPwd: string
 }
 const message = useMessage()
-const { userStore, userListStore } = useStore()
+const { userStore } = useStore()
 /** 表单数据 */
 const model = ref<ModelType>({
   oldPwd: '',
@@ -103,6 +103,9 @@ function handleSubmit(e: MouseEvent) {
           confirmPwd: ''
         }
         message.success('修改成功')
+      }).catch(err => {
+        console.log(err)
+        message.error('密码修改失败')
       })
     } else {
       console.log(errors)

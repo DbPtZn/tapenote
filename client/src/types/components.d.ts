@@ -62,6 +62,7 @@ declare module 'vue' {
     NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NModalProvider: typeof import('naive-ui')['NModalProvider']
+    NNotificationProvider: typeof import('naive-ui')['NNotificationProvider']
     Notebook: typeof import('./../components/icon/Notebook.vue')['default']
     NPopconfirm: typeof import('naive-ui')['NPopconfirm']
     NPopover: typeof import('naive-ui')['NPopover']

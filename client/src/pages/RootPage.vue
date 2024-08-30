@@ -45,14 +45,16 @@ const widthVal = ref(0)
     <n-modal-provider>
       <n-dialog-provider>
         <n-message-provider>
-          <n-layout>
-            <div ref="rootRef" class="root-page" :data-theme="[settingStore.theme ? 'dark-theme' : 'light-theme']">
-              <GlobalNavView @collapse="ev => (widthVal = ev)" />
-              <div class="router-view" :style="{ width: `calc(100% - ${widthVal}px)` }">
-                <router-view />
+          <n-notification-provider>
+            <n-layout>
+              <div ref="rootRef" class="root-page" :data-theme="[settingStore.theme ? 'dark-theme' : 'light-theme']">
+                <GlobalNavView @collapse="ev => (widthVal = ev)" />
+                <div class="router-view" :style="{ width: `calc(100% - ${widthVal}px)` }">
+                  <router-view />
+                </div>
               </div>
-            </div>
-          </n-layout>
+            </n-layout>
+          </n-notification-provider>
         </n-message-provider>
       </n-dialog-provider>
     </n-modal-provider>

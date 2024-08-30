@@ -132,6 +132,8 @@ function handleToLogin() {
   router.push(RoutePathEnum.LOGIN)
 }
 
+/** ------------------------------- 邮箱 验证 --------------------------- */
+
 const codeTxt = ref('获取验证码')
 function handleSendCode() {
   if(isQuerying.value) return message.loading('正在连接服务器...')
@@ -140,7 +142,7 @@ function handleSendCode() {
   console.log(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
   axios.get(`${model.value.hostname}/auth/sendCode/${model.value.account}`).then(res => {
     // message.success('验证码已发送！')
-    let count = 5
+    let count = 60
     const timer = setInterval(() => {
       codeTxt.value = `${--count}秒后重发`
       if(count <= 0) {
@@ -153,6 +155,7 @@ function handleSendCode() {
   })
 }
 
+/** ------------------------------- 服务器 验证 --------------------------- */
 const isQuerying = ref(false)
 const isHostValid = ref(false) // 服务器是否有效
 const isEnableEmailVerify = ref(false)  // 是否开启邮箱验证

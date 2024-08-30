@@ -74,6 +74,15 @@ export class AuthService {
                 account: account,
                 password: randomstring.generate(12)
               })
+              this.logger.log(`为 ${account} 创建新用户成功！`)
+              this.httpService.axiosRef.patch(`${this.common.ssoDomain}/user/register/note`, {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              }).catch(err => {
+                // note 注册状态只为记录用户使用情况，不影响用户实际使用，错误不做处理
+                this.logger.error(`通知 sso 系统更新 ${account} 的 note 注册状态失败！`)
+              })
             } catch (error) {
               this.logger.error(`为 ${account} 创建新用户失败, ${error.message}`)
               throw new Error('首次登录, 创建新用户失败!')

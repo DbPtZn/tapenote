@@ -214,7 +214,7 @@ export const useUserListStore = defineStore('userListStore', {
         subscriptionConfig: data.subscriptionConfig || []
       }
 
-      // 添加默认投稿配置
+      // 添加默认投稿配置（硬编码，所有通过该客户端登录的用户都会有这一条配置）
       const defaultSubmissionConfig = {
         id: 'Tapenote@Offical',
         name: import.meta.env.VITE_OFFICAL_SUBMIT_NAME,

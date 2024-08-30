@@ -43,12 +43,7 @@ export class AuthMiddleware implements NestMiddleware {
     //     }
     //   })(req, res, next)
     // }
-    console.log(this.common.ssoDomain)
-    return proxy(this.common.ssoDomain, {
-      userResDecorator: function (proxyRes, proxyResData, req, res) {
-        // console.log(JSON.parse(proxyResData.toString('utf8')))
-        return proxyResData
-      }
-    })(req, res, next)
+    // console.log(this.common.ssoDomain)
+    return proxy(this.common.ssoDomain)(req, res, next)
   }
 }

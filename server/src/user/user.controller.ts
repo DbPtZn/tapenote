@@ -54,7 +54,7 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Patch(`${REST.U}/pwd`)
+  @Patch(`pwd`)
   async updatePwd(@Body() updateUserPwdDto: UpdateUserPwdDto, @Req() req, @Res() res) {
     // console.log('更新用户密码：' + updateUserPwdDto)
     try {

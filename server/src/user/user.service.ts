@@ -232,6 +232,7 @@ export class UserService {
     try {
       this.userLogger.log(`正在更新用户密码...`)
       const { newPwd, oldPwd } = updatePwdDto
+      if(!oldPwd) throw new Error('旧密码不能为空！')
       const user = await this.findOneById(id)
       // 用户旧密码是否正确
       const valid = this.bcrtptService.compareSync(oldPwd, user.encryptedPassword)

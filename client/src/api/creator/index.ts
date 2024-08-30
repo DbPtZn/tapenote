@@ -28,9 +28,11 @@ export class CreatorApi {
   speaker: ReturnType<typeof speaker>
   bgm: ReturnType<typeof bgm>
 
+
   private promise: Promise<any> | null = null // 确保当多次请求刷新 token 时，只发起一次请求
   private caxios: AxiosInstance
   constructor(account: string, hostname: string) {
+    const ssoToken = this.getSsoToken(account, hostname)
     // 为该用户创建请求体实例
     this.caxios = axios.create({
       baseURL: hostname,
@@ -44,8 +46,21 @@ export class CreatorApi {
       }
       // 拦截请求，添加 token
       config.headers.Authorization = `Bearer ${this.getServerToken(account, hostname)}`
+
+      // 针对 SSO 的请求，添加 sso-token
+      if(ssoToken) {
+        // FIXME: 可能产生请求死循环
+        // 重要：发送给 SSO 服务器的权限请求，如果 sso-token 错误，会导致死循环
+        // 向 sso 服务器发送请求时携带 serverToken 导致错误 - 触发刷新token - 刷新又添加 serverToken重新向 sso 服务器发送请求
+        // 目前暂时没有办法区分来自 server 和 sso 的 401 错误
+        if(['/user/pwd'].includes(config.url!)) {
+          config.headers.Authorization = `Bearer ${ssoToken}`
+        }
+      }
+      defense = 0
       return config
     })
+    let defense = 0 // 防御措施，防止无限重试
     this.caxios.interceptors.response.use(
       async (response: AxiosResponse) => {
         // 对响应数据做点什么
@@ -55,6 +70,14 @@ export class CreatorApi {
         if (err.response?.status) {
           switch (err.response?.status) {
             case 401:
+              /** ------------ ↓ 防御性策略 ↓ ------------ */
+              // 短时间达到 10 次 401 错误，则抛出错误不要继续请求
+              if(defense > 10) {
+                defense = 0
+                return Promise.reject(err)
+              }
+              defense ++
+              /** ------------ ↑ 防御性策略 ↑ ------------ */
               // console.log('ssoToke:', this.getSsoToken(account, hostname))
               const resp = await this.refreshTokenAndRequestAgain(err.response, account, hostname)
               if(resp) return resp  // 返回重新请求的结果

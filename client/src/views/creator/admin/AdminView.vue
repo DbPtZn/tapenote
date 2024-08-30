@@ -7,6 +7,7 @@ import useStore from '@/store'
 import UserInfo from './UserInfo.vue'
 import UserConfig from './UserConfig.vue'
 import Password from './Password.vue'
+import PwdByEmail from './PwdByEmail.vue'
 import SubmissionConfig from './SubmissionConfig.vue'
 import SubscriptionConfig from './SubscriptionConfig.vue'
 import { onMounted } from 'vue'
@@ -33,7 +34,14 @@ const subscriptionConfig = useSubscriptionConfig()
           </n-tab-pane>
           <!-- 密码安全 -->
           <n-tab-pane name="password" tab="密码安全">
-            <Password />
+            <n-tabs size="large" animated :tabs-padding="50">
+              <n-tab-pane name="pwdByOld" tab="旧密码修改">
+                <Password />
+              </n-tab-pane>
+              <n-tab-pane name="pwdByEmail" tab="邮箱修改">
+                <PwdByEmail />
+              </n-tab-pane>
+            </n-tabs>
           </n-tab-pane>
           <!-- 投稿配置 -->
           <n-tab-pane name="submissionConfig" tab="投稿配置">

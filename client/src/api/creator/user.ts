@@ -16,7 +16,9 @@ interface UpdateUserDto {
 interface UpdateUserPwdDto {
   oldPwd: string
   newPwd: string
+  code?: string
 }
+
 
 interface UpdateUserConfigDto {
   autosave: boolean
@@ -52,7 +54,7 @@ export const user = (axios: AxiosInstance) => {
       return axios.patch<T>('/user/update/info', dto)
     },
     updatePassword<T>(dto: UpdateUserPwdDto) {
-      return axios.patch<T>('/user/update/pwd', dto)
+      return axios.patch<T>('/user/pwd', dto)
     },
     updateConfig<T>(dto: UpdateUserConfigDto) {
       return axios.patch<T>('/user/update/config', dto)
