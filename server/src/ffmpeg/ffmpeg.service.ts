@@ -141,8 +141,15 @@ export class FfmpegService {
    */
    concatAudioToOgg(audioPathGroup: string[], outputPath: string) {
     return new Promise<string>((resolve, reject) => {
-      const wav = this.storageService.createTempFilePath('.wav')
+      // const wav = this.storageService.createTempFilePath('.wav')
       const command = ffmpeg()
+
+      // for(const path of audioPathGroup) {
+      //   console.log(path)
+      //   const localPath = this.storageService.createTempFilePath('.wav')
+      //   fs.writeFileSync(localPath, fs.readFileSync(path))
+      //   command.input(localPath)
+      // }
 
       audioPathGroup.forEach(path => {
         command.input(path)

@@ -62,6 +62,33 @@ export class BucketService {
     })
   }
 
+    /**
+   * 获取私有文件
+   * @param filename 文件名 
+   * @param dirname 目录名
+   * @param output 输出路径
+   * @returns data
+   */
+    async fetchFile(filename: string, dirname: string, output: string) {
+      return new Promise((resolve, reject) => {
+        this.cos.getObject(
+          {
+            Bucket: this.common.bucket,
+            Region: this.common.region,
+            Key: `${dirname}/${filename}`,
+            Output: fsx.createWriteStream(output),
+          },
+          function (err, data) {
+            console.log(err)
+            if(err) {
+              reject(err)
+            }
+            resolve(data)
+          }
+        )
+      })
+    }
+
   async deleteObject(path: string) {
     return new Promise((resolve, reject) => {
       this.cos.deleteObject(

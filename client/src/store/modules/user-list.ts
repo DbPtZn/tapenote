@@ -222,7 +222,9 @@ export const useUserListStore = defineStore('userListStore', {
         code: import.meta.env.VITE_OFFICAL_SUBMIT_CODE,
         desc: import.meta.env.VITE_OFFICAL_SUBMIT_DESC
       }
-      if(state.submissionConfig[0].id !== defaultSubmissionConfig.id) {
+      if(!state.submissionConfig) {
+        state.submissionConfig = [defaultSubmissionConfig]
+      } else if(state.submissionConfig[0]?.id !== defaultSubmissionConfig.id) {
         state.submissionConfig.unshift(defaultSubmissionConfig)
       }
 

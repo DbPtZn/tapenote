@@ -93,6 +93,11 @@ export class StorageService {
     return `${dirPath}/${filename}`
   }
 
+  /** 获取远程文件 */
+  fetchRemoteFile(filename: string, dirname: string, output: string) {
+    return this.bucketService.fetchFile(filename, dirname, output)
+  }
+
   save(file: LocalUploadFile, dirname: string) {
     return new Promise<string>(async (resolve, reject) => {
       if (this.common.enableCOS) {
@@ -128,6 +133,7 @@ export class StorageService {
   createTempFilePath(extname: string) {
     const extWithoutDot = extname.charAt(0) === '.' ? extname.slice(1) : extname
     return path.join(os.tmpdir(), `${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`)
+    // return `${this.common.fullTempDir}/${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`
   }
 
   createCOSPath(pathOrName: string, dirname: string) {

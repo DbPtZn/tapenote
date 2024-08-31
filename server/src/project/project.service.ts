@@ -209,10 +209,22 @@ export class ProjectService {
         .sort((a, b) => {
           return order.indexOf(a.id) - order.indexOf(b.id)
         })
-        .map(fragment => {
+        // .map(fragment => {
+        //   fragment.audio = this.storageService.getFilePath(fragment.audio, dirname)
+        //   return fragment
+        // })
+      
+      for(const fragment of fragments) {
+        // 对于远程路径，先下载到本地后再进行拼接
+        if(this.common.enableCOS) {
+          const localpath = this.storageService.createTempFilePath('.wav')
+          await this.storageService.fetchRemoteFile(fragment.audio, dirname, localpath)
+          fragment.audio = localpath
+        } else {
           fragment.audio = this.storageService.getFilePath(fragment.audio, dirname)
-          return fragment
-        })
+        }
+      }
+      
 
       const group = {
         audioFragments: [] as string[],
@@ -257,7 +269,7 @@ export class ProjectService {
       // })
       // 创建临时地址
       const tempPath = this.storageService.createTempFilePath('.ogg')
-      // console.log(group.audioFragments)
+      console.log(group.audioFragments)
       await this.ffmpegService
         .concatAudioToOgg(group.audioFragments, tempPath)
         .then(() => {
@@ -268,6 +280,11 @@ export class ProjectService {
           console.log(err)
           throw new Error('拼接音频失败！')
         })
+
+      // 完成拼接后将缓存的音频片段删除
+      if(this.common.enableCOS) {
+        group.audioFragments.forEach(path => fs.unlinkSync(path))
+      }
       
       /** 计算合成音频的时长 */
       const duration = await this.ffmpegService.calculateDuration(tempPath)
