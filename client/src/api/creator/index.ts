@@ -32,7 +32,6 @@ export class CreatorApi {
   private promise: Promise<any> | null = null // 确保当多次请求刷新 token 时，只发起一次请求
   private caxios: AxiosInstance
   constructor(account: string, hostname: string) {
-    const ssoToken = this.getSsoToken(account, hostname)
     // 为该用户创建请求体实例
     this.caxios = axios.create({
       baseURL: hostname,
@@ -48,14 +47,13 @@ export class CreatorApi {
       config.headers.Authorization = `Bearer ${this.getServerToken(account, hostname)}`
 
       // 针对 SSO 的请求，添加 sso-token
-      if(ssoToken) {
-        // FIXME: 可能产生请求死循环
-        // 重要：发送给 SSO 服务器的权限请求，如果 sso-token 错误，会导致死循环
-        // 向 sso 服务器发送请求时携带 serverToken 导致错误 - 触发刷新token - 刷新又添加 serverToken重新向 sso 服务器发送请求
-        // 目前暂时没有办法区分来自 server 和 sso 的 401 错误
-        if(['/user/pwd'].includes(config.url!)) {
-          config.headers.Authorization = `Bearer ${ssoToken}`
-        }
+      // FIXME: 可能产生请求死循环
+      // 重要：发送给 SSO 服务器的权限请求，如果 sso-token 错误，会导致死循环
+      // 向 sso 服务器发送请求时携带 serverToken 导致错误 - 触发刷新token - 刷新又添加 serverToken重新向 sso 服务器发送请求
+      // 目前暂时没有办法区分来自 server 和 sso 的 401 错误
+      if(['/user/pwd'].includes(config.url!)) {
+        const ssoToken = this.getSsoToken(account, hostname)
+        if(ssoToken) config.headers.Authorization = `Bearer ${ssoToken}`
       }
       defense = 0
       return config

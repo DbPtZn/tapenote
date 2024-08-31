@@ -388,7 +388,8 @@ class Player {
     this.animeElementSequence.forEach((item, index) => {
       if(index >= startPoint) {
         item.forEach(el => {
-          el.style.opacity = visible ? '1' : '0'
+          // el.style.opacity = visible ? '1' : '0'
+          el.style.visibility = visible ? 'visible' : 'hidden'
         })
       }
     })

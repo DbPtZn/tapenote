@@ -15,7 +15,7 @@ export function useDownloadDialog() {
     if (!id) return
     dialog.create({
       icon: () => h(NIcon, { component: DownloadFilled, size: 24 }),
-      title: `导出${type === 'course' ? '课程' : '笔记'}`,
+      title: `导出${type === 'course' ? '课程动画' : '笔记项目'}`,
       content: () => h(DownloadForm, {
         type: type,
 

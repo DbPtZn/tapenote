@@ -5,7 +5,7 @@ import { CascaderOption, FormInst, FormItemRule, FormRules, NText, SelectRenderL
 import { LibraryEnum } from '@/enums'
 import { SelectBaseOption, SelectGroupOption, SelectOption } from 'naive-ui/es/select/src/interface'
 import useStore from '@/store'
-import { pack } from './pack'
+import { pack } from '../../../_utils'
 import dayjs from 'dayjs'
 import HistoryCard from './HistoryCard.vue'
 type SubmissionHistory = Omit<ReturnType<typeof useStore>['projectStore']['data'][0]['submissionHistory'][0], 'key'>

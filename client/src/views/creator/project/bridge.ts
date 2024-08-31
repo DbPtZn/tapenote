@@ -89,6 +89,7 @@ export class Bridge {
     animeAutoProvider?.autoAdd()
   }
 
+  /** 编辑模块重载（实现数据更新） */
   handleEditorReload() {
     this.editorReloadEvent.next('')
   }

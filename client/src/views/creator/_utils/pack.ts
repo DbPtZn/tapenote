@@ -9,36 +9,36 @@
  * 7. 对于微课来说，音频文件以及对应的播放数据也需要上传，这些数据可以考虑写成一个json文件，但音频文件只能当都上传，可以考虑和json文件一起打包压缩后上传。
  */
 
-import { Editor, createEditor } from '@textbus/editor'
+import { createEditor } from '@textbus/editor'
 import { getEditorConfig } from './outputEditorConfig'
 import { Img2base64Service } from '@/editor'
-import utils from '@/utils'
+// import utils from '@/utils'
 import axios from 'axios'
 import jszip from 'jszip'
 import dayjs from 'dayjs'
 // import ejs from 'ejs'
 import { Resources } from '@textbus/platform-browser'
-interface ProductInfo {
-  // -- 作品信息
-  type: 'course' | 'note'
-  site: string
-  code: string
-  penname: string
-  email: string // 邮箱
-  blog: string // 博客地址
-  msg: string // 提交时的备注信息
-}
-interface ProductContent {
-  // -- 作品内容
-  title: string
-  content: string
-  audio?: string[]
-  duration?: number
-  promoterSequence?: Array<string>
-  keyframeSequence?: Array<number>
-  subtitleSequence?: Array<string>
-  subtitleKeyframeSequence?: Array<number>
-}
+// interface ProductInfo {
+//   // -- 作品信息
+//   type: 'course' | 'note'
+//   site: string
+//   code: string
+//   penname: string
+//   email: string // 邮箱
+//   blog: string // 博客地址
+//   msg: string // 提交时的备注信息
+// }
+// interface ProductContent {
+//   // -- 作品内容
+//   title: string
+//   content: string
+//   audio?: string[]
+//   duration?: number
+//   promoterSequence?: Array<string>
+//   keyframeSequence?: Array<number>
+//   subtitleSequence?: Array<string>
+//   subtitleKeyframeSequence?: Array<number>
+// }
 
 // type PackData = ProductInfo & ProductContent
 
@@ -217,7 +217,7 @@ export class Pack {
       // 5.获取音频文件
       if (audio) {
         await fetch(audio).then(response => response.blob()).then(blob => {
-          zip.file('audio.wav', blob)
+          zip.file(`audio.${getAudioExtension(audio)}`, blob)
         })
       }
       // 6.打包课程所需的元数据
@@ -265,11 +265,11 @@ export class Pack {
         const audioBlob = audioIndex === -1 ? null : files[audioIndex].file
         // const file = new File([product], 'product_' + Date.now() + '.json', { type: 'application/json' })
         // const blob = new Blob([file], { type: 'application/octet-stream' })
-        const { site, type, editionId, title, abbrev, code, penname, email, blog, msg, duration, wordage } = data
+        const { site, type, editionId, title, abbrev, audio, code, penname, email, blog, msg, duration, wordage } = data
 
         const formData = new FormData()
         jsonBlob && formData.append('jsonDocs', jsonBlob, 'document.json')
-        audioBlob && formData.append('audios', audioBlob, 'audio.wav')
+        audioBlob && formData.append('audios', audioBlob, `audio.${getAudioExtension(audio)}`)
 
         formData.append('type', type)
         formData.append('editionId', editionId)
@@ -308,6 +308,11 @@ export class Pack {
       })
     })
   }
+}
+
+function getAudioExtension(audio: string) {
+  const parts = audio.split('.')
+  return parts.length > 1 ? parts.pop() : 'ogg'
 }
 
 export const pack = new Pack()

@@ -2,21 +2,22 @@
 import { LibraryEnum } from '@/enums'
 import useStore from '@/store'
 import { useThemeVars, useDialog, useMessage, NIcon, useNotification, NButton } from 'naive-ui'
-import { computed, h, inject, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, h, inject, onUnmounted, reactive, ref } from 'vue'
 import { Bridge } from '../bridge'
 import { Subscription } from '@tanbo/stream'
 import { FolderTreeSelect, UnallowUserTip } from '../../_common'
 import { CreatorShell } from '../../shell'
 import { useShell } from '@/renderer'
 import dayjs from 'dayjs'
-import { Flip, Subtitles, SubtitlesOff, MoreHoriz, TextSharp, DpzButton } from '@/components'
+import { Subtitles, SubtitlesOff, MoreHoriz, DpzButton } from '@/components'
 import { useSubmissionDialog } from './hooks/useSubmissionDialog'
-import { TooltipButton } from './private/_index'
 import { AutorenewOutlined, DownloadRound } from '@vicons/material'
 import { useDownloadDialog } from './hooks/useDownload'
+import TooltipButton from './private/TooltipButton.vue'
 import SubmissionCard from './private/SubmissionCard.vue'
 import SnapshotCard from './private/SnapshotCard.vue'
 import HistoryCourseCard from './private/HistoryCourseCard.vue'
+import CollapseButton from './private/CollapseButton.vue'
 type Snapshot = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['snapshots']>[0]
 type HistoryCourse = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['historyCourses']>[0]
 const bridge = inject('bridge') as Bridge
@@ -78,7 +79,7 @@ subs.push(
 const configure = reactive({
   folderId: ''
 })
-const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
+const { handleCreate, handleDirSelected, handleAutoAnime } = {
   handleDirSelected(folderId: string) {
     console.log(folderId)
     configure.folderId = folderId
@@ -90,20 +91,20 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
       content: `${props.lib === LibraryEnum.NOTE ? '确定创建工程项目？' : '确定创建课程项目？'}`,
       positiveText: '确定',
       negativeText: '取消',
-      onPositiveClick: () => {
+      onPositiveClick: async () => {
         if (!configure.folderId) return
-        projectStore.createBy({
-          folderId: configure.folderId,
-          sourceId: props.id,
-          lib: props.lib,
-          account: props.account,
-          hostname: props.hostname
-        }).then(res => {
+        try {
+          const project = await projectStore.createBy({
+            folderId: configure.folderId,
+            sourceId: props.id,
+            lib: props.lib,
+            account: props.account,
+            hostname: props.hostname
+          })
           const toLib = props.lib === LibraryEnum.NOTE ? LibraryEnum.PROCEDURE : LibraryEnum.COURSE
-          folderStore.addSubFile(res, configure.folderId, toLib)
+          folderStore.addSubFile(project, configure.folderId, toLib)
           const n = notification.success({
             title: `创建${props.lib === LibraryEnum.NOTE ? '工程项目' : '课程动画'}成功！`,
-            // content: '',
             duration: 10000,
             meta: dayjs().format('YYYY-MM-DD HH:mm:ss'),
             action: () => h(
@@ -112,7 +113,7 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
                 text: true,
                 type: 'primary',
                 onClick: () => {
-                  shell.workbench.setById({ id: res.id, lib: toLib, account: props.account, hostname: props.hostname })
+                  shell.workbench.setById({ id: project.id, lib: toLib, account: props.account, hostname: props.hostname })
                   n.destroy()
                 }
               },
@@ -121,17 +122,15 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
               }
             ),
           })
-        }).catch(err => {
+        } catch (error) {
+          console.log(error)
           message.error(`创建${props.lib === LibraryEnum.NOTE ? '工程项目' : '课程动画'}失败！`)
-        })
+        }
       },
       onNegativeClick: () => {
         message.create('已取消')
       }
     })
-  },
-  handleDownload() {
-    //
   },
   handleAutoAnime() {
     dialog.create({
@@ -145,12 +144,9 @@ const { handleCreate, handleDirSelected, handleDownload, handleAutoAnime } = {
     })
   }
 }
-const { handleExpandShareDialog  } = useSubmissionDialog()
-const { handleDownloadDialog } = useDownloadDialog()
-// onMounted(() => {})
-onUnmounted(() => {
-  subs.forEach(sub => sub.unsubscribe())
-}) 
+
+const { handleExpandShareDialog  } = useSubmissionDialog() // 投稿对话框
+const { handleDownloadDialog } = useDownloadDialog()  // 下载对话框
 
 function handleTabsUpdate(value: string) {
   if(value === 'snapshot') {
@@ -160,91 +156,92 @@ function handleTabsUpdate(value: string) {
     projectStore.getHistoryCourses(props.id, props.account, props.hostname)
   }
 }
+
+/** 快照 */
 const snapshotMethods = {
+  /** 应用快照 */
   handleApply: async (snapshot: Snapshot, isAutoSave: boolean) => {
     try {
       if(isAutoSave) await projectStore.createSnapshot(props.id, props.account, props.hostname)
-      await projectStore.applySnapshot(props.id, snapshot.id, props.account, props.hostname).then(content => {
-        // replaceContent 会触发 onChange 事件, 但后端的 content 是已经最新的
-        // bridge.editor?.replaceContent(content)
-        // if(data.value?.id) {
-        //   folderStore.updateCard(data.value.title, data.value?.id, 'title', data.value?.folderId)
-        //   folderStore.updateCard(content, data.value?.id, 'content', data.value?.folderId)
-        //   const timer = setTimeout(() => {
-        //     data.value!.isContentUpdating = false
-        //     clearTimeout(timer)
-        //   }, 500)
-        // }
-        // 重载 Editor 组件实现数据刷新
-        bridge.handleEditorReload()
-        if(data.value?.id) {
-          folderStore.updateCard(data.value.title, data.value.id, 'title', data.value?.folderId)
-          folderStore.updateCard(content, data.value.id, 'content', data.value?.folderId)
-        }
-      })
+      const content = await projectStore.applySnapshot(props.id, snapshot.id, props.account, props.hostname)
+      // 利用重载 Editor 组件实现数据刷新
+      bridge.handleEditorReload()
+      if(data.value?.id) {
+        folderStore.updateCard(data.value.title, data.value.id, 'title', data.value?.folderId)
+        folderStore.updateCard(content, data.value.id, 'content', data.value?.folderId)
+      }
     } catch (error) {
       console.log(error)
       message.error('应用历史快照时发生错误！')
     } 
   },
+  /** 查看快照详情 */
   handleDetail: (snapshot: Snapshot) => {
     projectStore.getSnapshot(snapshot.id, props.account, props.hostname).then(res => {
       console.log(res)
     })
   },
+  /** 删除快照 */
   handleDelete: (snapshot: Snapshot) => {
     projectStore.deleteSnapshot(props.id, snapshot.id, props.account, props.hostname)
   },
-}
-function handleHistoryCourseClick(course: HistoryCourse) {
-  dialog.create({
-    title: '创建课程新版本',
-    content: () => h('div', null, [
-      h('p', null, ['是否在目标课程中创建新版本？']),
-      h('span', null, ['(旧版本可在目标课程版本列表中查看/切换)'])
-    ]),
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        // 后端创建 course 时会自动创建相应的 snapshot
-        await projectStore.coverCourse(course.id, props.id, props.account, props.hostname)
-        const n = notification.success({
-          title: `创建新版本成功！`,
-          duration: 10000,
-          meta: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-          action: () => h(
-            NButton,
-            {
-              text: true,
-              type: 'primary',
-              onClick: () => {
-                shell.workbench.setById({ id: course.id, lib: LibraryEnum.COURSE, account: props.account, hostname: props.hostname })
-                n.destroy()
+  /** 课程动画历史快照的点击事件 */
+  handleCourseClick: (course: HistoryCourse) => {
+    dialog.create({
+      title: '创建课程新版本',
+      content: () => h('div', null, [
+        h('p', null, ['是否在目标课程中创建新版本？']),
+        h('span', null, ['(旧版本可在目标课程版本列表中查看/切换)'])
+      ]),
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: async () => {
+        try {
+          // 后端创建 course 时会自动创建相应的 snapshot
+          await projectStore.coverCourse(course.id, props.id, props.account, props.hostname)
+          const n = notification.success({
+            title: `创建新版本成功！`,
+            duration: 10000,
+            meta: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+            action: () => h(
+              NButton,
+              {
+                text: true,
+                type: 'primary',
+                onClick: () => {
+                  shell.workbench.setById({ id: course.id, lib: LibraryEnum.COURSE, account: props.account, hostname: props.hostname })
+                  n.destroy()
+                }
+              },
+              {
+                default: () => '跳转'
               }
-            },
-            {
-              default: () => '跳转'
-            }
-          )
-        })
-      } catch (error) {
-        message.error('创建课程新版本时发生错误！')
+            )
+          })
+        } catch (error) {
+          message.error('创建课程新版本时发生错误！')
+        }
+      },
+      onNegativeClick: () => {
+        message.create('已取消')
       }
-    },
-    onNegativeClick: () => {
-      message.create('已取消')
-    }
-  })
+    })
+  }
 }
+
+onUnmounted(() => {
+  subs.forEach(sub => sub.unsubscribe())
+}) 
 </script>
 
 <template>
   <div ref="rootRef" class="navbar">
     <div class="middle-nav">
+      <!-- 非当前用户的提示 -->
       <UnallowUserTip :show="state.isReadonly" :username="username" />
     </div>
     <div class="right-nav">
+      <!-- 保存状态 -->
       <div class="saving">
         <span class="saving-text">{{ state.isSaving ? '正在保存 ... ' : `${ data?.isContentUpdating || data?.isTitleUpdating ? '未保存' : '' }` }}</span>
         <n-icon v-if="state.isSaving" class="rotate" :component="AutorenewOutlined" :size="22" />
@@ -252,26 +249,27 @@ function handleHistoryCourseClick(course: HistoryCourse) {
       <!-- <DpzButton v-if="lib !== LibraryEnum.COURSE" >
         {{ `${ data?.content !== birdge.content ? '保存' : '已保存' }` }}
       </DpzButton> -->
-      <DpzButton v-if="lib !== LibraryEnum.COURSE" :active="state.isToolbarShow" :disabled="state.isReadonly" @click="handleToolbarCollapse" >
-        <n-icon :component="TextSharp" :size="16" />
-      </DpzButton>
       <!-- <DpzButton class="top-nav-btn" v-if="lib === LibraryEnum.COURSE && state.isNoteShow" :active="state.isToolbarShow" :disabled="state.isReadonly" @click="handleSidenoteToolbarCollapse">
         <n-icon :component="TextSharp" :size="16" />
       </DpzButton> -->
       <!-- <TooltipButton v-if="lib === LibraryEnum.COURSE" class="top-nav-btn" :icon="Flip" :tip="'笔记'" :active="state.isNoteShow" :disabled="state.isReadonly"  @click="handleFlip" /> -->
       <TooltipButton v-if="lib === LibraryEnum.COURSE" class="top-nav-btn" :icon="state.isSubtitleShow ? Subtitles : SubtitlesOff"  :disabled="state.isReadonly"  :tip="'字幕'" @click="handleSubtitle" />
+      <!-- 投稿 -->
       <n-button v-if="lib !== LibraryEnum.PROCEDURE" class="top-nav-btn" size="small" :disabled="state.isReadonly" @click="handleExpandShareDialog(props.id)">
         投稿
       </n-button>
+      <!-- 下载 -->
       <n-button v-if="lib !== LibraryEnum.PROCEDURE" class="top-nav-btn" size="small" text :disabled="state.isReadonly" @click="handleDownloadDialog(props.id)">
         <n-icon :component="DownloadRound" :size="22" />
       </n-button>
+      <!-- 更多 -->
       <DpzButton class="top-nav-btn"  :disabled="state.isReadonly"  @click="state.isDrawShow = !state.isDrawShow">
         <n-icon :component="MoreHoriz" :size="22" />
       </DpzButton>
     </div>
+    <CollapseButton v-if="lib !== LibraryEnum.COURSE" class="collapse-btn" @click="handleToolbarCollapse" :isCollapse="state.isToolbarShow" />
   </div>
-  <!-- 设置 -->
+  <!-- 抽屉 -->
   <n-drawer v-if="bridge.habit" v-model:show="state.isDrawShow"  :width="320" placement="right"  :to="bridge.projectRef!" :disabled="state.isReadonly">
     <n-drawer-content :style="{ zIndex: '1000' }">
       <n-tabs type="line" animated justify-content="space-evenly" @update:value="handleTabsUpdate">
@@ -337,7 +335,7 @@ function handleHistoryCourseClick(course: HistoryCourse) {
                 v-for="item in data?.historyCourses || []"
                 :key="item.id"
                 :data="item"
-                @click="handleHistoryCourseClick(item)"
+                @click="snapshotMethods.handleCourseClick(item)"
               />
             </div>
           </div>
@@ -375,12 +373,19 @@ function handleHistoryCourseClick(course: HistoryCourse) {
   display: inline;
   height: 100%;
   width: 100%;
-  // min-height: 42px;
   border-top: 1px solid var(--dpz-dividerColor);
   border-bottom: 1px solid var(--dpz-dividerColor);
   box-sizing: border-box;
-  overflow: hidden;
+  // overflow: hidden;
   background-color:  v-bind('themeVars.bodyColor');
+  .collapse-btn {
+    opacity: 0;
+  }
+  &:hover {
+    .collapse-btn {
+      opacity: 1;
+    }
+  }
 }
 
 .middle-nav {

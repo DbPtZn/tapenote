@@ -5,7 +5,7 @@ import { CascaderOption, FormInst, FormItemRule, FormRules, useMessage } from 'n
 import { LibraryEnum } from '@/enums'
 import { SelectBaseOption } from 'naive-ui/es/select/src/interface'
 import useStore from '@/store'
-import { pack } from './pack'
+import { pack } from '../../../_utils'
 interface ModelType {
   site: string
   code: string
@@ -18,7 +18,7 @@ interface ModelType {
   // dir: [] // 合辑目录（暂不实现）
 }
 type Response = ModelType & Record<string, unknown>
-const { userStore } = useStore()
+// const { userStore } = useStore()
 // const message = useMessage()
 const props = defineProps<{
   type: 'note' | 'course'
@@ -80,35 +80,35 @@ const rules: FormRules = {
     }
   ]
 }
-const value = ref('null')
-const options = computed(() => {
-  const opts = userStore.submissionConfig.map(config => {
-    return {
-      label: config.name,
-      value: config.id
-    }
-  })
-  return [
-    {
-      label: '自定义',
-      value: 'null'
-    },
-    ...opts
-  ]
-})
-function handleSelect(value: Array<any> | string | number | null, option: SelectBaseOption | null | SelectBaseOption[]) {
-  if (value === 'null') {
-    model.value.site = ''
-    model.value.code = ''
-    return
-  }
-  userStore.submissionConfig.some(config => {
-    if (config.id === value) {
-      model.value.site = config.site
-      model.value.code = config.code
-    }
-  })
-}
+// const value = ref('null')
+// const options = computed(() => {
+//   const opts = userStore.submissionConfig.map(config => {
+//     return {
+//       label: config.name,
+//       value: config.id
+//     }
+//   })
+//   return [
+//     {
+//       label: '自定义',
+//       value: 'null'
+//     },
+//     ...opts
+//   ]
+// })
+// function handleSelect(value: Array<any> | string | number | null, option: SelectBaseOption | null | SelectBaseOption[]) {
+//   if (value === 'null') {
+//     model.value.site = ''
+//     model.value.code = ''
+//     return
+//   }
+//   userStore.submissionConfig.some(config => {
+//     if (config.id === value) {
+//       model.value.site = config.site
+//       model.value.code = config.code
+//     }
+//   })
+// }
 
 /** 提交 */
 function handleSubmit(e: MouseEvent) {
@@ -178,20 +178,15 @@ function handleSubmit(e: MouseEvent) {
 <style lang="scss" scoped>
 .download-form {
   position: relative;
-  // width: 350px;
-  // height: 500px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  // align-items: center;
-  // border-radius: 15px;
   margin: 30px 0 0;
   z-index: 1;
   .tip {
     width: 100%;
     display: flex;
     align-items: center;
-    // justify-content: center;
     font-size: 26px;
     margin: 25px auto 30px auto;
   }
@@ -203,15 +198,6 @@ function handleSubmit(e: MouseEvent) {
     letter-spacing: 8px;
     border-radius: 10px;
     cursor: pointer;
-  }
-}
-.footer {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  a {
-    cursor: pointer;
-    color: plum;
   }
 }
 </style>
