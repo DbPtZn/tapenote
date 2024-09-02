@@ -3,7 +3,6 @@ import { UserService } from './user.service'
 import { UserController } from './user.controller'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { User } from './entities/user.entity'
-import { BcryptModule } from 'src/bcrypt/bcrypt.module'
 import { StorageModule } from 'src/storage/storage.module'
 import { BgmModule } from 'src/bgm/bgm.module'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
@@ -13,7 +12,7 @@ import { commonConfig } from 'src/config'
 import { UserMiddleware } from './user.middleware'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), BcryptModule, StorageModule],
+  imports: [TypeOrmModule.forFeature([User]), StorageModule],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService]

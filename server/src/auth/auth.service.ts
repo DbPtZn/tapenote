@@ -1,5 +1,4 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
-import { BcryptService } from 'src/bcrypt/bcrypt.service'
 import { UserService } from 'src/user/user.service'
 import * as svgCaptcha from 'svg-captcha'
 import { JwtService } from '@nestjs/jwt'
@@ -12,6 +11,7 @@ import { ConfigService } from '@nestjs/config'
 import { HttpService } from '@nestjs/axios'
 import { commonConfig } from 'src/config'
 import randomstring from 'randomstring'
+import bcrypt from 'bcryptjs'
 
 @Injectable()
 export class AuthService {
@@ -20,8 +20,6 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-    private readonly bcrtptService: BcryptService,
-    private readonly folderService: FolderService,
     private readonly httpService: HttpService,
     private readonly logger: LoggerService
   ) {
@@ -129,7 +127,7 @@ export class AuthService {
     // console.log(user)
     if (!user) return null
     // 用户密码是否正确
-    const valid = this.bcrtptService.compareSync(password, user.encryptedPassword)
+    const valid = bcrypt.compareSync(password, user.encryptedPassword)
     if (valid) return user
     return null
   }

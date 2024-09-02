@@ -285,17 +285,17 @@ export class ProjectService {
       if(this.common.enableCOS) {
         group.audioFragments.forEach(path => fs.unlinkSync(path))
       }
-      
+
       /** 计算合成音频的时长 */
       const duration = await this.ffmpegService.calculateDuration(tempPath)
       console.log(`合成音频时长：${duration}, 片段总时长：${accumDuration}`)
-
+ 
       /** 存储到数据库/上传音频文件 */
       const filepath = await this.uploadService.upload(
         {
           filename: basename(tempPath),
           path: tempPath,
-          mimetype: 'audio/ogg'
+          mimetype: 'audio/wma'
         },
         userId,
         dirname

@@ -63,7 +63,7 @@ export class BucketService {
   }
 
     /**
-   * 获取私有文件
+   * 获取远程文件
    * @param filename 文件名 
    * @param dirname 目录名
    * @param output 输出路径

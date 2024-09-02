@@ -24,6 +24,7 @@ import ValidateCode from './ValidateCode.vue'
 import LoginInfoCard from './private/LoginInfoCard.vue'
 import { Subscription, fromEvent } from '@tanbo/stream'
 import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
+import FilingsFooter from './FilingsFooter.vue'
 import axios from 'axios'
 interface ModelType {
   hostname: string
@@ -408,7 +409,7 @@ function handleSendCode() {
     <n-card class="login">
       <n-tabs :value="loginMode" size="large" animated justify-content="space-evenly" @update:value="loginMode = $event">
         <n-tab-pane name="loginByPass" tab="密码登录">
-          <n-space style="paddingTop: 18px" vertical>
+          <n-space style="paddingtop: 18px" vertical>
             <!-- <div class="title">登录</div> -->
             <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
               <n-form-item path="hostname" label="服务器地址">
@@ -470,7 +471,7 @@ function handleSendCode() {
           </n-space>
         </n-tab-pane>
         <n-tab-pane name="loginByEmail" tab="邮箱登录">
-          <n-space style="paddingTop: 18px" vertical>
+          <n-space style="paddingtop: 18px" vertical>
             <!-- <div class="title">登录</div> -->
             <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
               <n-form-item path="hostname" label="服务器地址">
@@ -499,7 +500,7 @@ function handleSendCode() {
                 <n-checkbox :disabled="!inElectron" v-model:checked="recordPassword" :on-update:checked="handleRecordPassword"> 记住密码 </n-checkbox>
               </n-flex>
             </n-form>
-            <n-tooltip :disabled="isEnableEmailVerify"  trigger="hover">
+            <n-tooltip :disabled="isEnableEmailVerify" trigger="hover">
               <template #trigger>
                 <n-button :disabled="!isEnableEmailVerify" class="confirm" @click="handleLogin">登录</n-button>
               </template>
@@ -512,6 +513,7 @@ function handleSendCode() {
         </n-tab-pane>
       </n-tabs>
     </n-card>
+    <FilingsFooter />
   </div>
 </template>
 
@@ -521,6 +523,7 @@ function handleSendCode() {
   width: 100%;
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }

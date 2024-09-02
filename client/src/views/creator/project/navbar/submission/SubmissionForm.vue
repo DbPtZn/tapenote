@@ -172,6 +172,8 @@ function handleSubmit(e: MouseEvent) {
   e.preventDefault()
   formRef.value?.validate(errors => {
     if (!errors) {
+      console.log(props.promoterSequence)
+      console.log(props.keyframeSequence)
       pack
         .submit({
           editionId: model.value.editionId,

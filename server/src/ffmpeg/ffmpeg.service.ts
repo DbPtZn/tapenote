@@ -76,6 +76,34 @@ export class FfmpegService {
       }
     })
   }
+
+  audioformat2(inputPath: string, outputPath: string) {
+    return new Promise<string>((resolve, reject) => {
+      try {
+        ffmpeg()
+          .input(inputPath)
+          .outputOptions('-ac 1')
+          .outputOptions('-ab 16k')
+          .outputOptions('-ar 16000')
+          .save(outputPath)
+          .on('end', function () {
+            // console.log(outputPath)
+            // fs.unlinkSync(inputPath)
+            resolve(outputPath)
+          })
+          .on('error', function (err) {
+            console.log(err)
+            reject(err)
+          })
+      } catch (error) {
+        console.log('格式化音频文件失败：')
+        console.log(error)
+        reject(error)
+      }
+    })
+  }
+
+
   /**
    * 音频格式化处理
    * @param inputPath 源文件路径（可以是指向资源文件的路径也可以是文件数据），此方法会自动删除源文件 inputPath指向的资源文件
@@ -150,7 +178,6 @@ export class FfmpegService {
       //   fs.writeFileSync(localPath, fs.readFileSync(path))
       //   command.input(localPath)
       // }
-
       audioPathGroup.forEach(path => {
         command.input(path)
       })

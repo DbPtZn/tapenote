@@ -4,7 +4,6 @@ import { UpdateUserDto } from './dto/update-user.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Dir, SubmissionConfig, SubscriptionConfig, User } from './entities/user.entity'
 import { DataSource, Repository } from 'typeorm'
-import { BcryptService } from 'src/bcrypt/bcrypt.service'
 import { UpdateUserPwdDto } from './dto/update-pwd.dto'
 import fs from 'fs'
 import path, { basename } from 'path'
@@ -19,7 +18,7 @@ import { UserModule } from './user.module'
 import { ConfigService } from '@nestjs/config'
 import { commonConfig } from 'src/config'
 import randomstring from 'randomstring'
-
+import bcrypt from 'bcryptjs'
 // const __rootdirname = process.cwd()
 @Injectable()
 export class UserService {
@@ -30,7 +29,6 @@ export class UserService {
     private readonly dataSource: DataSource,
     private readonly storageService: StorageService,
     private readonly configService: ConfigService,
-    private readonly bcrtptService: BcryptService,
     private readonly userLogger: UserLoggerService,
     private readonly logger: LoggerService
   ) {
@@ -58,7 +56,7 @@ export class UserService {
       }
       const dirname = await this.generateDirname()
       // 密码哈希加盐
-      const encryptedPassword = this.bcrtptService.hashSync(password)
+      const encryptedPassword = bcrypt.hashSync(password)
       const user = new User()
       // user.id = UUID.v4()
       user.account = account
@@ -235,10 +233,10 @@ export class UserService {
       if(!oldPwd) throw new Error('旧密码不能为空！')
       const user = await this.findOneById(id)
       // 用户旧密码是否正确
-      const valid = this.bcrtptService.compareSync(oldPwd, user.encryptedPassword)
+      const valid = bcrypt.compareSync(oldPwd, user.encryptedPassword)
       if (!valid) throw new Error('旧密码错误，修改密码失败')
       // 新密码哈希加盐
-      const encryptedPassword = this.bcrtptService.hashSync(newPwd)
+      const encryptedPassword = bcrypt.hashSync(newPwd)
       if (user) {
         user.encryptedPassword = encryptedPassword
         const newUser = await this.usersRepository.save(user)

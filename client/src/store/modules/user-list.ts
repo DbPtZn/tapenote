@@ -222,12 +222,14 @@ export const useUserListStore = defineStore('userListStore', {
         code: import.meta.env.VITE_OFFICAL_SUBMIT_CODE,
         desc: import.meta.env.VITE_OFFICAL_SUBMIT_DESC
       }
-      if(!state.submissionConfig) {
-        state.submissionConfig = [defaultSubmissionConfig]
-      } else if(state.submissionConfig[0]?.id !== defaultSubmissionConfig.id) {
-        state.submissionConfig.unshift(defaultSubmissionConfig)
+      if(defaultSubmissionConfig.name) {
+        if(!state.submissionConfig) {
+          state.submissionConfig = [defaultSubmissionConfig]
+        } else if(state.submissionConfig[0]?.id !== defaultSubmissionConfig.id) {
+          state.submissionConfig.unshift(defaultSubmissionConfig)
+        }
       }
-
+      
       // 特殊情况处理：
       // 1. 如果 hostname 为空
       if (!state.hostname) throw console.warn('未设置主机名')

@@ -3,6 +3,7 @@ import { Observable, Subject } from '@textbus/core'
 import { AnimeProvider, Structurer } from '.'
 import { VIEW_CONTAINER } from '@textbus/platform-browser'
 import { Layout } from '@textbus/editor'
+// import { Howl, Howler } from 'howler'
 import _ from 'lodash'
 
 export interface CourseData {
@@ -64,6 +65,7 @@ export class Player {
   private scrollTimer!: NodeJS.Timeout
 
   /** 公开状态 */
+  public isLoaded = false // 数据是否载入
   public subtitle = ''
   public rate = 1
   public volume = 1
@@ -122,11 +124,12 @@ export class Player {
               subtitleKeyframeSequence: item.subtitleKeyframeSequence
             }
           })
+          this.isLoaded = true
           resolve(this.data)
         })
         .catch(error => {
-          console.error('音频文件加载失败：' + error)
-          return
+          console.error('音频文件加载失败：', error)
+          reject(error)
         })
     })
   }
@@ -732,16 +735,19 @@ function getTopDistance(el: HTMLElement) {
 
 /** 异步加载音频数据 */
 function loadAudio(src: string) {
-  return new Promise<HTMLAudioElement>((resolve, reject) => {
+  return new Promise<HTMLAudioElement>(async (resolve, reject) => {
     const audio = new Audio(src)
-
+    
+    
     audio.addEventListener('canplaythrough', () => {
       resolve(audio)
     })
 
     audio.addEventListener('error', error => {
+      console.error('音频加载失败1:', error)
       reject(error)
     })
+
 
     audio.load()
   })

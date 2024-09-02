@@ -1,10 +1,11 @@
 import useStore from "@/store"
-import { useDialog } from "naive-ui"
+import { useDialog, useMessage } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 
 export function useSubmissionConfig() {
   const { userStore } = useStore()
   const dialog = useDialog()
+  const message = useMessage()
   const valueRef = ref()
   onMounted(() => {
     valueRef.value = userStore.submissionConfig[0]?.id
@@ -23,6 +24,9 @@ export function useSubmissionConfig() {
     })
   }
   function handleClose(name: string) {
+    if (name === 'Tapenote@Offical') {
+      return message.warning('这条官方配置无法删除哟')
+    }
     dialog.create({
       title: '确认删除？',
       content: '删除后无法恢复，确认删除吗？',

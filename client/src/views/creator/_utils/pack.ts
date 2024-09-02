@@ -118,6 +118,10 @@ export class Pack {
       promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence,
       // type, site, code, penname, email, blog, msg
     } = data
+    if(promoterSequence.length !== keyframeSequence.length) {
+      console.error('promoterSequence.length !== keyframeSequence.length')
+      throw new Error('启动子和关键帧数量不一致，请检查数据或刷新后重新尝试')
+    }
     const promoseArray = [
       new Promise<{ type: string; file: Blob }>((resolve, reject) => {
         // 获取富文本数据并结合其它数据生成 JSON Blob
@@ -218,6 +222,9 @@ export class Pack {
       if (audio) {
         await fetch(audio).then(response => response.blob()).then(blob => {
           zip.file(`audio.${getAudioExtension(audio)}`, blob)
+        }).catch(error => {
+          console.error('获取音频数据时出错:', error)
+          throw new Error('获取音频数据时出错!')
         })
       }
       // 6.打包课程所需的元数据
@@ -286,12 +293,7 @@ export class Pack {
         axios({
           method: 'post',
           url: `${site}&${code}`,
-          data: formData,
-          // headers: {
-          //   'Content-Type': 'multipart/form-data',
-          //   // 'authorization': `Bearer ${code}`,
-          //   // 'auth-code': `Bearer ${code}`,
-          // },
+          data: formData
         })
           .then(res => {
             console.log(res)
@@ -305,6 +307,9 @@ export class Pack {
             // console.log(error)
             reject(error)
           })
+      }).catch(error => {
+        console.error('toFiles error:', error)
+        reject(error)
       })
     })
   }

@@ -13,6 +13,7 @@ export function useSubmissionDialog() {
     const type = data?.lib === 'course' ? 'course' : 'note'
     if (!data) return
     if (!id) return
+    console.log(data)
     dialog.create({
       icon: () => h(NIcon, { component: ShareFilled, size: 24 }),
       title: '投稿',
