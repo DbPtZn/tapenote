@@ -44,20 +44,6 @@ const rules: FormRules = {
       message: '请输入服务器主机地址'
     }
   ],
-  nickname: [
-    {
-      required: true,
-      message: '请输入用户昵称',
-      trigger: 'blur'
-    },
-    {
-      message: '姓名长度不能超过18个字符',
-      trigger: 'blur',
-      validator: (rule: FormItemRule, value: string) => {
-        return value.length < 18
-      }
-    }
-  ],
   account: [
     {
       required: true,
@@ -72,10 +58,10 @@ const rules: FormRules = {
       trigger: 'blur'
     },
     {
-      message: '密码长度应该在8~24个字符之间',
+      message: '密码长度应该在8~32个字符之间',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: string) => {
-        return value.length >= 8 && value.length <= 24
+        return value.length >= 8 && value.length <= 32
       }
     }
   ]
@@ -83,7 +69,7 @@ const rules: FormRules = {
 /** 自动补全邮箱地址 */
 const autoCompleteOptions = computed(() => {
   // 可能还需要清理空格（空字符），防止用户输入的时候多了空字符
-  return ['@qq.com', '@gmail.com', '@163.com', '@139.com'].map(suffix => {
+  return ['@qq.com', '@163.com', '@139.com', '@gmail.com'].map(suffix => {
     const prefix = model.value.account!.split('@')[0]
     return {
       label: prefix + suffix,
@@ -199,7 +185,7 @@ function handleHostInputBlur() {
 
 <template>
   <div class="register-container">
-    <n-card v-if="allowRegister" class="register">
+    <div v-if="allowRegister" class="register">
       <n-space vertical>
         <div class="tip">注册</div>
         <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
@@ -214,9 +200,6 @@ function handleHostInputBlur() {
               </template>
             </n-input>
           </n-form-item>
-          <!-- <n-form-item path="nickname" label="昵称">
-          <n-input class="form-input" v-model:value="model.nickname" type="text" placeholder="请输入姓名" />
-        </n-form-item> -->
           <n-form-item path="account" label="账号 ( 仅支持邮箱注册 )">
             <n-auto-complete v-model:value="model.account" :options="autoCompleteOptions" placeholder="请输入邮箱" />
           </n-form-item>
@@ -231,12 +214,12 @@ function handleHostInputBlur() {
             </n-input>
           </n-form-item>
         </n-form>
-        <n-button class="confirm" @click="handleRegister">注册</n-button>
+        <n-button block class="confirm" @click="handleRegister">&nbsp;注册</n-button>
         <div class="footer">
           <span>已有帐号？<a @click="handleToLogin">去登录</a></span>
         </div>
       </n-space>
-    </n-card>
+    </div>
     <FilingsFooter />
   </div>
 </template>
@@ -245,6 +228,7 @@ function handleHostInputBlur() {
 .register-container {
   height: 100%;
   width: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -252,13 +236,15 @@ function handleHostInputBlur() {
 }
 .register {
   position: relative;
-  width: 350px;
-  height: 580px;
+  width: 100%;
+  max-width: 450px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  // align-items: center;
+  box-sizing: border-box;
   border-radius: 15px;
+  padding: 0 24px;
   margin: auto;
   z-index: 1;
   .tip {
@@ -270,8 +256,6 @@ function handleHostInputBlur() {
     margin: 25px auto 30px auto;
   }
   .confirm {
-    width: 280px;
-    height: 40px;
     border: none;
     font-weight: bold;
     letter-spacing: 8px;

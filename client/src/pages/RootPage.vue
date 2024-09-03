@@ -3,42 +3,15 @@ import useStore from '@/store'
 import { darkThemeOverrides, lightThemeOverrides } from './theme/_api'
 import { GlobalNavView } from '@/views'
 import { ref } from 'vue'
-// import { computed, onMounted, provide, watch } from 'vue'
-// import { useRouter } from 'vue-router'
 const { settingStore } = useStore()
 const widthVal = ref(0)
-// const router = useRouter()
-// const theme = computed(() => router.currentRoute.value.query.theme as string)
-// provide('getTheme', {
-//   getTheme: () => {
-//     return settingStore.theme
-//   }
-// })
-// watch(() => theme, () => {
-//   switch (theme.value) {
-//     case 'dark':
-//       settingStore.useDark()
-//       // console.log(theme.value)
-//       break
-//     case 'light':
-//       settingStore.useLight()
-//       // console.log(theme.value)
-//       break
-//     default:
-//       settingStore.useDark()
-//       // console.log(theme.value)
-//       return
-//   }
-// }, { deep: true })
 
-// onMounted(() => {
-//   /**
-//    * 这里 getInfo 在 Login 登录页面就会执行，如果无法获得用户信息会返回 401，强制跳转至登录页
-//    * 但后续登录成功后不会再一次执行该代码，因此如果是上述情况，无法再通过此代码获取用户信息
-//    * 因此在 sidebarview 中我们要再次调用 getInfo
-//    */
-//   // userStore.getInfo()
-// })
+/** 判断设备 */
+const userAgent = navigator.userAgent.toLowerCase()
+// 常见的移动设备标识
+const mobileDevices = /iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i
+settingStore.isMobile = mobileDevices.test(userAgent)
+console.log('当前设备：', settingStore.isMobile ? '移动端' : 'PC端')
 </script>
 <template>
   <n-config-provider :theme="settingStore.theme" :theme-overrides="settingStore.theme ? darkThemeOverrides : lightThemeOverrides">
@@ -48,8 +21,8 @@ const widthVal = ref(0)
           <n-notification-provider>
             <n-layout>
               <div ref="rootRef" class="root-page" :data-theme="[settingStore.theme ? 'dark-theme' : 'light-theme']">
-                <GlobalNavView @collapse="ev => (widthVal = ev)" />
-                <div class="router-view" :style="{ width: `calc(100% - ${widthVal}px)` }">
+                <GlobalNavView v-show="!settingStore.isMobile" @collapse="ev => (widthVal = ev)" />
+                <div class="router-view" :style="{ width: `calc(100% - ${!settingStore.isMobile ? widthVal : 0}px)` }">
                   <router-view />
                 </div>
               </div>

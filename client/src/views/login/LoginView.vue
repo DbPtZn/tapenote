@@ -11,16 +11,14 @@ import {
   NButton,
   SelectOption,
   SelectGroupOption,
-  NText,
   NFlex,
-  NAvatar,
   DropdownOption,
   DropdownGroupOption
 } from 'naive-ui'
 import { RoutePathEnum } from '@/enums'
 import { h } from 'vue'
 import { KeyboardArrowDownRound, KeyboardArrowUpRound } from '@vicons/material'
-import ValidateCode from './ValidateCode.vue'
+// import ValidateCode from './ValidateCode.vue'
 import LoginInfoCard from './private/LoginInfoCard.vue'
 import { Subscription, fromEvent } from '@tanbo/stream'
 import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
@@ -45,7 +43,7 @@ inElectron &&
 const router = useRouter()
 const { userListStore } = useStore()
 const message = useMessage()
-const dialog = useDialog()
+// const dialog = useDialog()
 const tip = import.meta.env.VITE_LOGIN_TIP || ''
 const loginMode = ref<'loginByPass' | 'loginByEmail'>('loginByPass')
 const formRef = ref<FormInst | null>(null)
@@ -96,6 +94,7 @@ function handleLogin() {
   submit()
 }
 
+/** 提交登录表单 */
 const submit = () => {
   if (isQuerying.value) return message.loading('正在连接服务器...')
   if (!isHostValid.value) return message.error('服务器地址不可用！')
@@ -133,8 +132,8 @@ const submit = () => {
           message.error(msg ? msg : '登录失败！')
         })
     } else {
+      console.log(errors)
       message.error('表单校验失败！')
-      // console.log(errors)
     }
   })
 }
@@ -266,6 +265,7 @@ async function getLoginInfoData() {
 /** In Electron */
 function renderOption(props: { node: VNode; option: DropdownOption | DropdownGroupOption | SelectOption | SelectGroupOption }) {
   const { option } = props
+  // if(!inElectron) return model.value.account = account
   return h(LoginInfoCard, {
     avatar: (option.avatar as string) || './avatar03.png',
     account: option.value as string,
@@ -304,22 +304,31 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
 
 /** ------------------------------- 桌面客户端 --------------------------- */
 const autoCompleteOptions = computed(() => {
-  return loginData.value
-    .filter(item => {
-      if (item.account.startsWith(model.value.account)) {
-        return true
-      }
-    })
-    .map(item => {
-      return {
-        label: item.account,
-        value: item.account,
-        key: item.key,
-        avatar: item.avatar,
-        hostname: item.hostname,
-        pwd: item.pwd
-      }
-    })
+  if(inElectron) {
+    return loginData.value
+      .filter(item => {
+        if (item.account.startsWith(model.value.account)) {
+          return true
+        }
+      })
+      .map(item => {
+        return {
+          label: item.account,
+          value: item.account,
+          key: item.key,
+          avatar: item.avatar,
+          hostname: item.hostname,
+          pwd: item.pwd
+        }
+      })
+  }
+  return ['@qq.com', '@163.com', '@139.com', '@gmail.com'].map(suffix => {
+    const prefix = model.value.account!.split('@')[0]
+    return {
+      label: prefix + suffix,
+      value: prefix + suffix
+    }
+  })
 })
 const isAutoCompleteOptionsShow = ref(false)
 function handleShow(value: string) {
@@ -406,7 +415,7 @@ function handleSendCode() {
     <div class="tip">
       {{ tip }}
     </div>
-    <n-card class="login">
+    <div class="login">
       <n-tabs :value="loginMode" size="large" animated justify-content="space-evenly" @update:value="loginMode = $event">
         <n-tab-pane name="loginByPass" tab="密码登录">
           <n-space style="paddingtop: 18px" vertical>
@@ -430,7 +439,7 @@ function handleSendCode() {
                   placeholder="帐号"
                   :get-show="handleShow"
                   :options="autoCompleteOptions"
-                  :render-option="renderOption"
+                  :render-option="inElectron ? renderOption : undefined"
                   @blur="handleBlur"
                   @update:value="handleUpdate"
                   @select="isAutoCompleteOptionsShow = false"
@@ -464,7 +473,7 @@ function handleSendCode() {
                 <n-checkbox :disabled="!inElectron" v-model:checked="recordPassword" :on-update:checked="handleRecordPassword"> 记住密码 </n-checkbox>
               </n-flex>
             </n-form>
-            <n-button class="confirm" @click="handleLogin">登录</n-button>
+            <n-button block class="confirm" @click="handleLogin">&nbsp;登录</n-button>
             <div class="footer">
               <span v-if="allowRegister">没有帐号？<a @click="handleToRegister">去注册</a></span>
             </div>
@@ -502,7 +511,7 @@ function handleSendCode() {
             </n-form>
             <n-tooltip :disabled="isEnableEmailVerify" trigger="hover">
               <template #trigger>
-                <n-button :disabled="!isEnableEmailVerify" class="confirm" @click="handleLogin">登录</n-button>
+                <n-button :disabled="!isEnableEmailVerify" block class="confirm" @click="handleLogin">&nbsp;登录</n-button>
               </template>
               目标服务器不支持邮箱验证码登录
             </n-tooltip>
@@ -512,7 +521,7 @@ function handleSendCode() {
           </n-space>
         </n-tab-pane>
       </n-tabs>
-    </n-card>
+    </div>
     <FilingsFooter />
   </div>
 </template>
@@ -554,12 +563,14 @@ function handleSendCode() {
 }
 .login {
   position: relative;
-  width: 350px;
-  height: 500px;
+  width: 100%;
+  max-width: 450px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 0 24px;
+  box-sizing: border-box;
   border-radius: 15px;
   margin: auto;
   z-index: 1;
@@ -585,10 +596,8 @@ function handleSendCode() {
     }
   }
   .confirm {
-    width: 280px;
     height: 40px;
     border: none;
-    color: #ffffff;
     font-weight: bold;
     letter-spacing: 8px;
     border-radius: 10px;

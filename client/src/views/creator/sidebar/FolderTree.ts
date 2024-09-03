@@ -2,7 +2,7 @@ import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
 import { LibraryEnum, RouteNameEnum } from '@/enums'
 import { TreeDropInfo, NText, NButton, NDropdown, useDialog, useMessage, NInput, NIcon } from 'naive-ui'
 import { Component, VNodeChild, h, ref } from 'vue'
-import * as UUID from 'uuid'
+// import * as UUID from 'uuid'
 import { FolderForm } from '../form'
 import { DialogApiInjection } from 'naive-ui/es/dialog/src/DialogProvider'
 import useStore, { TreeNode } from '@/store'
@@ -231,7 +231,7 @@ export class FolderTree {
     return [
       {
         label: '新建文档',
-        key: UUID.v4(),
+        key: 'create-new-file',
         show: lib !== LibraryEnum.COURSE,
         props: {
           onClick: () => {
@@ -254,7 +254,7 @@ export class FolderTree {
       },
       {
         label: '新建文件夹',
-        key: UUID.v4(),
+        key: 'create-new-folder',
         props: {
           onClick: () => {
             dialog.create({
@@ -280,7 +280,7 @@ export class FolderTree {
       },
       {
         label: '移动',
-        key: UUID.v4(),
+        key: 'move',
         show: false,
         props: {
           onClick: () => {
@@ -290,7 +290,7 @@ export class FolderTree {
       },
       {
         label: '重命名',
-        key: UUID.v4(),
+        key: 'rename',
         props: {
           onClick: () => {
             const folderNameVal = ref(node.label)
@@ -331,7 +331,7 @@ export class FolderTree {
       },
       {
         label: '移除',
-        key: UUID.v4(),
+        key: 'remove',
         props: {
           onClick: () => {
             this.removeNode(node, lib)
