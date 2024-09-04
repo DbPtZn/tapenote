@@ -33,6 +33,12 @@ interface UpdateSpeakerHistoryDto {
   speakerId: string
 }
 
+interface GetRecentlyDto {
+  skip: number
+  take: number
+  lib: LibraryEnum
+}
+
 interface AddSubmissionHistoryDto {
   id: string
   receiver: string
@@ -63,6 +69,10 @@ export const project = (axios: AxiosInstance) => {
     },
     get<T>(id: string) {
       return axios.get<T>('/project/read/' + id)
+    },
+    getRecent<T>(dto: GetRecentlyDto) {
+      console.log(dto)
+      return axios.get<T>(`/project/recent?skip=${dto.skip}&take=${dto.take}&lib=${dto.lib}`)
     },
     remove<T>(id: string) {
       return axios.patch<T>('/project/update/remove/' + id)

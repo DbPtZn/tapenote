@@ -10,14 +10,14 @@ import {
   PostAddOutlined
 } from '@vicons/material'
 import { DropdownOption, NIcon, useThemeVars } from 'naive-ui'
-import { Component, computed, h, nextTick, reactive, ref } from 'vue'
+import { Component, computed, h, nextTick, reactive } from 'vue'
 import useStore from '@/store'
-const { folderStore } = useStore()
+const { recentStore } = useStore()
 const themeVars = useThemeVars()
-const currentLib = computed(() => folderStore.lib)
+// const currentLib = computed(() => folderStore.lib)
 
 function getCurrentLibName() {
-  switch (currentLib.value) {
+  switch (recentStore.currentLib) {
     case LibraryEnum.NOTE:
       return '笔记'
     case LibraryEnum.COURSE:
@@ -43,11 +43,14 @@ function renderIcon(component: Component) {
   return h(NIcon, { component: component, size: 24 })
 }
 function handleSelectLib(lib: LibraryEnum) {
-  folderStore.fetchRecentlyAndSet({
-    lib: lib,
-    skip: 0,
-    take: 20
-  })
+  recentStore.currentLib = lib
+  if(recentStore.get.length === 0) {
+    recentStore.fetchAndSet({
+      lib: lib,
+      skip: 0,
+      take: 10
+    })
+  }
 }
 const options = computed<DropdownOption[]>(() => {
   return [
@@ -109,7 +112,10 @@ const options = computed<DropdownOption[]>(() => {
 })
 
 const dropdownMethods = {
-  handleClickOutside() {
+  handleClickOutside(ev: Event) {
+    // 阻止冒泡：实现再点击一次关闭下拉列表
+    ev.preventDefault()
+    ev.stopPropagation()
     dropdownState.showDropdownRef = false
     dropdownState.type = undefined
   },

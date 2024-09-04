@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui'
-import { 
+import {
   CreateFilled,
-  HomeFilled, 
+  HomeFilled,
   MapFilled,
   FolderFilled,
-  AccountCircleFilled, 
+  AccountCircleFilled,
   EmergencyShareFilled,
   CreateOutlined,
   HomeOutlined,
@@ -14,25 +14,32 @@ import {
   AccountCircleOutlined,
   EmergencyShareOutlined
 } from '@vicons/material'
-import { ref } from 'vue';
-type NavOption = 'home' | 'folder' | 'share' | 'user'
+import { ref } from 'vue'
+import useStore from '@/store'
+import router from '@/router';
+import { RouteNameEnum } from '@/enums'
+const { microStore } = useStore()
 const themeVars = useThemeVars()
-const selected = ref<NavOption>('home')
+const tabname = ref(RouteNameEnum.RECENT)
+function handleClick(tab: RouteNameEnum) {
+  router.push({ name: tab })
+  tabname.value = tab
+}
 </script>
 
 <template>
   <div class="footer">
-    <div class="footer-item" @click="selected = 'home'">
-      <n-icon :component="selected === 'home' ? CreateFilled : CreateOutlined" :size="24" />
+    <div class="footer-item" @click="handleClick(RouteNameEnum.RECENT)">
+      <n-icon :component="tabname === RouteNameEnum.RECENT ? CreateFilled : CreateOutlined" :size="24" />
     </div>
-    <div class="footer-item" @click="selected = 'folder'">
-      <n-icon :component="selected === 'folder' ? FolderFilled : FolderOutlined" :size="24" />
+    <div class="footer-item" @click="handleClick(RouteNameEnum.FOLDER)">
+      <n-icon :component="tabname === RouteNameEnum.FOLDER ? FolderFilled : FolderOutlined" :size="24" />
     </div>
-    <div class="footer-item" @click="selected = 'share'">
-      <n-icon :component="selected === 'share' ? EmergencyShareFilled : EmergencyShareOutlined" :size="24" />
+    <div class="footer-item" @click="handleClick(RouteNameEnum.SHARE)">
+      <n-icon :component="tabname === RouteNameEnum.SHARE ? EmergencyShareFilled : EmergencyShareOutlined" :size="24" />
     </div>
-    <div class="footer-item" @click="selected = 'user'">
-      <n-icon :component="selected === 'user' ? AccountCircleFilled : AccountCircleOutlined" :size="24" />
+    <div class="footer-item" @click="handleClick(RouteNameEnum.ADMIN)">
+      <n-icon :component="tabname === RouteNameEnum.ADMIN ? AccountCircleFilled : AccountCircleOutlined" :size="24" />
     </div>
   </div>
 </template>
@@ -47,5 +54,4 @@ const selected = ref<NavOption>('home')
   justify-content: space-around;
   align-items: center;
 }
- 
 </style>

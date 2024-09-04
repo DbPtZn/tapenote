@@ -3,6 +3,8 @@ import useStore from '@/store'
 import { darkThemeOverrides, lightThemeOverrides } from './theme/_api'
 import { GlobalNavView } from '@/views'
 import { ref } from 'vue'
+import router from '@/router';
+import { RouteNameEnum, RoutePathEnum } from '@/enums';
 const { settingStore } = useStore()
 const widthVal = ref(0)
 
@@ -11,6 +13,7 @@ const userAgent = navigator.userAgent.toLowerCase()
 // 常见的移动设备标识
 const mobileDevices = /iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i
 settingStore.isMobile = mobileDevices.test(userAgent)
+if(settingStore.isMobile) router.push({ name: RouteNameEnum.RECENT })
 console.log('当前设备：', settingStore.isMobile ? '移动端' : 'PC端')
 </script>
 <template>

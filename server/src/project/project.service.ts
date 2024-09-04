@@ -27,6 +27,11 @@ import { User } from 'src/user/entities/user.entity'
 import { commonConfig } from 'src/config'
 import { ConfigService } from '@nestjs/config'
 import { UploadService } from 'src/upload/upload.service'
+import {
+  paginate,
+  Pagination,
+  IPaginationOptions,
+} from 'nestjs-typeorm-paginate'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -520,11 +525,10 @@ export class ProjectService {
       })
       const data = projects.map(project => {
         const { folder, ...others } = project
-        const item = {
+        return {
           folderName: folder ? folder.name : '',
           ...others
         }
-        return item
       })
       return data
     } catch (error) {

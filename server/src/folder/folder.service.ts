@@ -10,12 +10,16 @@ import { GetRecentlyDto } from './dto/get-recently.dto'
 import { ProjectService } from 'src/project/project.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
+import { Project } from 'src/project/entities/project.entity'
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate'
 
 @Injectable()
 export class FolderService {
   constructor(
     @InjectRepository(Folder)
     private foldersRepository: Repository<Folder>,
+    @InjectRepository(Project)
+    private projectsRepository: Repository<Project>,
     @Inject(forwardRef(() => ProjectService))
     private readonly projectService: ProjectService,
     private readonly userService: UserService,
@@ -174,6 +178,36 @@ export class FolderService {
   }
 
   /** 获取最近编辑文档 考虑位置挪到projectService 中 */
+  // async getRecently(options: IPaginationOptions, lib: LibraryEnum, userId: string) {
+  //   // const { lib, skip, take } = getRecentlyDto
+  //   // console.log([lib, skip, take])
+  //   // const subfiles = await this.projectService.findByUpdateAtDESC(skip, take, lib, userId)
+  //   const result = await paginate<Project>(this.projectsRepository, options, {
+  //     where: { lib, userId, removed: RemovedEnum.NEVER },
+  //     relations: ['folder'],
+  //     select: ['id', 'title', 'lib', 'abbrev', 'folderId', 'updateAt', 'createAt'],
+  //     order: { updateAt: 'DESC' },
+  //   })
+  //   const subfiles = result.items.map(project => {
+  //     const { folder, ...others } = project
+  //     return {
+  //       folderName: folder ? folder.name : '',
+  //       ...others
+  //     }
+  //   })
+  //   const data = {
+  //     id: 'recently',
+  //     name: '',
+  //     desc: '',
+  //     lib: lib,
+  //     parentId: '',
+  //     createAt: '',
+  //     updateAt: '',
+  //     subfolders: [],
+  //     subfiles: subfiles
+  //   }
+  //   return data
+  // }
   async getRecently(getRecentlyDto: GetRecentlyDto, userId: string) {
     const { lib, skip, take } = getRecentlyDto
     // console.log([lib, skip, take])

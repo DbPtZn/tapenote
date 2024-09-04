@@ -43,11 +43,12 @@ function renderIcon(component: Component) {
   return h(NIcon, { component: component, size: 24 })
 }
 function handleSelectLib(lib: LibraryEnum) {
-  folderStore.fetchRecentlyAndSet({
-    lib: lib,
-    skip: 0,
-    take: 20
-  })
+  // if(folderStore.lib === lib) return  // 防止重复加载
+  // folderStore.fetchRecentlyAndSet({
+  //   lib: lib,
+  //   skip: 0,
+  //   take: 10
+  // })
 }
 const options = computed<DropdownOption[]>(() => {
   return [
@@ -109,7 +110,10 @@ const options = computed<DropdownOption[]>(() => {
 })
 
 const dropdownMethods = {
-  handleClickOutside() {
+  handleClickOutside(ev: Event) {
+    // 阻止冒泡：实现再点击一次关闭下拉列表
+    ev.preventDefault()
+    ev.stopPropagation()
     dropdownState.showDropdownRef = false
     dropdownState.type = undefined
   },
@@ -152,9 +156,10 @@ const handleRightBtnClick = (ev: MouseEvent) => {
 <template>
   <div class="header">
     <div class="item leftBtn" @click="handleLeftBtnClick">
-      <n-icon class="icon" :component="AutoAwesomeMotionOutlined" :size="24" />
+      <!-- <n-icon class="icon" :component="AutoAwesomeMotionOutlined" :size="24" /> -->
+      <span>{{ getCurrentLibName() }}</span>
     </div>
-    <div class="item title">{{ getCurrentLibName() }}</div>
+    <div class="item title"></div>
     <div class="item rightBtn" @click="handleRightBtnClick">
       <n-icon class="icon" :component="AddCircleOutlineFilled" :size="24" />
     </div>
@@ -192,7 +197,7 @@ const handleRightBtnClick = (ev: MouseEvent) => {
     }
   }
   .leftBtn {
-    width: 24px;
+    width: 48px;
   }
   .rightBtn {
     width: 24px;

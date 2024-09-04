@@ -1,32 +1,71 @@
 <script lang="ts" setup>
-import { LibraryEnum } from '@/enums';
+import { LibraryEnum, RoutePathEnum } from '@/enums';
 import useStore from '@/store'
-import { DropdownOption, useThemeVars } from 'naive-ui'
+import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
+import { DropdownOption, useMessage, useThemeVars } from 'naive-ui'
+import { StickyNote2Outlined } from '@vicons/material'
 import { computed, onMounted, ref } from 'vue'
 import Header from './Header.vue'
 import dayjs from 'dayjs'
-const { folderTreeStore, folderStore } = useStore()
+import router from '@/router';
+type RecentFile = typeof recentStore.data[0]
+const { recentStore } = useStore()
 const themeVars = useThemeVars()
+const message = useMessage()
 const scrollerRef = ref<HTMLElement>()
+const data = computed(() => recentStore.get)
 onMounted(() => {
-  folderStore.fetchRecentlyAndSet({
+  recentStore.fetchAndSet({
     lib: LibraryEnum.NOTE,
     skip: 0,
-    take: 20
+    take: 10
+  }).catch(err => {
+    console.log(err)
+    message.error('获取最近项目失败')
   })
 })
-const data = computed(() => folderStore.getSubfilesSortByCreateAt)
 
+/** 滚动加载 */
+function handleScroll(ev) {
+  const scrollerRef = ev.target as HTMLElement
+  if (scrollerRef.clientHeight + scrollerRef.scrollTop >= scrollerRef.scrollHeight) {
+    recentStore.fetchAndSet({
+      skip: data.value.length,
+      take: 8,
+      lib: recentStore.currentLib
+    })
+  }
+}
+
+function getCurrentLibIcon(lib: LibraryEnum) {
+  switch (lib) {
+    case LibraryEnum.NOTE:
+      return Notebook
+    case LibraryEnum.COURSE:
+      return PlayLesson
+    case LibraryEnum.PROCEDURE:
+      return CoffeeMaker
+    default:
+      return StickyNote2Outlined 
+  }
+}
+
+function handleClick(item: RecentFile) {
+  router.push(`${RoutePathEnum.PROJECT}/${item.id}`)
+}
 
 </script>
 
 <template>
   <Header />
-  <div ref="scrollerRef" class="home">
+  <div ref="scrollerRef" class="home" @scroll="handleScroll">
     <div class="list">
-      <div class="item" v-for="item in data" :key="item.id">
+      <div class="item" v-for="item in data" :key="item.id" @click="handleClick(item)">
         <div class="wrapper">
-          <div class="title">{{ item.title }}</div>
+          <div class="title">
+            <n-icon class="title-icon" :component="getCurrentLibIcon(item.lib)" :size="18"/>
+            <span style="margin-left: 6px;margin-top: 1px;"> {{ item.title }}</span>
+          </div>
           <div class="content">{{ item.abbrev }}</div>
           <div class="meta">
             <div class="createAt">{{ dayjs(item.updateAt).format('YY-MM-DD HH:mm:ss') }}</div>
@@ -63,6 +102,11 @@ const data = computed(() => folderStore.getSubfilesSortByCreateAt)
 .title {
   font-size: 14px;
   color: v-bind('themeVars.textColor1');
+  display: flex;
+  align-items: center;
+  .title-icon {
+    color:#7bebff;
+  }
 }
 .content {
   flex: 1;

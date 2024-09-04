@@ -1,6 +1,6 @@
 import { RouteNameEnum, RoutePathEnum } from '@/enums'
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
-import iframeRoutes from './iframe'
+import microRoutes from './micro'
 import errorRoutes from './error'
 const routes: Array<RouteRecordRaw> = [
   /** 主页 */
@@ -46,7 +46,7 @@ const routes: Array<RouteRecordRaw> = [
     name: RouteNameEnum.REGISTER,
     component: () => import(/* webpackChunkName: "about" */ '../pages/modules/RegisterPage.vue')
   },
-  ...iframeRoutes,
+  ...microRoutes,
   ...errorRoutes
 ]
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Res, Query } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Res, Query, ParseIntPipe, ParseEnumPipe } from '@nestjs/common'
 import { ProjectService } from './project.service'
 import { CreateProjectDto } from './dto/create-project.dto'
 import { AuthGuard } from '@nestjs/passport'
@@ -68,6 +68,24 @@ export class ProjectController {
       // TODO 错误处理的问题， 未处理的错误会阻塞程序运行
       console.log(error)
       res.status(400).send(error)
+    }
+  }
+
+
+  @Get(`/recent`)
+  async getRecent(
+    @Query('skip', ParseIntPipe) skip: number,
+    @Query('take', ParseIntPipe) take: number,
+    @Query('lib') lib: LibraryEnum,
+    @Req() req,
+    @Res() res
+  ) {
+    try {
+      console.log(skip, take, lib)
+      const result = await this.projectService.findByUpdateAtDESC(skip, take, lib, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error.message)
     }
   }
 

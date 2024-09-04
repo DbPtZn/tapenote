@@ -86,6 +86,9 @@ importers:
       mysql2:
         specifier: ^3.9.8
         version: 3.9.8
+      nestjs-typeorm-paginate:
+        specifier: ^4.0.4
+        version: 4.0.4(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(typeorm@0.3.20(better-sqlite3@11.0.0)(mysql2@3.9.8)(ts-node@10.9.2(@types/node@20.12.11)(typescript@5.4.5)))
       optional:
         specifier: ^0.1.4
         version: 0.1.4
@@ -2980,6 +2983,12 @@ packages:
 
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
+
+  nestjs-typeorm-paginate@4.0.4:
+    resolution: {integrity: sha512-arinWDc78wPV/EYWMmLYyeMSE5Lae1FHWD/2QpOdTmHaOVqK4PYf19EqZBqT9gbbPugkNW9JAMz3G2WmvSgR/A==}
+    peerDependencies:
+      '@nestjs/common': ^6.1.1 || ^5.6.2 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
+      typeorm: ^0.3.0
 
   node-abi@3.63.0:
     resolution: {integrity: sha512-vAszCsOUrUxjGAmdnM/pq7gUgie0IRteCQMX6d4A534fQCR93EJU5qgzBvU6EkFfK27s0T3HEV3BOyJIr7OMYw==}
@@ -7421,6 +7430,11 @@ snapshots:
   negotiator@0.6.3: {}
 
   neo-async@2.6.2: {}
+
+  nestjs-typeorm-paginate@4.0.4(@nestjs/common@10.3.8(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(typeorm@0.3.20(better-sqlite3@11.0.0)(mysql2@3.9.8)(ts-node@10.9.2(@types/node@20.12.11)(typescript@5.4.5))):
+    dependencies:
+      '@nestjs/common': 10.3.8(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.1)
+      typeorm: 0.3.20(better-sqlite3@11.0.0)(mysql2@3.9.8)(ts-node@10.9.2(@types/node@20.12.11)(typescript@5.4.5))
 
   node-abi@3.63.0:
     dependencies:

@@ -4,12 +4,20 @@ export enum RouteNameEnum {
   DEFAULT = 'default',
   LOGIN = 'login',
   REGISTER = 'register',
+  _400 = '400',
+  _403 = '403',
+  _404 = '404',
+
+  // micro
   NOTE = 'note',
   PROCEDURE = 'procedure',
   COURSE = 'course',
-  _400 = '400',
-  _403 = '403',
-  _404 = '404'
+  MICRO = 'micro',
+  RECENT = 'recent',
+  FOLDER = 'folder',
+  SHARE = 'share',
+  ADMIN = 'admin',
+  PROJECT='project'
 }
 
 export enum RoutePathEnum {
@@ -18,10 +26,18 @@ export enum RoutePathEnum {
   DEFAULT = '/default',
   LOGIN = '/login',
   REGISTER = '/register',
+  _400 = '/400',
+  _403 = '/403',
+  _404 = '/404',
+
+  // micro
   NOTE = '/note',
   PROCEDURE = '/procedure',
   COURSE = '/course',
-  _400 = '/400',
-  _403 = '/403',
-  _404 = '/404'
+  MICRO = '/micro',
+  RECENT = '/recent',
+  FOLDER = '/folder',
+  SHARE = '/share',
+  ADMIN = '/admin',
+  PROJECT='/project'
 }

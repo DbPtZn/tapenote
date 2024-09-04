@@ -96,6 +96,7 @@ function handleRegister(e: MouseEvent) {
         )
         .then(res => {
           console.log(res)
+          message.success('注册成功！')
           router.push(RoutePathEnum.LOGIN)
         })
         .catch(err => {

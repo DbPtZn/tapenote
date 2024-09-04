@@ -6,7 +6,7 @@ import { MicroFooter } from './layout'
 <template>
   <div class="micro">
     <!-- <MicroHeader /> -->
-    <Home />
+    <router-view />
     <MicroFooter />
   </div>
 </template>
