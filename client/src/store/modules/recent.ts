@@ -33,6 +33,7 @@ export const useRecentStore = defineStore('recentStore', {
           this.data.push(...data)
         })
     },
+    // 数据更新
   },
   getters: {
     get: (state) => {

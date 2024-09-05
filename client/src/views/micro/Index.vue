@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import Home from "./home/Home.vue"
+import router from '@/router'
 import { MicroFooter } from './layout'
 </script>
 
 <template>
   <div class="micro">
     <!-- <MicroHeader /> -->
-    <router-view />
+    <router-view :key="router.currentRoute.value.fullPath" />
     <MicroFooter />
   </div>
 </template>

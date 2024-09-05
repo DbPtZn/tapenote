@@ -13,9 +13,9 @@ const microRoutes: Array<RouteRecordRaw> = [
         component: () => import(/* webpackChunkName: "about" */ '../views/micro/home/Home.vue'),
       },
       {
-        path: RoutePathEnum.FOLDER,
+        path: `${RoutePathEnum.FOLDER}/:id`,
         name: RouteNameEnum.FOLDER,
-        component: () => import(/* webpackChunkName: "about" */ '../views/micro/folder/Folder.vue'),
+        component: () => import(/* webpackChunkName: "about" */ '../views/micro/folder/Folder.vue')
       },
       {
         path: RoutePathEnum.SHARE,

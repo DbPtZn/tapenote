@@ -17,13 +17,25 @@ import {
 import { ref } from 'vue'
 import useStore from '@/store'
 import router from '@/router';
-import { RouteNameEnum } from '@/enums'
-const { microStore } = useStore()
+import { LibraryEnum, RouteNameEnum, RoutePathEnum } from '@/enums'
+const { microStore, userStore } = useStore()
 const themeVars = useThemeVars()
 const tabname = ref(RouteNameEnum.RECENT)
 function handleClick(tab: RouteNameEnum) {
-  router.push({ name: tab })
   tabname.value = tab
+  // Folder 特别处理
+  if(tab === RouteNameEnum.FOLDER) {
+    const currentLib = localStorage.getItem('currentFolderLib') as LibraryEnum || LibraryEnum.NOTE
+    const id = localStorage.getItem(`${currentLib}-folder`)
+    if(!id) {
+      // 默认打开根目录
+      const rootId = userStore.getDirByLib(currentLib)
+      return router.push(`${RoutePathEnum.FOLDER}/${rootId}`)
+    } else {
+      return router.push(`${RoutePathEnum.FOLDER}/${id}`)
+    }
+  }
+  router.push({ name: tab })
 }
 </script>
 

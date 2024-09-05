@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { LibraryEnum, RoutePathEnum } from '@/enums';
+import { LibraryEnum, RoutePathEnum } from '@/enums'
 import useStore from '@/store'
 import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
 import { DropdownOption, useMessage, useThemeVars } from 'naive-ui'
@@ -7,22 +7,26 @@ import { StickyNote2Outlined } from '@vicons/material'
 import { computed, onMounted, ref } from 'vue'
 import Header from './Header.vue'
 import dayjs from 'dayjs'
-import router from '@/router';
-type RecentFile = typeof recentStore.data[0]
+import router from '@/router'
+type RecentFile = (typeof recentStore.data)[0]
 const { recentStore } = useStore()
 const themeVars = useThemeVars()
 const message = useMessage()
 const scrollerRef = ref<HTMLElement>()
 const data = computed(() => recentStore.get)
 onMounted(() => {
-  recentStore.fetchAndSet({
-    lib: LibraryEnum.NOTE,
-    skip: 0,
-    take: 10
-  }).catch(err => {
-    console.log(err)
-    message.error('获取最近项目失败')
-  })
+  if (recentStore.get.length === 0) {
+    recentStore
+      .fetchAndSet({
+        lib: LibraryEnum.NOTE,
+        skip: 0,
+        take: 10
+      })
+      .catch(err => {
+        console.log(err)
+        message.error('获取最近项目失败')
+      })
+  }
 })
 
 /** 滚动加载 */
@@ -46,14 +50,13 @@ function getCurrentLibIcon(lib: LibraryEnum) {
     case LibraryEnum.PROCEDURE:
       return CoffeeMaker
     default:
-      return StickyNote2Outlined 
+      return StickyNote2Outlined
   }
 }
 
 function handleClick(item: RecentFile) {
   router.push(`${RoutePathEnum.PROJECT}/${item.id}`)
 }
-
 </script>
 
 <template>
@@ -63,8 +66,8 @@ function handleClick(item: RecentFile) {
       <div class="item" v-for="item in data" :key="item.id" @click="handleClick(item)">
         <div class="wrapper">
           <div class="title">
-            <n-icon class="title-icon" :component="getCurrentLibIcon(item.lib)" :size="18"/>
-            <span style="margin-left: 6px;margin-top: 1px;"> {{ item.title }}</span>
+            <n-icon class="title-icon" :component="getCurrentLibIcon(item.lib)" :size="18" />
+            <span style="margin-left: 6px; margin-top: 1px"> {{ item.title }}</span>
           </div>
           <div class="content">{{ item.abbrev }}</div>
           <div class="meta">
@@ -105,7 +108,7 @@ function handleClick(item: RecentFile) {
   display: flex;
   align-items: center;
   .title-icon {
-    color:#7bebff;
+    color: #7bebff;
   }
 }
 .content {

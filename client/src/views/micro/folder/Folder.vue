@@ -2,31 +2,83 @@
 import useStore from '@/store'
 import { useThemeVars } from 'naive-ui'
 import { computed, onMounted } from 'vue'
-import { FolderFilled } from '@vicons/material'
+import { FolderFilled, StickyNote2Outlined, AutoAwesomeMotionOutlined } from '@vicons/material'
 import Header from './Header.vue'
-import router from '@/router';
-const { folderTreeStore, userStore } = useStore()
+import router from '@/router'
+import dayjs from 'dayjs'
+import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
+import { LibraryEnum, RoutePathEnum } from '@/enums'
+type Subfile = NonNullable<typeof folderStore.subfiles>[0]
+type Subfolder = NonNullable<typeof folderStore.subfolders>[0]
+
+const { folderTreeStore, userStore, folderStore } = useStore()
 const themeVars = useThemeVars()
 const id = computed(() => router.currentRoute.value.params.id as string)
 onMounted(() => {
-  console.log(id.value)
-  // folderTreeStore.fetchFirstLevel(id.value ? id.value : userStore.getDirByLib(), )
+  console.log(`当前文件夹id：`, id.value)
+  if(!id.value) return
+  folderStore.fetchAndSet(id.value).then(resp => {
+    // 获取文件夹后将文件夹 lib 以及 id 记录到 localStorage
+    localStorage.setItem(`${folderStore.lib}-folder`, folderStore.id)
+  })
 })
+
+function handleSubfolderClick(item: Subfolder) {
+  router.push(`${RoutePathEnum.FOLDER}/${item.id}`)
+}
+
+
+// ----------------------------- Subfile ----------------------------------
+
+
+function getCurrentLibIcon(lib: LibraryEnum | undefined) {
+  switch (lib) {
+    case LibraryEnum.NOTE:
+      return Notebook
+    case LibraryEnum.COURSE:
+      return PlayLesson
+    case LibraryEnum.PROCEDURE:
+      return CoffeeMaker
+    default:
+      return StickyNote2Outlined 
+  }
+}
+
+function handleSubfileClick(item: Subfile) {
+  router.push(`${RoutePathEnum.PROJECT}/${item.id}`)
+}
+
+
 </script>
 
 <template>
   <Header />
   <div class="folder">
-    <div class="list">
-      <div class="item" v-for="item in 15" :key="item">
+    <!-- Folder -->
+    <div class="folder-list">
+      <div class="item" v-for="item in folderStore.subfolders" :key="item.id" @click="handleSubfolderClick(item)">
         <div class="wrapper">
           <div class="title">
             <n-icon :component="FolderFilled" :size="18" color="#F8D777"/>
-            <span style="margin-left: 6px;margin-top: 1px;">标题</span>
+            <span style="margin-left: 6px;margin-top: 1px;">{{ item.name }}</span>
           </div>
-          <!-- <div class="content">内容内容内容内容内容内容内容内容内容内容内容</div> -->
           <div class="meta">
-            <div class="createAt">2023-07-01 00:00:00</div>
+            <div class="date">{{ dayjs(item.createAt).format('YY-MM-DD HH:mm:ss') }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- File -->
+    <div class="list">
+      <div class="item" v-for="item in folderStore.subfiles" :key="item.id" @click="handleSubfileClick(item)">
+        <div class="wrapper">
+          <div class="title">
+            <n-icon class="title-icon" :component="getCurrentLibIcon(item.lib)" :size="18"/>
+            <span style="margin-left: 6px;margin-top: 1px;"> {{ item.title }}</span>
+          </div>
+          <div class="content">{{ item.abbrev }}</div>
+          <div class="meta">
+            <div class="date">{{ dayjs(item.updateAt).format('YY-MM-DD HH:mm:ss') }}</div>
           </div>
         </div>
       </div>
@@ -35,6 +87,9 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.floatbtn {
+  opacity: 0.7;
+}
 .folder {
   height: 100%;
   width: 100%;
