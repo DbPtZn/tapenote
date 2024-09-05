@@ -8,6 +8,7 @@ import { computed, onMounted, ref } from 'vue'
 import Header from './Header.vue'
 import dayjs from 'dayjs'
 import router from '@/router'
+import { Footer } from '../layout'
 type RecentFile = (typeof recentStore.data)[0]
 const { recentStore } = useStore()
 const themeVars = useThemeVars()
@@ -55,7 +56,7 @@ function getCurrentLibIcon(lib: LibraryEnum) {
 }
 
 function handleClick(item: RecentFile) {
-  router.push(`${RoutePathEnum.PROJECT}/${item.id}`)
+  router.push(`${RoutePathEnum.PROJECT}?id=${item.id}&lib=${item.lib}`)
 }
 </script>
 
@@ -77,6 +78,7 @@ function handleClick(item: RecentFile) {
       </div>
     </div>
   </div>
+  <Footer />
 </template>
 
 <style lang="scss" scoped>

@@ -1,15 +1,16 @@
+import { RouteNameEnum } from '@/enums'
 import { defineStore } from 'pinia'
-// type TabOption = 'home' | 'folder' | 'share' | 'user'
+// type TabOption = 'recent' | 'folder' | 'share' | 'user'
 interface State {
   isMobile: boolean  // 是否为移动端
-  // tab: TabOption
+  tab: RouteNameEnum
 }
 
 export const useMicroStore = defineStore('microStore', {
   state(): State {
     return {
       isMobile: false,
-      // tab: 'home'
+      tab: RouteNameEnum.RECENT
     }
   },
   actions: {

@@ -28,7 +28,7 @@ const microRoutes: Array<RouteRecordRaw> = [
         component: () => import(/* webpackChunkName: "about" */ '../views/micro/admin/Admin.vue'),
       },
       {
-        path: `${RoutePathEnum.PROJECT}/:id`,
+        path: `${RoutePathEnum.PROJECT}`,
         name: RouteNameEnum.PROJECT,
         component: () => import(/* webpackChunkName: "about" */ '../views/micro/project/Project.vue'),
       }

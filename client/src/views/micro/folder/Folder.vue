@@ -8,6 +8,7 @@ import router from '@/router'
 import dayjs from 'dayjs'
 import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
 import { LibraryEnum, RoutePathEnum } from '@/enums'
+import { Footer } from '../layout'
 type Subfile = NonNullable<typeof folderStore.subfiles>[0]
 type Subfolder = NonNullable<typeof folderStore.subfolders>[0]
 
@@ -84,6 +85,7 @@ function handleSubfileClick(item: Subfile) {
       </div>
     </div>
   </div>
+  <Footer />
 </template>
 
 <style lang="scss" scoped>

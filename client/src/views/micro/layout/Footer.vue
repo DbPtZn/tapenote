@@ -20,9 +20,9 @@ import router from '@/router';
 import { LibraryEnum, RouteNameEnum, RoutePathEnum } from '@/enums'
 const { microStore, userStore } = useStore()
 const themeVars = useThemeVars()
-const tabname = ref(RouteNameEnum.RECENT)
+
 function handleClick(tab: RouteNameEnum) {
-  tabname.value = tab
+  microStore.tab = tab
   // Folder 特别处理
   if(tab === RouteNameEnum.FOLDER) {
     const currentLib = localStorage.getItem('currentFolderLib') as LibraryEnum || LibraryEnum.NOTE
@@ -42,16 +42,16 @@ function handleClick(tab: RouteNameEnum) {
 <template>
   <div class="footer">
     <div class="footer-item" @click="handleClick(RouteNameEnum.RECENT)">
-      <n-icon :component="tabname === RouteNameEnum.RECENT ? CreateFilled : CreateOutlined" :size="24" />
+      <n-icon :component="microStore.tab === RouteNameEnum.RECENT ? CreateFilled : CreateOutlined" :size="24" />
     </div>
     <div class="footer-item" @click="handleClick(RouteNameEnum.FOLDER)">
-      <n-icon :component="tabname === RouteNameEnum.FOLDER ? FolderFilled : FolderOutlined" :size="24" />
+      <n-icon :component="microStore.tab === RouteNameEnum.FOLDER ? FolderFilled : FolderOutlined" :size="24" />
     </div>
     <div class="footer-item" @click="handleClick(RouteNameEnum.SHARE)">
-      <n-icon :component="tabname === RouteNameEnum.SHARE ? EmergencyShareFilled : EmergencyShareOutlined" :size="24" />
+      <n-icon :component="microStore.tab === RouteNameEnum.SHARE ? EmergencyShareFilled : EmergencyShareOutlined" :size="24" />
     </div>
     <div class="footer-item" @click="handleClick(RouteNameEnum.ADMIN)">
-      <n-icon :component="tabname === RouteNameEnum.ADMIN ? AccountCircleFilled : AccountCircleOutlined" :size="24" />
+      <n-icon :component="microStore.tab === RouteNameEnum.ADMIN ? AccountCircleFilled : AccountCircleOutlined" :size="24" />
     </div>
   </div>
 </template>

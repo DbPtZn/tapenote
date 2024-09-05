@@ -7,11 +7,13 @@ import {
   WorkspacesFilled, 
   AutoAwesomeMotionOutlined,
   SearchOutlined,
-  PostAddOutlined
+  PostAddOutlined,
+StickyNote2Outlined
 } from '@vicons/material'
 import { DropdownOption, NIcon, useThemeVars } from 'naive-ui'
 import { Component, computed, h, nextTick, reactive } from 'vue'
 import useStore from '@/store'
+import { Footer } from '../layout'
 const { recentStore } = useStore()
 const themeVars = useThemeVars()
 // const currentLib = computed(() => folderStore.lib)
@@ -31,13 +33,13 @@ function getCurrentLibName() {
 
 const dropdownState = reactive({
   lib: undefined as LibraryEnum | undefined,
-  type: undefined as 'leftBtn' | 'rightBtn' | undefined,
+  type: undefined as 'leftBtn' | 'rightBtn' | 'floatBtn' | undefined,
   target: undefined as HTMLElement | undefined,
   xRef: 0,
   yRef: 0,
   showDropdownRef: false,
   showArrowRef: false,
-  placementRef: 'bottom-start' as 'bottom' | 'bottom-start' | 'bottom-end'
+  placementRef: 'bottom-start' as 'bottom' | 'bottom-start' | 'bottom-end' | 'left'
 })
 function renderIcon(component: Component) {
   return h(NIcon, { component: component, size: 24 })
@@ -58,7 +60,7 @@ const options = computed<DropdownOption[]>(() => {
       key: 'note',
       icon: () => renderIcon(Notebook),
       label: '笔记',
-      show: dropdownState.type === 'leftBtn',
+      show: dropdownState.type === 'floatBtn',
       props: {
         onClick: () => {
           handleSelectLib(LibraryEnum.NOTE)
@@ -69,7 +71,7 @@ const options = computed<DropdownOption[]>(() => {
       key: 'course',
       icon: () => renderIcon(PlayLesson),
       label: '课程',
-      show: dropdownState.type === 'leftBtn',
+      show: dropdownState.type === 'floatBtn',
       props: {
         onClick: () => {
           handleSelectLib(LibraryEnum.COURSE)
@@ -80,7 +82,7 @@ const options = computed<DropdownOption[]>(() => {
       key: 'procedure',
       icon: () => renderIcon(CoffeeMaker),
       label: '工程',
-      show: dropdownState.type === 'leftBtn',
+      show: dropdownState.type === 'floatBtn',
       props: {
         onClick: () => {
           handleSelectLib(LibraryEnum.PROCEDURE)
@@ -153,12 +155,39 @@ const handleRightBtnClick = (ev: MouseEvent) => {
     dropdownState.placementRef = 'bottom-end'
   })
 }
+
+function getCurrentLibIcon(lib: LibraryEnum | undefined) {
+  switch (lib) {
+    case LibraryEnum.NOTE:
+      return Notebook
+    case LibraryEnum.COURSE:
+      return PlayLesson
+    case LibraryEnum.PROCEDURE:
+      return CoffeeMaker
+    default:
+      return StickyNote2Outlined 
+  }
+}
+function handleFloatBtnClick(ev) {
+  if(dropdownState.type === 'floatBtn') return dropdownState.type = undefined
+  dropdownState.type = 'floatBtn'
+  const target = ev.target as HTMLElement
+  const rect = target.getBoundingClientRect()
+  dropdownState.target = target
+  nextTick().then(() => {
+    dropdownState.showDropdownRef = true
+    dropdownState.xRef = rect.x
+    dropdownState.yRef = rect.y + 28
+    dropdownState.showArrowRef = false
+    dropdownState.placementRef = 'left'
+  })
+}
 </script>
 
 <template>
   <div class="header">
     <div class="item leftBtn" @click="handleLeftBtnClick">
-      <n-icon class="icon" :component="AutoAwesomeMotionOutlined" :size="24" />
+      <!-- <n-icon class="icon" :component="AutoAwesomeMotionOutlined" :size="24" /> -->
     </div>
     <div class="item title">{{ getCurrentLibName() }}</div>
     <div class="item rightBtn" @click="handleRightBtnClick">
@@ -177,6 +206,9 @@ const handleRightBtnClick = (ev: MouseEvent) => {
     @select="dropdownMethods.handleSelect"
     @clickoutside="dropdownMethods.handleClickOutside"
   />
+  <n-float-button class="floatbtn" :right="-6" :bottom="150" shape="square" @click="handleFloatBtnClick">
+    <n-icon class="icon" :component="getCurrentLibIcon(recentStore.currentLib)" size="24px"/>
+  </n-float-button>
 </template>
 
 <style lang="scss" scoped>

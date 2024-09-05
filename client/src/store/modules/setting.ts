@@ -4,7 +4,6 @@ import { defineStore } from 'pinia'
 
 interface State {
   theme: typeof darkTheme | null
-  isMobile: boolean  // 是否为移动端
   isSidebarCollapse: boolean
   isItemListCollapse: boolean
   isCacheListShow: boolean
@@ -14,7 +13,6 @@ export const useSettingStore = defineStore('settingStore', {
   state(): State {
     return {
       theme: darkTheme,
-      isMobile: false,
       isSidebarCollapse: false,
       isItemListCollapse: false,
       isCacheListShow: false,

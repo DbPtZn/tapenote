@@ -1,15 +1,28 @@
 <script lang="ts" setup>
 import router from '@/router'
-import { computed, onMounted } from 'vue'
-const id = computed(() => router.currentRoute.value.params.id as string)
+import { computed, onMounted, provide } from 'vue'
+import Header from './Header.vue'
+import Editor from './editor/Editor.vue'
+import { useThemeVars } from 'naive-ui'
+import { Bridge } from './bridge'
+import { LibraryEnum } from '@/enums'
+import useStore from '@/store'
+const bridge = new Bridge()
+provide('bridge', bridge)
+const id = computed(() => router.currentRoute.value.query.id as string)
+const lib = computed(() => router.currentRoute.value.query.lib as LibraryEnum)
+const themeVars = useThemeVars()
+
+const { userStore } = useStore()
 onMounted(() => {
   console.log(id.value)
 })
 </script>
 
 <template>
+  <Header />
   <div class="project">
-    {{id}}
+    <Editor :id="id" :account="userStore.account" :hostname="userStore.hostname" :lib="lib" />
   </div>
 </template>
 
@@ -17,8 +30,9 @@ onMounted(() => {
 .project {
   height: 100%;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background-color: v-bind('themeVars.cardColor');
+  // display: flex;
+  // align-items: center;
+  // justify-content: center;
 }
 </style>

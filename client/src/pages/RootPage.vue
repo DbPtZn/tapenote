@@ -5,16 +5,16 @@ import { GlobalNavView } from '@/views'
 import { ref } from 'vue'
 import router from '@/router';
 import { RouteNameEnum, RoutePathEnum } from '@/enums';
-const { settingStore } = useStore()
+const { settingStore, microStore } = useStore()
 const widthVal = ref(0)
 
 /** 判断设备 */
 const userAgent = navigator.userAgent.toLowerCase()
 // 常见的移动设备标识
 const mobileDevices = /iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i
-settingStore.isMobile = mobileDevices.test(userAgent)
-if(settingStore.isMobile) router.push({ name: RouteNameEnum.RECENT })
-console.log('当前设备：', settingStore.isMobile ? '移动端' : 'PC端')
+microStore.isMobile = mobileDevices.test(userAgent)
+if(microStore.isMobile) router.push({ name: RouteNameEnum.RECENT })
+console.log('当前设备：', microStore.isMobile ? '移动端' : 'PC端')
 </script>
 <template>
   <n-config-provider :theme="settingStore.theme" :theme-overrides="settingStore.theme ? darkThemeOverrides : lightThemeOverrides">
@@ -24,8 +24,8 @@ console.log('当前设备：', settingStore.isMobile ? '移动端' : 'PC端')
           <n-notification-provider>
             <n-layout>
               <div ref="rootRef" class="root-page" :data-theme="[settingStore.theme ? 'dark-theme' : 'light-theme']">
-                <GlobalNavView v-show="!settingStore.isMobile" @collapse="ev => (widthVal = ev)" />
-                <div class="router-view" :style="{ width: `calc(100% - ${!settingStore.isMobile ? widthVal : 0}px)` }">
+                <GlobalNavView v-show="!microStore.isMobile" @collapse="ev => (widthVal = ev)" />
+                <div class="router-view" :style="{ width: `calc(100% - ${!microStore.isMobile ? widthVal : 0}px)` }">
                   <router-view />
                 </div>
               </div>
