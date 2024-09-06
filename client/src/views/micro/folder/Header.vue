@@ -15,7 +15,7 @@ import { DropdownOption, NIcon, useThemeVars } from 'naive-ui'
 import { Component, computed, h, nextTick, onMounted, reactive, ref } from 'vue'
 import useStore from '@/store'
 import router from '@/router'
-const { folderStore, userStore } = useStore()
+const { folderStore, userStore, recentStore, projectStore } = useStore()
 const themeVars = useThemeVars()
 const currentLib = computed(() => folderStore.lib)
 
@@ -53,10 +53,10 @@ function handleSelectLib(lib: LibraryEnum) {
   // 如果 id 不存在，则打开根目录
   if(!id) {
     const rootId = userStore.getDirByLib(lib)
-    router.push(`${RoutePathEnum.FOLDER}/${rootId}`)
+    router.push(`${RoutePathEnum.FOLDER}?id=${rootId}`)
     return
   }
-  router.push(`${RoutePathEnum.FOLDER}/${id}`)
+  router.push(`${RoutePathEnum.FOLDER}?id=${id}`)
 }
 
 // onMounted(() => {
@@ -111,9 +111,27 @@ const options = computed<DropdownOption[]>(() => {
       icon: () => renderIcon(PostAddOutlined),
       label: '新建项目',
       show: dropdownState.type === 'rightBtn',
-      disabled: true,
+      disabled: folderStore.lib !== LibraryEnum.NOTE,
       props: {
-        onClick: () => {}
+        onClick: async () => {
+          if(folderStore.lib === LibraryEnum.NOTE) {
+            const project = await projectStore.create(folderStore.id, LibraryEnum.NOTE, userStore.account, userStore.hostname)
+            const { id, title, lib, abbrev, updateAt, createAt, folderId } = project
+            if(recentStore.data.length !== 0) {
+              // 如果 recent 没有数据，添加一条数据会导致 recent 无法自动加载
+              recentStore.add({
+                id,
+                title,
+                lib,
+                abbrev,
+                updateAt,
+                createAt,
+                folderId
+              })
+            }
+            folderStore.addSubFile(project, project.folderId, LibraryEnum.NOTE)
+          }
+        }
       }
     },
     {
@@ -144,7 +162,7 @@ const dropdownMethods = {
 }
 
 const handleLeftBtnClick = (ev: MouseEvent) => {
-  router.push(`${RoutePathEnum.FOLDER}/${folderStore.parentId}`)
+  router.push(`${RoutePathEnum.FOLDER}?id=${folderStore.parentId}`)
   // if(dropdownState.type === 'leftBtn') return dropdownState.type = undefined
   // dropdownState.type = 'leftBtn'
   // const target = ev.target as HTMLElement

@@ -10,12 +10,14 @@ import {
   PostAddOutlined,
 StickyNote2Outlined
 } from '@vicons/material'
-import { DropdownOption, NIcon, useThemeVars } from 'naive-ui'
+import { DropdownOption, NIcon, useMessage, useThemeVars } from 'naive-ui'
 import { Component, computed, h, nextTick, reactive } from 'vue'
 import useStore from '@/store'
 import { Footer } from '../layout'
-const { recentStore } = useStore()
+import { user } from '@/api/creator/user'
+const { recentStore, userStore, projectStore } = useStore()
 const themeVars = useThemeVars()
+const message = useMessage()
 // const currentLib = computed(() => folderStore.lib)
 
 function getCurrentLibName() {
@@ -95,9 +97,29 @@ const options = computed<DropdownOption[]>(() => {
       icon: () => renderIcon(PostAddOutlined),
       label: '新建项目',
       show: dropdownState.type === 'rightBtn',
-      disabled: true,
+      disabled: recentStore.currentLib !== LibraryEnum.NOTE,
       props: {
-        onClick: () => {}
+        onClick: async () => {
+          if (recentStore.currentLib === LibraryEnum.NOTE) {
+            const rootFolderId = userStore.getDirByLib(LibraryEnum.NOTE)
+            try {
+              const project = await projectStore.create(rootFolderId, LibraryEnum.NOTE, userStore.account, userStore.hostname)
+              const { id, title, lib, abbrev, updateAt, createAt, folderId } = project
+              recentStore.add({
+                id,
+                title,
+                lib,
+                abbrev,
+                updateAt,
+                createAt,
+                folderId
+              })
+            } catch (error) {
+              console.log(error)
+              message.error('新建笔记失败')
+            }
+          }
+        }
       }
     },
     {

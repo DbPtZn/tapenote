@@ -13,7 +13,7 @@ const userAgent = navigator.userAgent.toLowerCase()
 // 常见的移动设备标识
 const mobileDevices = /iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i
 microStore.isMobile = mobileDevices.test(userAgent)
-if(microStore.isMobile) router.push({ name: RouteNameEnum.RECENT })
+// if(microStore.isMobile) router.push({ name: RouteNameEnum.RECENT })
 console.log('当前设备：', microStore.isMobile ? '移动端' : 'PC端')
 </script>
 <template>

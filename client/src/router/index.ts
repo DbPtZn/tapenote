@@ -2,15 +2,17 @@ import { RouteNameEnum, RoutePathEnum } from '@/enums'
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import microRoutes from './micro'
 import errorRoutes from './error'
+import useStore from '@/store'
 const routes: Array<RouteRecordRaw> = [
   /** 主页 */
   {
     path: RoutePathEnum.HOME,
     name: RouteNameEnum.HOME,
     component: () => import(/* webpackChunkName: "about" */ '../pages/modules/CreatorPage.vue'),
-    // beforeEnter() {
-    //   useRendererStore().set(mainShell)
-    // }
+    beforeEnter(to, from, next) {
+      const { microStore } = useStore()
+      microStore.isMobile ? router.push({ name: RouteNameEnum.RECENT }) : next()
+    }
   },
   {
     path: '/home',

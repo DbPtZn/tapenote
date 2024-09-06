@@ -26,7 +26,7 @@ const model = ref<ModelType>({
   lib: props.lib || LibraryEnum.NOTE,
   // isCloud: true
 })
-const regex = /[!"#&$'()*./:<>?\^`|\s]/g
+const regex = /[<>:"/\\|?*]/g
 /** 表单规则 */
 const rules: FormRules = {
   name: [
@@ -43,7 +43,7 @@ const rules: FormRules = {
       }
     },
     {
-      message: '文件夹名称不能包含特殊英文标点符号或空格',
+      message: '文件夹名称不能包含以下任何字符 <>:"/\\|?*',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: string) => {
         return !regex.test(value)

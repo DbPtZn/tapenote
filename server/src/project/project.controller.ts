@@ -20,16 +20,16 @@ export class ProjectController {
     try {
       const project = await this.projectService.create(dto, req.user.id, req.user.dirname)
       /** 用于项目列表展示的数据 */
-      const data = {
-        id: project.id,
-        folderId: project.folderId,
-        title: project.title,
-        content: project.content,
-        abbrev: project.abbrev,
-        updateAt: project.updateAt,
-        createAt: project.createAt
-      }
-      res.status(201).send(data)
+      // const data = {
+      //   id: project.id,
+      //   folderId: project.folderId,
+      //   title: project.title,
+      //   content: project.content,
+      //   abbrev: project.abbrev,
+      //   updateAt: project.updateAt,
+      //   createAt: project.createAt
+      // }
+      res.status(201).send(project)
     } catch (error) {
       console.log(error)
       res.status(400).send(error)

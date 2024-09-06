@@ -10,15 +10,28 @@ import {
   PostAddOutlined,
   MoreHorizFilled,
   StickyNote2Outlined,
-  KeyboardArrowLeftFilled
+  KeyboardArrowLeftFilled,
+  SaveFilled,
+  CheckFilled
 } from '@vicons/material'
+import dayjs from 'dayjs'
 import { DropdownOption, NIcon, useThemeVars } from 'naive-ui'
-import { Component, computed, h, nextTick, onMounted, reactive, ref } from 'vue'
+import { Component, computed, h, inject, nextTick, onMounted, reactive, ref } from 'vue'
 import useStore from '@/store'
 import router from '@/router'
-const { folderStore, userStore } = useStore()
+import { Bridge } from './bridge'
+import { Subscription } from '@tanbo/stream'
+const props = defineProps<{
+  id: string
+  lib: LibraryEnum
+  account: string
+  hostname: string
+}>()
+const bridge = inject('bridge') as Bridge
+const { folderStore, projectStore } = useStore()
+const data = computed(() => projectStore.get(props.id))
+const subs: Subscription[] = []
 const themeVars = useThemeVars()
-
 const dropdownState = reactive({
   lib: undefined as LibraryEnum | undefined,
   type: undefined as 'leftBtn' | 'rightBtn' | 'floatBtn' | undefined,
@@ -29,16 +42,47 @@ const dropdownState = reactive({
   showArrowRef: false,
   placementRef: 'bottom-start' as 'bottom' | 'bottom-start' | 'bottom-end' | 'top-start' | 'top' | 'top-end' | 'left-start' | 'left' | 'left-end'
 })
-function renderIcon(component: Component) {
-  return h(NIcon, { component: component, size: 24 })
+
+const isEditable = ref(false)
+
+subs.push(
+  bridge.onEditable.subscribe((state) => {
+    isEditable.value = state
+  })
+)
+function getLeftBtnIcon() {
+  return isEditable.value ? CheckFilled : ArrowBackIosFilled
+}
+const handleLeftBtnClick = (ev: MouseEvent) => {
+  if(isEditable.value) {
+    console.log('save')
+    bridge.handleSave()
+    bridge.handleEditable(false)
+  } else {
+    router.back()
+  }
 }
 
 
-const options = computed<DropdownOption[]>(() => {
-  return [
-    //
-  ]
-})
+
+function renderIcon(component: Component) {
+  return h(NIcon, { component: component, size: 24 })
+}
+const handleRightBtnClick = (ev: MouseEvent) => {
+  isDrawerActive.value = !isDrawerActive.value
+  // if(dropdownState.type === 'rightBtn') return dropdownState.type = undefined
+  // dropdownState.type = 'rightBtn'
+  // const target = ev.target as HTMLElement
+  // const rect = target.getBoundingClientRect()
+  // dropdownState.target = target
+  // nextTick().then(() => {
+  //   dropdownState.showDropdownRef = true
+  //   dropdownState.xRef = rect.x + 20
+  //   dropdownState.yRef = rect.y + 28
+  //   dropdownState.showArrowRef = false
+  //   dropdownState.placementRef = 'bottom-end'
+  // })
+}
 
 const dropdownMethods = {
   handleClickOutside(ev: Event) {
@@ -54,24 +98,11 @@ const dropdownMethods = {
   }
 }
 
-const handleLeftBtnClick = (ev: MouseEvent) => {
-  router.back()
-}
-const handleRightBtnClick = (ev: MouseEvent) => {
-  if(dropdownState.type === 'rightBtn') return dropdownState.type = undefined
-  dropdownState.type = 'rightBtn'
-  const target = ev.target as HTMLElement
-  const rect = target.getBoundingClientRect()
-  dropdownState.target = target
-  nextTick().then(() => {
-    dropdownState.showDropdownRef = true
-    dropdownState.xRef = rect.x + 20
-    dropdownState.yRef = rect.y + 28
-    dropdownState.showArrowRef = false
-    dropdownState.placementRef = 'bottom-end'
-  })
-}
-
+const options = computed<DropdownOption[]>(() => {
+  return [
+    //
+  ]
+})
 
 // function handleFloatBtnClick(ev) {
 //   if(dropdownState.type === 'floatBtn') return dropdownState.type = undefined
@@ -88,12 +119,14 @@ const handleRightBtnClick = (ev: MouseEvent) => {
 //   })
 // }
 
+const isDrawerActive = ref(false)
+
 </script>
 
 <template>
   <div class="header">
     <div class="item leftBtn" @click="handleLeftBtnClick">
-      <n-icon class="icon" :component="KeyboardArrowLeftFilled" :size="24" />
+      <n-icon class="icon" :component="getLeftBtnIcon()" :size="24" />
     </div>
     <div class="item title">
       <span> </span>
@@ -117,6 +150,29 @@ const handleRightBtnClick = (ev: MouseEvent) => {
   <!-- <n-float-button class="floatbtn" :right="-6" :bottom="150" shape="square" @click="handleFloatBtnClick">
     <n-icon class="icon" :component="getCurrentLibIcon(folderStore.lib)" size="24px"/>
   </n-float-button> -->
+
+  <n-drawer v-model:show="isDrawerActive" :height="'50%'" :placement="'bottom'">
+    <n-drawer-content>
+      <n-flex style="width: 100%;">
+        <!-- 文章详情 -->
+        <n-descriptions style="width: 100%;" label-style="white-space: nowrap;" label-placement="left" label-align="center" :column="1" :bordered="true" title="详情">
+          <n-descriptions-item label="作者"> {{data?.detial.penname}} </n-descriptions-item>
+          <!-- <n-descriptions-item label="邮箱"> {{data?.detial.email}} </n-descriptions-item>
+          <n-descriptions-item label="作者主页"> {{data?.detial.homepage}} </n-descriptions-item> -->
+          <n-descriptions-item label="创建时间"> {{dayjs(data?.createAt).format('YYYY-MM-DD HH:mm:ss')}} </n-descriptions-item>
+          <n-descriptions-item label="更新时间"> {{dayjs(data?.updateAt).format('YYYY-MM-DD HH:mm:ss')}} </n-descriptions-item>
+          <n-descriptions-item label="字数"> {{data?.detial.wordage}} </n-descriptions-item>
+        </n-descriptions>
+        <n-divider />
+        <!-- 文件夹 -->
+        <div style="width: 100%;display: flex; align-items: center;justify-content: space-between;">
+          <span style="margin-right: 6px;">所在文件夹：<span :style="{ color: themeVars.primaryColor }">{{ data?.folder.name }}</span></span>
+          <n-button size="tiny" @click="router.push(`${RoutePathEnum.FOLDER}?id=${data?.folderId}`)">前往</n-button>
+        </div>
+        <n-divider />
+      </n-flex>
+    </n-drawer-content>
+  </n-drawer>
 </template>
 
 <style lang="scss" scoped>

@@ -41,7 +41,7 @@ inElectron &&
   })
 
 const router = useRouter()
-const { userListStore } = useStore()
+const { userListStore, microStore } = useStore()
 const message = useMessage()
 // const dialog = useDialog()
 const tip = import.meta.env.VITE_LOGIN_TIP || ''
@@ -538,6 +538,7 @@ function handleSendCode() {
 }
 .tip {
   position: fixed;
+  padding: 0 36px;
   top: 24px;
   margin-top: 24px;
   font-size: 24px;
@@ -612,6 +613,12 @@ function handleSendCode() {
   a {
     cursor: pointer;
     color: plum;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .login {
+    max-width: 300px;
   }
 }
 </style>

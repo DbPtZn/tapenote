@@ -81,7 +81,7 @@ const inputEvent = (ev: any) => {
   let inputVal = ev.target.innerText
   if (regexg.test(inputVal)) {
     // 特殊标点符号如 "/" 可能会导致导出时将部分标题解析成目录
-    message.warning('标题中不应包含特殊英文符号或空格')
+    message.warning('标题中不应包含以下任何字符：< > : " / \\ | ? *')
     inputVal = inputVal.replace(regex, '')
     textarea.value.innerText = inputVal
   }

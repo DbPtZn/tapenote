@@ -10,7 +10,7 @@ import { UserOption } from './types'
 import { useDropdown } from './hooks/_index'
 import { SettingsRound, LocalLibraryRound,  History, Blogger } from '@/components'
 import { AddFilled, FaceFilled } from '@vicons/material'
-import Draggable from 'vuedraggable'
+import { VueDraggable } from 'vue-draggable-plus'
 import { useRouter } from 'vue-router'
 import Container from './private/Container.vue'
 import BloggerOption from './private/BloggerOption.vue'
@@ -33,7 +33,17 @@ const state = reactive({
 // 移除 sessionStorage 以外的所有缓存（刷新页面等意外退出时，无法及时保存缓存，会导致缓存与实际数据不一致）
 // FIXME  不建议在这里清理所有 localStorage ，这会导致刷新以后的所有 localStorage 都被清理掉。
 // 这不是优雅的解决方案，如果后续有其它地方需要用到 localstorage,会导致那些缓存也失效
-localStorage.clear()
+// localStorage.clear()
+
+// fill sessionStorage
+Object.entries(localStorage).map(([key, value]) => {
+  if (key.startsWith('SSO:')) {
+    sessionStorage.setItem(key, value)
+  }
+  if (key.startsWith('Server:')) {
+    sessionStorage.setItem(key, value)
+  }
+})
 
 onMounted(() => {
   // 1.初始化时，先根据 sessionStorage 填充用户信息
@@ -44,6 +54,11 @@ onMounted(() => {
       // return shell.useLogin() // 必须在 onMounted 后使用
       return router.push(RoutePathEnum.LOGIN)
     }
+    // 3. 意外刷新或重载时清理不必要的缓存
+    userListStore.data.forEach(user => {
+      const key = `Folder:${user.account}&${user.hostname}`
+      localStorage.removeItem(key)
+    })
     // 4. 有用户登录的时候，自动补位
     userListStore.autoFilling()
   })
@@ -250,14 +265,12 @@ onErrorCaptured(err => {
   <Container @collapse="ev => emits('collapse', ev)">
     <div class="sidenav">
       <div class="header">
-        <Draggable v-if="state.userOption" class="draggable" v-model="userOptions" :itemKey="'key'" @change="userListStore.moveSequence">
-          <template #item="{ element }">
-            <div class="btn user-option" :key="element.key" :title="element.nickname" @click="element.onClick(element)" @contextmenu="handleContextMenu($event, element)">
-              <img class="avatar" v-if="element.avatar" :src="element.avatar" alt="" @error="handleError" />
-              <n-icon v-if="!element.avatar" :component="element.defaultIcon" :size="24" />
-            </div>
-          </template>
-        </Draggable>
+        <VueDraggable v-if="state.userOption" class="draggable" v-model="userOptions" :itemKey="'key'" @end="userListStore.moveSequence($event)">
+          <div class="btn user-option" v-for="element in userOptions" :key="element.key" :data-account="element.account" :data-hostname="element.hostname" :title="element.nickname" @click="element.onClick(element)" @contextmenu="handleContextMenu($event, element)">
+            <img class="avatar" v-if="element.avatar" :src="element.avatar" alt="" @error="handleError" />
+            <n-icon v-if="!element.avatar" :component="element.defaultIcon" :size="24" />
+          </div>
+        </VueDraggable>
         <!-- 添加用户按钮： 最多同时登录五个账户 -->
         <div v-if="userOptions.length < 5" class="btn user-option" :title="'添加'" @click="handleAddUser">
           <!-- <DpzIcon :icon="`${MaterialTypeEnum.FILLED}add`" :size="24" /> -->

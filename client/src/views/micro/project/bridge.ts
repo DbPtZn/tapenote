@@ -19,10 +19,17 @@ export class Bridge {
   animeState: AnimeStateProvider | null = null
   animeUtils: AnimeUtilsProvider | null = null
   outlineService: OutlineService | null = null
+
+  private editableEvent: Subject<boolean> = new Subject()
+  onEditable: Observable<boolean> = this.editableEvent.asObservable()
+  
   private editorReadyEvent: Subject<any> = new Subject()
   onEditorReady: Observable<Editor> = this.editorReadyEvent.asObservable()
-  private toolbarCollapseEvent: Subject<any> = new Subject()
-  onToolbarCollapse: Observable<any> = this.toolbarCollapseEvent.asObservable()
+  // private toolbarCollapseEvent: Subject<any> = new Subject()
+  // onToolbarCollapse: Observable<any> = this.toolbarCollapseEvent.asObservable()
+
+  private saveEvent: Subject<any> = new Subject()
+  onSave: Observable<any> = this.saveEvent.asObservable()
   private saveStartEvent: Subject<any> = new Subject()
   onSaveStart: Observable<any> = this.saveStartEvent.asObservable()
   private saveEndEvent: Subject<any> = new Subject()
@@ -53,8 +60,16 @@ export class Bridge {
     this.outlineService = editor.get(OutlineService)
   }
 
-  handleToolbarCollapse() {
-    this.toolbarCollapseEvent.next('')
+  // handleToolbarCollapse() {
+  //   this.toolbarCollapseEvent.next('')
+  // }
+
+  handleSave() {
+    this.saveEvent.next('')
+  }
+
+  handleEditable(is: boolean) {
+    this.editableEvent.next(is)
   }
 
   handleSaveStart() {
@@ -76,9 +91,9 @@ export class Bridge {
   handleSidenoteShow(is: boolean) {
     this.sidenoteShowEvent.next(is)
   }
-  handleSidenoteToolbarCollapse(value: boolean) {
-    this.toolbarCollapseEvent.next(value)
-  }
+  // handleSidenoteToolbarCollapse(value: boolean) {
+  //   this.toolbarCollapseEvent.next(value)
+  // }
 
   handleOutlineShow() {
     this.outlineService?.handleExpand()

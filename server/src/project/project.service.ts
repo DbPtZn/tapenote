@@ -368,7 +368,7 @@ export class ProjectService {
   async input(dto: InputProjectDto, userId: string, dirname: string) {
     try {
       const { lib, title, content, cover, penname, email, homepage } = dto
-      // checkTitle(title)
+      checkTitle(title)
       const user = await this.usersRepository.findOneBy({ id: userId })
       // console.log(dto.folderId)
       const folderId = dto.folderId ? dto.folderId : user.dir[lib]
@@ -409,7 +409,7 @@ export class ProjectService {
     try {
       const project = await this.projectsRepository.findOne({
         where: { id, userId, removed: RemovedEnum.NEVER },
-        relations: ['fragments']
+        relations: ['fragments', 'folder']
       })
       // 补全路径
       switch (project.lib) {
@@ -431,6 +431,7 @@ export class ProjectService {
           project.audio = this.storageService.getResponsePath(project.audio, dirname)
           break
       }
+      // console.log('project folder:', project.folder)
       return project
     } catch (error) {
       throw error
@@ -1187,7 +1188,7 @@ function subtitleProcessing(transcriptGroup: string[][], fragmentDurationGroup: 
 
 /** 检查标题是否合规 */
 function checkTitle(title: string) {
-  const regex = /[!"#&$'()*./:<>?\^`|\s]/
+  const regex = /[<>:"/\\|?*]/
   if (regex.test(title)) {
     throw new Error('标题中包含非法字符')
   }

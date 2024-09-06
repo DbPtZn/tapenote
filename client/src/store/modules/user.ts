@@ -78,8 +78,9 @@ export const useUserStore = defineStore('userStore', {
     /** SubmissionConfig */
     addSubmissionConfig() {
       return this.creatorApi().user.addSubmissionConfig<{ config: SubmissionConfig }>().then(res => {
-        console.log(res.data)
+        // console.log(res.data)
         this.submissionConfig.push(res.data.config)
+        this.saveCache()
         return res.data.config
       })
     },
@@ -88,6 +89,7 @@ export const useUserStore = defineStore('userStore', {
         this.submissionConfig.some((item, index, arr) => {
           if (item.id === id) {
             arr.splice(index, 1)
+            this.saveCache()
             return true
           }
         })
@@ -98,6 +100,7 @@ export const useUserStore = defineStore('userStore', {
         this.submissionConfig.some((item, index, arr) => {
           if (item.id === dto.id) {
             arr[index] = dto
+            this.saveCache()
             return true
           }
         })
@@ -108,6 +111,7 @@ export const useUserStore = defineStore('userStore', {
       return this.creatorApi().user.addSubscriptionConfig<{ config: SubscriptionConfig }>().then(res => {
         console.log(res.data)
         this.subscriptionConfig.push(res.data.config)
+        this.saveCache()
         return res.data.config
       })
     },
@@ -116,6 +120,7 @@ export const useUserStore = defineStore('userStore', {
         this.subscriptionConfig.some((item, index, arr) => {
           if (item.id === id) {
             arr.splice(index, 1)
+            this.saveCache()
             return true
           }
         })
@@ -126,6 +131,7 @@ export const useUserStore = defineStore('userStore', {
         this.subscriptionConfig.some((item, index, arr) => {
           if (item.id === dto.id) {
             arr[index] = dto
+            this.saveCache()
             return true
           }
         })

@@ -51,10 +51,11 @@
     "vue": "^3.4.21",
     "vue-draggable-plus": "^0.5.0",
     "vue-router": "^4.3.2",
-    "vuedraggable": "4.1.0"
+    "vue3-touch-events": "^4.2.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",
+    "@iconify/vue": "^4.1.2",
     "@types/animejs": "^3.1.12",
     "@types/element-resize-detector": "^1.1.6",
     "@types/howler": "^2.2.11",
@@ -70,6 +71,7 @@
     "sass": "^1.76.0",
     "typescript": "^5.2.2",
     "unplugin-vue-components": "^0.27.0",
+    "vconsole": "^3.15.1",
     "vite": "^5.1.6",
     "vite-plugin-dts": "^3.9.0",
     "vite-plugin-electron": "^0.28.6",

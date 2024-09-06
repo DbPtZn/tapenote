@@ -30,5 +30,17 @@ export default defineConfig(({ command, mode }) => {
         '@': path.resolve(__dirname, 'src') // 路径别名
       }
     },
+    server: {
+      host: '0.0.0.0',
+      port: 8080,
+      open: true,
+      // proxy: {
+      //   '/api': {
+      //     target: 'http://localhost:3000',
+      //     changeOrigin: true,
+      //     rewrite: (path) => path.replace(/^\/api/, '')
+      //   }
+      // }
+    }
   }
 })

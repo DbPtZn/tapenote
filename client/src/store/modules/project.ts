@@ -78,6 +78,11 @@ interface HistoryCourse {
   }
 }
 
+interface Folder {
+  id: string
+  name: string
+}
+
 export interface Project {
   account: string
   hostname: string
@@ -89,6 +94,7 @@ export interface Project {
   lib: LibraryEnum
   dirname: string
   folderId: string
+  folder: Folder
   title: string
   content: string
   abbrev: string
@@ -140,7 +146,7 @@ export const useProjectStore = defineStore('projectStore', {
     create(folderId: string, lib: LibraryEnum, account: string, hostname: string) {
       const { userListStore } = useStore()
       const user = userListStore.get(account, hostname)!
-      console.log(user)
+      // console.log(user)
       const author = { penname: user.nickname, email: user.email, homepage: user.homepage }
       // console.log(author)
       return this.creatorApi(account, hostname).project.create<Project>({ folderId, lib, ...author }).then(res => {
@@ -228,6 +234,7 @@ export const useProjectStore = defineStore('projectStore', {
         lib: data.lib || '',
         dirname: data.dirname || '',
         folderId: data.folderId || '',
+        folder: data.folder || { id: '', name: '' },
         title: data.title || '',
         content: data.content || '',
         abbrev: data.abbrev || '',

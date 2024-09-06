@@ -12,11 +12,11 @@ import { Footer } from '../layout'
 type Subfile = NonNullable<typeof folderStore.subfiles>[0]
 type Subfolder = NonNullable<typeof folderStore.subfolders>[0]
 
-const { folderTreeStore, userStore, folderStore } = useStore()
+const { folderStore } = useStore()
 const themeVars = useThemeVars()
-const id = computed(() => router.currentRoute.value.params.id as string)
+const id = computed(() => router.currentRoute.value.query.id as string)
 onMounted(() => {
-  console.log(`当前文件夹id：`, id.value)
+  // console.log(`当前文件夹id：`, id.value)
   if(!id.value) return
   folderStore.fetchAndSet(id.value).then(resp => {
     // 获取文件夹后将文件夹 lib 以及 id 记录到 localStorage
@@ -25,7 +25,7 @@ onMounted(() => {
 })
 
 function handleSubfolderClick(item: Subfolder) {
-  router.push(`${RoutePathEnum.FOLDER}/${item.id}`)
+  router.push(`${RoutePathEnum.FOLDER}?id=${item.id}`)
 }
 
 
@@ -46,7 +46,7 @@ function getCurrentLibIcon(lib: LibraryEnum | undefined) {
 }
 
 function handleSubfileClick(item: Subfile) {
-  router.push(`${RoutePathEnum.PROJECT}/${item.id}`)
+  router.push(`${RoutePathEnum.PROJECT}?id=${item.id}&lib=${item.lib}`)
 }
 
 

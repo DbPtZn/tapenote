@@ -144,7 +144,7 @@ export class CreatorApi {
   }
   
   getServerToken(account: string, hostname: string) {
-    return sessionStorage.getItem(`User:${account}&${hostname}`)
+    return sessionStorage.getItem(`Server:${account}&${hostname}`)
   }
   
   async refreshToken(account: string, hostname: string) {
@@ -163,7 +163,7 @@ export class CreatorApi {
         if(resp?.data?.token) {
           // 刷新成功，重新设置 server-token
           console.log('刷新成功，重新设置 server-token')
-          sessionStorage.setItem(`User:${account}&${hostname}`, resp.data.token)
+          sessionStorage.setItem(`Server:${account}&${hostname}`, resp.data.token)
         }
         // 约定: 比如刷新成功后返回一个值来判断是否刷新成功
         resolve(resp?.data?.type === 'server')

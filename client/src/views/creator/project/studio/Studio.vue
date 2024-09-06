@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import Draggable from 'vuedraggable'
 import { Character, AudioFragment, TTS, ASR, StudioToolbar, SpeakerSelectList, TxtEdit, FragmentTrash, CreateBlankFragment } from './private'
 import useStore from '@/store'
 import { computed, h, inject, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'

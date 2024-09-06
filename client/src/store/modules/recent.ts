@@ -33,7 +33,27 @@ export const useRecentStore = defineStore('recentStore', {
           this.data.push(...data)
         })
     },
+    add(data: Subfile) {
+      console.log('add recent')
+      this.data.unshift(data)
+      console.log(this.data)
+    },
     // 数据更新
+    updateCard(value: string, id: string, type: 'title' | 'content') {
+      // 传入 folderId 参数时，会判断改动的项目是否位于当前开启的文件夹下，否时直接跳出
+      this.data?.some((item, index, arr) => {
+        if (item.id === id) {
+          if (type === 'content') {
+            arr[index].abbrev = value.replace(/<[^>]+>/g, '').slice(0, 100)
+          }
+          else if (type === 'title') {
+            arr[index].title = value
+          }
+          arr[index].updateAt = new Date(Date.now()).toString()
+          return true
+        }
+      })
+    }
   },
   getters: {
     get: (state) => {

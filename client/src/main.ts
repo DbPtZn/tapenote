@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { createApp } from 'vue'
+import { ObjectPlugin, createApp } from 'vue'
 import './style.css'
 // import './style.scss'
 import App from './App.vue'
@@ -10,6 +10,7 @@ import router from './router'
 // import 'vfonts/Lato.css'
 // 等宽字体
 import 'vfonts/FiraCode.css'
+import Vue3TouchEvents from 'vue3-touch-events'
 
 /** Pinia */
 const pinia = createPinia()
@@ -22,5 +23,6 @@ const app = createApp(App)
 
 app.use(router)
 app.use(pinia)
+app.use(Vue3TouchEvents as ObjectPlugin)
 app.mount('#app')
 

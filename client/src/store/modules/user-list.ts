@@ -5,6 +5,7 @@ import { defineStore } from 'pinia'
 import jsrsasign from 'jsrsasign'
 import useStore from '..'
 import axios from 'axios'
+import { SortableEvent } from 'vue-draggable-plus'
 export interface SubmissionConfig {
   id: string
   name: string
@@ -83,8 +84,8 @@ export const useUserListStore = defineStore('userListStore', {
             if (!res.data) reject('登录失败')
 
             // 存储 sso-token 或 server-token （ 若存储了 sso-token, 则会在下一次请求 server 时触发 refreshToken，自动获取 server-token ）
-            sessionStorage.setItem(res.data.type === 'sso' ? `SSO:${params.account}&${hostname}` : `User:${params.account}&${hostname}`, res.data.token as string)
-
+            sessionStorage.setItem(res.data.type === 'sso' ? `SSO:${params.account}&${hostname}` : `Server:${params.account}&${hostname}`, res.data.token as string)
+            localStorage.setItem(res.data.type === 'sso' ? `SSO:${params.account}&${hostname}` : `Server:${params.account}&${hostname}`, res.data.token as string)
             // 创建用户请求实例
             creator.createCreatorApi(params.account, hostname)
             this.fetch(params.account, hostname).then(state => {
@@ -109,12 +110,15 @@ export const useUserListStore = defineStore('userListStore', {
       this.data.splice(index, 1)
       // 登出时清理缓存
       const ssoKey = `SSO:${account}&${hostname}`
+      const serverKey = `Server:${account}&${hostname}`
       const userkey = `User:${account}&${hostname}`
       const folderTreeKey = `FolderTree:${account}&${hostname}`
       const folderKey = `Folder:${account}&${hostname}`
       localStorage.removeItem(userkey) // 这个存的是用户信息
       sessionStorage.removeItem(ssoKey)
-      sessionStorage.removeItem(userkey) // 这个存的是用户 token
+      sessionStorage.removeItem(serverKey)
+      localStorage.removeItem(ssoKey)
+      localStorage.removeItem(serverKey)
       localStorage.removeItem(folderTreeKey)
       localStorage.removeItem(folderKey)
       projectStore.cleanCacheByUser(account, hostname)
@@ -142,7 +146,7 @@ export const useUserListStore = defineStore('userListStore', {
           resolve(state)
           return
         }
-        const key = `User:${account}&${hostname}`
+        const key = `Server:${account}&${hostname}`
         const token = sessionStorage.getItem(key)
         const userStateStr = localStorage.getItem(key)
         // 第二优先：使用缓存中的用户信息
@@ -194,12 +198,13 @@ export const useUserListStore = defineStore('userListStore', {
     set(data: UserState) {
       const resourceDomain = data.resourceDomain ? data.resourceDomain : data.hostname
       // console.log('resourceDomain:', resourceDomain)
+      const avatar = data.avatar ? data.avatar.includes(resourceDomain) ? data.avatar : resourceDomain + data.avatar : ''
       const state: UserState = {
         resourceDomain: resourceDomain,
         hostname: data.hostname,
         account: data.account,
         nickname: data.nickname,
-        avatar: data.avatar ? resourceDomain + data.avatar : '',
+        avatar: avatar,
         desc: data.desc || '',
         email: data.email || '',
         homepage: data.homepage || '',
@@ -253,7 +258,7 @@ export const useUserListStore = defineStore('userListStore', {
     async checkToken(account: string, hostname: string) {
       // console.log('检查 token 是否即将过期')
       const ssokey = `SSO:${account}&${hostname}`
-      const serverkey = `User:${account}&${hostname}`
+      const serverkey = `Server:${account}&${hostname}`
       const ssoToken = sessionStorage.getItem(ssokey)
       // 存在 sso-token 时不需要主动更新 server-token
       if(ssoToken) {
@@ -277,6 +282,7 @@ export const useUserListStore = defineStore('userListStore', {
           }).then(resp => {
             if(resp?.data?.type === 'sso') {
               sessionStorage.setItem(ssokey, resp?.data?.token as string)
+              localStorage.setItem(ssokey, resp?.data?.token as string)
               console.log('更新 sso-token 成功')
             }
           }).catch(err => {
@@ -301,6 +307,7 @@ export const useUserListStore = defineStore('userListStore', {
           }).then(resp => {
             if(resp?.data?.type === 'server') {
               sessionStorage.setItem(serverkey, resp?.data?.token as string)
+              localStorage.setItem(serverkey, resp?.data?.token as string)
               console.log('更新 server-token 成功')
             }
           }).catch(err => {
@@ -310,58 +317,81 @@ export const useUserListStore = defineStore('userListStore', {
       }
     },
     fillInfo() {
-      /** 补全排序信息 */
-      const sequence = sessionStorage.getItem('sequence')
-      this.sequence = sequence ? JSON.parse(sequence) : []
-      if (this.sequence.length === 0) {
+      return new Promise(async (resolve, reject) => {
+        /** 补全排序信息 */
+        const sequence = sessionStorage.getItem('sequence')
+        this.sequence = sequence ? JSON.parse(sequence) : []
+        if (this.sequence.length === 0) {
+          Object.keys(sessionStorage).map(key => {
+            if (key.startsWith('Server:') || key.startsWith('SSO:')) {
+              let suffix = ''
+              if(key.startsWith('SSO:')) {
+                suffix = key.substring(4)
+              } else {
+                suffix = key.substring(7)
+              }
+              const arr = suffix.split('&')
+              const account = arr[0]
+              const hostname = arr[1]
+              // 补全排序信息
+              this.addSequence(account, hostname)
+            }
+          })
+        }
+        /** 补全用户信息 */
+        const userSessionKeys: string[] = []
         Object.keys(sessionStorage).map(key => {
-          const prefix = key.substring(0, 5)
-          if (prefix === 'User:') {
-            const arr = key.substring(5).split('&')
+          if (key.startsWith('Server:') || key.startsWith('SSO:')) {
+            // const prefix = key.substring(0, 7)
+            let suffix = ''
+            if(key.startsWith('SSO:')) {
+              suffix = key.substring(4)
+            } else {
+              suffix = key.substring(7)
+            }
+            // 创建用户请求实例
+            const arr = suffix.split('&')
             const account = arr[0]
             const hostname = arr[1]
-            // 补全排序信息
-            this.addSequence(account, hostname)
+            this.checkToken(account, hostname)
+            creator.createCreatorApi(account, hostname)
+            // 记录用户缓存的 session key
+            userSessionKeys.push(`User:${suffix}`)
           }
         })
-      }
-      /** 补全用户信息 */
-      const userSessionKeys: string[] = []
-      Object.keys(sessionStorage).map(key => {
-        const prefix = key.substring(0, 5)
-        if (prefix === 'User:') {
-          // 创建用户请求实例
-          const arr = key.substring(5).split('&')
-          const account = arr[0]
-          const hostname = arr[1]
-          this.checkToken(account, hostname)
-          creator.createCreatorApi(account, hostname)
-          // 记录用户缓存的 session key
-          userSessionKeys.push(key)
+
+        const promiseArr: Promise<any>[] = []
+        for (let i = 0; i < userSessionKeys.length; i++) {
+          const userStateStr = localStorage.getItem(userSessionKeys[i])
+          if (!userStateStr) {
+            const suffix = userSessionKeys[i].substring(5)
+            const arr = suffix.split('&')
+            const account = arr[0]
+            const hostname = arr[1]
+            promiseArr.push(
+              this.fetch(account, hostname).then(state => {
+                state && this.set(state)
+              })
+            )
+          } else {
+            const state = JSON.parse(userStateStr)
+            this.set(state)
+          }
+        }
+        if(promiseArr.length !== 0) {
+          await Promise.all(promiseArr).then(() => {
+            resolve('')
+          })
+        } else {
+          resolve('')
         }
       })
-      const promiseArr: Promise<any>[] = []
-      for (let i = 0; i < userSessionKeys.length; i++) {
-        const userStateStr = localStorage.getItem(userSessionKeys[i])
-        if (!userStateStr) {
-          const suffix = userSessionKeys[i].substring(5)
-          const arr = suffix.split('&')
-          const account = arr[0]
-          const hostname = arr[1]
-          promiseArr.push(
-            this.fetch(account, hostname).then(state => {
-              state && this.set(state)
-            })
-          )
-        }
-      }
-      return Promise.all(promiseArr)
     },
     autoFilling() {
       if (this.data.length === 0) return
       const { folderTreeStore, folderStore, userStore } = useStore()
       if (!userStore.account || !userStore.hostname) {
-        const data = this.data[this.data.findIndex(item => `User:${item.account}&${item.hostname}` === this.sequence[0])]
+        const data = this.data[this.data.findIndex(item => `Server:${item.account}&${item.hostname}` === this.sequence[0])]
         // 自动补位时按排序第一的补位，如果不存在，则按缓存的第一补位
         data ? userStore.$patch(data) : userStore.$patch(this.data[0])
         // 获取缓存的当前用户的目录树状态并设置
@@ -374,13 +404,16 @@ export const useUserListStore = defineStore('userListStore', {
     },
     checkCaches() {
       Object.keys(localStorage).map(key => {
-        const prefix = key.substring(0, 5)
-        if (prefix === 'User:') {
-          const token = sessionStorage.getItem(key)
+        // console.log(prefix, suffix)
+        if (key.startsWith('User:')) {
+          // const prefix = key.substring(0, 5)
+          const suffix = key.substring(5)
+          const token = sessionStorage.getItem(`Server:${suffix}`)
           if (!token) {
-            const arr = key.substring(5).split('&')
+            const arr = suffix.split('&')
             const account = arr[0]
             const hostname = arr[1]
+            console.error('token 已过期，请重新登录！')
             this.logout(account, hostname)
           }
         }
@@ -400,30 +433,31 @@ export const useUserListStore = defineStore('userListStore', {
       localStorage.removeItem(key)
     },
     queryCache(account: string, hostname: string) {
-      const key = `User:${account}&${hostname}`
-      const token = sessionStorage.getItem(key)
-      const user = localStorage.getItem(key)
+      const token = sessionStorage.getItem(`Server:${account}&${hostname}`)
+      const user = localStorage.getItem(`User:${account}&${hostname}`)
       if (token && user) return { token, user }
       return null
     },
     addSequence(account: string, hostname: string) {
-      const key = `User:${account}&${hostname}`
+      const key = `Server:${account}&${hostname}`
       if (this.sequence.includes(key)) return
       this.sequence.push(key)
       sessionStorage.setItem('sequence', JSON.stringify(this.sequence))
     },
     removeSequence(account: string, hostname: string) {
-      const key = `User:${account}&${hostname}`
+      const key = `Server:${account}&${hostname}`
       this.sequence.splice(this.sequence.indexOf(key), 1)
       sessionStorage.setItem('sequence', JSON.stringify(this.sequence))
     },
-    moveSequence(args: { moved: { element: any, oldIndex: number, newIndex: number } }) {
-      const { element, oldIndex, newIndex } = args.moved
+    moveSequence(event: SortableEvent, element?: { account: string, hostname: string }) {
+      const { item, oldIndex, newIndex } = event
+      const account = item.dataset.account
+      const hostname = item.dataset.hostname
       const str = sessionStorage.getItem('sequence')
       if (!str) return
       const newSequence = JSON.parse(str)
       newSequence.splice(oldIndex, 1)
-      const key = `User:${element.account}&${element.hostname}`
+      const key = `Server:${account}&${hostname}`
       newSequence.splice(newIndex, 0, key)
       sessionStorage.setItem('sequence', JSON.stringify(newSequence))
     },
@@ -441,24 +475,8 @@ export const useUserListStore = defineStore('userListStore', {
     getData(state) {
       return state.data.map((item) => {
         return {
-          key: `User:${item.account}&${item.hostname}`,
+          key: `Server:${item.account}&${item.hostname}`,
           ...item
-          // hostname: item.hostname || '',
-          // account: item.account || '',
-          // nickname: item.nickname || '',
-          // avatar: item.avatar || '',
-          // desc: item.desc || '',
-          // email: item.email || '',
-          // phone: item.phone || '',
-          // homepage: item.homepage || '',
-          // dir: {
-          //   note: item.dir.note || '',
-          //   course: item.dir.course || '',
-          //   procedure: item.dir.procedure || ''
-          // },
-          // config: item.config || [],
-          // submissionConfig: item.submissionConfig || [],
-          // subscriptionConfig: item.subscriptionConfig || []
         }
       }).sort((a, b) => {
         return state.sequence.indexOf(a.key) - state.sequence.indexOf(b.key)

@@ -13,7 +13,7 @@ const microRoutes: Array<RouteRecordRaw> = [
         component: () => import(/* webpackChunkName: "about" */ '../views/micro/home/Home.vue'),
       },
       {
-        path: `${RoutePathEnum.FOLDER}/:id`,
+        path: `${RoutePathEnum.FOLDER}`,
         name: RouteNameEnum.FOLDER,
         component: () => import(/* webpackChunkName: "about" */ '../views/micro/folder/Folder.vue')
       },

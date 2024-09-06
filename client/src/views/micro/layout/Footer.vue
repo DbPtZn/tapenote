@@ -14,13 +14,17 @@ import {
   AccountCircleOutlined,
   EmergencyShareOutlined
 } from '@vicons/material'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import useStore from '@/store'
 import router from '@/router';
 import { LibraryEnum, RouteNameEnum, RoutePathEnum } from '@/enums'
 const { microStore, userStore } = useStore()
 const themeVars = useThemeVars()
 
+onMounted(() => {
+  // console.log(router.currentRoute.value.name)
+  microStore.tab = router.currentRoute.value.name as RouteNameEnum
+})
 function handleClick(tab: RouteNameEnum) {
   microStore.tab = tab
   // Folder 特别处理
@@ -30,9 +34,9 @@ function handleClick(tab: RouteNameEnum) {
     if(!id) {
       // 默认打开根目录
       const rootId = userStore.getDirByLib(currentLib)
-      return router.push(`${RoutePathEnum.FOLDER}/${rootId}`)
+      return router.push(`${RoutePathEnum.FOLDER}?id=${rootId}`)
     } else {
-      return router.push(`${RoutePathEnum.FOLDER}/${id}`)
+      return router.push(`${RoutePathEnum.FOLDER}?id=${id}`)
     }
   }
   router.push({ name: tab })
@@ -58,6 +62,10 @@ function handleClick(tab: RouteNameEnum) {
 
 <style lang="scss" scoped>
 .footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  
   height: 63px;
   min-height: 63px;
   background-color: v-bind('themeVars.cardColor');

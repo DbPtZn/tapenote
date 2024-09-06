@@ -7,6 +7,8 @@ import { useThemeVars } from 'naive-ui'
 import { Bridge } from './bridge'
 import { LibraryEnum } from '@/enums'
 import useStore from '@/store'
+import vconsole from 'vconsole'
+const vc = new vconsole()
 const bridge = new Bridge()
 provide('bridge', bridge)
 const id = computed(() => router.currentRoute.value.query.id as string)
@@ -20,9 +22,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <Header />
+  <Header :id="id" :lib="lib" :account="userStore.account" :hostname="userStore.hostname" />
   <div class="project">
-    <Editor :id="id" :account="userStore.account" :hostname="userStore.hostname" :lib="lib" />
+    <Editor :id="id" :lib="lib" :account="userStore.account" :hostname="userStore.hostname"  />
   </div>
 </template>
 

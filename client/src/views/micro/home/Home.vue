@@ -14,14 +14,14 @@ const { recentStore } = useStore()
 const themeVars = useThemeVars()
 const message = useMessage()
 const scrollerRef = ref<HTMLElement>()
-const data = computed(() => recentStore.get)
+// const data = computed(() => recentStore.get)
 onMounted(() => {
   if (recentStore.get.length === 0) {
     recentStore
       .fetchAndSet({
         lib: LibraryEnum.NOTE,
         skip: 0,
-        take: 10
+        take: 20 // 首次加载获取20条数据（太少的话可能无法撑开滚动条，导致滚动加载无法触发）
       })
       .catch(err => {
         console.log(err)
@@ -35,7 +35,7 @@ function handleScroll(ev) {
   const scrollerRef = ev.target as HTMLElement
   if (scrollerRef.clientHeight + scrollerRef.scrollTop >= scrollerRef.scrollHeight) {
     recentStore.fetchAndSet({
-      skip: data.value.length,
+      skip: recentStore.get.length,
       take: 8,
       lib: recentStore.currentLib
     })
@@ -64,11 +64,11 @@ function handleClick(item: RecentFile) {
   <Header />
   <div ref="scrollerRef" class="home" @scroll="handleScroll">
     <div class="list">
-      <div class="item" v-for="item in data" :key="item.id" @click="handleClick(item)">
+      <div class="item" v-for="item in recentStore.get" :key="item.id" @click="handleClick(item)">
         <div class="wrapper">
           <div class="title">
             <n-icon class="title-icon" :component="getCurrentLibIcon(item.lib)" :size="18" />
-            <span style="margin-left: 6px; margin-top: 1px"> {{ item.title }}</span>
+            <span style="margin-left: 6px; margin-top: 1px"> {{ item.title ? item.title : '无标题' }}</span>
           </div>
           <div class="content">{{ item.abbrev }}</div>
           <div class="meta">
