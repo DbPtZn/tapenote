@@ -110,7 +110,7 @@ function handleClick(item: RecentFile) {
 .list {
   padding-bottom: 64px;
   .touch-bottom {
-    margin: 20px;
+    margin-top: 20px;
     text-align: center;
   }
 }

@@ -17,7 +17,10 @@ import BloggerOption from './private/BloggerOption.vue'
 import AddBlogger from './private/AddBlogger.vue'
 import { markRaw } from 'vue'
 const emits = defineEmits<{
-  collapse: [number]
+  collapse: [boolean]
+}>()
+defineProps<{
+  width: number
 }>()
 const themeVars = useThemeVars()
 const message = useMessage()
@@ -262,7 +265,7 @@ onErrorCaptured(err => {
 </script>
 
 <template>
-  <Container @collapse="ev => emits('collapse', ev)">
+  <Container :width="width" @collapse="ev => emits('collapse', ev)">
     <div class="sidenav">
       <div class="header">
         <VueDraggable v-if="state.userOption" class="draggable" v-model="userOptions" :itemKey="'key'" @end="userListStore.moveSequence($event)">
