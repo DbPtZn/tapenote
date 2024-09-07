@@ -9,6 +9,7 @@ import Header from './Header.vue'
 import dayjs from 'dayjs'
 import router from '@/router'
 import { Footer } from '../layout'
+import _ from 'lodash'
 type RecentFile = (typeof recentStore.data)[0]
 const { recentStore } = useStore()
 const themeVars = useThemeVars()
@@ -30,15 +31,28 @@ onMounted(() => {
   }
 })
 
+const debounceFunc = _.debounce(func => func(), 1000)
+const loading = ref(false)
+const noMore = ref(false)
 /** 滚动加载 */
 function handleScroll(ev) {
   const scrollerRef = ev.target as HTMLElement
   if (scrollerRef.clientHeight + scrollerRef.scrollTop >= scrollerRef.scrollHeight) {
-    recentStore.fetchAndSet({
-      skip: recentStore.get.length,
-      take: 8,
-      lib: recentStore.currentLib
+    if(noMore.value) return
+    loading.value = true
+    debounceFunc(() => {
+      recentStore.fetchAndSet({
+        skip: recentStore.get.length,
+        take: 8,
+        lib: recentStore.currentLib
+      }).then(result => {
+        loading.value = false
+        noMore.value = result
+      }).catch(() => {
+        loading.value = false
+      })
     })
+   
   }
 }
 
@@ -76,6 +90,12 @@ function handleClick(item: RecentFile) {
           </div>
         </div>
       </div>
+      <div v-if="loading" class="touch-bottom">
+        加载中...
+      </div>
+      <div v-if="noMore" class="touch-bottom">
+        没有更多了 🤪
+      </div>
     </div>
   </div>
   <Footer />
@@ -86,6 +106,13 @@ function handleClick(item: RecentFile) {
   height: 100%;
   width: 100%;
   overflow-y: auto;
+}
+.list {
+  padding-bottom: 64px;
+  .touch-bottom {
+    margin: 20px;
+    text-align: center;
+  }
 }
 .item {
   padding: 5px 16px;

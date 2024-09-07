@@ -11,7 +11,7 @@ import { UpdateTitleDto } from './dto/update-title.dto'
 import { UpdateContentDto } from './dto/update-content.dto'
 import { UpdateSidenoteContentDto } from './dto/update-sidenote-content.dto'
 import { FfmpegService } from 'src/ffmpeg/ffmpeg.service'
-import path, { basename } from 'path'
+import path, { basename, extname } from 'path'
 import fs from 'fs'
 import fsx from 'fs-extra'
 import * as UUID from 'uuid'
@@ -27,11 +27,6 @@ import { User } from 'src/user/entities/user.entity'
 import { commonConfig } from 'src/config'
 import { ConfigService } from '@nestjs/config'
 import { UploadService } from 'src/upload/upload.service'
-import {
-  paginate,
-  Pagination,
-  IPaginationOptions,
-} from 'nestjs-typeorm-paginate'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -214,11 +209,8 @@ export class ProjectService {
         .sort((a, b) => {
           return order.indexOf(a.id) - order.indexOf(b.id)
         })
-        // .map(fragment => {
-        //   fragment.audio = this.storageService.getFilePath(fragment.audio, dirname)
-        //   return fragment
-        // })
       
+      // 对音频路径进行处理
       for(const fragment of fragments) {
         // 对于远程路径，先下载到本地后再进行拼接
         if(this.common.enableCOS) {
@@ -267,26 +259,18 @@ export class ProjectService {
       subtitleSequence = subtitleGroup.flat()
       subtitleKeyframeSequence = subtitleKeyframeGroup.flat()
 
-      // 拼接音频片段
-      // const filepath = this.storageService.createFilePath({
-      //   dirname: [userDirname, projectDirname],
-      //   filename: `${randomstring.generate(3)}${new Date().getTime()}.wav`,
-      // })
       // 创建临时地址
       const tempPath = this.storageService.createTempFilePath('.ogg')
-      console.log(group.audioFragments)
-      await this.ffmpegService
-        .concatAudioToOgg(group.audioFragments, tempPath)
-        .then(() => {
-          console.log('拼接成功！')
-          console.log(tempPath)
-        })
-        .catch(err => {
-          console.log(err)
-          throw new Error('拼接音频失败！')
-        })
 
-      // 完成拼接后将缓存的音频片段删除
+      // 拼接音频片段
+      try {
+        await this.ffmpegService.concatAudioToOgg(group.audioFragments, tempPath)
+      } catch (error) {
+        console.log(error)
+        throw new Error('拼接音频失败！')
+      }
+        
+      // 完成拼接后将云存储缓存到本地的音频片段删除
       if(this.common.enableCOS) {
         group.audioFragments.forEach(path => fs.unlinkSync(path))
       }
@@ -294,17 +278,29 @@ export class ProjectService {
       /** 计算合成音频的时长 */
       const duration = await this.ffmpegService.calculateDuration(tempPath)
       console.log(`合成音频时长：${duration}, 片段总时长：${accumDuration}`)
- 
-      /** 存储到数据库/上传音频文件 */
+
+      // 适配移动浏览器 再生成一份 mp3 格式的音频
+      const mp3path = this.storageService.createTempFilePath('.mp3', basename(tempPath))
+      try {
+        await this.ffmpegService.convertToMp3(tempPath, mp3path)
+      } catch (error) {
+        throw new Error(`音频文件转换失败: ${error.message}`)
+      }
+
+      // 存储 mp3 文件 
+      await this.uploadService.upload({
+        filename: basename(mp3path),
+        path: mp3path,
+        mimetype: 'audio/mp3'
+      }, userId, dirname)
+
+      // 存储 ogg 文件
       const filepath = await this.uploadService.upload(
         {
           filename: basename(tempPath),
           path: tempPath,
-          mimetype: 'audio/wma'
-        },
-        userId,
-        dirname
-      )
+          mimetype: 'audio/ogg'
+        }, userId, dirname)
 
       return {
         title: procedure.title,

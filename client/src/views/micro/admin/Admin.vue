@@ -1,12 +1,21 @@
 <script lang="ts" setup>
 import useStore from '@/store'
 import { Footer } from '../layout'
-const { userStore, userListStore } = useStore()
+import { LibraryEnum } from '@/enums';
+const { userStore, userListStore, recentStore, folderStore, folderTreeStore } = useStore()
 
 function handleLogout() {
   const account = userStore.account
   const hostname = userStore.hostname
   userListStore.logout(account, hostname)
+  userStore.$reset()
+  recentStore.$reset()
+  folderStore.$reset()
+  folderTreeStore.$reset()
+  localStorage.removeItem(`${LibraryEnum.NOTE}-folder`)
+  localStorage.removeItem(`${LibraryEnum.COURSE}-folder`)
+  localStorage.removeItem(`${LibraryEnum.PROCEDURE}-folder`)
+  localStorage.removeItem(`currentFolderLib`)
 }
 
 </script>

@@ -37,7 +37,16 @@ export class UploadService {
   //   return this.bucketService.uploadFile(file, filename, dirname)
   // }
 
-  async upload(file: LocalUploadFile, userId: string, dirname: string, quoteId?: string) {
+  /**
+   * 
+   * @param file 
+   * @param userId 
+   * @param dirname 
+   * @param quoteId 
+   * @param removeLocalFile 上传完成后删除本地文件 仅云存储模式下生效
+   * @returns 
+   */
+  async upload(file: LocalUploadFile, userId: string, dirname: string, quoteId?: string, removeLocalFile = true) {
     try {
       const md5 = await this.calculateFileStats(file.path).catch(err => {
         throw new Error('计算文件md5失败')
@@ -50,7 +59,7 @@ export class UploadService {
         console.log('用户上传的文件已存在，直接返回文件路径!')
         return this.storageService.getResponsePath(uploadfile.name, dirname)
       }
-      const filepath = await this.storageService.save(file, dirname).catch(err => {
+      const filepath = await this.storageService.save(file, dirname, removeLocalFile).catch(err => {
         throw new Error('保存文件失败')
       })
       const upload = new UploadFile()

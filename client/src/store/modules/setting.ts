@@ -5,6 +5,7 @@ import { defineStore } from 'pinia'
 interface State {
   theme: typeof darkTheme | null
   isSidebarCollapse: boolean
+  isNavbarCollapse: boolean
   isItemListCollapse: boolean
   isCacheListShow: boolean
 }
@@ -14,6 +15,7 @@ export const useSettingStore = defineStore('settingStore', {
     return {
       theme: darkTheme,
       isSidebarCollapse: false,
+      isNavbarCollapse: import.meta.env.VITE_COLLAPSE_SIDER === 'true',
       isItemListCollapse: false,
       isCacheListShow: false,
     }

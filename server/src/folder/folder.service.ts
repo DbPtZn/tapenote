@@ -11,7 +11,6 @@ import { ProjectService } from 'src/project/project.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { Project } from 'src/project/entities/project.entity'
-import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate'
 
 @Injectable()
 export class FolderService {

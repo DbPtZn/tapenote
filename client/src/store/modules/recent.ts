@@ -31,6 +31,7 @@ export const useRecentStore = defineStore('recentStore', {
         .then(res => {
           const data = res.data
           this.data.push(...data)
+          return data.length === 0
         })
     },
     add(data: Subfile) {

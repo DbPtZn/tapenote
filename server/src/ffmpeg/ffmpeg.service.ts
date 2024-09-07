@@ -38,6 +38,23 @@ export class FfmpegService {
     })
   }
 
+  /** 将音频文件转换成 ogg 格式 (转 mp3 格式会出现输出音频时长不一致的问题) */
+  async convertToMp3(source: string, target: string) {
+    return new Promise<string>((resolve, reject) => {
+      ffmpeg(source)
+        .toFormat('mp3')
+        .save(target)
+        .on('error', function (err) {
+          console.log('An error occurred: ' + err.message)
+          reject(err)
+        })
+        .on('end', function () {
+          // console.log('Processing finished successfully')
+          resolve(target)
+        })
+    })
+  }
+
   createBlankAudio(duration: number, outputPath: string) {
     console.log('创建空白音频')
     return new Promise<string>((resolve, reject) => {
@@ -77,31 +94,31 @@ export class FfmpegService {
     })
   }
 
-  audioformat2(inputPath: string, outputPath: string) {
-    return new Promise<string>((resolve, reject) => {
-      try {
-        ffmpeg()
-          .input(inputPath)
-          .outputOptions('-ac 1')
-          .outputOptions('-ab 16k')
-          .outputOptions('-ar 16000')
-          .save(outputPath)
-          .on('end', function () {
-            // console.log(outputPath)
-            // fs.unlinkSync(inputPath)
-            resolve(outputPath)
-          })
-          .on('error', function (err) {
-            console.log(err)
-            reject(err)
-          })
-      } catch (error) {
-        console.log('格式化音频文件失败：')
-        console.log(error)
-        reject(error)
-      }
-    })
-  }
+  // audioformat2(inputPath: string, outputPath: string) {
+  //   return new Promise<string>((resolve, reject) => {
+  //     try {
+  //       ffmpeg()
+  //         .input(inputPath)
+  //         .outputOptions('-ac 1')
+  //         .outputOptions('-ab 16k')
+  //         .outputOptions('-ar 16000')
+  //         .save(outputPath)
+  //         .on('end', function () {
+  //           // console.log(outputPath)
+  //           // fs.unlinkSync(inputPath)
+  //           resolve(outputPath)
+  //         })
+  //         .on('error', function (err) {
+  //           console.log(err)
+  //           reject(err)
+  //         })
+  //     } catch (error) {
+  //       console.log('格式化音频文件失败：')
+  //       console.log(error)
+  //       reject(error)
+  //     }
+  //   })
+  // }
 
 
   /**

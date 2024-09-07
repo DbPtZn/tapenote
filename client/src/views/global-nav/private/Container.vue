@@ -1,35 +1,31 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useThemeVars } from 'naive-ui'
 import { ArrowLeftFilled, ArrowRightFilled } from '@vicons/material'
+import useStore from '@/store'
 const emits = defineEmits<{
-  collapse: [number]
+  collapse: [boolean]
 }>()
+defineProps<{
+  width: number
+}>()
+const { settingStore } = useStore()
 const themeVars = useThemeVars()
-const isCollapse = ref(false)
+const isCollapse = computed(() => settingStore.isNavbarCollapse)
 const collapseVisible = ref(false)
-const widthVal = ref(64)
-const isDefaultCollape = import.meta.env.VITE_COLLAPSE_SIDER === 'true'
-onMounted(() => {
-  if(!isCollapse.value) emits('collapse', widthVal.value)
-  isDefaultCollape && handleCollapse()
-})
-function handleCollapse(){
-  isCollapse.value = !isCollapse.value
-  widthVal.value = isCollapse.value ? 0 : 64
-  emits('collapse', widthVal.value)
-  // collapseVisible.value = !collapseVisible.value
+function handleCollapse(is: boolean){
+  emits('collapse', is)
 }
 </script>
 
 <template>
-  <div :class="['container']" :style="{ width: widthVal + 'px' }" @mouseover="collapseVisible = true" @mouseleave="collapseVisible = false">
+  <div :class="['container']" :style="{ width: width + 'px' }" @mouseover="collapseVisible = true" @mouseleave="collapseVisible = false">
     <div :class="['content',isCollapse && 'collapse']">
       <slot />
     </div>
 
     <!-- 展开/折叠按钮 -->
-    <div v-if="collapseVisible || isCollapse" class="collapse-btn" @click="handleCollapse">
+    <div v-if="collapseVisible || isCollapse" class="collapse-btn" @click="handleCollapse(!isCollapse)">
       <n-icon v-if="!isCollapse" :component="ArrowLeftFilled" />
       <n-icon v-if="isCollapse" :component="ArrowRightFilled" />
     </div>

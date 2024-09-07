@@ -144,13 +144,14 @@ export const useFolderStore = defineStore('folderStore', {
         const data = res.data
         if (this.id !== 'recently' || this.lib !== data.lib) {
           this.set(data)
-          return
+          return false
         }
         if (this.subfiles && data.subfiles && this.subfiles!.length > 0 && data.id === 'recently') {
           if(this.lib === data.lib) {
             this.subfiles.push(...data.subfiles)
           }
         }
+        return data.subfiles?.length === 0
       })
     },
     getSubfiles(sortType?: SortType) {

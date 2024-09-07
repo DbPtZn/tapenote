@@ -41,7 +41,7 @@ inElectron &&
   })
 
 const router = useRouter()
-const { userListStore, microStore } = useStore()
+const { userListStore, settingStore } = useStore()
 const message = useMessage()
 // const dialog = useDialog()
 const tip = import.meta.env.VITE_LOGIN_TIP || ''
@@ -70,6 +70,16 @@ const rules: FormRules = {
         // console.log(value)
         if (value.includes('&')) return false
         return true
+      },
+      trigger: ['input', 'blur']
+    },
+    {
+      required: true,
+      message: '该账号已登录',
+      validator(rule: FormItemRule, value: string) {
+        const isLogining = userListStore.data.some(item => item.account === value)
+        if(isLogining) settingStore.isNavbarCollapse = false
+        return !isLogining
       },
       trigger: ['input', 'blur']
     }

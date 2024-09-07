@@ -2,11 +2,16 @@
 import useStore from '@/store'
 import { darkThemeOverrides, lightThemeOverrides } from './theme/_api'
 import { GlobalNavView } from '@/views'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import router from '@/router';
 import { RouteNameEnum, RoutePathEnum } from '@/enums';
 const { settingStore, microStore } = useStore()
-const widthVal = ref(0)
+const widthVal = computed(() => {
+  return settingStore.isNavbarCollapse ? 0 : 64
+})
+function handleCollapse() {
+  settingStore.isNavbarCollapse = !settingStore.isNavbarCollapse
+}
 
 /** 判断设备 */
 const userAgent = navigator.userAgent.toLowerCase()
@@ -24,7 +29,7 @@ console.log('当前设备：', microStore.isMobile ? '移动端' : 'PC端')
           <n-notification-provider>
             <n-layout>
               <div ref="rootRef" class="root-page" :data-theme="[settingStore.theme ? 'dark-theme' : 'light-theme']">
-                <GlobalNavView v-show="!microStore.isMobile" @collapse="ev => (widthVal = ev)" />
+                <GlobalNavView v-show="!microStore.isMobile" :width="widthVal" @collapse="handleCollapse" />
                 <div class="router-view" :style="{ width: `calc(100% - ${!microStore.isMobile ? widthVal : 0}px)` }">
                   <router-view />
                 </div>

@@ -12,6 +12,7 @@ import ItemListContainer from './ItemListContainer.vue'
 import { useItemListDropDown, useDrag } from './hooks/_index'
 import { DropdownOption } from 'naive-ui/es/dropdown/src/interface'
 import { ArrowDropDownRound, ChevronLeftFilled, MoreHorizFilled } from '@vicons/material'
+import _ from 'lodash'
 const { folderStore, folderTreeStore, dragStore, userStore, projectStore } = useStore()
 const shell = useShell<CreatorShell>()
 const themeVars = useThemeVars()
@@ -148,15 +149,28 @@ function handleRecentlySelected(value: LibraryEnum) {
     })
   }
 }
+
 // 最近编辑模式下滚动加载
+const debounceFunc = _.debounce(func => func(), 1000) // 防抖
+const loading = ref(false)
+// const noMore = ref(false) //TODO 没有持久缓存，切换文件夹当前缓存丢失但后 noMore 也没有重置，待优化
 function handleScroll(ev) {
   if (folderStore.id !== 'recently') return
   const scrollerRef = ev.target as HTMLElement
   if (scrollerRef.clientHeight + scrollerRef.scrollTop >= scrollerRef.scrollHeight) {
-    folderStore.fetchRecentlyAndSet({
-      skip: folderStore.subfiles!.length,
-      take: 8,
-      lib: folderStore.lib!
+    // if(noMore.value) return
+    loading.value = true
+    debounceFunc(() => {
+      folderStore.fetchRecentlyAndSet({
+        skip: folderStore.subfiles!.length,
+        take: 8,
+        lib: folderStore.lib!
+      }).then(end => {
+        loading.value = false
+        // noMore.value = end
+      }).catch(() => {
+        loading.value = false
+      })
     })
   }
 }
@@ -249,6 +263,12 @@ watch(() => folderStore.lib, (v) => {
             @to-folder="fileMethods.handleToFolder($event, item.lib)"
             @contextmenu="handleContextmenu($event, 'file', item)"
           />
+          <div v-if="loading" class="touch-bottom">
+            加载中...
+          </div>
+          <!-- <div v-if="noMore" class="touch-bottom">
+            没有更多了 🤪
+          </div> -->
         </div>
       </div>
     </div>
@@ -309,8 +329,14 @@ watch(() => folderStore.lib, (v) => {
   padding: 0px 12px;
   box-sizing: border-box;
   .list {
-    height: 100%;
+    // height: 100%;
     width: 100%;
+    box-sizing: border-box;
+    padding-bottom: 60px;
+    .touch-bottom {
+      margin-top: 50px;
+      text-align: center;
+    }
   }
 }
 

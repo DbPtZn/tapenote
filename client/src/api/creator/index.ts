@@ -65,6 +65,7 @@ export class CreatorApi {
         return response
       },
       async (err: AxiosError<any>) => {
+        if (err.code === 'ERR_NETWORK') return alert('无法连接到服务器')
         if (err.response?.status) {
           switch (err.response?.status) {
             case 401:

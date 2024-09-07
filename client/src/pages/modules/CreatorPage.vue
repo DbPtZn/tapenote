@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import useStore from '@/store'
 import { CreatorView } from '@/views'
-const { settingStore } = useStore()
+const { microStore } = useStore()
 </script>
 
 <template>
   <div class="creator-page">
-    <CreatorView v-if="!settingStore.isMobile" />
+    <CreatorView v-if="!microStore.isMobile" />
   </div>
 </template>
 

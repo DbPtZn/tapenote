@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import path, { basename } from 'path'
+import { basename, extname, join } from 'path'
 import fs from 'fs'
 import randomstring from 'randomstring'
 import os from 'os'
@@ -37,7 +37,7 @@ export class StorageService {
   getLocalDir(dirname: string, prv?: boolean) {
     // console.log('getUserDir:' + process.env.NODE_ENV)
     const common = this.common
-    const dirPath = path.join(
+    const dirPath = join(
       common.systemDir ? common.systemDir : __rootdirname,
       common.appDir,
       prv === true ? common.privateDir : common.publicDir,
@@ -77,7 +77,7 @@ export class StorageService {
       return `${this.common.proxyDomain}/${dirname}`
     }
     const common = this.common
-    const dirPath = path.join(
+    const dirPath = join(
       prv === true ? common.fullPrivateDir : common.fullPublicDir,
       dirname
     )
@@ -98,7 +98,14 @@ export class StorageService {
     return this.bucketService.fetchFile(filename, dirname, output)
   }
 
-  save(file: LocalUploadFile, dirname: string) {
+  /**
+   * 
+   * @param file 
+   * @param dirname 
+   * @param removeFile 上传后删除文件，仅 cos 模式下有用
+   * @returns 
+   */
+  save(file: LocalUploadFile, dirname: string, removeFile = true) {
     return new Promise<string>(async (resolve, reject) => {
       if (this.common.enableCOS) {
         this.bucketService
@@ -108,7 +115,7 @@ export class StorageService {
             // console.log('file.originalname:', file.originalname)
             // console.log('file.path', file.path)
             const url = this.common.proxyDomain + '/' + dirname + '/' + basename(file.path)
-            fs.unlinkSync(file.path)
+            removeFile && fs.unlinkSync(file.path)
             console.log('cos url:', url)
             resolve(url)
           })
@@ -116,7 +123,7 @@ export class StorageService {
             reject(err)
           })
       } else {
-        const targetPath = this.createLocalFilePath(path.basename(file.path), dirname)
+        const targetPath = this.createLocalFilePath(basename(file.path), dirname)
         // 移动文件
         fs.rename(file.path, targetPath, err => {
           if (err) {
@@ -130,10 +137,13 @@ export class StorageService {
   }
 
   /** 参数： 拓展名， 如 '.wav' */
-  createTempFilePath(extname: string) {
-    const extWithoutDot = extname.charAt(0) === '.' ? extname.slice(1) : extname
-    return path.join(os.tmpdir(), `${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`)
-    // return `${this.common.fullTempDir}/${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`
+  createTempFilePath(ext: string, filename?: string) {
+    const extWithoutDot = ext.charAt(0) === '.' ? ext.slice(1) : ext
+    if(!filename) return join(os.tmpdir(), `${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`)
+    // const fileNameWithoutExt = filename.replace(path.extname(filename), '')
+    const fileNameWithoutExt = basename(filename, extname(filename))
+    console.log('fileNameWithoutExt:', fileNameWithoutExt)
+    return join(os.tmpdir(), `${fileNameWithoutExt}.${extWithoutDot}`)
   }
 
   createCOSPath(pathOrName: string, dirname: string) {
