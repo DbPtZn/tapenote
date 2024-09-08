@@ -97,6 +97,8 @@ const { handleCreate, handleDirSelected, handleAutoAnime, handleJumpToFolder } =
       positiveText: '确定',
       negativeText: '取消',
       onPositiveClick: async () => {
+        dialog.destroyAll() // 先关闭对话框，否则会等创建完成后才关闭
+        message.info('正在创建，请稍后...')
         if (!configure.folderId) return
         try {
           const project = await projectStore.createBy({
@@ -133,7 +135,7 @@ const { handleCreate, handleDirSelected, handleAutoAnime, handleJumpToFolder } =
         }
       },
       onNegativeClick: () => {
-        message.create('已取消')
+        message.info('已取消')
       }
     })
   },

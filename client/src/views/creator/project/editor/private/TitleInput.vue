@@ -142,10 +142,11 @@ watchOnce(
   // padding: 0 250px 0 250px;
   .title-wrapper {
     position: relative;
-    padding: 18px 6px;
+    padding: 18px 12px;
     // margin: 24px 0;
     // background-color: v-bind('themeVars.cardColor');
     background-color: v-bind('themeVars.bodyColor');
+    // background-color: var(--dpz-editor-pgColor);
     border-bottom: 1px solid v-bind('themeVars.dividerColor');
     .title-input {
       // width: 100%;

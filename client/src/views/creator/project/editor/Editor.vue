@@ -251,6 +251,7 @@ onUnmounted(() => {
     subs.forEach(sub => sub.unsubscribe())
     subs.length = 0
     editor?.destroy()
+    console.log('编辑器是否已经销毁：' + editor.destroyed)
   } catch (error) {
     console.error(error)
     message.error('编辑器销毁失败！')
@@ -279,7 +280,7 @@ onUnmounted(() => {
       <!-- 滚动区 -->
       <!-- TODO height 从 100vh 改成 100% (同步地 main 也要设置 height: 100%)，观察会不会产生其它 Bug 2024/4/16 -->
       <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
-        <TitleInput @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
+        <TitleInput class="title-input" @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
         <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
       </div>
     </div>
@@ -327,6 +328,7 @@ onUnmounted(() => {
   flex-direction: column;
   height: 100%;
   width: 100%;
+  background-color: var(--dpz-editor-bgColor);
   // border-right: 1px solid v-bind('themeVars.dividerColor');
   // border-bottom: 1px solid v-bind('themeVars.dividerColor');
   // &:hover {
@@ -389,6 +391,7 @@ onUnmounted(() => {
     z-index: 1;
     word-wrap: break-word;
     border-bottom: 1px solid v-bind('themeVars.dividerColor');
+    // background-color: var(--dpz-editor-pgColor);
   }
   .scroller {
     display: flex;
@@ -398,6 +401,8 @@ onUnmounted(() => {
     overflow-x: hidden;
     // background-color: v-bind('themeVars.cardColor');
     background-color:  v-bind('themeVars.bodyColor');
+    // background-color: var(--dpz-editor-bgColor);
+    // background-color: var(--dpz-editor-pgColor);
   }
   .editor {
     height: 100%;
@@ -412,7 +417,9 @@ onUnmounted(() => {
         max-width: v-bind('state.editorWidth');
         width: 100%;
         margin: 0 auto;
-        // background-color: v-bind('themeVars.cardColor');
+        padding: 0 12px;
+        box-sizing: border-box;
+        // background-color: var(--dpz-editor-pgColor);
         background-color:  v-bind('themeVars.bodyColor');
       }
     }

@@ -32,7 +32,6 @@ export function createAnimeEditor(args: {
 
   onUnmounted(() => {
     try {
-      // editor.get(Commander).destory()
       editor.get(AnimeProvider).destory()
       editor.get(AddAnimeService).destory()
       editor.get(AnimeUtilsProvider).destory()
@@ -44,8 +43,7 @@ export function createAnimeEditor(args: {
       editor.get(ThemeProvider).destory()
       editor.get(Player).destory()
       editor.get(ImgToUrlService).destory()
-      // console.log('销毁依赖')
-      // console.log('编辑器是否已经销毁：' + editor.destroyed)
+      console.log('销毁依赖')
     } catch (error) {
       console.error(error)
       console.error('依赖销毁失败！')

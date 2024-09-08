@@ -29,7 +29,6 @@ export function createTextEditor(args: {
   )
   onUnmounted(() => {
     try {
-      console.log('销毁依赖')
       editor.get(ResizeService).destory()
       editor.get(OutlineService).destory()
       editor.get(DialogProvider).destory()
@@ -37,7 +36,7 @@ export function createTextEditor(args: {
       editor.get(Structurer).destory()
       editor.get(ThemeProvider).destory()
       editor.get(ImgToUrlService).destory()
-      console.log('编辑器是否已经销毁：' + editor.destroyed)
+      console.log('销毁依赖')
     } catch (error) {
       console.log(error)
       console.error('编辑器销毁失败！')

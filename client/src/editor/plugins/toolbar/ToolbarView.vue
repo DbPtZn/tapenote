@@ -152,7 +152,7 @@ onUnmounted(() => {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  background-color: v-bind('themeVars.baseColor');
+  // background-color: v-bind('themeVars.baseColor');
 }
 /** 工具组之间的间距 */
 :deep(.group-wrapper) {
@@ -176,7 +176,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   // animation: fadeInDown 0.3s ease-in-out;
-  background-color: v-bind('themeVars.baseColor');
+  // background-color: v-bind('themeVars.baseColor');
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
 }

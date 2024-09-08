@@ -176,7 +176,7 @@ export function useItemListDropDown() {
       {
         label: '创建版本快照',
         key: 'create-snapshot',
-        show: dropdownState.lib && dropdownState.lib !== LibraryEnum.COURSE,
+        show: dropdownState.lib && dropdownState.lib !== LibraryEnum.COURSE  && dropdownState.type === 'file',
         props: {
           onClick: () => {
             const file = dropdownState.target as Subfile
@@ -184,19 +184,6 @@ export function useItemListDropDown() {
           }
         }
       },
-      // 投稿至博客
-      // {
-      //   label: '投稿至博客',
-      //   disabled: true,
-      //   key: UUID.v4(),
-      //   show: dropdownState.lib && [LibraryEnum.COURSE, LibraryEnum.NOTE].includes(dropdownState.lib) && dropdownState.type === 'file',
-      //   props: {
-      //     onClick: () => {
-      //       const file = dropdownState.target as Subfile
-      //       submitCreation(file.title, userStore.nickname, userStore.email)
-      //     }
-      //   }
-      // },
       // 移除
       {
         label: '移除',

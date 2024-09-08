@@ -44,6 +44,7 @@ function handleContainerFocus(event, node: FractalContainerConfig) {
   }
 }
 function handleContainerRemove() {
+  console.log('handleContainerRemove', dragStore.dragging && dragStore.isFile)
   const firstContainer = shell.workbench.findFirstNodeByType(ContainerTypeEnum.CMPT)
   firstContainer ? shell.workbench.setFocus({ node: firstContainer }) : shell.workbench.clearFocus()
   // shell.workbench.setPersist(shell.workbench.data)

@@ -147,10 +147,10 @@ export class ContainerTree implements ContainerTreeModule {
   removeByNode(node: FractalContainerConfig, parentNode?: FractalContainerConfig): void {
     const parent = parentNode || node.parent || this.findParentNodeById(node.id)
     if (parent) {
-      parent.children.forEach((child, index, arr) => {
+      parent.children.some((child, index, arr) => {
         if (child.id === node.id) {
           arr.splice(index, 1)
-          return
+          return true
         }
       })
     }

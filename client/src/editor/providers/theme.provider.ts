@@ -23,10 +23,11 @@ export class ThemeProvider {
   constructor() {
     this.onThemeUpdate = this.themeUpdateEvent.asObservable()
   }
-  setup(injector: Injector): void {
+  setup(injector: Injector, fontSize='16px'): void {
     this.layout = injector.get(Layout)
     this.editorHost = this.layout.container
     this.layout.middle.setAttribute('data-color', '#000000')
+    this.layout.middle.style.fontSize = fontSize
     const structurer = injector.get(Structurer)
     this.toolbarHost = structurer.toolbarRef
     this.subs.push(

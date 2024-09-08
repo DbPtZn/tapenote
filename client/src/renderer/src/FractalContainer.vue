@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { VNode, onErrorCaptured, onMounted, provide, ref } from 'vue'
+import { VNode, nextTick, onErrorCaptured, onMounted, provide, ref } from 'vue'
 import { RecursiveContainer, ContainerTypeEnum, WrapperInjectKey, ResizeInjectKey } from '.'
 import { ContainerTree } from '.'
 import { FractalContainerConfig, InsertType } from '.'
@@ -176,6 +176,7 @@ const handleContainerDragEnd = (ev: DragEvent, dragNode: FractalContainerConfig)
 const handleContainerRemove = (node: FractalContainerConfig, parent: FractalContainerConfig) => {
   containerTree.removeByNode(node)
   containerTree.findEmptyNodeAndRemove()
+  console.log('innerMaskController', innerMaskController.value)
   emits('onContainerRemove', node, parent)
 }
 const handleContainerMouseEnter = (event: MouseEvent, node: FractalContainerConfig) => {
@@ -204,11 +205,18 @@ const handleContainerDrop = (node: FractalContainerConfig, parent: FractalContai
   sourceNode = null
   innerShredderVisible.value = ''
   draggable.value = false
-  containerTree.removeByNode(node, parent)
+  const timer = setTimeout(() => {
+    // 延迟 remove node, 否则可能会出现 mask 残留的情况，原因未知
+    // 怀疑可能是 mask 渲染与节点删除动作冲突，在 mask 关闭前，节点删除导致 mask 没有正常关闭或者与递归传参有关
+    // 延迟还不能太低，太低可能失效
+    containerTree.removeByNode(node, parent)
+    clearTimeout(timer)
+  }, 120)
   containerTree.findEmptyNodeAndRemove()
   containerTree.findUnnecessaryNestedNodeAndClean()
   emits('onContainerRemove', node, parent)
 }
+
 </script>
 
 <template>
