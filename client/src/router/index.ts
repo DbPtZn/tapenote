@@ -1,5 +1,5 @@
 import { RouteNameEnum, RoutePathEnum } from '@/enums'
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory, RouteRecordRaw } from 'vue-router'
 import microRoutes from './micro'
 import errorRoutes from './error'
 import useStore from '@/store'
@@ -53,7 +53,8 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  // history: createWebHashHistory(),
+  history: createWebHistory(),
   routes
 })
 

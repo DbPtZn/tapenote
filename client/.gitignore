@@ -42,3 +42,6 @@ sherpa-onnx.node
 *.njsproj
 *.sln
 *.sw?
+
+*.zip
+*.tar.gz

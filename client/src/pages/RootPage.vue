@@ -3,8 +3,8 @@ import useStore from '@/store'
 import { darkThemeOverrides, lightThemeOverrides } from './theme/_api'
 import { GlobalNavView } from '@/views'
 import { computed, ref } from 'vue'
-import router from '@/router';
-import { RouteNameEnum, RoutePathEnum } from '@/enums';
+import router from '@/router'
+import { RouteNameEnum, RoutePathEnum } from '@/enums'
 const { settingStore, microStore } = useStore()
 const widthVal = computed(() => {
   return settingStore.isNavbarCollapse ? 0 : 64

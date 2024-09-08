@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import router from '@/router'
-
-/** 添加 meta ,阻止浏览器自动缩放窗口 */
+// import vconsole from 'vconsole'
+// const vc = new vconsole()
+/** 添加 meta ,阻止浏览器窗口缩放 */
 // 创建一个新的meta元素
 const meta = document.createElement('meta')
 // 设置meta标签的属性

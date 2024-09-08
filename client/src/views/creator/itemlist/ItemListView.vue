@@ -151,7 +151,7 @@ function handleRecentlySelected(value: LibraryEnum) {
 }
 
 // 最近编辑模式下滚动加载
-const debounceFunc = _.debounce(func => func(), 1000) // 防抖
+const debounceFunc = _.debounce(func => func(), 300) // 防抖
 const loading = ref(false)
 // const noMore = ref(false) //TODO 没有持久缓存，切换文件夹当前缓存丢失但后 noMore 也没有重置，待优化
 function handleScroll(ev) {

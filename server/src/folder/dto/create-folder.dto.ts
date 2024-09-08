@@ -3,8 +3,8 @@ import { LibraryEnum } from 'src/enum'
 
 export class CreateFolderDto {
   // 文件夹名称
-  @Length(1, 18, {
-    message: '文件夹名称不能超过18个字符'
+  @Length(1, 64, {
+    message: '文件夹名称不能超过64个字符'
   })
   @IsNotEmpty({
     message: '文件夹名称不能为空'

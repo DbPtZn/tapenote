@@ -26,7 +26,7 @@ const model = ref<ModelType>({
   lib: props.lib || LibraryEnum.NOTE,
   // isCloud: true
 })
-const regex = /[<>:"/\\|?*]/g
+const regex = /[<>:"/\\|?*]/
 /** 表单规则 */
 const rules: FormRules = {
   name: [
