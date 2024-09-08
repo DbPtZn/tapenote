@@ -2,6 +2,7 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { FormInst, FormItemRule, FormRules, UploadFileInfo, useMessage } from 'naive-ui'
 import useStore from '@/store'
+import { getServerToken } from '@/api';
 interface ModelType {
   type:  'human' | 'machine'
   avatar: string
@@ -100,7 +101,7 @@ const rules: FormRules = {
     }
   ]
 }
-const accessToken = computed(() => sessionStorage.getItem(`User:${props.account}&${props.hostname}`)) 
+const accessToken = computed(() => getServerToken(props.account, props.hostname)) 
 /** 提交 */
 function handleSubmit(e: MouseEvent) {
   e.preventDefault()

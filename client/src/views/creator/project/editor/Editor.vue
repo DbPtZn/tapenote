@@ -35,6 +35,9 @@ const subs: Subscription[] = []
 const data = computed(() => projectStore.get(props.id))
 const state = reactive({
   isToolbarShow: true,
+  isChangeByReadonly1: false,
+  isChangeByReadonly2: false,
+  isReadonly: computed(() => props.readonly()),
   isDrawShow: false,
   isSaving: false,
   toolbarHeight: 50, // 基于顶部固定工具条的高度调整滚动区的高度
@@ -49,6 +52,12 @@ onBeforeMount(() => {
 })
 onMounted(() => {
   // loadingBar.finish()
+})
+
+// 当 readonly 状态改变时，editor onChange 也会监听到，设置 isChangeByReadonly1/2 为 true, 阻止两个 editor onChange 的事务
+watch(() => state.isReadonly, (is) => {
+  state.isChangeByReadonly1 = true
+  state.isChangeByReadonly2 = true
 })
 
 let player: Player
@@ -72,6 +81,7 @@ useEditor({
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
       editor.onChange.subscribe(() => {
+        if(state.isChangeByReadonly1) return state.isChangeByReadonly1 = false
         // console.log('content change')
         data.value!.isContentUpdating = true
       }),
@@ -93,7 +103,10 @@ useEditor({
     )
     autosave.value && subs.push(
       editor.onChange.pipe(debounceTime(saveInterval.value)).subscribe(() => {
-        if(props.readonly()) return
+        // console.log('自动保存1')
+        if(state.isReadonly) return
+        if(state.isChangeByReadonly2) return state.isChangeByReadonly2 = false
+        // console.log('自动保存2')
         const content = editor.getHTML()
         // console.log(lastContent === content)
         // if(content === data.value!.content) {

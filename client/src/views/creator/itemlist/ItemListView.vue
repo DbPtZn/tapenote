@@ -329,12 +329,15 @@ watch(() => folderStore.lib, (v) => {
   padding: 0px 12px;
   box-sizing: border-box;
   .list {
-    // height: 100%;
+    height: 100%; // 100% 才能覆盖整个列表的右击菜单事件
     width: 100%;
     box-sizing: border-box;
-    padding-bottom: 60px;
+    padding-bottom: 120px;
     .touch-bottom {
-      margin-top: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-align: center;
     }
   }

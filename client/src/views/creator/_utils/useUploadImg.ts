@@ -1,6 +1,7 @@
+import { getServerToken } from '@/api'
 import axios from 'axios'
 export function useUploadImg(uploadImgUrl: string, account: string, hostname: string) {
-  const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
+  const accessToken = getServerToken(account, hostname)
   const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
   const axiosInstance = axios.create({
     method: 'post',
@@ -18,8 +19,8 @@ export function useUploadImg(uploadImgUrl: string, account: string, hostname: st
       axiosInstance
         .post(uploadImgUrl, formdata)
         .then(res => {
-          console.log('res.config.baseURL:', res.config.baseURL)
-          console.log('ResourceDomain:', ResourceDomain)
+          // console.log('res.config.baseURL:', res.config.baseURL)
+          // console.log('ResourceDomain:', ResourceDomain)
           const url = ResourceDomain + res.data
           resolve(url)
         })

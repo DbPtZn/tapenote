@@ -14,7 +14,13 @@ import { bgm } from './bgm'
 import useStore from '@/store'
 import { speaker } from './speaker'
 
+export function getSsoToken(account: string, hostname: string) {
+  return sessionStorage.getItem(`SSO:${account}&${hostname}`)
+}
 
+export function getServerToken(account: string, hostname: string) {
+  return sessionStorage.getItem(`Server:${account}&${hostname}`)
+}
 
 export class CreatorApi {
   user: ReturnType<typeof user>
@@ -141,11 +147,11 @@ export class CreatorApi {
   }
 
   getSsoToken(account: string, hostname: string) {
-    return sessionStorage.getItem(`SSO:${account}&${hostname}`)
+    return getSsoToken(account, hostname)
   }
   
   getServerToken(account: string, hostname: string) {
-    return sessionStorage.getItem(`Server:${account}&${hostname}`)
+    return getServerToken(account, hostname)
   }
   
   async refreshToken(account: string, hostname: string) {

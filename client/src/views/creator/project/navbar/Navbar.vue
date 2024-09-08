@@ -18,6 +18,7 @@ import SubmissionCard from './private/SubmissionCard.vue'
 import SnapshotCard from './private/SnapshotCard.vue'
 import HistoryCourseCard from './private/HistoryCourseCard.vue'
 import CollapseButton from './private/CollapseButton.vue'
+import { watch } from 'vue'
 type Snapshot = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['snapshots']>[0]
 type HistoryCourse = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['historyCourses']>[0]
 const bridge = inject('bridge') as Bridge
@@ -46,6 +47,10 @@ const state = reactive({
   // course
   isSubtitleShow: false,
   isNoteShow: false,
+})
+
+watch(() => state.isReadonly, (is) => {
+  if(is) state.isDrawShow = false
 })
 
 const username = userListStore.get(props.account, props.hostname)!.nickname // 获取用户名信息
@@ -79,7 +84,7 @@ subs.push(
 const configure = reactive({
   folderId: ''
 })
-const { handleCreate, handleDirSelected, handleAutoAnime } = {
+const { handleCreate, handleDirSelected, handleAutoAnime, handleJumpToFolder } = {
   handleDirSelected(folderId: string) {
     console.log(folderId)
     configure.folderId = folderId
@@ -142,6 +147,14 @@ const { handleCreate, handleDirSelected, handleAutoAnime } = {
         bridge.handleAutoAnime()
       }
     })
+  },
+  handleJumpToFolder(folderId: string | undefined) {
+    if(folderId) {
+      folderStore.fetchAndSet(folderId)
+      state.isDrawShow = false
+    } else {
+      message.error('无法跳转至该目录')
+    }
   }
 }
 
@@ -319,6 +332,15 @@ onUnmounted(() => {
             <n-descriptions-item label="更新时间"> {{dayjs(data?.updateAt).format('YYYY-MM-DD HH:mm:ss')}} </n-descriptions-item>
             <n-descriptions-item label="字数"> {{data?.detial.wordage}} </n-descriptions-item>
           </n-descriptions>
+          <n-divider />
+          <n-space :justify="'space-between'" :align="'center'">
+            <div>
+              <span>文件夹：</span>
+              <span>{{data?.folder.name}}</span>
+            </div>
+            <n-button :size="'tiny'" :disabled="state.isReadonly" @click="handleJumpToFolder(data?.folderId)">跳转</n-button>
+          </n-space>
+          <n-divider />
         </n-tab-pane>
         <!-- 创建工程/课程 -->
         <n-tab-pane v-if="lib !== LibraryEnum.COURSE" class="create-pane" name="create" :tab="lib === LibraryEnum.PROCEDURE ? '创建课程' : '创建工程'">

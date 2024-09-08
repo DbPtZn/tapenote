@@ -5,6 +5,7 @@ import type { DataTableColumns, FormInst, FormItemRule, FormRules, UploadFileInf
 import { Main, Header } from '@/components'
 import useStore from '@/store'
 import { onMounted } from 'vue'
+import { getServerToken } from '@/api'
 interface ModelType {
   avatar: string
   nickname: string
@@ -68,7 +69,7 @@ function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
     model.value.avatar = path
   }
 }
-const accessToken = computed(() => sessionStorage.getItem(`User:${userStore.account}&${userStore.hostname}`))
+const accessToken = computed(() => getServerToken(userStore.account,userStore.hostname))
 /** 提交 */
 function handleSubmit(e: MouseEvent) {
   e.preventDefault()
