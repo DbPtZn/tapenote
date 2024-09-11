@@ -10,7 +10,6 @@ import {
 import { ComponentLoader, createElement, createTextNode } from '@textbus/platform-browser'
 import { AttrState, Dialog, FileUploader, Form, FormItem, FormRadio, FormTextField, I18n, useDragResize } from '@textbus/editor'
 import { ImgToUrlService } from '..'
-import { AxiosProvider } from '../providers'
 // import { useDragResize } from './hooks/drag-resize'
 // import { Form, FormTextField, FormRadio, AttrState, FormItem } from '../uikit/_api'
 // import { FileUploader } from '../file-uploader'
@@ -174,36 +173,20 @@ export const imageB2UComponent = defineComponent({
   name: 'ImageB2UComponent',
   setup(data?: ComponentInitData<ImageComponentLiteral>) {
     const injector = useContext()
-    // const axios = injector.get(AxiosProvider)
     const img2Url = injector.get(ImgToUrlService) 
 
-    // const reg = /^https?/gi
-    // const reg = /^https?:\/\/.+\.(jpg|jpeg|png|gif|bmp|svg)$/i
     // 若图片为 base64
     if (data && data.state && ImgToUrlService.isBase64(data.state.src)) {
-      // const formdata = new FormData()
-      // img2Url.uploadImg(data.state.src).then(url => {
-      //   console.log(url)
-      //   stateController.update((draft) => {
-      //     draft.src = url
-      //   })
-      // }).catch(err => {
-      //   console.log('图片上传失败')
-      //   stateController.update((draft) => {
-      //     draft.src = 'image-error.png'
-      //   })
-      //   console.log(err)
-      // })
       img2Url.addUploadProcess(
         data.state.src, 
         (url) => {
-          console.log(url)
+          // console.log(url)
           stateController.update((draft) => {
             draft.src = url
           })
         },
         (err) => {
-          console.log('图片上传失败')
+          // console.log('图片上传失败')
           stateController.update((draft) => {
             draft.src = 'image-error.png'
           })

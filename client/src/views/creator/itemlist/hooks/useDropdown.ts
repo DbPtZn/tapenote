@@ -3,7 +3,7 @@ import useStore, { Subfile, Subfolder, TreeNode } from '@/store'
 import { Ref, nextTick, ref, h, reactive, computed, Component } from 'vue'
 // import * as UUID from 'uuid'
 import { LibraryEnum } from '@/enums'
-import { NIcon, NInput, NTree, useDialog, useMessage } from 'naive-ui'
+import { NButton, NIcon, NInput, NTree, useDialog, useMessage, useNotification } from 'naive-ui'
 import { DialogApiInjection } from 'naive-ui/es/dialog/src/DialogProvider'
 import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import { FolderForm } from '../../form'
@@ -13,6 +13,7 @@ import CreateAdvancedForm  from './utils/CreateAdvancedForm.vue'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../..'
 import { CreateNewFolderFilled, DriveFileMoveRtlFilled, DriveFileRenameOutlineFilled, ShareFilled } from '@vicons/material'
+import dayjs from 'dayjs'
 
 // type Target<T extends Subfolder | Subfile> = T
 
@@ -20,6 +21,7 @@ export function useItemListDropDown() {
   const { projectStore, folderStore, folderTreeStore, trashStore, clipboardStore, userStore } = useStore()
   const dialog = useDialog()
   const message = useMessage()
+  const notification = useNotification()
   const account = computed(() => userStore.account)
   const hostname = computed(() => userStore.hostname)
   const shell = useShell<CreatorShell>()
@@ -150,17 +152,17 @@ export function useItemListDropDown() {
         }
       },
       // 生成微课
-      {
-        label: '生成课程项目',
-        key: 'create-course',
-        show: dropdownState.lib && dropdownState.lib === LibraryEnum.PROCEDURE && dropdownState.type === 'file',
-        props: {
-          onClick: () => {
-            const file = dropdownState.target as Subfile
-            createAdvancedProject(file.title, file.id, dropdownState.lib!)
-          }
-        }
-      },
+      // {
+      //   label: '生成课程项目',
+      //   key: 'create-course',
+      //   show: dropdownState.lib && dropdownState.lib === LibraryEnum.PROCEDURE && dropdownState.type === 'file',
+      //   props: {
+      //     onClick: () => {
+      //       const file = dropdownState.target as Subfile
+      //       createAdvancedProject(file.title, file.id, dropdownState.lib!)
+      //     }
+      //   }
+      // },
       // 创建微课编辑文件
       {
         label: '创建工程项目',
@@ -313,6 +315,8 @@ export function useItemListDropDown() {
           lib: advancedLib,
           title: title,
           onSubmit: folderId => {
+            dialog.destroyAll()
+            const msg = message.info('正在创建，请稍后...', { duration: 0 })
             projectStore.createBy({
               folderId,
               sourceId: projectId,
@@ -320,14 +324,34 @@ export function useItemListDropDown() {
               account: account.value,
               hostname: hostname.value
             }).then(res => {
+              msg.destroy()
               if(!res.account) res.account = account.value
               if(!res.hostname) res.hostname = hostname.value
-              shell.useWorkbench()
-              shell.workbench.setById({ id: res.id, lib: advancedLib, account: res.account, hostname: res.hostname })
+              const n = notification.success({
+                title: `创建${lib === LibraryEnum.NOTE ? '工程项目' : '课程动画'}成功！`,
+                duration: 10000,
+                meta: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                action: () => h(
+                  NButton,
+                  {
+                    text: true,
+                    type: 'primary',
+                    onClick: () => {
+                      shell.useWorkbench()
+                      shell.workbench.setById({ id: res.id, lib: advancedLib, account: res.account, hostname: res.hostname })
+                      n.destroy()
+                    }
+                  },
+                  {
+                    default: () => '跳转'
+                  }
+                ),
+              })
+              
             }).catch(err => {
+              msg.destroy()
               message.error('创建失败')
             })
-            dialog.destroyAll()
           }
         }),
       maskClosable: true,

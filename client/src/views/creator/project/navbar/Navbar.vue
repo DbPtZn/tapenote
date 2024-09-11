@@ -98,7 +98,7 @@ const { handleCreate, handleDirSelected, handleAutoAnime, handleJumpToFolder } =
       negativeText: '取消',
       onPositiveClick: async () => {
         dialog.destroyAll() // 先关闭对话框，否则会等创建完成后才关闭
-        message.info('正在创建，请稍后...')
+        const msg = message.info('正在创建，请稍后...', { duration: 0 })
         if (!configure.folderId) return
         try {
           const project = await projectStore.createBy({
@@ -108,6 +108,7 @@ const { handleCreate, handleDirSelected, handleAutoAnime, handleJumpToFolder } =
             account: props.account,
             hostname: props.hostname
           })
+          msg.destroy()
           const toLib = props.lib === LibraryEnum.NOTE ? LibraryEnum.PROCEDURE : LibraryEnum.COURSE
           folderStore.addSubFile(project, configure.folderId, toLib)
           const n = notification.success({
@@ -131,6 +132,7 @@ const { handleCreate, handleDirSelected, handleAutoAnime, handleJumpToFolder } =
           })
         } catch (error) {
           console.log(error)
+          msg.destroy()
           message.error(`创建${props.lib === LibraryEnum.NOTE ? '工程项目' : '课程动画'}失败！`)
         }
       },

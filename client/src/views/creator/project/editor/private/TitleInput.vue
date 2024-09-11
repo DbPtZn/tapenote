@@ -74,8 +74,8 @@ watch(
 )
 // const regex = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~\s]/g
 // 不能在检查时禁止英文单引号 ' ，因为输入法输入时会产生单引号
-const regexg = /[!"#&$()*./:<>?\^`|]/g
-const regex = /[!"#&$()*./:<>?\^`|]/
+const regexg = /[<>:"/\\|?*]/g
+const regex = /[<>:"/\\|?*]/
 const inputEvent = (ev: any) => {
   // .trim() 不能在输入的时候清理两段空白字符，这会导致光标跳回起始位置
   let inputVal = ev.target.innerText

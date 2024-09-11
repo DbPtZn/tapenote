@@ -21,6 +21,7 @@ export class UploadFile {
   @Column({
     type: 'varchar',
     length: 18,
+    // nullable: true
   })
   dirname: string
 
@@ -37,7 +38,8 @@ export class UploadFile {
 
   @Column({
     type: 'varchar',
-    length: 24
+    length: 24,
+    // nullable: true
   })
   mimetype: string // 文件类型
 

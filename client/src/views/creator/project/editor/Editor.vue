@@ -103,17 +103,9 @@ useEditor({
     )
     autosave.value && subs.push(
       editor.onChange.pipe(debounceTime(saveInterval.value)).subscribe(() => {
-        // console.log('自动保存1')
         if(state.isReadonly) return
         if(state.isChangeByReadonly2) return state.isChangeByReadonly2 = false
-        // console.log('自动保存2')
         const content = editor.getHTML()
-        // console.log(lastContent === content)
-        // if(content === data.value!.content) {
-        //   // 当前内容与上次内容相同，无需保存（应用快照时不会再触发保存）
-        //   data.value!.isContentUpdating = false
-        //   return 
-        // }
         if(lastContent === content) {
           // console.log('内容未改变，无需保存')
           data.value!.isContentUpdating = false
@@ -241,7 +233,7 @@ onBeforeUnmount(() => {
       handleContentSave(content, id, account, hostname)
       lastContent = content
     })
-    // 有个疑问？通过防抖延迟了保存事务，为什么事务中不会拿到切换后的数据状态？可能因为 const props 是一个具名常量，并不会在切换项目后改变
+    //TODO 有个疑问？通过防抖延迟了保存事务，为什么事务中不会拿到切换后的数据状态？可能因为 const props 是一个具名常量，并不会在切换项目后改变
   }
 })
 
@@ -278,9 +270,9 @@ onUnmounted(() => {
         />
       </div>
       <!-- 滚动区 -->
-      <!-- TODO height 从 100vh 改成 100% (同步地 main 也要设置 height: 100%)，观察会不会产生其它 Bug 2024/4/16 -->
       <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
-        <TitleInput class="title-input" @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
+        <!-- v-if="data" 保证在数据获取之前不会渲染标题栏 -->
+        <TitleInput v-if="data" class="title-input" @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
         <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
       </div>
     </div>
