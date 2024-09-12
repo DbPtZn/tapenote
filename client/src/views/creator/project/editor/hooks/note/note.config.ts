@@ -1,4 +1,55 @@
-import { InlineToolbarPlugin, OutlinePlugin, ResizeService, OutlineService, Toolbar, boldTool, historyBackTool, historyForwardTool, headingTool, italicTool, strikeThroughTool, underlineTool, olTool, ulTool, fontSizeTool, textIndentTool, colorTool, textBackgroundTool, insertParagraphBeforeTool, insertParagraphAfterTool, linkTool, fontFamilyTool, unlinkTool, imageTool, textAlignTool, tableRemoveTool, formatPainterTool, tableAddTool, cleanTool, colorFormatter, textBackgroundColorFormatLoader, colorFormatLoader, textBackgroundColorFormatter, defaultGroupTool, DialogProvider, imageB2UComponent, imageB2UComponentLoader, AxiosProvider, outlineTool, Clipboard, ContextMenu, CustomCommander, ColorProvider, componentsTool, rootComponent, rootComponentLoader, Structurer, ThemeProvider, ImgToUrlService, preComponent, preComponentLoader } from '@/editor'
+import {
+  InlineToolbarPlugin,
+  OutlinePlugin,
+  ResizeService,
+  OutlineService,
+  Toolbar,
+  boldTool,
+  historyBackTool,
+  historyForwardTool,
+  headingTool,
+  italicTool,
+  strikeThroughTool,
+  underlineTool,
+  olTool,
+  ulTool,
+  fontSizeTool,
+  textIndentTool,
+  colorTool,
+  textBackgroundTool,
+  insertParagraphBeforeTool,
+  insertParagraphAfterTool,
+  linkTool,
+  fontFamilyTool,
+  unlinkTool,
+  imageTool,
+  textAlignTool,
+  tableRemoveTool,
+  formatPainterTool,
+  tableAddTool,
+  cleanTool,
+  colorFormatter,
+  textBackgroundColorFormatLoader,
+  colorFormatLoader,
+  textBackgroundColorFormatter,
+  defaultGroupTool,
+  DialogProvider,
+  imageB2UComponent,
+  imageB2UComponentLoader,
+  outlineTool,
+  Clipboard,
+  ContextMenu,
+  CustomCommander,
+  ColorProvider,
+  componentsTool,
+  rootComponent,
+  rootComponentLoader,
+  Structurer,
+  ThemeProvider,
+  ImgToUrlService,
+  preComponent,
+  preComponentLoader
+} from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
   defaultComponentLoaders,
@@ -6,19 +57,19 @@ import {
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
-  LinkJumpTipPlugin,
+  LinkJumpTipPlugin
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
 export function getNoteConfig(args: {
-  account: string,
-  hostname: string,
-  dirname: string,
-  rootRef: HTMLElement,
-  editorRef: HTMLElement,
-  scrollerRef: HTMLElement,
-  toolbarRef?: HTMLElement,
-  controllerRef?: HTMLElement,
+  account: string
+  hostname: string
+  dirname: string
+  rootRef: HTMLElement
+  editorRef: HTMLElement
+  scrollerRef: HTMLElement
+  toolbarRef?: HTMLElement
+  controllerRef?: HTMLElement
   content?: string
 }) {
   const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
@@ -39,7 +90,7 @@ export function getNoteConfig(args: {
     // styleSheets: [],
     providers: [
       { provide: Commander, useClass: CustomCommander },
-      ResizeService, 
+      ResizeService,
       OutlineService,
       DialogProvider,
       ColorProvider,
@@ -48,36 +99,43 @@ export function getNoteConfig(args: {
       ImgToUrlService
     ],
     plugins: [
-      () => new Toolbar([
-        [historyBackTool, historyForwardTool],
-        [defaultGroupTool],
-        [componentsTool],
-        [headingTool],
-        [boldTool, italicTool, strikeThroughTool, underlineTool],
-        [olTool, ulTool],
-        [fontSizeTool, textIndentTool],
-        [colorTool, textBackgroundTool],
-        [insertParagraphBeforeTool, insertParagraphAfterTool],
-        [fontFamilyTool],
-        [linkTool, unlinkTool],
-        [imageTool],
-        [textAlignTool],
-        [tableAddTool, tableRemoveTool],
-        [formatPainterTool],
-        [cleanTool],
-        // [outlineTool]
-      ], toolbarRef!),
       () =>
-        new InlineToolbarPlugin([
-          [headingTool],
-          [boldTool, italicTool, strikeThroughTool, underlineTool],
-          [colorTool, textBackgroundTool],
-          [fontSizeTool],
-          [olTool, ulTool],
-          [cleanTool]
-        ], scrollerRef),
+        new Toolbar(
+          [
+            [historyBackTool, historyForwardTool],
+            [defaultGroupTool],
+            [componentsTool],
+            [headingTool],
+            [boldTool, italicTool, strikeThroughTool, underlineTool],
+            [olTool, ulTool],
+            [fontSizeTool, textIndentTool],
+            [colorTool, textBackgroundTool],
+            [insertParagraphBeforeTool, insertParagraphAfterTool],
+            [fontFamilyTool],
+            [linkTool, unlinkTool],
+            [imageTool],
+            [textAlignTool],
+            [tableAddTool, tableRemoveTool],
+            [formatPainterTool],
+            [cleanTool]
+            // [outlineTool]
+          ],
+          toolbarRef!
+        ),
+      () =>
+        new InlineToolbarPlugin(
+          [
+            [headingTool],
+            [boldTool, italicTool, strikeThroughTool, underlineTool],
+            [colorTool, textBackgroundTool],
+            [fontSizeTool],
+            [olTool, ulTool],
+            [cleanTool]
+          ],
+          scrollerRef
+        ),
       () => new LinkJumpTipPlugin(),
-      () => new OutlinePlugin(),
+      () => new OutlinePlugin()
       // () => new Clipboard(),
       // () => new ContextMenu()
     ],

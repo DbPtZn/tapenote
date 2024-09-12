@@ -47,11 +47,11 @@ export function defaultGroupToolFactory(injector: Injector): DropdownToolConfig 
         type: ToolType.Render,
         label: i18n.get('plugins.toolbar.insertObjectTool.emoji')
       },
-      {
-        ...audioToolConfigFactory(injector),
-        type: ToolType.Dialog,
-        label: i18n.get('plugins.toolbar.insertObjectTool.audio')
-      },
+      // {
+      //   ...audioToolConfigFactory(injector),
+      //   type: ToolType.Dialog,
+      //   label: i18n.get('plugins.toolbar.insertObjectTool.audio')
+      // },
       // {
       //   ...videoToolConfigFactory(injector),
       //   type: ToolType.Dialog,

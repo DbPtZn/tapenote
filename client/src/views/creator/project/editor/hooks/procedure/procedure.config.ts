@@ -15,7 +15,7 @@ import { InlineToolbarPlugin,
   animeComponent, animeComponentLoader, AnimeContextmenuPlugin, 
   OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
   preview_startTool, preview_stopTool, animeBadgeVisibleTool, animeElementVisibleTool, 
-  AxiosProvider, imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
+  imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
   animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider 
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
@@ -62,6 +62,7 @@ export function getProcedureConfig(args: {
       'anime:hover{outline: 1px dashed #aaaaaa30; border-radius: 3px;}',
       'anime{pointer-events:none;}',
       'anime:active{pointer-events:none;}',
+      'anime img{ pointer-events: all;}', // 放行图片上的点击事件
       '[data-state="active"]:after { background-color:pink }',
       '.anime-element-hidden anime{ opacity: 0!important; }',
       '.anime-element-hidden anime-component{opacity:0!important;}',

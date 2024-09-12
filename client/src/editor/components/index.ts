@@ -1,4 +1,5 @@
 // common
+export * from './common'
 export * from './imageB2U.component'
 export * from './imageU2B.component'
 export * from './root.component'

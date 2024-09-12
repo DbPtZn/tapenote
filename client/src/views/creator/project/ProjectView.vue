@@ -4,7 +4,7 @@ import utils from '@/utils'
 import { Editor } from './editor'
 import { Studio } from './studio'
 import { Navbar } from './navbar'
-import { computed, h, markRaw, onMounted, onUnmounted, provide, reactive, ref, watch } from 'vue'
+import { computed, h, markRaw, onErrorCaptured, onMounted, onUnmounted, provide, reactive, ref, watch } from 'vue'
 import useStore from '@/store'
 import { Bridge } from './bridge'
 import { LibraryEnum } from '@/enums'
@@ -161,6 +161,10 @@ onUnmounted(() => {
   if (implementRef.value) {
     erd.uninstall(implementRef.value)
   }
+})
+
+onErrorCaptured(e => {
+  console.log('error', e)
 })
 </script>
 <template>

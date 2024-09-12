@@ -8,9 +8,9 @@ import {
   useState, onContextMenu, useContext, Injector, onDestroy, Subscription,
 } from '@textbus/core'
 import { ComponentLoader, createElement, createTextNode } from '@textbus/platform-browser'
-import { AttrState, Dialog, FileUploader, Form, FormItem, FormRadio, FormTextField, I18n, useDragResize } from '@textbus/editor'
+import { AttrState, Dialog, FileUploader, Form, FormItem, FormRadio, FormTextField, I18n} from '@textbus/editor'
 import { ImgToUrlService } from '..'
-// import { useDragResize } from './hooks/drag-resize'
+import { useDragResize } from './hooks/drag-resize'
 // import { Form, FormTextField, FormRadio, AttrState, FormItem } from '../uikit/_api'
 // import { FileUploader } from '../file-uploader'
 // import { I18n } from '../i18n'
@@ -174,7 +174,7 @@ export const imageB2UComponent = defineComponent({
   setup(data?: ComponentInitData<ImageComponentLiteral>) {
     const injector = useContext()
     const img2Url = injector.get(ImgToUrlService) 
-
+    console.log('img component init')
     // 若图片为 base64
     if (data && data.state && ImgToUrlService.isBase64(data.state.src)) {
       img2Url.addUploadProcess(
@@ -326,7 +326,8 @@ export const imageB2UComponent = defineComponent({
             maxWidth: state.maxWidth,
             maxHeight: state.maxHeight,
             margin: state.margin,
-            float: state.float
+            float: state.float,
+            // objectFit: 'contain'  // 保持长宽比
           }
         })
       }

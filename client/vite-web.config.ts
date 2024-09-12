@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import eslintPlugin from 'vite-plugin-eslint'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -23,7 +24,23 @@ export default defineConfig(({ command, mode }) => {
         // 可以指定放置类型声明文件的位置和名称
         dts: 'src/types/components.d.ts'
       }),
-      
+      VitePWA({
+        manifest: {
+          name: '笔记映画',
+          short_name: 'Tapenote',
+          description: 'A cloud note app',
+          theme_color: '#ffffff',
+          background_color: '#ffffff',
+          display: 'standalone',
+          icons: [
+            {
+              src: 'logo192.png',
+              sizes: '192x192',
+              type: 'image/png',
+            },
+          ],
+        },
+      }),
     ],
     resolve: {
       alias: {

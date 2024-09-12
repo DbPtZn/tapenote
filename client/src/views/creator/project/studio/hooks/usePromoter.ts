@@ -52,6 +52,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
         let serial = ''
         const target = ev.target as HTMLElement
         if (target.tagName.toLocaleLowerCase() === 'anime') {
+          // console.log('anime click')
             ev.preventDefault() // 阻止默认事件
             ev.stopPropagation() // 阻止事件冒泡
             // console.log('anime')
@@ -59,8 +60,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
               id = target.dataset.id
               serial = target.dataset.serial
             }
-        }
-        if (target.classList.contains('anime-component-tab')) {
+        } else if (target.classList.contains('anime-component-tab')) {
           const node = target.parentElement
           if(node?.tagName.toLocaleLowerCase() === 'anime-component') {
             ev.preventDefault() // 阻止默认事件
@@ -76,6 +76,8 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
               }
             }
           }
+        } else {
+          return
         }
         addPromoter(fragmentId, subscript, serial, id)
         if (oldAniId) { // 更新操作时的判定
