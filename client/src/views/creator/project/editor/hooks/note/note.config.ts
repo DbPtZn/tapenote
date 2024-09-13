@@ -48,9 +48,12 @@ import {
   ThemeProvider,
   ImgToUrlService,
   preComponent,
-  preComponentLoader
+  preComponentLoader,
+  listComponent,
+  listComponentLoader,
+  KeyboardManager
 } from '@/editor'
-import { Commander, fromEvent, Injector } from '@textbus/core'
+import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {
   defaultComponentLoaders,
   defaultComponents,
@@ -83,8 +86,8 @@ export function getNoteConfig(args: {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: content || '',
-    components: [imageB2UComponent, preComponent, ...defaultComponents],
-    componentLoaders: [imageB2UComponentLoader, preComponentLoader, ...defaultComponentLoaders],
+    components: [imageB2UComponent, preComponent, listComponent, ...defaultComponents],
+    componentLoaders: [imageB2UComponentLoader, preComponentLoader, listComponentLoader, ...defaultComponentLoaders],
     formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     // styleSheets: [],
@@ -96,7 +99,8 @@ export function getNoteConfig(args: {
       ColorProvider,
       Structurer,
       ThemeProvider,
-      ImgToUrlService
+      ImgToUrlService,
+      KeyboardManager
     ],
     plugins: [
       () =>
@@ -154,6 +158,9 @@ export function getNoteConfig(args: {
           scrollerRef.scrollTop += offsetScrollTop
         }
       })
+      
+      const keyboardManager = injector.get(KeyboardManager)
+      keyboardManager.setup(injector)
       /** 依赖注入 */
       // 主题依赖
       const themeProvider = injector.get(ThemeProvider)

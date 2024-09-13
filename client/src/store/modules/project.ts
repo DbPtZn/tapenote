@@ -199,7 +199,7 @@ export const useProjectStore = defineStore('projectStore', {
     },
     fetchAndSet(id: string, account: string, hostname: string) {
       // console.log('fetchAndSet')
-      // console.log([id, account, hostname])
+      console.log([id, account, hostname])
       return new Promise<Project>((resolve, reject) => {
         // console.log('fetchAndset')
         const index = this.data.findIndex(i => i.id === id)

@@ -41,7 +41,7 @@ const state = reactive({
   isDrawShow: false,
   isSaving: false,
   toolbarHeight: 50, // 基于顶部固定工具条的高度调整滚动区的高度
-  editorWidth: computed(() => bridge.habit!.state.platform.width),
+  editorWidth: computed(() => bridge?.habit!.state.platform.width),
   isSubtitleShow: true, //computed(() => bridge.habit.state.subtitle.isShow),
   subtitle: ''
 })
@@ -126,7 +126,7 @@ useEditor({
       })
     )
   }
-  bridge.setup(editor, props.lib, editorRef.value, scrollerRef.value)
+  bridge?.setup(editor, props.lib, editorRef.value, scrollerRef.value)
 }).catch(err => {
   console.error(err)
   message.error('项目打开失败！')
@@ -139,7 +139,7 @@ if (props.lib !== LibraryEnum.COURSE) {
       state.toolbarHeight = args.height
     }),
     /** 工具条折叠 */
-    bridge.onToolbarCollapse.subscribe(() => {
+    bridge?.onToolbarCollapse.subscribe(() => {
       state.isToolbarShow = !state.isToolbarShow
     })
   )
@@ -253,7 +253,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="rootRef" :class="['editor-wrapper', bridge.habit?.state.platform.isScrollbarShow && 'scrollbar-visible', lib === LibraryEnum.COURSE && 'player-wrapper']">
+  <div ref="rootRef" :class="['editor-wrapper', bridge?.habit?.state.platform.isScrollbarShow && 'scrollbar-visible', lib === LibraryEnum.COURSE && 'player-wrapper']">
     <div class="main" :style="{ height: '100%', flexDirection: lib === LibraryEnum.COURSE ? 'row' : 'column' }">
       <!-- 工具条 -->
       <div v-if="lib !== LibraryEnum.COURSE" ref="toolbarWrapperRef">
@@ -340,6 +340,7 @@ onUnmounted(() => {
     }
   }
 }
+
 .header {
   display: flex;
   flex-direction: row;

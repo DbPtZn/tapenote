@@ -326,8 +326,7 @@ export const imageB2UComponent = defineComponent({
             maxWidth: state.maxWidth,
             maxHeight: state.maxHeight,
             margin: state.margin,
-            float: state.float,
-            // objectFit: 'contain'  // 保持长宽比
+            float: state.float
           }
         })
       }

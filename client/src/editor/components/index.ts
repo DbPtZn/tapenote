@@ -4,6 +4,7 @@ export * from './imageB2U.component'
 export * from './imageU2B.component'
 export * from './root.component'
 export * from './pre.component'
+export * from './list.component'
 // anime
 export * from './anime.component'
 export * from './animeRoot.component'

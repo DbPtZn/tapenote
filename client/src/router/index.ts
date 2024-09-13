@@ -52,6 +52,14 @@ const routes: Array<RouteRecordRaw> = [
   ...errorRoutes
 ]
 
+import.meta.env.MODE === 'development' && routes.push(
+  {
+    path: '/editor',
+    name: 'editor',
+    component: () => import(/* webpackChunkName: "about" */ '../pages/modules/EditorPage.vue'),
+  }
+)
+
 const router = createRouter({
   // history: createWebHashHistory(),
   history: createWebHistory(),
