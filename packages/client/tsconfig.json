@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    // "jsx": "preserve",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@textbus/core",
+    "experimentalDecorators": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": false,
+
+    /** textbus */
+    "importHelpers": true,
+    // "moduleResolution": "node",
+    // "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    // "useDefineForClassFields": true,
+    "emitDecoratorMetadata": true,
+    // "experimentalDecorators": true,
+    "noImplicitAny": false,
+    // "suppressImplicitAnyIndexErrors": true,
+    "downlevelIteration": true,
+
+    /* custom */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "#/*": ["*"]
+    },
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "electron", "build-editor.config.ts", "build-container.config.ts", "server/node_modules/sherpa-onnx-win-x64", "dist-electron/sherpa-onnx-win-x64"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

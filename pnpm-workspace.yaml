@@ -1,0 +1,11 @@
+packages:
+  # all packages in direct subdirs of packages/ 所有前端项目储存的地方
+  - 'packages/*'
+  # all packages in subdirs of components/ 公共的，给所有项目使用的公共组件
+  - 'components/**'
+  # 公共的方法
+  - 'api/**'
+  # 编辑器
+  - 'editor/**'
+  # exclude packages that are inside test directories
+  - '!**/test/**'
