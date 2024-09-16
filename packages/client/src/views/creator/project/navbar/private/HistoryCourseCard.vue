@@ -53,12 +53,13 @@ const themeVars = useThemeVars()
     color: v-bind('themeVars.textColor2');
   }
   &:hover {
-    .icon {
-      opacity: 1;
-    }
     border-radius: v-bind('themeVars.borderRadius');
     background-color: v-bind('themeVars.cardColor');
     border-top: 1px solid #ffffff00;
+    .icon {
+      opacity: 1;
+    }
+
     &:last-child {
       border-bottom: 1px solid #ffffff00;
     }

@@ -5,9 +5,9 @@ const ip = require('ip')
 
 module.exports = {
   mode: 'development',
-  devtool: process.env.NODE_ENV === 'development' ? 'cheap-module-source-map' : undefined,
+  devtool: process.env.NODE_ENV === 'production' ? undefined : 'cheap-module-source-map',
   entry: {
-    index: path.resolve(__dirname, './src/index.tsx')
+    index: path.resolve(__dirname, './index.ts')
   },
   output: {
     path: path.resolve(__dirname, './dist'),
@@ -24,7 +24,7 @@ module.exports = {
       directory: path.join(__dirname, 'public')
     },
     compress: true,
-    port: 8080,
+    port: 5634,
     hot: true,
     open: true
   },

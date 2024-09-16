@@ -13,15 +13,15 @@
     "build:editor": "vite build --config build-editor.config.ts",
     "build:container": "vite build --config build-container.config.ts",
     "preview": "vite preview",
-    "postinstall": "electron-builder install-app-deps"
+    "--postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "@dbptzn/xnote": "workspace:0.0.1-alpha.42",
     "@tanbo/bezier": "^1.0.1",
     "@tanbo/stream": "^1.2.5",
     "@textbus/core": "3.7.8",
     "@textbus/editor": "3.7.9",
     "@textbus/platform-browser": "3.7.9",
-    "@textbus/xnote": "0.0.1-alpha.42",
     "@vueuse/core": "^10.9.0",
     "animate.css": "^4.1.1",
     "animejs": "^3.2.2",

@@ -79,11 +79,11 @@ function handleRemoveCache(ev) {
   }
   &:hover {
     border-radius: v-bind('themeVars.borderRadius');
+    background-color: v-bind('themeVars.buttonColor2Hover');
+    border-top: 1px solid #ffffff00;
     .header-icon {
       opacity: 1;
     }
-    background-color: v-bind('themeVars.buttonColor2Hover');
-    border-top: 1px solid #ffffff00;
     &:last-child {
       border-bottom: 1px solid #ffffff00;
     }

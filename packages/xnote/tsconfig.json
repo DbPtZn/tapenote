@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
+    "declaration": true,
     "target": "es6",
     "module": "esnext",
     "strict": true,
     "moduleResolution": "node",
     "sourceMap": true,
-    "useDefineForClassFields": true,
+    "useDefineForClassFields": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "lib": [
@@ -20,5 +21,6 @@
     "baseUrl": "./",
     "jsx": "react-jsx",
     "jsxImportSource": "@viewfly/core"
-  }
+  },
+  "include": ["src", "./types.d.ts"]
 }

@@ -24,29 +24,32 @@ export default defineConfig(({ command, mode }) => {
         // 可以指定放置类型声明文件的位置和名称
         dts: 'src/types/components.d.ts'
       }),
-      VitePWA({
-        manifest: {
-          name: '笔记映画',
-          short_name: 'Tapenote',
-          description: 'A cloud note app',
-          theme_color: '#ffffff',
-          background_color: '#ffffff',
-          display: 'standalone',
-          icons: [
-            {
-              src: 'logo192.png',
-              sizes: '192x192',
-              type: 'image/png',
-            },
-          ],
-        },
-      }),
+      // VitePWA({
+      //   manifest: {
+      //     name: '笔记映画',
+      //     short_name: 'Tapenote',
+      //     description: 'A cloud note app',
+      //     theme_color: '#ffffff',
+      //     background_color: '#ffffff',
+      //     display: 'standalone',
+      //     icons: [
+      //       {
+      //         src: 'logo192.png',
+      //         sizes: '192x192',
+      //         type: 'image/png',
+      //       },
+      //     ],
+      //   },
+      // }),
     ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'), // 路径别名
         '#': path.resolve(__dirname, '.')
       }
+    },
+    optimizeDeps: {
+      exclude: ["@textbus/core", "@textbus/platform-browser", "@textbus/editor"]
     },
     server: {
       host: '0.0.0.0',
