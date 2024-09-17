@@ -1,4 +1,8 @@
 .container {
-  color: #000000;
+  // color: #000000;
   background-color: #ebebeb;
+}
+
+[data-theme="dark"].container {
+  background-color: #1b1b1b;
 }

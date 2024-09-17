@@ -65,8 +65,8 @@ export function ColorTool(props: ColorToolProps) {
   })
 
   const textColors: string[] = [
-    '#000',
-    '#aaa',
+    '#000000',
+    '#aaaaaa',
     '#ff2e2e',
     '#ff8d45',
     '#ffdf14',
@@ -75,11 +75,11 @@ export function ColorTool(props: ColorToolProps) {
     '#1296db',
     '#617fff',
     '#c459ff',
-    '#fff',
+    '#ffffff',
   ]
 
   const backgroundColors: string[] = [
-    '#aaa',
+    '#aaaaaa',
     '#ef7373',
     '#ec9c6a',
     '#dccc64',

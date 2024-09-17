@@ -1,3 +1,4 @@
+export * from './anime.formatter'
 export * from './background-color'
 export * from './bold'
 export * from './code'

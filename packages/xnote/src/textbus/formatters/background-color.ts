@@ -1,5 +1,6 @@
 import { Component, FormatHostBindingRender, Formatter, VElement, VTextNode } from '@textbus/core'
 import { FormatLoader, FormatLoaderReadResult } from '@textbus/platform-browser'
+import { rgbaToHex } from '../_utils/rgbaToHex'
 
 export const backgroundColorFormatter = new Formatter<string>('backgroundColor', {
   columned: true,
@@ -7,7 +8,9 @@ export const backgroundColorFormatter = new Formatter<string>('backgroundColor',
     return {
       fallbackTagName: 'span',
       attach(host: VElement) {
-        host.styles.set('backgroundColor', formatValue)
+        // host.styles.set('backgroundColor', formatValue)
+        host.styles.set('backgroundColor', rgbaToHex(formatValue))
+        host.attrs.set('data-bgcolor', rgbaToHex(formatValue))
       }
     }
   }

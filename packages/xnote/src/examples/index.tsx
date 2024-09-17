@@ -50,7 +50,7 @@ function App() {
   })
   
   return withScopedCSS(css, () => {
-    return <div class="container">
+    return <div data-theme={theme()} class="container">
             <button onClick={handleThemeUpdate}>{theme()}</button>
             <div ref={editorRef} class="editor"></div>
           </div>

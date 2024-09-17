@@ -19,11 +19,11 @@ database
 
 # server
 sherpa
-database
-assets
-logs
+/database
+/assets
+/logs
 database.sqlite
-server
+/server
 sherpa-onnx-win-x64
 sherpa-onnx.node
 
@@ -45,4 +45,4 @@ sherpa-onnx.node
 
 *.zip
 *.tar.gz
-xnote
+/xnote
