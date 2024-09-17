@@ -12,7 +12,7 @@ dist
 dist-ssr
 dist-electron
 dist-editor
-editor
+/editor
 release
 *.local
 database

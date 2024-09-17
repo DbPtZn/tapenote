@@ -1,0 +1,5 @@
+@media (max-width: 767px) {
+  .tb-img {
+    object-fit: contain!important;
+  }
+}

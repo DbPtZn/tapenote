@@ -1,0 +1,6 @@
+
+code {
+  color: var(--tb-codeTextColor)!important;
+  border-color: var(--tb-codeBorderColor)!important;
+  background-color: var(--tb-codeBgColor)!important;
+}
