@@ -7,7 +7,6 @@ import { ThemeProvider } from '../providers/theme.provider'
 import { Editor } from '../editor'
 
 import css from './index.scoped.scss'
-import '../assets/edit-dark.scss'
 
 const editor = new Editor({
   readonly: false,
@@ -24,7 +23,6 @@ const editor = new Editor({
   setup(textbus) {
     const themeProvider = textbus.get(ThemeProvider)
     themeProvider.setup(textbus)
-    themeProvider.updateTheme('dark')
   },
 })
 
@@ -52,7 +50,7 @@ function App() {
   })
   
   return withScopedCSS(css, () => {
-    return <div data-theme={theme()} class="container">
+    return <div class="container">
             <button onClick={handleThemeUpdate}>{theme()}</button>
             <div ref={editorRef} class="editor"></div>
           </div>

@@ -11,17 +11,20 @@ interface ThemeConfig {
 @Injectable()
 export class ThemeProvider {
   private viewContainer: HTMLElement | null = null
+  private viewDocument: HTMLElement | null = null
+
   private theme: Theme = 'light'
   private themeUpdateEvent: Subject<Theme> = new Subject()
   onThemeUpdate: Observable<Theme> = this.themeUpdateEvent.asObservable()
 
   setup(injector: Injector, config?: ThemeConfig) {
     this.viewContainer = injector.get(VIEW_CONTAINER)
+    this.viewDocument = injector.get(VIEW_DOCUMENT)
     const theme = config?.theme || this.theme
     
-    if(this.viewContainer) {
-      this.viewContainer.setAttribute('data-color', theme === 'dark' ? '#000000' : '#ffffff')
-      this.viewContainer.style.color = '#000000'
+    if(this.viewContainer && this.viewDocument) {
+      // this.viewContainer.setAttribute('data-color', '#000000')
+      this.viewContainer.setAttribute('data-theme', `${theme}-theme`)
     }
   }
 

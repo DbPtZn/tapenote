@@ -11,18 +11,6 @@ $colors:(
 );
 
 @each $source, $target in $colors {
-  [data-theme="dark"] [data-color="#{''+$source}"] {
-    color: #{$target}!important;
-  }
-}
-
-@each $source, $target in $colors {
-  [data-theme="dark"] [data-bgcolor="#{''+$source}"] {
-    background-color: #{$target}!important;
-  }
-}
-
-@each $source, $target in $colors {
   [data-theme="dark-theme"] [data-color="#{''+$source}"] {
     color: #{$target}!important;
   }
@@ -33,4 +21,3 @@ $colors:(
     background-color: #{$target}!important;
   }
 }
-

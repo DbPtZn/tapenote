@@ -56,24 +56,29 @@ module.exports = {
       }, 'sass-loader'],
     }, {
       test: /\.less$/,
-      use: ['style-loader', '@viewfly/devtools/scoped-css-webpack-loader', {
-        loader: 'postcss-loader',
-        options: {
-          postcssOptions: {
-            plugins: [
-              [
-                'postcss-preset-env',
-                {
-                  // Options
-                },
+      use: [
+        'style-loader', 
+        '@viewfly/devtools/scoped-css-webpack-loader',
+        {
+          loader: 'postcss-loader',
+          options: {
+            postcssOptions: {
+              plugins: [
+                [
+                  'postcss-preset-env',
+                  {
+                    // Options
+                  },
+                ],
+                [
+                  'autoprefixer'
+                ]
               ],
-              [
-                'autoprefixer'
-              ]
-            ],
+            }
           }
-        }
-      }, 'less-loader'],
+        },
+        'less-loader'
+    ],
     }, {
       test: /\.(jpe?g|png|svg|gif)$/,
       type: 'asset'

@@ -87,6 +87,7 @@ export function RootView(props: ViewComponentProps<RootComponent>) {
         <SlotRender
           slot={content}
           tag='div'
+          data-color="#000000"
           class="xnote-content"
           data-placeholder={content.isEmpty ? '请输入内容' : ''}
           renderEnv={readonly() || output()}

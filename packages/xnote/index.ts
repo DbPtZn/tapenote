@@ -4,7 +4,6 @@ import { Editor, Member, Organization, ThemeProvider } from './src/public-api'
 import { UserInfo } from '@textbus/collaborate'
 import { FileUploader } from './src/interfaces'
 
-import './src/assets/edit-dark.scss'
 export * from './src/examples/index'
 
 const firstNameText = '王、李、张、刘、陈、杨、黄、赵、周、吴、徐、孙、马、胡、朱、郭、何、罗、高、林'.replace(/、/g, '')
