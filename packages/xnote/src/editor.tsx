@@ -9,12 +9,15 @@ import {
   isMobileBrowser
 } from '@textbus/platform-browser'
 import { CollaborateConfig, CollaborateModule } from '@textbus/collaborate'
-import { Component, ContentType, Module, Slot, Textbus, TextbusConfig } from '@textbus/core'
+import { Component, ContentType, Formatter, Module, Slot, Textbus, TextbusConfig } from '@textbus/core'
 import { ReflectiveInjector } from '@viewfly/core'
 
 import './assets/icons/style.css'
 
 import {
+  AnimeComponent,
+  animeComponentLoader,
+  AnimeView,
   AtComponent, atComponentLoader, AtComponentView,
   BlockquoteComponent,
   blockquoteComponentLoader,
@@ -49,6 +52,8 @@ import {
 } from './textbus/components/_api'
 import { LeftToolbarPlugin, LinkJump, ToolbarPlugin } from './plugins/_api'
 import {
+  animeFormatLoader,
+  animeFormatter,
   backgroundColorFormatLoader,
   backgroundColorFormatter,
   boldFormatLoader,
@@ -82,6 +87,90 @@ import { registerTextIndentShortcut, textIndentAttr, textIndentAttrLoader } from
 import { OutputInjectionToken } from './textbus/injection-tokens'
 import { TableSelectionAwarenessDelegate } from './textbus/components/table/table-selection-awareness-delegate'
 
+export const defaultComponentViews = {
+  [ParagraphComponent.componentName]: ParagraphView,
+  [RootComponent.componentName]: RootView,
+  [BlockquoteComponent.componentName]: BlockquoteView,
+  [TodolistComponent.componentName]: TodolistView,
+  [SourceCodeComponent.componentName]: SourceCodeView,
+  [TableComponent.componentName]: TableComponentView,
+  [HighlightBoxComponent.componentName]: HighlightBoxView,
+  [ListComponent.componentName]: ListComponentView,
+  [ImageComponent.componentName]: ImageView,
+  [VideoComponent.componentName]: VideoView,
+  [AtComponent.componentName]: AtComponentView,
+  [KatexComponent.componentName]: KatexComponentView,
+  [AnimeComponent.componentName]: AnimeView
+}
+export const defaultComponentLoaders = [
+  atComponentLoader,
+  sourceCodeComponentLoader,
+  listComponentLoader,
+  tableComponentLoader,
+  imageComponentLoader,
+  highlightBoxComponentLoader,
+  blockquoteComponentLoader,
+  videoComponentLoader,
+  todolistComponentLoader,
+  katexComponentLoader,
+  paragraphComponentLoader,
+  animeComponentLoader
+]
+
+export const defaultFormatterLoaders = [
+  backgroundColorFormatLoader,
+  boldFormatLoader,
+  codeFormatLoader,
+  colorFormatLoader,
+  fontFamilyFormatLoader,
+  fontSizeFormatLoader,
+  italicFormatLoader,
+  linkFormatLoader,
+  strikeThroughFormatLoader,
+  underlineFormatLoader,
+  animeFormatLoader
+]
+
+export const defaultAttributeLoaders = [
+  headingAttrLoader,
+  textAlignAttrLoader,
+  textIndentAttrLoader
+]
+
+export const defaultComponents = [
+  ImageComponent,
+  ParagraphComponent,
+  RootComponent,
+  BlockquoteComponent,
+  TodolistComponent,
+  SourceCodeComponent,
+  TableComponent,
+  HighlightBoxComponent,
+  ListComponent,
+  VideoComponent,
+  AtComponent,
+  KatexComponent,
+  AnimeComponent
+]
+export const defaultFormatters: Formatter<any>[] = [
+  backgroundColorFormatter,
+  boldFormatter,
+  codeFormatter,
+  colorFormatter,
+  fontFamilyFormatter,
+  fontSizeFormatter,
+  italicFormatter,
+  linkFormatter,
+  strikeThroughFormatter,
+  underlineFormatter,
+  animeFormatter
+]
+export const defaultAttributes = [
+  headingAttr,
+  textAlignAttr,
+  textIndentAttr
+]
+
 export interface EditorConfig extends TextbusConfig {
   content?: string,
   collaborateConfig?: CollaborateConfig,
@@ -94,20 +183,7 @@ export class Editor extends Textbus {
   private vDomAdapter: ViewflyVDomAdapter
 
   constructor(private editorConfig: EditorConfig = {}) {
-    const adapter = new ViewflyAdapter({
-      [ParagraphComponent.componentName]: ParagraphView,
-      [RootComponent.componentName]: RootView,
-      [BlockquoteComponent.componentName]: BlockquoteView,
-      [TodolistComponent.componentName]: TodolistView,
-      [SourceCodeComponent.componentName]: SourceCodeView,
-      [TableComponent.componentName]: TableComponentView,
-      [HighlightBoxComponent.componentName]: HighlightBoxView,
-      [ListComponent.componentName]: ListComponentView,
-      [ImageComponent.componentName]: ImageView,
-      [VideoComponent.componentName]: VideoView,
-      [AtComponent.componentName]: AtComponentView,
-      [KatexComponent.componentName]: KatexComponentView,
-    }, (host, root, injector) => {
+    const adapter = new ViewflyAdapter(defaultComponentViews, (host, root, injector) => {
       const appInjector = new ReflectiveInjector(injector, [{
         provide: OutputInjectionToken,
         useValue: false
@@ -130,36 +206,9 @@ export class Editor extends Textbus {
       },
       useContentEditable: isMobileBrowser(),
       adapter,
-      componentLoaders: [
-        atComponentLoader,
-        sourceCodeComponentLoader,
-        listComponentLoader,
-        tableComponentLoader,
-        imageComponentLoader,
-        highlightBoxComponentLoader,
-        blockquoteComponentLoader,
-        videoComponentLoader,
-        todolistComponentLoader,
-        katexComponentLoader,
-        paragraphComponentLoader,
-      ],
-      formatLoaders: [
-        backgroundColorFormatLoader,
-        boldFormatLoader,
-        codeFormatLoader,
-        colorFormatLoader,
-        fontFamilyFormatLoader,
-        fontSizeFormatLoader,
-        italicFormatLoader,
-        linkFormatLoader,
-        strikeThroughFormatLoader,
-        underlineFormatLoader
-      ],
-      attributeLoaders: [
-        headingAttrLoader,
-        textAlignAttrLoader,
-        textIndentAttrLoader
-      ],
+      componentLoaders: defaultComponentLoaders,
+      formatLoaders: defaultFormatterLoaders,
+      attributeLoaders: defaultAttributeLoaders,
       ...editorConfig.viewOptions
     })
 
@@ -171,20 +220,7 @@ export class Editor extends Textbus {
         useClass: TableSelectionAwarenessDelegate
       })
     }
-    const vDomAdapter = new ViewflyVDomAdapter({
-      [ParagraphComponent.componentName]: ParagraphView,
-      [RootComponent.componentName]: RootView,
-      [BlockquoteComponent.componentName]: BlockquoteView,
-      [TodolistComponent.componentName]: TodolistView,
-      [SourceCodeComponent.componentName]: SourceCodeView,
-      [TableComponent.componentName]: TableComponentView,
-      [HighlightBoxComponent.componentName]: HighlightBoxView,
-      [ListComponent.componentName]: ListComponentView,
-      [ImageComponent.componentName]: ImageView,
-      [VideoComponent.componentName]: VideoView,
-      [AtComponent.componentName]: AtComponentView,
-      [KatexComponent.componentName]: KatexComponentView
-    } as any, (host, root, injector) => {
+    const vDomAdapter = new ViewflyVDomAdapter(defaultComponentViews as any, (host, root, injector) => {
       const appInjector = new ReflectiveInjector(injector, [{
         provide: OutputInjectionToken,
         useValue: true
@@ -203,41 +239,14 @@ export class Editor extends Textbus {
         app.destroy()
       }
     })
+    
     super({
       zenCoding: true,
       additionalAdapters: [vDomAdapter],
       imports: modules,
-      components: [
-        ImageComponent,
-        ParagraphComponent,
-        RootComponent,
-        BlockquoteComponent,
-        TodolistComponent,
-        SourceCodeComponent,
-        TableComponent,
-        HighlightBoxComponent,
-        ListComponent,
-        VideoComponent,
-        AtComponent,
-        KatexComponent
-      ],
-      formatters: [
-        backgroundColorFormatter,
-        boldFormatter,
-        codeFormatter,
-        colorFormatter,
-        fontFamilyFormatter,
-        fontSizeFormatter,
-        italicFormatter,
-        linkFormatter,
-        strikeThroughFormatter,
-        underlineFormatter
-      ],
-      attributes: [
-        headingAttr,
-        textAlignAttr,
-        textIndentAttr
-      ],
+      components: defaultComponents,
+      formatters: defaultFormatters,
+      attributes: defaultAttributes,
       plugins: [
         new LeftToolbarPlugin(),
         new ToolbarPlugin(),

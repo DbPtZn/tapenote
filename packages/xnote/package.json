@@ -35,6 +35,7 @@
     "@viewfly/hooks": "^1.0.0-alpha.17",
     "@viewfly/platform-browser": "^1.0.0-alpha.17",
     "@viewfly/scoped-css": "^1.0.0-alpha.17",
+    "animejs": "^3.2.2",
     "highlight.js": "^11.9.0",
     "katex": "^0.16.10",
     "reflect-metadata": "^0.2.2"
@@ -43,6 +44,7 @@
     "@babel/core": "^7.16.5",
     "@babel/preset-env": "^7.16.5",
     "@rollup/plugin-commonjs": "^25.0.7",
+    "@types/animejs": "^3.1.12",
     "@types/jest": "^29.5.2",
     "@typescript-eslint/eslint-plugin": "^5.8.0",
     "@typescript-eslint/parser": "^5.8.0",

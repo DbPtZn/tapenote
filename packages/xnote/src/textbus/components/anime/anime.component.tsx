@@ -4,10 +4,13 @@ import {
   ComponentStateLiteral,
   ContentType,
   onContentDeleted,
+  Query,
+  QueryStateType,
   Registry,
   Slot,
   Textbus,
   useContext,
+  Selection,
   useSelf,
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
@@ -66,7 +69,48 @@ export class AnimeComponent extends Component<AnimeComponentState> {
       }
     })
   }
-  
+}
+
+export function toAnimeComponent(textbus: Textbus) {
+  console.log('toAnimeComponent')
+  const query = textbus.get(Query)
+  const commander = textbus.get(Commander)
+  const selection = textbus.get(Selection)
+
+  const state = query.queryComponent(AnimeComponent)
+  if (state.state === QueryStateType.Enabled) {
+    const current = state.value!
+    const parent = current.parent!
+
+    const index = parent.indexOf(current)
+
+    parent.retain(index)
+
+    commander.removeComponent(current)
+
+    current.__slots__.get(0)!.sliceContent().forEach(i => {
+      parent.insert(i)
+    })
+  } else {
+    const block = new AnimeComponent(textbus)
+    const slot = block.state.slot
+    if (selection.startSlot === selection.endSlot) {
+      const parentComponent = selection.startSlot!.parent!
+      const parentSlot = parentComponent.parent!
+      const position = parentSlot.indexOf(parentComponent)
+      slot.insert(parentComponent)
+      parentSlot.retain(position)
+      parentSlot.insert(block)
+    } else {
+      const commonAncestorSlot = selection.commonAncestorSlot!
+      const scope = selection.getCommonAncestorSlotScope()!
+      commonAncestorSlot.cut(scope.startOffset, scope.endOffset).sliceContent().forEach(i => {
+        slot.insert(i)
+      })
+      commonAncestorSlot.retain(scope.startOffset)
+      commonAncestorSlot.insert(block)
+    }
+  }
 }
 
 export function AnimeView(props: ViewComponentProps<AnimeComponent>) {

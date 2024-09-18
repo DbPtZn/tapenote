@@ -1,3 +1,4 @@
+export * from './anime.tool'
 export * from './attr.tool'
 export * from './block.tool'
 export * from './bold.tool'

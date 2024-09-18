@@ -37,6 +37,7 @@ import { AttrTool } from '../_common/attr.tool'
 import { ColorTool } from '../_common/color.tool'
 import { InsertTool } from './insert-tool'
 import { EditorService } from '../../services/editor.service'
+import { AnimeTool } from '../_api'
 
 export const LeftToolbar = withAnnotation({
   providers: [RefreshService]
@@ -315,6 +316,13 @@ export const LeftToolbar = withAnnotation({
                   </Button>
                 </div>
                 <Divider/>
+                <AnimeTool
+                  style={{ display: 'block' }}
+                  abreast={true}
+                  slot={slot}
+                  applyBefore={applyBefore}>
+                  <MenuItem arrow={true} icon={<span class="xnote-icon-color"/>}>动画</MenuItem>
+                </AnimeTool>
                 <AttrTool
                   style={{ display: 'block' }}
                   abreast={true}

@@ -20,6 +20,7 @@ import { FontFamilyTool } from '../_common/font-family.tool'
 import { EditorService } from '../../services/editor.service'
 import { SourceCodeComponent } from '../../textbus/components/source-code/source-code.component'
 import { LinkTool } from '../_common/link.tool'
+import { AnimeTool } from '../_api'
 
 export const Toolbar = withAnnotation({
   providers: [RefreshService]
@@ -186,6 +187,9 @@ export const Toolbar = withAnnotation({
         </ToolbarItem>
         <ToolbarItem>
           <ColorTool/>
+        </ToolbarItem>
+        <ToolbarItem>
+          <AnimeTool/>
         </ToolbarItem>
       </div>
     )

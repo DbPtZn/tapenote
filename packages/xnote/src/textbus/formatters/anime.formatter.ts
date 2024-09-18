@@ -4,6 +4,16 @@ import {
   VTextNode
 } from '@textbus/core'
 import { FormatLoader } from '@textbus/platform-browser'
+import './anime.formatter.scss'
+
+interface FormatterValue {
+  dataId: string
+  dataSerial: string
+  dataEffect: string
+  dataState: 'active' | 'inactive'
+  dataTitle: string
+}
+
 
 export const animeFormatter = new Formatter('anime', {
   inheritable: false,
@@ -11,7 +21,7 @@ export const animeFormatter = new Formatter('anime', {
   columned: false,
   render(
     children: Array<VElement | VTextNode>,
-    formatValue: Record<string, string>,
+    formatValue: FormatterValue,
   ): VElement {
     const vdom = new VElement(
       'anime',

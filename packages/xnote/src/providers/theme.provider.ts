@@ -2,6 +2,9 @@ import { Injectable, Injector } from '@viewfly/core'
 import { VIEW_DOCUMENT, VIEW_CONTAINER, VIEW_MASK } from '@textbus/platform-browser'
 import { Observable, Subject } from '@textbus/core'
 import '../assets/edit-dark.scss'
+import '../assets/dark.scss'
+import '../assets/light.scss'
+
 type Theme = 'dark' | 'light'
 
 interface ThemeConfig {
@@ -23,7 +26,6 @@ export class ThemeProvider {
     const theme = config?.theme || this.theme
     
     if(this.viewContainer && this.viewDocument) {
-      // this.viewContainer.setAttribute('data-color', '#000000')
       this.viewContainer.setAttribute('data-theme', `${theme}-theme`)
     }
   }

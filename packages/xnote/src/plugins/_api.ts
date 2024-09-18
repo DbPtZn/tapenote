@@ -10,3 +10,5 @@ export * from './link-jump/link-jump'
 
 export * from './toolbar/toolbar.plugin'
 export * from './toolbar/toolbar'
+
+export * from './anime-component-support/anime-component-support.plugin'

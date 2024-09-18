@@ -75,6 +75,7 @@ export class BlockquoteComponent extends Component<BlockquoteComponentState> {
 
 
 export function toBlockquote(textbus: Textbus) {
+  console.log('toBlockquote')
   const query = textbus.get(Query)
   const commander = textbus.get(Commander)
   const selection = textbus.get(Selection)

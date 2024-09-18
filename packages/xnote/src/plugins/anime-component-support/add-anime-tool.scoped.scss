@@ -1,0 +1,65 @@
+.anime-tool {
+  position: absolute;
+  user-select: none;
+  right: 84px;
+  top: -32px;
+  .anime-btn {
+    position: absolute;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    word-break: keep-all;
+    box-sizing: border-box;
+    font-size: 14px;
+    color: var(--tb-textColor1);
+    background-color: var(--tb-buttonColor2);
+    transition: opacity 0.5s ease-in-out;
+    cursor: pointer;
+  }
+}
+.trigger {
+  display: flex;
+  flex-direction: row;
+  .caret {
+    pointer-events: none;
+    transition: all 0.15s ease-in-out;
+    transform: rotate(-90deg);
+  }
+  .active {
+    transform: rotate(90deg);
+  }
+}
+
+.left-btn {
+  display: flex;
+  align-items: center;
+  user-select: none;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  word-break: keep-all;
+  overflow: hidden;
+  cursor: pointer;
+  &:hover {
+    background-color: var(--tb-buttonColor2Hover);
+  }
+  &:active {
+    background-color: var(--tb-buttonColor2Pressed);
+  }
+}
+.right-btn {
+  display: flex;
+  align-items: center;
+  user-select: none;
+  padding: 0 3px;
+  box-sizing: border-box;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  cursor: pointer;
+  &:hover {
+    background-color: var(--tb-buttonColor2Hover);
+  }
+  &:active {
+    background-color: var(--tb-buttonColor2Pressed);
+  }
+}
