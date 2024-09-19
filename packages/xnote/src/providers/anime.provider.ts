@@ -77,18 +77,23 @@ export class AnimeProvider {
   generateAnimeSerial() {
     if (!this.viewContainer) return 1
     const serialArr: number[] = []
+    
     const animeFormatsArr = this.viewContainer.getElementsByTagName('anime') as HTMLCollectionOf<HTMLElement>
     const animeComponentsArr = this.viewContainer.getElementsByTagName('anime-component') as HTMLCollectionOf<HTMLElement>
-    const anime_amount = animeFormatsArr.length + animeComponentsArr.length
+    const animeAttributesArr = this.viewContainer.querySelectorAll<HTMLElement>('[data-anime="true"]')
+
+    const animeFormatElements = Array.from(animeFormatsArr)
+    const animeComponentElements = Array.from(animeComponentsArr)
+    const animeAttributeElements = Array.from(animeAttributesArr)
+
+    const animeElements = [...animeFormatElements, ...animeComponentElements, ...animeAttributeElements]
+    
+    const anime_amount = animeElements.length
     if (!anime_amount) {
       return 1
     }
-    for (let i = 0; i < animeFormatsArr.length; i++) {
-      const serial = animeFormatsArr[i].dataset.serial
-      serial && serialArr.push(Number(serial))
-    }
-    for (let i = 0; i < animeComponentsArr.length; i++) {
-      const serial = animeComponentsArr[i].dataset.serial
+    for (let i = 0; i < animeElements.length; i++) {
+      const serial = animeElements[i].dataset.serial
       serial && serialArr.push(Number(serial))
     }
     let maxSerial = 1

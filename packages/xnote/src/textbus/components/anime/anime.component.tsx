@@ -21,11 +21,13 @@ import { useOutput } from '../../hooks/use-output'
 import { SlotRender } from '../SlotRender'
 import './anime.component.scss'
 
+type AnimeState = 'active' | 'inactive'
+
 export interface AnimeComponentState {
   dataId: string
   dataEffect: string
   dataSerial: string
-  dataState: string
+  dataState: AnimeState
   dataTitle: string
   slot: Slot
 }
@@ -35,7 +37,6 @@ export class AnimeComponent extends Component<AnimeComponentState> {
   static type = ContentType.BlockComponent
 
   static fromJSON(textbus: Textbus, json: ComponentStateLiteral<AnimeComponentState>) {
-    // const slot = textbus.get(Registry).createSlot(json.slot)
     return new AnimeComponent(textbus, {
       dataId: json.dataId,
       dataEffect: json.dataEffect,
@@ -165,7 +166,7 @@ export const animeComponentLoader: ComponentLoader = {
       dataId: element.getAttribute('data-id') || '',
       dataEffect: element.getAttribute('data-effect') || '',
       dataSerial: element.getAttribute('data-serial') || '',
-      dataState: element.getAttribute('data-state') || '',
+      dataState: element.getAttribute('data-state') as AnimeState || 'inactive',
       dataTitle: element.getAttribute('data-title') || '',
       slot
     })

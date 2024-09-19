@@ -1,6 +1,6 @@
 .anime-component-evoke {
   display: block;
-  outline: 1px dashed #aaaaaa30;
+  outline: 1px dashed #aaaaaa30!important;
 }
 .anime-component-tab:after {
   z-index: 1;
@@ -35,4 +35,9 @@
 }
 [data-state="active"]:after { 
   background-color:pink 
+}
+
+// 属性
+[data-anime="false"] .anime-component-tab:after {
+  content: unset;
 }

@@ -1,13 +1,13 @@
 import { createRef, createSignal, inject, withAnnotation } from '@viewfly/core'
 import { withScopedCSS } from '@viewfly/scoped-css'
-import { Adapter, Commander, Component, ContentType, Slot, Subscription, Textbus, auditTime, debounceTime } from '@textbus/core'
+import { Adapter, Commander, Component, ContentType, Slot, Subscription, Textbus } from '@textbus/core'
 // import { Editor } from '../../editor'
 import { AnimeService, RefreshService } from '../../services/_api'
 import css from './add-anime-tool.scoped.scss'
 import { VIEW_CONTAINER } from '@textbus/platform-browser'
 import { useProduce } from '@viewfly/hooks'
 import { AnimeProvider } from '../../providers/_api'
-import { AnimeComponent } from '../../textbus/components/_api'
+import { AnimeComponent, ListComponent } from '../../textbus/components/_api'
 import { AnimeTool } from '../_common/anime.tool'
 
 // 以下组件不支持动画组件
@@ -54,6 +54,15 @@ export const AddAnimeTool = withAnnotation({
     const id = animeProvider.generateAnimeId()
     const serial = animeProvider.generateAnimeSerial().toString()
     try {
+      if(['ListComponent'].includes(componentInstance.name)) {
+        componentInstance.state.dataAnime = true
+        componentInstance.state.dataId = id
+        componentInstance.state.dataSerial = serial
+        componentInstance.state.dataState = 'inactive'
+        componentInstance.state.dataEffect = currentOptionSignal().effect
+        componentInstance.state.dataTitle = currentOptionSignal().title
+        return
+      }
       const slot = new Slot([ContentType.BlockComponent])
       const anime = new AnimeComponent(textbus, {
         dataId: id,
@@ -104,8 +113,8 @@ export const AddAnimeTool = withAnnotation({
       // 如果是行内组件或文本组件，不显示按钮（可以通过 formatter 方式设置动画）
       if ([ContentType.InlineComponent, ContentType.Text].includes(component.type)) return
 
-      // 父组件不是动画组件，说明该组件未添加动画  // 如果组件的
-      if (component.parentComponent && component.parentComponent.name === 'AnimeComponent') return
+      // 如果组件不包含动画属性 且 父组件不是动画组件，说明该组件未添加动画 
+      if (component.state.dataAnime || (component.parentComponent && component.parentComponent.name === 'AnimeComponent')) return
       // console.log(component.name)
       const nativeNode = adapter.getNativeNodeByComponent(component) as HTMLElement
       // console.log(nativeNode)
@@ -138,6 +147,9 @@ export const AddAnimeTool = withAnnotation({
       addAnime(currentComponent)
     }
     currentComponent = null
+    updatePosition(draft => {
+      draft.display = false
+    })
   }
 
   function handleExpendStateChange(is: boolean) {

@@ -29,10 +29,19 @@ import { useOutput } from '../../hooks/use-output'
 import { headingAttr } from '../../attributes/heading.attr'
 import { SlotRender } from '../SlotRender'
 
+type AnimeState = 'active' | 'inactive'
+
 export interface ListComponentState {
   type: 'OrderedList' | 'UnorderedList'
   slot: Slot
   reorder: boolean
+
+  dataAnime?: boolean
+  dataId?: string
+  dataEffect?: string
+  dataSerial?: string
+  dataState?: AnimeState
+  dataTitle?: string
 }
 
 export function toList(textbus: Textbus, type: 'OrderedList' | 'UnorderedList') {
@@ -295,10 +304,38 @@ export function ListComponentView(props: ViewComponentProps<ListComponent>) {
         icon = numberToLetter(listStep) + '.'
       }
     }
+    const { dataAnime, dataId, dataTitle, dataEffect, dataSerial, dataState } = props.component.state
     return (
-      <ListType ref={props.rootRef} data-component={component.name} data-reorder={(listStep === 0) + ''} class="xnote-list" style={{
-        marginLeft: indent * 24 + 'px'
-      }}>
+      <ListType 
+        ref={props.rootRef}
+        data-component={component.name}
+        data-reorder={(listStep === 0) + ''}
+        class="xnote-list"
+        style={{
+          marginLeft: indent * 24 + 'px'
+        }}
+        data-anime={dataAnime || false}
+        data-id={dataId || ''}
+        data-effect={dataEffect || ''}
+        data-serial={dataSerial || ''}
+        data-state={dataState || ''}
+        data-title={dataTitle || ''}
+        title={dataTitle || ''}
+        >
+        <span
+          class={'anime-component-tab'}
+          title={dataTitle}
+          data-serial={dataSerial}
+          data-state={dataState}
+          onMouseenter={(ev) => {
+            const target = ev.target as HTMLElement
+            target.parentElement?.classList.add('anime-component-evoke')
+          }}
+          onMouseleave={(ev) => {
+            const target = ev.target as HTMLElement
+            target.parentElement?.classList.remove('anime-component-evoke')
+          }}
+        />
         <li style={{
           justifyContent: align[component.state.slot.getAttribute(textAlignAttr)!],
           textAlign: component.state.slot.getAttribute(textAlignAttr) === 'justify' ? 'justify' : void 0
@@ -339,7 +376,14 @@ export const listComponentLoader: ComponentLoader = {
       return new ListComponent(textbus, {
         slot,
         reorder: element.dataset.reorder !== 'false',
-        type
+        type,
+        
+        dataAnime: element.dataset.anime === 'true',
+        dataId: element.getAttribute('data-id') || '',
+        dataEffect: element.getAttribute('data-effect') || '',
+        dataSerial: element.getAttribute('data-serial') || '',
+        dataState: element.getAttribute('data-state') as AnimeState || 'inactive',
+        dataTitle: element.getAttribute('data-title') || '',
       })
     }
 
