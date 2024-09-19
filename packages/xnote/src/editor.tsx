@@ -152,6 +152,7 @@ export const defaultComponents = [
   KatexComponent,
   AnimeComponent
 ]
+
 export const defaultFormatters: Formatter<any>[] = [
   backgroundColorFormatter,
   boldFormatter,
@@ -175,6 +176,29 @@ export interface EditorConfig extends TextbusConfig {
   content?: string,
   collaborateConfig?: CollaborateConfig,
   viewOptions?: Partial<ViewOptions>
+}
+
+export function getVDomAdapter(views = {}) {
+  const vDomAdapter = new ViewflyVDomAdapter({...views, ...defaultComponentViews} as any, (host, root, injector) => {
+    const appInjector = new ReflectiveInjector(injector, [{
+      provide: OutputInjectionToken,
+      useValue: true
+    }, {
+      provide: DomAdapter,
+      useFactory: () => {
+        return vDomAdapter
+      }
+    }])
+    const app = createApp(root, {
+      context: appInjector,
+      nativeRenderer: new HTMLRenderer()
+    }).mount(host)
+  
+    return () => {
+      app.destroy()
+    }
+  })
+  return vDomAdapter
 }
 
 export class Editor extends Textbus {
