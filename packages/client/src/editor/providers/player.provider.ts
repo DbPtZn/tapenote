@@ -4,7 +4,7 @@ import { AnimeProvider, Structurer } from '.'
 import { VIEW_CONTAINER } from '@textbus/platform-browser'
 import { Layout } from '@textbus/editor'
 // import { Howl, Howler } from 'howler'
-import _ from 'lodash'
+// import _ from 'lodash'
 
 export interface CourseData {
   audio: string
