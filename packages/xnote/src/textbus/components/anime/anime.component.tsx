@@ -35,6 +35,9 @@ export interface AnimeComponentState {
 }
 
 export class AnimeComponent extends Component<AnimeComponentState> {
+  override getSlots(): Slot[] {
+    return [this.state.slot]
+  }
   static componentName = 'AnimeComponent'
   static type = ContentType.BlockComponent
 
@@ -126,7 +129,7 @@ export function toAnimeComponent(textbus: Textbus) {
 
     commander.removeComponent(current)
 
-    current.__slots__.get(0)!.sliceContent().forEach(i => {
+    current.slots.at(0)!.sliceContent().forEach(i => {
       parent.insert(i)
     })
   } else {

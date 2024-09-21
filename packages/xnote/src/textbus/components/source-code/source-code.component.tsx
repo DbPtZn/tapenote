@@ -8,7 +8,7 @@ import {
   onBlur,
   onBreak,
   onFocus,
-  onPaste,
+  onPaste, onSlotApplyFormat, onSlotSetAttribute,
   Registry,
   Selection,
   Slot,
@@ -229,6 +229,10 @@ export class SourceCodeComponent extends Component<SourceCodeComponentState> {
 
   focus = new BehaviorSubject<boolean>(false)
 
+  override getSlots(): Slot[] {
+    return this.state.slots.map(i => i.slot)
+  }
+
   override setup() {
     const textbus = useContext()
 
@@ -275,6 +279,13 @@ export class SourceCodeComponent extends Component<SourceCodeComponentState> {
       textbus.nextTick(() => {
         selection.setPosition(nextSlot, 0)
       })
+      ev.preventDefault()
+    })
+
+    onSlotApplyFormat(ev => {
+      ev.preventDefault()
+    })
+    onSlotSetAttribute(ev => {
       ev.preventDefault()
     })
 

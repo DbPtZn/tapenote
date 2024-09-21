@@ -8,7 +8,7 @@ import {
   Slot,
   Subject,
   Textbus,
-  Registry,
+  Registry, onSlotSetAttribute, onSlotApplyFormat,
   Subscription,
   fromEvent,
 } from '@textbus/core'
@@ -41,12 +41,21 @@ export class RootComponent extends Component<RootComponentState> {
   }
 
   onCompositionStart = new Subject<Event<Slot, CompositionStartEventData>>()
+  override getSlots(): Slot[] {
+    return [this.state.content]
+  }
 
   override setup() {
     useBlockContent((slot) => slot === this.state.content)
 
     onCompositionStart(ev => {
       this.onCompositionStart.next(ev)
+    })
+    onSlotSetAttribute(ev => {
+      ev.preventDefault()
+    })
+    onSlotApplyFormat(ev => {
+      ev.preventDefault()
     })
   }
 
@@ -85,10 +94,10 @@ export function RootView(props: ViewComponentProps<RootComponent>) {
     const { rootRef } = props
 
     return (
-      <div class="xnote-root" dir='auto' ref={[rootRef, ref]} data-component={props.component.name}>
+      <div class="xnote-root" dir="auto" ref={[rootRef, ref]} data-component={props.component.name}>
         <SlotRender
           slot={content}
-          tag='div'
+          tag="div"
           data-color="#000000"
           class="xnote-content"
           data-placeholder={content.isEmpty ? '请输入内容' : ''}

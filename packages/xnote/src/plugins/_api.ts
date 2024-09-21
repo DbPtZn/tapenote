@@ -12,3 +12,4 @@ export * from './toolbar/toolbar.plugin'
 export * from './toolbar/toolbar'
 
 export * from './anime-component-support/anime-component-support.plugin'
+export * from './anime-contextmenu/anime-contextmenu.plugin'

@@ -230,7 +230,7 @@ export const LeftToolbar = withAnnotation({
     if (!slot) {
       return
     }
-    if (slot.parent!.__slots__.length <= 1) {
+    if (slot.parent!.slots.length <= 1) {
       commander.removeComponent(slot.parent!)
     } else {
       selection.selectSlot(slot)

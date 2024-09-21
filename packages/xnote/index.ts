@@ -78,6 +78,12 @@ const editor = new Editor({
   //   roomName: 'xnote',
   //   userinfo: user
   // },
+  // collaborateConfig: {
+  //   url: 'ws://localhost:1234',
+  //   // url: 'wss://textbus.io/api',
+  //   roomName: 'xnote',
+  //   userinfo: user
+  // },
   providers: [
     // {
     //   provide: Organization,

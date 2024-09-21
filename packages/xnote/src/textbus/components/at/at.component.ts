@@ -70,7 +70,7 @@ export class AtComponent extends Component<AtComponentState> {
     const registry = textbus.get(Registry)
     if (slotState) {
       const slot = registry.createSlot(slotState)
-      return new AtComponent({
+      return new AtComponent(textbus, {
         slot
       })
     }
@@ -84,13 +84,20 @@ export class AtComponent extends Component<AtComponentState> {
   members = createSignal<Member[]>([])
   selectedIndex = createSignal(0)
 
-  constructor(textbus, state: AtComponentState = {
+  constructor(textbus: Textbus, state: AtComponentState = {
     slot: new Slot([ContentType.Text])
   }) {
     if (!state.userInfo && !state.slot) {
       state.slot = new Slot([ContentType.Text])
     }
     super(textbus, state)
+  }
+
+  override getSlots(): Slot[] {
+    if (this.state.slot) {
+      return [this.state.slot]
+    }
+    return []
   }
 
   override setup() {

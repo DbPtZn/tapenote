@@ -55,7 +55,7 @@ export class Player {
   private injector!: Injector
   private anime!: AnimeProvider
   private data: ParseData[] = [] // 数据
-  sourceData: CourseData[]  = []// 源数据
+  sourceData: CourseData[] = []// 源数据
   private scrollerRef!: HTMLElement // 滚动条
   private rootRef!: HTMLElement // 最外层容器
   private containerRef!: HTMLElement
@@ -90,7 +90,7 @@ export class Player {
   private subtitleKeyframeSequence: number[] = []
   private animeElementSequence: NodeListOf<HTMLElement>[] = []
 
-  constructor() {}
+  // constructor() {}
   setup(injector: Injector, scrollerRef: HTMLElement, containerRef?: HTMLElement) {
     // const structurer = injector.get(Structurer)
     const viewContainer = injector.get(VIEW_CONTAINER)
@@ -247,7 +247,7 @@ export class Player {
         this.showIgnoreComponent()
         this.scrollerSub.unsubscribe()
         clearTimeout(timer)
-      }, 5000);
+      }, 5000)
     }
   }
 
@@ -646,16 +646,18 @@ export class Player {
       promoterSequence = promoters.filter((item, index) => {
         if (item !== null) {
           keyframeSequence.push(timestamps[index])
-          return item
+          return true
         }
+        return false
       }) as string[]
     } else {
       const section = duration / promoters.length // 切片时长
       promoterSequence = promoters.filter((item, index) => {
         if (item !== null) {
           keyframeSequence.push(Number((section * index).toFixed(3)))
-          return item
+          return true
         }
+        return false
       }) as string[]
     }
 
@@ -664,15 +666,15 @@ export class Player {
 
   /** 将音频时长（duration）转化成 HH:MM:SS 格式 */
   durationFormat(duration: number) {
-    const hours = Math.floor(duration / 3600);
-    const minutes = Math.floor((duration % 3600) / 60);
-    const seconds = Math.floor(duration % 60);
+    const hours = Math.floor(duration / 3600)
+    const minutes = Math.floor((duration % 3600) / 60)
+    const seconds = Math.floor(duration % 60)
 
-    const formattedHours = String(hours).padStart(2, '0');
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(seconds).padStart(2, '0');
+    const formattedHours = String(hours).padStart(2, '0')
+    const formattedMinutes = String(minutes).padStart(2, '0')
+    const formattedSeconds = String(seconds).padStart(2, '0')
 
-    return `${hours ? formattedHours + ':' : ''}${formattedMinutes}:${formattedSeconds}`;
+    return `${hours ? formattedHours + ':' : ''}${formattedMinutes}:${formattedSeconds}`
   }
 
   destory() {
@@ -698,23 +700,23 @@ export class Player {
         
       
       this.keyframeHistory.length = 0
-      this.keyframeHistory = null  as any
+      this.keyframeHistory = null as any
     
 
       this.keyframeSequence.length = 0
-      this.keyframeSequence = null  as any
+      this.keyframeSequence = null as any
     
 
       this.subtitleSequence.length = 0
-      this.subtitleSequence = null  as any
+      this.subtitleSequence = null as any
       
 
       this.subtitleKeyframeSequence.length = 0
-      this.subtitleKeyframeSequence = null  as any
+      this.subtitleKeyframeSequence = null as any
     
 
       this.animeElementSequence.length = 0
-      this.animeElementSequence = null  as any
+      this.animeElementSequence = null as any
     } catch (error) {
       console.error(error)
     }
@@ -736,9 +738,8 @@ function getTopDistance(el: HTMLElement) {
 
 /** 异步加载音频数据 */
 function loadAudio(src: string) {
-  return new Promise<HTMLAudioElement>(async (resolve, reject) => {
+  return new Promise<HTMLAudioElement>((resolve, reject) => {
     const audio = new Audio(src)
-    
     
     audio.addEventListener('canplaythrough', () => {
       resolve(audio)
@@ -748,7 +749,6 @@ function loadAudio(src: string) {
       console.error('音频加载失败1:', error)
       reject(error)
     })
-
 
     audio.load()
   })
