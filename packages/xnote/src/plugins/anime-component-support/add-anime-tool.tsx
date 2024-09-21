@@ -19,7 +19,6 @@ export const AddAnimeTool = withAnnotation({
   const animeService = inject(AnimeService)
   const adapter = inject(Adapter)
   const textbus = inject(Textbus)
-  const commander = inject(Commander)
   const animeProvider = inject(AnimeProvider)
   const viewContainer = inject(VIEW_CONTAINER)
   const subs: Subscription[] = []
@@ -46,39 +45,7 @@ export const AddAnimeTool = withAnnotation({
   })
 
   // 计算动画标题的宽度, 修正按钮位置
-  // const offsetVal = () => currentOptionSignal().title.length * 14
-
-  /** 添加动画 */
-  function addAnime(componentInstance: Component | null) {
-    if (!componentInstance) return
-    const id = animeProvider.generateAnimeId()
-    const serial = animeProvider.generateAnimeSerial().toString()
-    try {
-      if(['ListComponent'].includes(componentInstance.name)) {
-        componentInstance.state.dataAnime = true
-        componentInstance.state.dataId = id
-        componentInstance.state.dataSerial = serial
-        componentInstance.state.dataState = 'inactive'
-        componentInstance.state.dataEffect = currentOptionSignal().effect
-        componentInstance.state.dataTitle = currentOptionSignal().title
-        return
-      }
-      const slot = new Slot([ContentType.BlockComponent])
-      const anime = new AnimeComponent(textbus, {
-        dataId: id,
-        dataEffect: currentOptionSignal().effect,
-        dataSerial: serial.toString(),
-        dataState: 'inactive',
-        dataTitle: currentOptionSignal().title,
-        slot
-      })
-      commander.replaceComponent(componentInstance, anime)
-      // 可以在插入组件后再把内容插入插槽
-      slot.insert(componentInstance)
-    } catch (error) {
-      console.log(error)
-    }
-  }
+  const offsetVal = () => currentOptionSignal().title.length * 14
 
   subs.push(
     animeService.onComponentActive.subscribe((component) => {
@@ -127,6 +94,7 @@ export const AddAnimeTool = withAnnotation({
         draft.top = top
         draft.display = true
       })
+      // console.log(component)
       currentComponent = component
       currentElement = nativeNode
     })
@@ -144,7 +112,7 @@ export const AddAnimeTool = withAnnotation({
   
   function handleClick() {
     if (currentComponent) {
-      addAnime(currentComponent)
+      AnimeComponent.addAnime(currentComponent, textbus, currentOptionSignal().effect, currentOptionSignal().title)
     }
     currentComponent = null
     updatePosition(draft => {
@@ -154,6 +122,12 @@ export const AddAnimeTool = withAnnotation({
 
   function handleExpendStateChange(is: boolean) {
     isDropdownExpanded = is
+  }
+  function handleApply(effect: string, title: string) {
+    updateCurrentOption(draft => {
+      draft.effect = effect
+      draft.title = title
+    })
   }
 
   return withScopedCSS(css, () => {
@@ -168,7 +142,7 @@ export const AddAnimeTool = withAnnotation({
           onMouseleave={handleMouseLeave}
           style={
             {
-              left: position.left + 'px',
+              left: position.left - offsetVal() + 'px',
               top: position.top + 'px',
               display: position.display ? 'block' : 'none'
             }
@@ -179,7 +153,7 @@ export const AddAnimeTool = withAnnotation({
                 <span class="left-btn-txt">{ currentOptionSignal().title }</span>
               </div>
               <div class="right-btn">
-                <AnimeTool abreast={true} style={{height: '100%', width: '100%', display: 'flex', alignItems: 'center' }} onExpendStateChange={handleExpendStateChange}>
+                <AnimeTool abreast={true} component={currentComponent} style={{height: '100%', width: '100%', display: 'flex', alignItems: 'center' }} onExpendStateChange={handleExpendStateChange} onApply={handleApply}>
                   <div class="arrow">
                     <span class="xnote-icon-arrow-right"></span>
                   </div>

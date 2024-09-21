@@ -1,7 +1,7 @@
 .xnote-table {
   margin-top: 16px;
   margin-bottom: 16px;
-
+  
   &-inner {
     position: relative;
     display: inline-block;
@@ -30,9 +30,9 @@
   }
 }
 
-.xnote-table-bar {
+// .xnote-table-bar {
 
-}
+// }
 
 .xnote-table-wrapper {
   position: relative;
@@ -41,6 +41,7 @@
 
 .xnote-table-container {
   position: relative;
+  margin-right: 6px; // 未占满宽度时，不显示 x 轴滚动条
 }
 
 .xnote-table-delete-btn {

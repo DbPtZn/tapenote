@@ -22,11 +22,13 @@
   }
 
   &:hover {
-    background: #eee;
+    // background: #eee;
+    background-color: var(--tb-buttonColor2Hover, #eee);
   }
 
   &.active {
-    background: rgba(0, 0, 0, .1);
+    // background: #0000001a;
+    background-color: var(--tb-buttonColor2Hover, #0000001a);
   }
 }
 .menu-icon {

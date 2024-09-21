@@ -1,7 +1,9 @@
 import { Injectable, Injector } from '@viewfly/core'
 import { VIEW_CONTAINER, DomAdapter } from '@textbus/platform-browser'
-import { Selection } from '@textbus/core'
+import { Commander, Component, ContentType, RootComponentRef, Selection, Slot, Textbus } from '@textbus/core'
 import anime from 'animejs'
+import { animeFormatter } from '../textbus/formatters/_api'
+import { AnimeComponent } from '../textbus/components/_api'
 
 type AnimeMap = Map<string, { name: string; play: (target: Element) => anime.AnimeInstance }>
 interface AnimeOption {
@@ -11,6 +13,13 @@ interface AnimeOption {
   default?: boolean
   play: (target: HTMLElement) => void
 }
+interface AnimeState {
+  id?: string
+  effect?: string
+  serial?: number
+  state?: 'active' | 'inactive'
+  title?: string
+}
 
 @Injectable()
 export class AnimeProvider {
@@ -19,6 +28,11 @@ export class AnimeProvider {
   private scroller?: HTMLElement | null = null
   private selection!: Selection
   private adapter!: DomAdapter
+  private commander!: Commander
+  private rootComponentRef!: RootComponentRef
+  private injector!: Injector
+  private textbus!: Textbus
+  
   constructor() {
     this.animesMap = new Map([
       ['bounceIn', { name: '弹入', play: bounce.bounceIn }],
@@ -37,8 +51,13 @@ export class AnimeProvider {
   }
 
   setup(injector: Injector, scroller?: HTMLElement, customMap?: AnimeMap) {
+    this.injector = injector
+    this.textbus = injector.get(Textbus)
     this.viewContainer = injector.get(VIEW_CONTAINER)
     this.adapter = injector.get(DomAdapter)
+    this.commander = injector.get(Commander)
+    this.selection = injector.get(Selection)
+    this.rootComponentRef = injector.get(RootComponentRef)
     this.scroller = scroller
     this.animesMap = customMap || this.animesMap
   }
@@ -129,6 +148,232 @@ export class AnimeProvider {
     this.selection.setBaseAndExtent(location.slot, location.startIndex, location.slot, location.endIndex)
     this.selection.restore()
     // 组件无选中行为，不处理
+  }
+
+  /** 根据指定元素激活对应的动画块 */
+  setActiveByElement(element: HTMLElement) {
+    if(element.tagName.toLocaleLowerCase() === 'anime') {
+      this.updateAnimeState(element, { state: 'active' })
+      return
+    }
+    if(element.classList.contains('anime-component-tab')) {
+      const parentElement = element.parentElement
+      if(parentElement && (parentElement.tagName.toLocaleLowerCase() === 'anime-component' || parentElement.dataset.anime === 'true')) {
+        this.updateAnimeState(element.parentElement, { state: 'active' })
+        return
+      }
+    }
+  }
+
+  /** 根据指定元素取消激活对应的动画块 */
+  setInactiveByElement(element: HTMLElement) {
+    if(element.tagName.toLocaleLowerCase() === 'anime') {
+      this.updateAnimeState(element, { state: 'inactive' })
+      return
+    }
+    if(element.classList.contains('anime-component-tab')) {
+      const parentElement = element.parentElement
+      if(parentElement && (parentElement.tagName.toLocaleLowerCase() === 'anime-component' || parentElement.dataset.anime === 'true')) {
+        this.updateAnimeState(element.parentElement, { state: 'inactive' })
+      }
+    }
+  }
+
+  // 注意：存在动画块被分割的情况，所以一般更新时应当查询所有匹配的 data-id 一起更新
+  /** 激活所有 data-id 匹配的动画块 */
+  setAllActiveById(aniId: string) {
+    const elements = this.viewContainer?.querySelectorAll<HTMLElement>(`[data-id="${aniId}"]`)
+    if (elements && elements.length !== 0) {
+      elements.forEach((item) => {
+        this.updateAnimeState(item, { state: 'active' })
+      })
+    }
+  }
+
+  /** 取消激活所有 data-id 匹配的动画块 */
+  setAllInactiveById(aniId: string) {
+    const elements = this.viewContainer?.querySelectorAll<HTMLElement>(`[data-id="${aniId}"]`)
+    if (elements && elements.length !== 0) {
+      elements.forEach((item) => {
+        this.updateAnimeState(item, { state: 'inactive' })
+      })
+    }
+  }
+  
+  /** 更新所有 data-id 匹配的动画块编号 */
+  updateSerial(aniId: string, serial: number) {
+    const elements = this.viewContainer?.querySelectorAll<HTMLElement>(`[data-id="${aniId}"]`)
+    if (elements && elements.length !== 0) {
+      elements.forEach((item) => {
+        this.updateAnimeState(item, { serial })
+      })
+    }
+  }
+
+  /** 更新动画的状态 */
+  private updateAnimeState(element: HTMLElement, state: AnimeState) {
+    if (element.tagName.toLowerCase() === 'anime') {
+      this.updateFormatterState(element, state)
+    } else {
+      this.updateComponentState(element, state)
+    }
+  }
+
+  // 更新 Formatter 的状态
+  private updateFormatterState(element: HTMLElement, state: AnimeState) {
+    const location = this.adapter.getLocationByNativeNode(element)
+    if (location) {
+      /** 设置选区锚点位置 */
+      this.selection.setAnchor(location.slot, location.startIndex)
+      /** 设置选区焦点位置 */
+      this.selection.setFocus(location.slot, location.endIndex)
+      const dataId = element.dataset.id!
+      const dataSerial = element.dataset.serial!
+      const dataEffect = element.dataset.effect!
+      const dataState = element.dataset.state!
+      const dataTitle = element.dataset.title!
+      this.commander.applyFormat(animeFormatter, {
+        dataId: state.id !== undefined ? state.id : dataId,
+        dataSerial: state.serial !== undefined ? state.serial.toString() : dataSerial,
+        dataEffect: state.effect !== undefined ? state.effect : dataEffect ,
+        dataState: state.state !== undefined ? state.state : dataState,
+        dataTitle: state.title !== undefined ? state.title : dataTitle
+      })
+      /** 设置完成后向后移动光标——>取消选区 */
+      this.selection.toNext()
+    }
+  }
+  
+  // 通过 element 查询 component，通过 compoent 实例直接更新其状态
+  private updateComponentState(element: HTMLElement, state: AnimeState) {
+    const component = this.adapter.getComponentByNativeNode(element)
+    if (component) {
+      if (component.name === 'AnimeComponent') {
+        if (state.id !== undefined) component.state.dataId = state.id
+        if (state.effect!== undefined) component.state.dataEffect = state.effect
+        if (state.serial !== undefined) component.state.dataSerial = state.serial.toString()
+        if (state.state !== undefined) component.state.dataState = state.state
+        if (state.title !== undefined) component.state.dataTitle = state.title
+        return
+      }
+      if (element.dataset.anime === 'true') {
+        if (state.id !== undefined) component.state.dataId = state.id
+        if (state.effect!== undefined) component.state.dataEffect = state.effect
+        if (state.serial !== undefined) component.state.dataSerial = state.serial.toString()
+        if (state.state !== undefined) component.state.dataState = state.state
+        if (state.title !== undefined) component.state.dataTitle =state.title
+      }
+    }
+  }
+
+  /**
+   * 自动添加动画预设
+   * @param selectAnimeOption 指定一种动画，如果提供该选项，则所有自动添加的预设都会采用该动画
+   */
+  autoAdd(selectAnimeOption?: { key: string; value: { name: string } }) {
+    // console.log('add anime auto')
+    // 获取根节点插槽
+    const content = this.rootComponentRef.component.state.content.sliceContent()
+    for(let i = 0; i < content.length; i++) {
+      const components = content[i]
+      outerLoop: for(let k = 0; k < components.length; k++) {
+        const component = components[k]
+        if (typeof component !== 'string') {
+          // 排除列表，不设置动画
+          if (['RootComponent', 'AnimeIgnoreComponent', 'AnimeComponent'].includes(component.name)) continue
+          // console.log('a')
+
+          // 要采用 formatter 设置动画的组件
+          if (['ParagraphComponent'].includes(component.name)) {
+            console.log('formatter anime')
+            component.slots.toArray().forEach(slot => {
+              setTimeout(() => {
+                this.addFormatterAnime(slot, selectAnimeOption)
+              }, 0)
+            })
+            continue
+          }
+
+          // 父组件包含在 AnimeIgnoreComponent 中，不设置动画
+          let parentComponent = component.parentComponent
+          while (parentComponent) {
+            if (parentComponent && parentComponent.name === 'RootComponent') break
+            // 父组件包含 AnimeIgnoreComponent ，不设置动画
+            if (parentComponent && parentComponent.name === 'AnimeIgnoreComponent') continue outerLoop
+            // 父组件是动画组件，不设置动画
+            if (parentComponent && parentComponent.name === 'AnimeComponent') continue outerLoop
+            parentComponent = parentComponent.parentComponent
+          }
+
+          // console.log('b')
+
+          // 如果是行内组件或文本组件, 也采用 formatter 设置动画
+          if ([ContentType.InlineComponent, ContentType.Text].includes(component.type)) {
+            console.log('行内组件或文本组件')
+            component.slots.toArray().forEach(slot => {
+              setTimeout(() => {
+                this.addFormatterAnime(slot, selectAnimeOption)
+              }, 0)
+            })
+            continue
+          }
+
+          // console.log('c')
+          // 将函数的执行推迟到当前执行栈清空之后, 确保DOM更新完成 (会先完成循环，在执行内部函数)
+          setTimeout(() => {
+            this.addComponentAnime(component, selectAnimeOption)
+          }, 0)
+
+          // 要同时采用 component 和 formatter 设置动画的组件
+          if (['ListComponent'].includes(component.name)) {
+            component.slots.toArray().forEach(slot => {
+              setTimeout(() => {
+                this.addFormatterAnime(slot, selectAnimeOption)
+              }, 0)
+            })
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * 添加组件动画
+   * @param componentInstance 组件
+   * @param selectAnimeOption 指定一种动画，不传的时候会在动画列表中随机选择
+   */
+  addComponentAnime(componentInstance: Component | null, selectAnimeOption?: { key: string; value: { name: string } }) {
+    if (!componentInstance) return
+    const animeOption = selectAnimeOption || this.getRandomAnime()
+    AnimeComponent.addAnime(componentInstance, this.textbus, animeOption.key, animeOption.value?.name || '')
+  }
+
+  /**
+   * 添加格式动画
+   * @param slot 插槽
+   * @param selectAnimeOption 指定一种动画，不传的时候会在动画列表中随机选择
+   */
+  addFormatterAnime(slot: Slot, selectAnimeOption?: { key: string; value: { name: string } }) {
+    try {
+      if(slot.sliceContent()[0] !== '\n') {
+        const id = this.generateAnimeId()
+        const serial = this.generateAnimeSerial().toString()
+        const animeOption = this.getRandomAnime()
+        slot.applyFormat(animeFormatter, {
+          startIndex: 0,
+          endIndex: slot.length,
+          value: {
+            dataId: id,
+            dataSerial: serial,
+            dataEffect: animeOption.key,
+            dataState: 'inactive',
+            dataTitle: animeOption.value?.name
+          }
+        })
+      }
+    } catch (error) {
+      console.log(error)
+    }
   }
 }
 

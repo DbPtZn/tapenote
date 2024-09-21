@@ -107,9 +107,9 @@ export const LeftToolbar = withAnnotation({
       }),
       distinctUntilChanged(),
       filter(slot => {
-        return !slot || slot !== rootComponent.state.content
+        return !slot || slot !== rootComponent.state.content && slot.parent?.parentComponent?.name !== 'TableComponent' 
       }),
-      sampleTime(250),
+      sampleTime(50),
       filter(() => {
         return !isShow()
       })
@@ -130,6 +130,14 @@ export const LeftToolbar = withAnnotation({
           draft.left = currentRect.left - containerRect.left
           draft.top = currentRect.top - containerRect.top + docContentContainer.offsetTop
         })
+        
+        // 表格不显示侧边工具
+        if(slot.parent instanceof TableComponent) {
+          updatePosition(draft => {
+            draft.display = false
+          })
+          isEmptyBlock.set(false)
+        }
       } else {
         updatePosition(draft => {
           draft.display = false
@@ -149,6 +157,8 @@ export const LeftToolbar = withAnnotation({
     refreshService.onRefresh.next()
   }).add(
     selection.onChange.pipe(throttleTime(30)).subscribe(() => {
+      // console.log(activeSlot())
+      // console.log(isIgnoreMove)
       if (!selection.isCollapsed) {
         updatePosition(draft => {
           draft.display = false
@@ -321,7 +331,7 @@ export const LeftToolbar = withAnnotation({
                   abreast={true}
                   slot={slot}
                   applyBefore={applyBefore}>
-                  <MenuItem arrow={true} icon={<span class="xnote-icon-color"/>}>动画</MenuItem>
+                  <MenuItem arrow={true} icon={<span style={{'font-family': 'system-ui'}}>M</span>}>动画</MenuItem>
                 </AnimeTool>
                 <AttrTool
                   style={{ display: 'block' }}

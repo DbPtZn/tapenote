@@ -750,13 +750,13 @@ importers:
         specifier: ^4.0.0-alpha.67
         version: 4.0.0-alpha.67
       '@textbus/collaborate':
-        specifier: ^4.0.0-alpha.66
+        specifier: 4.0.0-alpha.66
         version: 4.0.0-alpha.66
       '@textbus/core':
-        specifier: ^4.0.0-alpha.66
+        specifier: 4.0.0-alpha.66
         version: 4.0.0-alpha.66
       '@textbus/platform-browser':
-        specifier: ^4.0.0-alpha.66
+        specifier: 4.0.0-alpha.66
         version: 4.0.0-alpha.66
       '@viewfly/core':
         specifier: ^1.0.0-alpha.17

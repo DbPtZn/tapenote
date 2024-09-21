@@ -20,6 +20,8 @@ import { useReadonly } from '../../hooks/use-readonly'
 import { useOutput } from '../../hooks/use-output'
 import { SlotRender } from '../SlotRender'
 import './anime.component.scss'
+import { inject } from '@viewfly/core'
+import { AnimeProvider } from '../../../providers/_api'
 
 type AnimeState = 'active' | 'inactive'
 
@@ -56,6 +58,41 @@ export class AnimeComponent extends Component<AnimeComponentState> {
     slot: new Slot([ContentType.BlockComponent, ContentType.InlineComponent, ContentType.Text])
   }) {
    super(textbus, state)
+   this.textbus = textbus
+  }
+
+  /** 添加动画 */
+  static addAnime(componentInstance: Component | null, textbus: Textbus, effect: string, title: string) {
+    if (!componentInstance) return
+    const animeProvider = textbus.get(AnimeProvider)
+    const commander = textbus.get(Commander)
+    const id = animeProvider.generateAnimeId()
+    const serial = animeProvider.generateAnimeSerial().toString()
+    try {
+      if(['ListComponent'].includes(componentInstance.name)) {
+        componentInstance.state.dataAnime = true
+        componentInstance.state.dataId = id
+        componentInstance.state.dataSerial = serial
+        componentInstance.state.dataState = 'inactive'
+        componentInstance.state.dataEffect = effect
+        componentInstance.state.dataTitle = title
+        return
+      }
+      const slot = new Slot([ContentType.BlockComponent])
+      const anime = new AnimeComponent(textbus, {
+        dataId: id,
+        dataEffect: effect,
+        dataSerial: serial.toString(),
+        dataState: 'inactive',
+        dataTitle: title,
+        slot
+      })
+      commander.replaceComponent(componentInstance, anime)
+      // 可以在插入组件后再把内容插入插槽
+      slot.insert(componentInstance)
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   override setup() {
