@@ -82,14 +82,14 @@ export class AnimeContextmenuPlugin implements Plugin {
             this.Options.value = options
             this.show()
         }
-        if (target.classList.contains('anime-component-tab')) {
+        if (target.tagName.toLocaleLowerCase() === 'anime-component') {
           // console.log('anime-component')
-          const node = target.parentElement
-          if(node?.tagName.toLocaleLowerCase() === 'anime-component') {
+          // const node = target.parentElement
+          // if(node?.tagName.toLocaleLowerCase() === 'anime-component') {
             ev.preventDefault() // 阻止默认事件
             ev.stopPropagation() // 阻止事件冒泡
             // console.log(node)
-            const component = this.renderer.getComponentByNativeNode(node)
+            const component = this.renderer.getComponentByNativeNode(target)
             if(component) {
               const { x, y, options } = this.createComponentMenu(target, component)
               this.xRef.value = x
@@ -97,7 +97,7 @@ export class AnimeContextmenuPlugin implements Plugin {
               this.Options.value = options
               this.show()
             }
-          }
+          // }
         }
       }),
       // 滚动时隐藏菜单
@@ -119,10 +119,20 @@ export class AnimeContextmenuPlugin implements Plugin {
   
 
   createFormatMenu(target: HTMLElement) {
-    const { x, y } = getTextNodeEndPosition(target)
-    const position = {
-      x: x + 10,
-      y
+    let x = 0
+    let y = 0
+    let display
+    if(target.getElementsByTagName('img').length > 0) {
+      display = target.style.display
+      target.style.display = 'inline-block'
+      const rect = target.getBoundingClientRect()
+      x = rect.x + rect.width + 10
+      y = rect.y
+      target.style.display = display
+    } else {
+      const position = getTextNodeEndPosition(target)
+      x = position.x + 10
+      y = position.y
     }
     const menus = [
       {
@@ -164,7 +174,7 @@ export class AnimeContextmenuPlugin implements Plugin {
         }
       }
     ]
-    return { x: position.x, y: position.y, options: menus }
+    return { x: x, y: y, options: menus }
   }
 
   createComponentMenu(target: HTMLElement, component: ComponentInstance) {

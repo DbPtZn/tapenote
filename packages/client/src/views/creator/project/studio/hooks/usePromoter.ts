@@ -53,13 +53,13 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
               id = target.dataset.id
               serial = target.dataset.serial
             }
-        } else if (target.classList.contains('anime-component-tab')) {
-          const node = target.parentElement
-          if(node?.tagName.toLocaleLowerCase() === 'anime-component') {
+        } else if (target.tagName.toLocaleLowerCase() === 'anime-component') {
+          // const node = target.parentElement
+          // if(node?.tagName.toLocaleLowerCase() === 'anime-component') {
             ev.preventDefault() // 阻止默认事件
             ev.stopPropagation() // 阻止事件冒泡
             // console.log(node)
-            const component = renderer.getComponentByNativeNode(node)
+            const component = renderer.getComponentByNativeNode(target)
             if(component) {
               // console.log(component.state)
               const state = component.state
@@ -68,7 +68,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
                 serial = state.dataSerial
               }
             }
-          }
+          // }
         } else {
           return
         }

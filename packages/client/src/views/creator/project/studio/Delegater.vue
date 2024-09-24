@@ -96,7 +96,7 @@ onMounted(() => {
     bridge.onAutoMoveAnimePointerChange.subscribe(isOpen => {
       isAutoMoveAnimePointer = isOpen
       if(isOpen && bridge.editorRef && bridge.scrollerRef) {
-        const elements = bridge.editorRef.querySelectorAll<HTMLElement>("[data-id]")
+        const elements = bridge.editorRef.querySelectorAll<HTMLElement>(`[data-id]`)
         animeMap.value = Array.from(elements)
         scrollerRef.value = bridge.scrollerRef
         scrollerRef.value.style.position = 'relative' // 添加 'relative' 作为 pointer 绝对定位参照系
@@ -112,8 +112,8 @@ onMounted(() => {
           }),
           fromEvent<PointerEvent>(bridge.editorRef, 'click').subscribe(e => {
             const target = e.target as HTMLElement
-            console.log(target)
-            const index = animeMap.value.findIndex(element => element === (target.tagName.toLocaleLowerCase() === 'anime' ? target : (target.classList.contains('anime-component-tab') ? target.parentElement : '')))
+            // console.log(target)
+            const index = animeMap.value.findIndex(element => element === (['anime', 'anime-component'].includes(target.tagName.toLocaleLowerCase()) ? target : ''))
             if(index !== -1) pointerIndex.value = index
           })
         )
