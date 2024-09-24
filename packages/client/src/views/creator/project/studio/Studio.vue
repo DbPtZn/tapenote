@@ -2,7 +2,7 @@
 import { Character, AudioFragment, TTS, ASR, StudioToolbar, SpeakerSelectList, TxtEdit, FragmentTrash, CreateBlankFragment } from './private'
 import useStore from '@/store'
 import { computed, h, inject, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { NIcon, NMessageProvider, useDialog, useMessage, useThemeVars } from 'naive-ui'
+import { DropdownOption, NIcon, NMessageProvider, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import { Bridge } from '../bridge'
 import _ from 'lodash'
 import utils from '@/utils'
@@ -14,6 +14,7 @@ import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp } from 
 import Delegater from './Delegater.vue'
 import { splitText } from './_utils'
 import { VueDraggable } from 'vue-draggable-plus'
+import { useI18n } from 'vue-i18n'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 const bridge = inject('bridge') as Bridge
@@ -29,6 +30,7 @@ const { projectStore, speakerStore, clipboardStore } = useStore()
 const dialog = useDialog()
 const message = useMessage()
 const themeVars = useThemeVars()
+const { t } = useI18n()
 const scrollerRef = ref()
 const state = reactive({
   isReadonly: computed(() => props.readonly()),
@@ -37,7 +39,7 @@ const state = reactive({
   recorderMode: 'TTS' as 'TTS' | 'ASR',
 })
 onMounted(() => {
-   // 获取说话人列表
+  // 获取说话人列表
   speakerStore.fetchAndSet(props.account, props.hostname)
 })
 const speakerId = computed(() => state.recorderMode === 'TTS' ? projectStore.get(props.id)?.speakerHistory.machine : projectStore.get(props.id)?.speakerHistory.human)
@@ -65,7 +67,7 @@ const {
       if(typeof chunks === 'string') {
         console.log(chunks)
         // 防御：避免字符串文本，因为会被 for let...of 解析为单字符数组
-        message.error('输入发生错误，请尝试重新输入')
+        message.error(t('studio.msg.input_error'))
         return
       }
       const promiseArr: Promise<any>[] = []
@@ -81,7 +83,7 @@ const {
       // TODO 这里涉及并发问题，无法确定并发数量，如果中间有失败，则需要对失败片段重新上传，再次失败则放弃并提示用户
       // 理论上我们可以限制最大 6 个并发，这样用户一次输入的文本长度不应该超过 32 * 6 个字符（中文），当超过时提示用户手动分片
       Promise.all(promiseArr).catch(e => {
-        message.error('创建片段失败！')
+        message.error(t('studio.msg.create_fragment_error'))
       })
       return
     }
@@ -90,17 +92,16 @@ const {
       speakerId: speakerId.value || '',
       speed: state.ttsSpeed
     }).catch(e => {
-      message.error('创建片段失败！')
+      message.error(t('studio.msg.create_fragment_error'))
     })
   },
   handleAudioOutput(data: { audio: Blob, duration: number }) {
-    // console.log(data)
     projectStore.fragment(props.id).createByAudio({
       audio: data.audio,
       duration: data.duration,
       speakerId: speakerId.value || '',
     }).catch(e => {
-      message.error('创建片段失败！')
+      message.error(t('studio.msg.create_fragment_error'))
     })
   },
   handleModeSwitch() {
@@ -113,7 +114,7 @@ const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
     dialog.destroyAll()
     dialog.create({
       icon: () => h(NIcon, { component: AddReactionSharp, size: 24, style: { marginRight: '8px' } }),
-      title: ' 切换角色',
+      title: t('studio.changeRoles'),
       content: () => h(SpeakerSelectList, {
         account: props.account,
         hostname: props.hostname,
@@ -149,7 +150,7 @@ const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
           CreateBlankFragment, {
           onConfirm: (result) => {
             projectStore.fragment(props.id).createBlank(result).catch(e => {
-              message.error('创建片段失败！')
+              message.error(t('studio.msg.create_fragment_error'))
             })
             dialog.destroyAll()
           },
@@ -181,8 +182,8 @@ const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
     })
   }
 }
-const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, checkAnimeState, checkPromoter, handleReorder } = usePromoter(props.id, bridge)
-const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, isShowOrder, handleContextmenu, handleExpand, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge, checkAnimeState, handleReorder)
+const { checkAnimeState, checkPromoter, handleReorder } = usePromoter(props.id, bridge)
+const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, isShowOrder, handleContextmenu, handleExpand, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge, checkAnimeState, checkPromoter, handleReorder)
 
 const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort())
 const fragmentsLength = computed(() => fragments.value.length)
@@ -311,11 +312,11 @@ function collapseText(transcript: string[]) {
               </template>
               <!-- 移除片段 （可以优化，不用每个片段都创建一个实例） -->
               <template #delete>
-                <n-popconfirm positive-text="确认" negative-text="取消"  @positive-click="handleRemove(element)">
+                <n-popconfirm :positive-text="t('confirm')" :negative-text="t('cancel')"  @positive-click="handleRemove(element)">
                   <template #trigger>
                     <n-icon :component="DeleteOutlined" :size="18" />
                   </template>
-                  是否移除该片段 ?
+                  {{ t('studio.msg.whether_remove_fragment') }}
                 </n-popconfirm>
               </template>
             </AudioFragment>
@@ -392,7 +393,7 @@ function collapseText(transcript: string[]) {
       trigger="manual"
       :x="dropdownState.x"
       :y="dropdownState.y"
-      :options="dropdownState.options"
+      :options="(dropdownState.options as DropdownOption[])"
       :show="dropdownState.isShow"
       :on-clickoutside="() => dropdownState.isShow = false"
     />

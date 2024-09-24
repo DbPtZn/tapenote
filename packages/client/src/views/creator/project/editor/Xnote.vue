@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import { Editor } from '@dbptzn/xnote'
-import '@dbptzn/xnote/bundles/index.css'
-import { onMounted, ref } from 'vue'
-const editorRef = ref()
-onMounted(() => {
-  // console.log('editor ready.', Editor)
-  const editor = new Editor()
-  editor.mount(editorRef.value).then(() => {
-    console.log('编辑器准备完成。')
-  })
-})
+// import { Editor } from '@dbptzn/xnote'
+// import '@dbptzn/xnote/bundles/index.css'
+// import { onMounted, ref } from 'vue'
+// const editorRef = ref()
+// onMounted(() => {
+//   // console.log('editor ready.', Editor)
+//   const editor = new Editor()
+//   editor.mount(editorRef.value).then(() => {
+//     console.log('编辑器准备完成。')
+//   })
+// })
 </script>
 
 <template>

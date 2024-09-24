@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import { NButton, useThemeVars } from 'naive-ui'
 import { MoreVertRound } from '@vicons/material'
+import { useI18n } from 'vue-i18n'
 const themeVars = useThemeVars()
+const { t } = useI18n()
 const props = defineProps({
   /** 笔记 id */
   id: {
@@ -55,11 +57,11 @@ function handleMoreAction(ev) {
 function getFolderName(name: string) {
   switch (name) {
     case 'NOTE ROOT DIR':
-      return '笔记根目录'
+      return t('itemlist.note_root_dir')
     case 'COURSE ROOT DIR':
-      return '工程根目录'
+      return t('itemlist.course_root_dir')
     case 'PROCEDURE ROOT DIR':
-      return '课程根目录'
+      return t('itemlist.procedure_root_dir')
     default:
       return name
   }

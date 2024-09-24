@@ -13,10 +13,12 @@ import { useItemListDropDown, useDrag } from './hooks/_index'
 import { DropdownOption } from 'naive-ui/es/dropdown/src/interface'
 import { ArrowDropDownRound, ChevronLeftFilled, MoreHorizFilled } from '@vicons/material'
 import _ from 'lodash'
+import { useI18n } from 'vue-i18n'
 const { folderStore, folderTreeStore, dragStore, userStore, projectStore } = useStore()
 const shell = useShell<CreatorShell>()
 const themeVars = useThemeVars()
 const message = useMessage()
+const { t } = useI18n()
 const { dropdownState, options, handleContextmenu, handleMoreAction, handleSelect, handleClickoutside } = useItemListDropDown()
 const value = ref()
 const scrollerRef = ref<HTMLElement>()
@@ -111,11 +113,11 @@ const fileMethods = {
 function getFolderName(name: string) {
   switch (name) {
     case 'NOTE ROOT DIR':
-      return '笔记'
+      return t('itemlist.note_root_dir')
     case 'COURSE ROOT DIR':
-      return '工程'
+      return t('itemlist.course_root_dir')
     case 'PROCEDURE ROOT DIR':
-      return '课程'
+      return t('itemlist.procedure_root_dir')
     default:
       return name
   }

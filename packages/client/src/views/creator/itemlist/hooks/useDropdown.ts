@@ -5,7 +5,7 @@ import { Ref, nextTick, ref, h, reactive, computed, Component } from 'vue'
 import { LibraryEnum } from '@/enums'
 import { NButton, NIcon, NInput, NTree, useDialog, useMessage, useNotification } from 'naive-ui'
 import { DialogApiInjection } from 'naive-ui/es/dialog/src/DialogProvider'
-import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
+import { DropdownOption } from 'naive-ui'
 import { FolderForm } from '../../form'
 import { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 // import { FolderTreeSelect } from '../../_common'
@@ -14,6 +14,7 @@ import { useShell } from '@/renderer'
 import { CreatorShell } from '../..'
 import { CreateNewFolderFilled, DriveFileMoveRtlFilled, DriveFileRenameOutlineFilled, ShareFilled } from '@vicons/material'
 import dayjs from 'dayjs'
+import { useI18n } from 'vue-i18n'
 
 // type Target<T extends Subfolder | Subfile> = T
 
@@ -21,6 +22,7 @@ export function useItemListDropDown() {
   const { projectStore, folderStore, folderTreeStore, trashStore, clipboardStore, userStore } = useStore()
   const dialog = useDialog()
   const message = useMessage()
+  const { t } = useI18n()
   const notification = useNotification()
   const account = computed(() => userStore.account)
   const hostname = computed(() => userStore.hostname)
@@ -35,7 +37,7 @@ export function useItemListDropDown() {
     showArrowRef: ref<boolean>(false),
     placementRef: ref<'bottom' | 'bottom-start'>('bottom-start')
   })
-  const options = computed<DropdownMixedOption[]>(() => {
+  const options = computed<DropdownOption[]>(() => {
     let folderId = ''
     switch (dropdownState.type) {
       case 'file':
@@ -59,11 +61,11 @@ export function useItemListDropDown() {
     return [
       // 新建
       {
-        label: '新建',
+        label: t('new'),
         key: 'new-project',
         children: [
           {
-            label: '文档',
+            label: t('file'),
             key: 'new-file',
             show: dropdownState.lib !== LibraryEnum.COURSE,
             props: {
@@ -75,7 +77,7 @@ export function useItemListDropDown() {
             }
           },
           {
-            label: '文件夹',
+            label: t('folder'),
             key: 'new-folder',
             show: folderStore.id !== 'recently',
             props: {
@@ -90,7 +92,7 @@ export function useItemListDropDown() {
       },
       // 移动
       {
-        label: '移动到',
+        label: t('move'),
         key: 'move',
         show: dropdownState.type && dropdownState.type !== 'list',
         props: {
@@ -102,7 +104,7 @@ export function useItemListDropDown() {
       },
       // 复制
       {
-        label: '复制',
+        label: t('copy'),
         key: 'copy',
         show: dropdownState.type === 'file',
         props: {
@@ -129,7 +131,7 @@ export function useItemListDropDown() {
       // },
       // 粘贴
       {
-        label: '粘贴',
+        label: t('paste'),
         key: 'paste',
         disabled: !pastable,
         props: {
@@ -142,7 +144,7 @@ export function useItemListDropDown() {
       },
       // 重命名
       {
-        label: '重命名',
+        label: t('rename'),
         key: 'rename',
         show: dropdownState.type && dropdownState.type === 'folder',
         props: {

@@ -16,7 +16,7 @@ import { InlineToolbarPlugin,
   OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
   preview_startTool, preview_stopTool, animeBadgeVisibleTool, animeElementVisibleTool, 
   imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
-  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider 
+  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider, listComponent, listComponentLoader 
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
@@ -51,12 +51,12 @@ export function getProcedureConfig(args: {
     content: content || '',
     rootComponent: animeRootComponent,
     rootComponentLoader: animeRootComponentLoader,
-    components: [animeComponent, paragraphComponent, imageB2UComponent, animeIgnoreComponent, ...defaultComponents],
-    componentLoaders: [animeComponentLoader, paragraphComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, ...defaultComponentLoaders],
+    components: [animeComponent, paragraphComponent, imageB2UComponent, animeIgnoreComponent, listComponent, ...defaultComponents.filter(i => !(i.name === 'ListComponent'))],
+    componentLoaders: [animeComponentLoader, paragraphComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, listComponentLoader, ...defaultComponentLoaders],
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter,...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     styleSheets: [
-      'anime:after{content: attr(data-serial);vertical-align: super;color:white;background-color:#c8c9cc;border-radius:24px;display:inline-block;width:23px;height:23px;font-size:15px;line-height:23px;-webkit-border-radius:24px;text-align:center;box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);pointer-events: auto;}',
+      'anime:after{ position: absolute;margin-left: -12px; margin-top: -12px; content: attr(data-serial);vertical-align: super;color:white;background-color:#c8c9cc;border-radius:24px;display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;font-size:15px;line-height:0px;-webkit-border-radius:24px;text-align:center;box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);pointer-events: auto;}',
       'anime:hover:after{cursor: pointer;animation: .8s .5s tada infinite;}',
       '[data-theme="dark-theme"] anime:hover{outline: 1px dashed #aaaaaa30; border-radius: 3px;}',
       'anime:hover{outline: 1px dashed #aaaaaa30; border-radius: 3px;}',
@@ -91,7 +91,6 @@ export function getProcedureConfig(args: {
         [fontFamilyTool],
         [linkTool, unlinkTool],
         [imageTool],
-        [textAlignTool],
         [tableAddTool, tableRemoveTool],
         [formatPainterTool],
         [cleanTool],
@@ -102,6 +101,7 @@ export function getProcedureConfig(args: {
         new InlineToolbarPlugin([
           [headingTool],
           [animeTool, animeIgnoreTool],
+          [textAlignTool],
           [boldTool, italicTool, strikeThroughTool, underlineTool],
           [colorTool, textBackgroundTool],
           [fontSizeTool],

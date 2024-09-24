@@ -1,14 +1,19 @@
 anime:after {
+  position: absolute;
+  margin-left: -12px;
+  margin-top: -12px;
   content: attr(data-serial);
   vertical-align: super;
   color: white;
   background-color: #c8c9cc;
   border-radius: 24px;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 23px;
   height: 23px;
   font-size: 15px;
-  line-height: 23px;
+  line-height: 0px;
   -webkit-border-radius: 24px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);

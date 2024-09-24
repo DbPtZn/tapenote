@@ -12,6 +12,7 @@ import { useShell } from '@/renderer'
 import { CreatorShell } from '../shell'
 import { CreateNewFolderFilled, DriveFileRenameOutlineFilled, MoreHorizFilled } from '@vicons/material'
 import router from '@/router'
+import { useI18n } from 'vue-i18n'
 interface CustomTreeDropInfo extends TreeDropInfo {
   node: TreeNode
   dragNode: TreeNode
@@ -19,35 +20,36 @@ interface CustomTreeDropInfo extends TreeDropInfo {
 export class FolderTree {
   private dialog: DialogApiInjection
   private message: MessageApiInjection
+  private t: any
   collapseOptions: { id: string; icon: () => VNodeChild; label: string; name: LibraryEnum }[]
   private createFolderEvent!: Subject<any>
   onCreateFolder!: Observable<TreeNode>
-  // private removeFolderEvent!: Subject<{ folderId: string, lib: LibraryEnum, removedIds: string[] }>
-  // onRemoveFolder!: Observable<{ folderId: string, lib: LibraryEnum, removedIds: string[] }>
+
   constructor() {
     this.createFolderEvent = new Subject()
     this.onCreateFolder = this.createFolderEvent.asObservable()
-    // this.removeFolderEvent = new Subject()
-    // this.onRemoveFolder = this.removeFolderEvent.asObservable()
+
     const { userStore } = useStore()
+    const { t } = useI18n()
+    this.t = t
     this.dialog = useDialog()
     this.message = useMessage()
     this.collapseOptions = [
       {
         id: userStore.dir.note || '',
-        label: '笔记',
+        label: `${t('note')}`,
         icon: () => this.renderIcon(Notebook),
         name: LibraryEnum.NOTE
       },
       {
         id: userStore.dir.course || '',
-        label: '课程',
+        label: `${t('course')}`,
         icon: () => this.renderIcon(PlayLesson),
         name: LibraryEnum.COURSE
       },
       {
         id: userStore.dir.procedure || '',
-        label: '工程',
+        label: `${t('procedure')}`,
         icon: () => this.renderIcon(CoffeeMaker),
         name: LibraryEnum.PROCEDURE
       }
@@ -160,14 +162,6 @@ export class FolderTree {
   /** 节点下拉列表选项 */
   private treeNodeDropDownOptions(lib: LibraryEnum, node: TreeNode) {
     return this.createDropDownOptions(lib, node, this.dialog)
-    // switch (lib) {
-    //   case LibraryEnum.NOTE:
-    //     return this.noteDropDownOptions(lib, node, this.dialog)
-    //   case LibraryEnum.COURSE:
-    //     return this.courseDropDownOptions(lib, node, this.dialog)
-    //   case LibraryEnum.PROCEDURE:
-    //     return this.procedureDropDownOptions(lib, node, this.dialog)
-    // }
   }
   private createFolder(config: any, node: TreeNode) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -191,11 +185,11 @@ export class FolderTree {
             .then(data => {
               node.children = data
               that.createFolderEvent.next(node)
-              this.message.success('新建文件夹成功！')
+              this.message.success(that.t('sidebar.create_folder_success'))
             })
             .catch(err => {
               console.log(err)
-              this.message.error('新建文件夹失败！')
+              this.message.error(that.t('sidebar.create_folder_fail'))
             })
         }
       })
@@ -239,16 +233,6 @@ export class FolderTree {
             projectStore.create(node.id!, lib, userStore.account, userStore.hostname).then(newFile => {
               this.handleCreateFile(newFile, folderId, lib)
             })
-            // if (lib === LibraryEnum.NOTE) {
-            //   noteStore.create(node.id!, userStore.account, userStore.hostname).then(newFile => {
-            //     this.handleCreateFile(newFile, folderId, LibraryEnum.NOTE)
-            //   })
-            // }
-            // else if (lib === LibraryEnum.PROCEDURE) {
-            //   procedureStore.create(node.id!, userStore.account, userStore.hostname).then(newFile => {
-            //     this.handleCreateFile(newFile, folderId, LibraryEnum.PROCEDURE)
-            //   })
-            // }
           }
         }
       },

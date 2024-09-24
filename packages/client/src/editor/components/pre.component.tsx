@@ -382,6 +382,7 @@ export const preComponent = defineComponent({
       theme: ''
     }
   }) {
+    console.log('setup', 'precomponent')
     let languageGrammar = getLanguageGrammar(data.state!.lang)
     let [blockCommentStartString, blockCommentEndString] = getLanguageBlockCommentStart(data.state!.lang)
     const stateController = useState({

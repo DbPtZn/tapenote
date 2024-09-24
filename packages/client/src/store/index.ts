@@ -11,7 +11,8 @@ import {
   useProjectStore,
   useSpeakerStore,
   useMicroStore,
-  useRecentStore
+  useRecentStore,
+  useStudioStore
 } from './modules/_api'
 
 const useStore = () => ({
@@ -26,7 +27,8 @@ const useStore = () => ({
   projectStore: useProjectStore(),
   speakerStore: useSpeakerStore(),
   microStore: useMicroStore(),
-  recentStore: useRecentStore()
+  recentStore: useRecentStore(),
+  studioStore: useStudioStore()
 })
 
 

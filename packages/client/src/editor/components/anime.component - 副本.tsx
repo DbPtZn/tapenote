@@ -63,7 +63,7 @@ export const animeComponent = defineComponent({
             data-title={state.dataTitle}
             data-state={state.dataState}
           >
-            {/* <span
+            <span
               class={'anime-component-tab'}
               title={state.dataTitle}
               data-serial={state.dataSerial}
@@ -76,7 +76,7 @@ export const animeComponent = defineComponent({
                 const target = ev.target as HTMLElement
                 target.parentElement?.classList.remove('anime-component-evoke')
               }}
-            /> */}
+            />
             {slotRender(slot!, (children) => {
               return <div class={'anime-component-content'}>{children}</div>
             })}
@@ -93,47 +93,15 @@ export const animeComponentLoader: ComponentLoader = {
     editModeStyles: [
       `
     anime-component {
-      position: relative;
       display: block;
-      pointer-events: none;
+      // pointer-events: none;
     }
-    .anime-component-content {
-      pointer-events: auto;
-    }
+    // .anime-component-content {
+    //   pointer-events: auto;
+    // }
     .anime-component-evoke {
       display: block;
       outline: 1px dashed #aaaaaa30;
-    }
-    anime-component:after {
-      position: absolute;
-      right: -12px;
-      top: -12px;
-      // margin-left: -12px;
-      // margin-top: -12px;
-      content: attr(data-serial);
-      vertical-align: super;
-      color: white;
-      background-color: #c8c9cc;
-      border-radius: 24px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 23px;
-      height: 23px;
-      font-size: 15px;
-      line-height: 0px;
-      -webkit-border-radius: 24px;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);
-      pointer-events: auto;
-    }
-    anime-component:hover:after {
-      cursor: pointer;
-      animation: .8s .5s tada infinite;
-    }
-    anime-component:hover {
-      outline: 1px dashed #aaaaaa30;
-      border-radius: 3px;
     }
     .anime-component-tab:after {
       z-index: 1;

@@ -28,6 +28,8 @@ import { useReadonly } from '../../hooks/use-readonly'
 import { useOutput } from '../../hooks/use-output'
 import { headingAttr } from '../../attributes/heading.attr'
 import { SlotRender } from '../SlotRender'
+import { inject } from '@viewfly/core'
+import { DropdownContextService } from '../../../components/_api'
 
 type AnimeState = 'active' | 'inactive'
 
@@ -244,7 +246,6 @@ function numberToLetter(num: number) {
 
 export function ListComponentView(props: ViewComponentProps<ListComponent>) {
   const component = props.component
-
   function reorder(is: boolean) {
     component.state.reorder = is
     const parentSlot = component.parent!
@@ -348,7 +349,7 @@ export function ListComponentView(props: ViewComponentProps<ListComponent>) {
             (component.state.type === 'UnorderedList' || readonly() || output()) ?
               <span class="xnote-order-btn">{icon}</span>
               :
-              <Dropdown menu={<>
+              <Dropdown trigger='click' menu={<>
                 <MenuItem onClick={() => reorder(false)}>继续编号</MenuItem>
                 <MenuItem onClick={() => reorder(true)}>重新编号</MenuItem>
               </>}>

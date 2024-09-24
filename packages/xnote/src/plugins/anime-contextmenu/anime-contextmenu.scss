@@ -1,6 +1,29 @@
 .contextmenu {
   position: absolute;
-  height: 50px;
-  width: 50px;
-  background-color: aqua;
+  width: fit-content;
+  border-radius: 3px;
+  background-color: var(--tb-cardColor);
+  transition: transform 0.3s, opacity 0.3s;
+}
+.contextmenu-inner {
+  padding: 4px 6px;
+}
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px;
+  border-radius: 3px;
+  cursor: pointer;
+  &:hover {
+    background-color: var(--tb-buttonColor2Hover);
+  }
+
+  .label {
+    flex: 1;
+    padding: 0 3px;
+  }
+  .icon {
+    padding: 0 1px;
+  }
 }

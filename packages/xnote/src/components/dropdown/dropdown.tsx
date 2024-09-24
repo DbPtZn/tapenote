@@ -9,7 +9,7 @@ import {
   withAnnotation,
 } from '@viewfly/core'
 import { withScopedCSS } from '@viewfly/scoped-css'
-import { fromEvent, Subscription } from '@textbus/core'
+import { auditTime, fromEvent, Subscription } from '@textbus/core'
 import { HTMLAttributes } from '@viewfly/platform-browser'
 
 import css from './dropdown.scoped.scss'
@@ -51,6 +51,12 @@ export const Dropdown = withAnnotation({
       dropdownContextService.hide(false)
     } else {
       dropdownContextService.open()
+      setTimeout(() => {
+        const s = fromEvent(document, 'click').subscribe(e => {
+          dropdownContextService.hide(false)
+          s.unsubscribe()
+        })
+      }, 0)
     }
   }
 

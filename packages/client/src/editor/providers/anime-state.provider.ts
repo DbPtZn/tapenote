@@ -112,6 +112,7 @@ export class AnimeStateProvider {
       })
       /** 设置完成后向后移动光标——>取消选区 */
       this.selection.toNext()
+      // this.input.disabled = true 
       // const timer = setTimeout(() => {
       //   this.input.disabled = false
       //   clearTimeout(timer)

@@ -144,7 +144,8 @@ export const AddAnimeTool = withAnnotation({
             {
               left: position.left - offsetVal() + 'px',
               top: position.top + 'px',
-              display: position.display ? 'block' : 'none'
+              scale: position.display ? '1' : '0',
+              opacity: position.display ? '1' : '0'
             }
           }
           >

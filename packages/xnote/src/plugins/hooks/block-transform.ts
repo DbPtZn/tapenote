@@ -9,6 +9,7 @@ import { toBlockquote } from '../../textbus/components/blockqoute/blockquote.com
 import { SourceCodeComponent } from '../../textbus/components/source-code/source-code.component'
 import { HighlightBoxComponent } from '../../textbus/components/highlight-box/highlight-box.component'
 import { toList } from '../../textbus/components/list/list.component'
+import { toAnimeComponent } from '../../textbus/components/anime/anime.component'
 
 export function useBlockTransform() {
   const commander = inject(Commander)

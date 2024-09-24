@@ -46,8 +46,9 @@ export class ButtonTool implements Tool {
     this.config = this.factory(injector)
     this.controller = injector.get(Controller)
     const keyboard = injector.get(Keyboard)
+    const { queryState, ...config } = this.config
     const viewer = h(UIButton, { 
-      ...this.config, 
+      ...config,
       highlight: () => this.isHighlight.value,
       disabled: () => this.isDisabled.value
     })

@@ -326,13 +326,13 @@ export const LeftToolbar = withAnnotation({
                   </Button>
                 </div>
                 <Divider/>
-                <AnimeTool
+                {/* <AnimeTool
                   style={{ display: 'block' }}
                   abreast={true}
                   slot={slot}
                   applyBefore={applyBefore}>
                   <MenuItem arrow={true} icon={<span style={{'font-family': 'system-ui'}}>M</span>}>动画</MenuItem>
-                </AnimeTool>
+                </AnimeTool> */}
                 <AttrTool
                   style={{ display: 'block' }}
                   abreast={true}

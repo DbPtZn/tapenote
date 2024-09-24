@@ -159,7 +159,7 @@ export class AnimeContextmenuPlugin implements Plugin {
         props: {
           onClick: () => {
             const dataEffect = target.dataset.effect as string
-            this.playAnime(target, dataEffect)
+            this.playAnime(target, dataEffect, true)
           }
         }
       }
@@ -280,16 +280,16 @@ export class AnimeContextmenuPlugin implements Plugin {
   }
 
   /** 测试动画效果 */
-  playAnime(target: HTMLElement, effect: string) {
+  playAnime(target: HTMLElement, effect: string, isInline = false) {
     const display = target.style.display
-    target.style.display = 'block' // 设置成 block 才能正常播放动画
+    isInline && (target.style.display = 'inline-block') // 设置成 block 才能正常播放动画
     const anime = this.anime.getAnime(effect)
     if(anime) {
       anime.applyEffect(target).finished.then(() => {
-        target.style.display = display
+        isInline && (target.style.display = display)
       })
     } else {
-      target.style.display = display
+      isInline && (target.style.display = display)
     }
   }
   // 可选，编辑器销毁时调用

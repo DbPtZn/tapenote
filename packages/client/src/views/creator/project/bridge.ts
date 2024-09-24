@@ -19,6 +19,7 @@ export class Bridge {
   animeState: AnimeStateProvider | null = null
   animeUtils: AnimeUtilsProvider | null = null
   outlineService: OutlineService | null = null
+  
   private editorReadyEvent: Subject<any> = new Subject()
   onEditorReady: Observable<Editor> = this.editorReadyEvent.asObservable()
   private toolbarCollapseEvent: Subject<any> = new Subject()
@@ -35,6 +36,9 @@ export class Bridge {
 
   private editorReloadEvent: Subject<any> = new Subject()
   onEditorReload: Observable<Editor> = this.editorReloadEvent.asObservable()
+
+  private autoMoveAnimePointerChangeEvent: Subject<boolean> = new Subject()
+  onAutoMoveAnimePointerChange:Observable<boolean> = this.autoMoveAnimePointerChangeEvent.asObservable()
 
   constructor() {
     this.habit = new Habit()
@@ -87,6 +91,10 @@ export class Bridge {
   handleAutoAnime() {
     const animeAutoProvider = this.editor?.get(AnimeAutoProvider)
     animeAutoProvider?.autoAdd()
+  }
+
+  handleAutoMoveAnimePointer(is: boolean) {
+    this.autoMoveAnimePointerChangeEvent.next(is)
   }
 
   /** 编辑模块重载（实现数据更新） */

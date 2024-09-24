@@ -12,6 +12,8 @@ import {
   useContext,
   Selection,
   useSelf,
+  onBreak,
+  Adapter,
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import { ViewComponentProps } from '@textbus/adapter-viewfly'
@@ -20,8 +22,9 @@ import { useReadonly } from '../../hooks/use-readonly'
 import { useOutput } from '../../hooks/use-output'
 import { SlotRender } from '../SlotRender'
 import './anime.component.scss'
-import { inject } from '@viewfly/core'
 import { AnimeProvider } from '../../../providers/_api'
+import { headingAttr } from '../../../textbus/attributes/_api'
+import { BlockquoteComponent, HighlightBoxComponent, ParagraphComponent } from '../_api'
 
 type AnimeState = 'active' | 'inactive'
 
@@ -31,6 +34,7 @@ export interface AnimeComponentState {
   dataSerial: string
   dataState: AnimeState
   dataTitle: string
+  dataRange: boolean
   slot: Slot
 }
 
@@ -48,6 +52,7 @@ export class AnimeComponent extends Component<AnimeComponentState> {
       dataSerial: json.dataSerial,
       dataState: json.dataState,
       dataTitle: json.dataTitle,
+      dataRange: json.dataRange,
       slot: textbus.get(Registry).createSlot(json.slot)
     })
   }
@@ -58,10 +63,27 @@ export class AnimeComponent extends Component<AnimeComponentState> {
     dataSerial: '',
     dataState: 'inactive',
     dataTitle: '',
+    dataRange: false,
     slot: new Slot([ContentType.BlockComponent, ContentType.InlineComponent, ContentType.Text])
   }) {
    super(textbus, state)
    this.textbus = textbus
+  }
+
+  static createAnimeComponent(textbus: Textbus, effect: string, title: string, range = true) {
+    const animeProvider = textbus.get(AnimeProvider)
+    const id = animeProvider.generateAnimeId()
+    const serial = animeProvider.generateAnimeSerial().toString()
+    const component = new AnimeComponent(textbus, {
+      dataId: id,
+      dataEffect: effect,
+      dataSerial: serial.toString(),
+      dataState: 'inactive',
+      dataTitle: title,
+      dataRange: range,
+      slot: new Slot([ContentType.BlockComponent])
+    })
+    return component
   }
 
   /** 添加动画 */
@@ -88,6 +110,7 @@ export class AnimeComponent extends Component<AnimeComponentState> {
         dataSerial: serial.toString(),
         dataState: 'inactive',
         dataTitle: title,
+        dataRange: false,
         slot
       })
       commander.replaceComponent(componentInstance, anime)
@@ -98,8 +121,40 @@ export class AnimeComponent extends Component<AnimeComponentState> {
     }
   }
 
+  /** 移除动画组件 */
+  static removeAnime(componentInstance: Component | null, textbus: Textbus) {
+    if (!componentInstance) return
+    if (componentInstance instanceof AnimeComponent) {
+      const commander = textbus.get(Commander)
+    
+      const parent = componentInstance.parent!
+
+      const index = parent.indexOf(componentInstance)
+
+      parent.retain(index)
+
+      commander.removeComponent(componentInstance)
+
+      componentInstance.slots.at(0)!.sliceContent().forEach(i => {
+        parent.insert(i)
+      })
+
+      return
+    }
+    if (componentInstance.state.dataAnime) {
+      componentInstance.state.dataAnime = false
+      componentInstance.state.dataId = ''
+      componentInstance.state.dataEffect = ''
+      componentInstance.state.dataSerial = ''
+      componentInstance.state.dataState = ''
+      componentInstance.state.dataTitle = ''
+      componentInstance.state.dataRange = false
+    }
+  }
+
   override setup() {
     const commander = this.textbus.get(Commander)
+    const selection = this.textbus.get(Selection)
     const componentInstance = useSelf()
     
     onContentDeleted((ev) => {
@@ -109,48 +164,61 @@ export class AnimeComponent extends Component<AnimeComponentState> {
         commander.removeComponent(componentInstance)
       }
     })
+    
+    onBreak(ev => {
+      const isEmpty = this.state.slot.isEmpty
+      const afterSlot = ev.target.cut(ev.data.index)
+      afterSlot.removeAttribute(headingAttr)
+      const nextParagraph = new ParagraphComponent(this.textbus, {
+        slot: afterSlot
+      })
+
+      if (isEmpty && (
+        this.parentComponent instanceof BlockquoteComponent ||
+        this.parentComponent instanceof HighlightBoxComponent
+      )) {
+        commander.insertAfter(nextParagraph, this.parentComponent)
+        commander.removeComponent(this)
+      } else {
+        commander.insertAfter(nextParagraph, this)
+      }
+      selection.setPosition(afterSlot, 0)
+      ev.preventDefault()
+    })
   }
 }
 
-export function toAnimeComponent(textbus: Textbus) {
-  console.log('toAnimeComponent')
-  const query = textbus.get(Query)
-  const commander = textbus.get(Commander)
+export function toAnimeComponent(textbus: Textbus, effect: string, title: string) {
   const selection = textbus.get(Selection)
-
-  const state = query.queryComponent(AnimeComponent)
-  if (state.state === QueryStateType.Enabled) {
-    const current = state.value!
-    const parent = current.parent!
-
-    const index = parent.indexOf(current)
-
-    parent.retain(index)
-
-    commander.removeComponent(current)
-
-    current.slots.at(0)!.sliceContent().forEach(i => {
-      parent.insert(i)
-    })
+  const animeProvider = textbus.get(AnimeProvider)
+  const id = animeProvider.generateAnimeId()
+  const serial = animeProvider.generateAnimeSerial().toString()
+  
+  const block = new AnimeComponent(textbus, {
+    dataId: id,
+    dataEffect: effect,
+    dataSerial: serial.toString(),
+    dataState: 'inactive',
+    dataTitle: title,
+    dataRange: true,
+    slot: new Slot([ContentType.BlockComponent])
+  })
+  const slot = block.state.slot
+  if (selection.startSlot === selection.endSlot) {
+    const parentComponent = selection.startSlot!.parent!
+    const parentSlot = parentComponent.parent!
+    const position = parentSlot.indexOf(parentComponent)
+    slot.insert(parentComponent)
+    parentSlot.retain(position)
+    parentSlot.insert(block)
   } else {
-    const block = new AnimeComponent(textbus)
-    const slot = block.state.slot
-    if (selection.startSlot === selection.endSlot) {
-      const parentComponent = selection.startSlot!.parent!
-      const parentSlot = parentComponent.parent!
-      const position = parentSlot.indexOf(parentComponent)
-      slot.insert(parentComponent)
-      parentSlot.retain(position)
-      parentSlot.insert(block)
-    } else {
-      const commonAncestorSlot = selection.commonAncestorSlot!
-      const scope = selection.getCommonAncestorSlotScope()!
-      commonAncestorSlot.cut(scope.startOffset, scope.endOffset).sliceContent().forEach(i => {
-        slot.insert(i)
-      })
-      commonAncestorSlot.retain(scope.startOffset)
-      commonAncestorSlot.insert(block)
-    }
+    const commonAncestorSlot = selection.commonAncestorSlot!
+    const scope = selection.getCommonAncestorSlotScope()!
+    commonAncestorSlot.cut(scope.startOffset, scope.endOffset).sliceContent().forEach(i => {
+      slot.insert(i)
+    })
+    commonAncestorSlot.retain(scope.startOffset)
+    commonAncestorSlot.insert(block)
   }
 }
 
@@ -162,7 +230,7 @@ export function AnimeView(props: ViewComponentProps<AnimeComponent>) {
     const slot = state.slot
     return (
       <anime-component 
-        class="anime-component" 
+        class={{ 'anime-component': true, 'anime-range': state.dataRange }} 
         ref={props.rootRef} 
         data-component={props.component.name}
         data-id={state.dataId}
@@ -208,6 +276,7 @@ export const animeComponentLoader: ComponentLoader = {
       dataSerial: element.getAttribute('data-serial') || '',
       dataState: element.getAttribute('data-state') as AnimeState || 'inactive',
       dataTitle: element.getAttribute('data-title') || '',
+      dataRange: element.getAttribute('data-range') === 'true',
       slot
     })
   },

@@ -188,7 +188,7 @@ export const imageB2UComponent = defineComponent({
         (err) => {
           // console.log('图片上传失败')
           stateController.update((draft) => {
-            draft.src = 'image-error.png'
+            draft.src = ''
           })
           console.log(err)
         }

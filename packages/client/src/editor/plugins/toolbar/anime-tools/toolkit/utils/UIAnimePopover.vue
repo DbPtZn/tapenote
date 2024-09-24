@@ -121,10 +121,10 @@ if (props.keymap) {
   box-sizing: border-box;
   &:hover {
     .selector-left-btn {
-      background-color: var(--tb-buttonColor2Hover);
+      background-color: var(--tb-buttonColor2);
     }
     .selector-right-btn {
-      background-color: var(--tb-buttonColor2Hover);
+      background-color: var(--tb-buttonColor2);
     }
   }
   .selector-left-btn {
@@ -146,7 +146,7 @@ if (props.keymap) {
     align-items: center;
     // height: 100%;
     user-select: none;
-    padding: 2px;
+    padding: 2px 4px;
     box-sizing: border-box;
     border-top-right-radius: 3px;
     border-bottom-right-radius: 3px;

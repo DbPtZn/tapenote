@@ -10,7 +10,7 @@ import { animeFormatter } from '../../textbus/formatters/_api'
 import { Dropdown, DropdownProps } from '../../components/dropdown/dropdown'
 import css from './anime-tool.scoped.scss'
 import { AnimeProvider } from '../../providers/_api'
-import { AnimeComponent } from '../../textbus/components/_api'
+import { AnimeComponent, toAnimeComponent } from '../../textbus/components/_api'
 
 export interface AnimeToolProps extends Props {
   abreast?: DropdownProps['abreast']
@@ -88,6 +88,14 @@ export function AnimeTool(props: AnimeToolProps) {
                     onClick={() => {
                       props.applyBefore?.()
                       props.onApply?.(c.value, c.label)
+                      if(props.slot) {
+                        const active = props.slot
+                        selection.setBaseAndExtent(active, 0, active, active.length)
+                        selection.restore()
+                        toAnimeComponent(textbus, c.value, c.label)
+                        refreshService.onRefresh.next()
+                        return
+                      }
                       if(props.component) {
                         AnimeComponent.addAnime(props.component, textbus, c.value, c.label)
                         return
@@ -111,11 +119,14 @@ export function AnimeTool(props: AnimeToolProps) {
         </div>
       }>
         {
-          props.children || <Button highlight={vm.highlight} arrow={true} disabled={vm.disabled}>
-          <span class="anime-btn">
-            <span class="anime-icon">{ usedOption().label }</span>
-          </span>
-          </Button>
+          props.children ||
+          <div>
+            <Button highlight={vm.highlight} arrow={true} disabled={vm.disabled}>
+              <span class="anime-btn">
+                <span class="anime-icon">{ usedOption().label }</span>
+              </span>
+            </Button>
+          </div>
         }
       </Dropdown>
     )

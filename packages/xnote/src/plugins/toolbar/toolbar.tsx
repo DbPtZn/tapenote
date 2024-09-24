@@ -177,6 +177,9 @@ export const Toolbar = withAnnotation({
           <FontSizeTool/>
         </ToolbarItem>
         <ToolbarItem>
+          <AnimeTool/>
+        </ToolbarItem>
+        <ToolbarItem>
           <FontFamilyTool/>
         </ToolbarItem>
         <ToolbarItem>
@@ -187,9 +190,6 @@ export const Toolbar = withAnnotation({
         </ToolbarItem>
         <ToolbarItem>
           <ColorTool/>
-        </ToolbarItem>
-        <ToolbarItem>
-          <AnimeTool/>
         </ToolbarItem>
       </div>
     )

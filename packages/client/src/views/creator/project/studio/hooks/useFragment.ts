@@ -1,5 +1,5 @@
 import useStore from '@/store'
-import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
+import { DropdownOption } from 'naive-ui'
 import { h, onUnmounted, reactive, ref } from 'vue'
 import { Bridge } from '../../bridge'
 import _ from 'lodash'
@@ -10,11 +10,12 @@ import { Player } from '@/editor'
 import { Subscription } from '@tanbo/stream'
 import { SortableEvent } from 'vue-draggable-plus'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
-export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: () => void, handleReorder: () => void) {
-  console.log('useFragment：', bridge)
-  const { projectStore, clipboardStore } = useStore()
+export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: () => void, checkPromoter: () => void, handleReorder: () => void) {
+  // console.log('useFragment：', bridge)
+  const { projectStore, clipboardStore, studioStore } = useStore()
   const isShowName = ref(false)
   const isShowOrder = ref(false)
+  let autoMoveAnimePointer = false
   const dialog = useDialog()
   const message = useMessage()
   let player: Player | undefined = undefined
@@ -24,7 +25,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   const dropdownState = reactive({
     x: 0,
     y: 0,
-    options: [] as DropdownMixedOption[],
+    options: [] as DropdownOption[],
     isShow: false
   })
   const playerState = reactive({
@@ -272,7 +273,26 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     ]
   }
 
-  const studioOptions: DropdownMixedOption[] = [
+  const studioOptions: DropdownOption[] = [
+    {
+      key: 'refresh',
+      label: '更新标记',
+      props: {
+        onClick: () => {
+          checkPromoter()
+        }
+      }
+    },
+    {
+      key: 'auto',
+      label: () => `${autoMoveAnimePointer ? '关闭' : '开启' }自动切换动画块`,
+      props: {
+        onClick: () => {
+          autoMoveAnimePointer = !autoMoveAnimePointer
+          bridge.handleAutoMoveAnimePointer(autoMoveAnimePointer)
+        }
+      }
+    },
     {
       key: 'preview',
       label: '播放预览',

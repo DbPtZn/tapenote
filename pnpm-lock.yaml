@@ -164,9 +164,6 @@ importers:
 
   packages/client:
     dependencies:
-      '@dbptzn/xnote':
-        specifier: workspace:0.0.1-alpha.42
-        version: link:../../editor
       '@tanbo/bezier':
         specifier: ^1.0.1
         version: 1.0.1
@@ -177,11 +174,11 @@ importers:
         specifier: 3.7.8
         version: 3.7.8
       '@textbus/editor':
-        specifier: 3.7.9
-        version: 3.7.9
+        specifier: 3.7.10
+        version: 3.7.10
       '@textbus/platform-browser':
-        specifier: 3.7.9
-        version: 3.7.9
+        specifier: 3.7.10
+        version: 3.7.10
       '@vueuse/core':
         specifier: ^10.9.0
         version: 10.11.1(vue@3.5.5(typescript@5.6.2))
@@ -269,6 +266,9 @@ importers:
       vue-draggable-plus:
         specifier: ^0.5.0
         version: 0.5.3(@types/sortablejs@1.15.8)
+      vue-i18n:
+        specifier: ^9.13.1
+        version: 9.14.0(vue@3.5.5(typescript@5.6.2))
       vue-router:
         specifier: ^4.3.2
         version: 4.4.5(vue@3.5.5(typescript@5.6.2))
@@ -3320,11 +3320,14 @@ packages:
   '@textbus/core@4.0.0-alpha.71':
     resolution: {integrity: sha512-LzF752Nis06Qqn8qTB0sXxQsYENPfIZkSA2JFKBTGi1j7cwueJ53RUpR3mR8/fiEqVlLNUxmD017C70jUsHPWw==}
 
+  '@textbus/editor@3.7.10':
+    resolution: {integrity: sha512-NxqtfoICKBCgfiMD9wKNgN+WIKMKyvTA629PckBVjkpXHhIG5V+T0D14vz12jDdc/Rggh7xpEuOsevsffzL7fA==}
+
   '@textbus/editor@3.7.8':
     resolution: {integrity: sha512-QwLfqfzR0IaKEfVLxzNvYoIHGzEzYlte33BHTH2BRZmZCaEfPFIuotawwK4cTO7vE33h3UKYS3t91h6LPtP88Q==}
 
-  '@textbus/editor@3.7.9':
-    resolution: {integrity: sha512-5kXy6Nmn4Atq9VUrQ+n+Rt28uNFgbwXBtuOzRcgl3umlAHBOOToVl4gnMj1HJMS6l6NM1zJ2eJRkD4zIMV+4iA==}
+  '@textbus/platform-browser@3.7.10':
+    resolution: {integrity: sha512-izyvyfp4qZdCN7Ah82yLZJrKrWjnqhLIM/siSKl/N3Cmy2p2bLwkyIRNQ3OBMsNPGoKcrEUnuFfCxS0Fb+y08A==}
 
   '@textbus/platform-browser@3.7.8':
     resolution: {integrity: sha512-Up1zBnVWGU7/kT/jI74vDC8iRIFmDDN7pXNicIjxkH9SvcBlywtF049plIp0LE0nxl/lylUrN1TwadkOjQxxNw==}
@@ -14640,7 +14643,7 @@ snapshots:
     dependencies:
       '@tanbo/stream': 1.2.5
       '@textbus/core': 4.0.0-alpha.66
-      '@textbus/platform-browser': 4.0.0-alpha.66
+      '@textbus/platform-browser': 4.0.0-alpha.71
       '@textbus/platform-node': 4.0.0-alpha.67
       '@viewfly/core': 1.0.0-alpha.17
       '@viewfly/platform-browser': 1.0.0-alpha.17
@@ -14698,6 +14701,20 @@ snapshots:
       '@tanbo/stream': 1.2.5
       '@viewfly/core': 1.0.0-alpha.17
 
+  '@textbus/editor@3.7.10':
+    dependencies:
+      '@tanbo/bezier': 1.0.1
+      '@tanbo/color': 0.1.1
+      '@tanbo/color-picker': 1.0.3
+      '@tanbo/css-themes': 0.0.1
+      '@tanbo/di': 1.1.8
+      '@tanbo/stream': 1.2.5
+      '@textbus/core': 3.7.8
+      '@textbus/platform-browser': 3.7.10
+      classnames: 2.5.1
+      katex: 0.16.11
+      prismjs: 1.29.0
+
   '@textbus/editor@3.7.8':
     dependencies:
       '@tanbo/bezier': 1.0.1
@@ -14712,19 +14729,12 @@ snapshots:
       katex: 0.16.11
       prismjs: 1.29.0
 
-  '@textbus/editor@3.7.9':
+  '@textbus/platform-browser@3.7.10':
     dependencies:
-      '@tanbo/bezier': 1.0.1
-      '@tanbo/color': 0.1.1
-      '@tanbo/color-picker': 1.0.3
-      '@tanbo/css-themes': 0.0.1
       '@tanbo/di': 1.1.8
       '@tanbo/stream': 1.2.5
       '@textbus/core': 3.7.8
-      '@textbus/platform-browser': 3.7.9
-      classnames: 2.5.1
-      katex: 0.16.11
-      prismjs: 1.29.0
+      reflect-metadata: 0.1.14
 
   '@textbus/platform-browser@3.7.8':
     dependencies:

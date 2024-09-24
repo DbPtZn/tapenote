@@ -11,8 +11,10 @@ import { useShell } from '@/renderer'
 import { AccessTimeRound, SearchRound, MoreHorizRound } from '@vicons/material'
 import { CreatorShell } from '../shell'
 import SidebarContainer from './SidebarContainer.vue'
+import { useI18n } from 'vue-i18n'
 const themeVars = useThemeVars()
 const shell = useShell<CreatorShell>()
+const { t } = useI18n()
 const { userListStore, userStore, folderTreeStore, folderStore, dragStore } = useStore()
 const { dropdownState, options, onCreateFolder, handleUserDropdown, handleMasterDropdown, handleRecentContextmenu, handleMoreDropdown, handleCollapseDropdown, handleSelect, handleClickoutside } = useSidebarDropDown()
 const sidebarRef = ref<HTMLElement>()
@@ -113,9 +115,9 @@ function hanldeToRecent() {
       </Header>
       <Main class="main" :flex="1">
         <!-- 导航菜单 -->
-        <NavMenuItem :label="'最近编辑'" :icon="AccessTimeRound" :active="folderStore.id === 'recently'" @click="hanldeToRecent" @contextmenu.prevent="handleRecentContextmenu" />
-        <NavMenuItem :label="'搜索'" :icon="SearchRound" :active="false" disabled />
-        <NavMenuItem :label="'更多'" :icon="MoreHorizRound" :active="false" @click="handleMoreDropdown" />
+        <NavMenuItem :label="t('sidebar.recently')" :icon="AccessTimeRound" :active="folderStore.id === 'recently'" @click="hanldeToRecent" @contextmenu.prevent="handleRecentContextmenu" />
+        <NavMenuItem :label="t('sidebar.search')" :icon="SearchRound" :active="false" disabled />
+        <NavMenuItem :label="t('sidebar.more')" :icon="MoreHorizRound" :active="false" @click="handleMoreDropdown" />
         <!-- 折叠面板 -->
         <CollapsePanel
           class="collapse"

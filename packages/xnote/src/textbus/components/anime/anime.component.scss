@@ -1,7 +1,15 @@
+.anime-component {
+  display: block;
+}
+.anime-range {
+  display: block;
+  outline: 1px dashed #aaaaaa30!important;
+}
 .anime-component-evoke {
   display: block;
   outline: 1px dashed #aaaaaa30!important;
 }
+
 .anime-component-tab:after {
   z-index: 1;
   content: attr(data-serial);

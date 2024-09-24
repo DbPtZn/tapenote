@@ -5,13 +5,17 @@ import { VIEW_DOCUMENT } from '@textbus/platform-browser'
 import { ANIME, ANIME_COMPONENT } from '@/editor'
 import { useMessage } from 'naive-ui'
 import { onUnmounted } from 'vue'
-import { Renderer } from '@textbus/core'
+
 export function usePromoter(procedureId: string, bridge: Bridge) {
   const { projectStore } = useStore()
   const message = useMessage()
   const subs: Subscription[] = []
   /** 选择启动子 */
-  function handlePromoterSelect(fragmentId: string, subscript: number) {
+  function handlePromoterSelect(fragmentId: string, subscript: number, id?: string, serial?: string) {
+    if(id && serial) {
+      makePreset(fragmentId, subscript, id, serial)
+      return
+    }
     makePresetStart(fragmentId, subscript, null)
   }
   /** 更新启动子 */
@@ -35,17 +39,6 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     const renderer = bridge.renderer
     if (!container || !renderer) return
     subs.push(
-      // ----------------- 弃用 ( 改用事件委托 ) ------------------
-      // bridge.animeService!.onAnimeClick.subscribe(animeInfo => {
-      //   const { id, serial } = animeInfo
-      //   addPromoter(fragmentId, subscript, serial, id)
-      //   if (oldAniId) { // 更新操作时的判定
-      //     const isUnique = checkPromoterUnique(oldAniId)
-      //     // aniId 是唯一绑定，其被替换后，应该取消其对应动画块的激活状态
-      //     if (isUnique) setAnimeToInactive(oldAniId)
-      //   }
-      //   makePresetEnd()
-      // }),
       fromEvent<PointerEvent>(container, 'click').subscribe(ev => {
         // console.log(ev)
         let id = ''
@@ -103,6 +96,10 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
       subs.forEach(sub => sub.unsubscribe())
       subs.length = 0
     }
+  }
+  /** 预设启动子  */
+  function makePreset(fragmentId: string, subscript: number, id: string, serial: string) {
+    addPromoter(fragmentId, subscript, serial, id)
   }
   function addPromoter(fragmentId: string, subscript: number, serial: string, aniId: string) {
     projectStore.fragment(procedureId).addPromoter({
@@ -291,3 +288,14 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     checkAnimeState,
   }
 }
+// ----------------- 弃用 ( 改用事件委托 ) ------------------
+// bridge.animeService!.onAnimeClick.subscribe(animeInfo => {
+//   const { id, serial } = animeInfo
+//   addPromoter(fragmentId, subscript, serial, id)
+//   if (oldAniId) { // 更新操作时的判定
+//     const isUnique = checkPromoterUnique(oldAniId)
+//     // aniId 是唯一绑定，其被替换后，应该取消其对应动画块的激活状态
+//     if (isUnique) setAnimeToInactive(oldAniId)
+//   }
+//   makePresetEnd()
+// })

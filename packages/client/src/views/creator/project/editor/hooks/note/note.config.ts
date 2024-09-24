@@ -44,13 +44,13 @@ import {
   componentsTool,
   rootComponent,
   rootComponentLoader,
+  listComponent,
+  listComponentLoader,
   Structurer,
   ThemeProvider,
   ImgToUrlService,
   preComponent,
   preComponentLoader,
-  listComponent,
-  listComponentLoader,
   KeyboardManager
 } from '@/editor'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
@@ -75,6 +75,7 @@ export function getNoteConfig(args: {
   controllerRef?: HTMLElement
   content?: string
 }) {
+  
   const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
   const config: EditorOptions = {
     theme: 'darkline',
@@ -86,8 +87,8 @@ export function getNoteConfig(args: {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: content || '',
-    components: [imageB2UComponent, preComponent, ...defaultComponents],
-    componentLoaders: [imageB2UComponentLoader, preComponentLoader, ...defaultComponentLoaders],
+    components: [imageB2UComponent, preComponent, listComponent, ...defaultComponents.filter(i => !(i.name === 'ListComponent'))], // 组件虽然可以覆盖,但快捷键仍然会被注册, 所以得过滤掉
+    componentLoaders: [imageB2UComponentLoader, preComponentLoader, listComponentLoader, ...defaultComponentLoaders],
     formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     // styleSheets: [],
@@ -100,7 +101,6 @@ export function getNoteConfig(args: {
       Structurer,
       ThemeProvider,
       ImgToUrlService,
-      KeyboardManager
     ],
     plugins: [
       () =>
@@ -130,6 +130,7 @@ export function getNoteConfig(args: {
         new InlineToolbarPlugin(
           [
             [headingTool],
+            [textAlignTool],
             [boldTool, italicTool, strikeThroughTool, underlineTool],
             [colorTool, textBackgroundTool],
             [fontSizeTool],
@@ -159,8 +160,8 @@ export function getNoteConfig(args: {
         }
       })
       
-      const keyboardManager = injector.get(KeyboardManager)
-      keyboardManager.setup(injector)
+      // const keyboardManager = injector.get(KeyboardManager)
+      // keyboardManager.setup(injector)
       /** 依赖注入 */
       // 主题依赖
       const themeProvider = injector.get(ThemeProvider)
@@ -174,8 +175,7 @@ export function getNoteConfig(args: {
         editorRef,
         controllerRef
       })
-      // 图片工具
-      // const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
+      // 上传图片
       const imgToUrlService = injector.get(ImgToUrlService)
       const { uploadImgFunction } = useUploadImg('/upload/img', account, hostname)
       imgToUrlService.setup(uploadImgFunction)

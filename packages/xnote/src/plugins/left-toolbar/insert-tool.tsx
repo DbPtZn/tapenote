@@ -19,6 +19,9 @@ import { VideoComponent } from '../../textbus/components/video/video.component'
 import { MenuHeading } from '../../components/menu-heading/menu-heading'
 import { KatexComponent } from '../../textbus/components/katex/katex.component'
 import { DropdownContextService } from '../../components/dropdown/dropdown-context.service'
+import { AnimeTool } from '../_common/anime.tool'
+import { AnimeProvider } from '../../providers/_api'
+import { AnimeComponent, toAnimeComponent } from '../../textbus/components/_api'
 
 export interface InsertToolProps {
   slot: Slot | null
@@ -29,9 +32,10 @@ export interface InsertToolProps {
 export function InsertTool(props: InsertToolProps) {
   const commander = inject(Commander)
   const selection = inject(Selection)
-  const textbus = inject(Textbus)
+  const textbus = inject(Textbus) 
   const fileUploader = inject(FileUploader, null)
   const dropdownContextService = inject(DropdownContextService)
+  const animeProvider = inject(AnimeProvider)
 
   function insert(type: string) {
     const component = props.slot?.parent
@@ -162,6 +166,25 @@ export function InsertTool(props: InsertToolProps) {
     }
   }
 
+  // function insertAnime(effect: string, title: string) {
+  //   const component = props.slot?.parent
+  //   if (!component) {
+  //     return
+  //   }
+  //   const comp = AnimeComponent.createAnimeComponent(textbus, effect, title)
+  //   const p = new ParagraphComponent(textbus, {
+  //     slot: new Slot([
+  //       ContentType.InlineComponent,
+  //       ContentType.Text
+  //     ])
+  //   })
+  //   comp.state.slot.insert(p)
+  //   commander.insertAfter(comp, component!)
+  //   selection.setPosition(p.state.slot, 0)
+  //   dropdownContextService.canHide = true
+  //   dropdownContextService.hide(false)
+  // }
+
   return withScopedCSS(css, () => {
     return <>
       {
@@ -200,6 +223,13 @@ export function InsertTool(props: InsertToolProps) {
         </Button>
       </div>
       <Divider/>
+      {/* <AnimeTool
+        style={{ display: 'block' }}
+        abreast={true}
+        onApply={insertAnime}
+        >
+        <MenuItem arrow={true} icon={<span style={{'font-family': 'system-ui'}}>M</span>}>动画</MenuItem>
+      </AnimeTool> */}
       <MenuItem onClick={() => insert('table')} icon={<span class="xnote-icon-table"/>}>表格</MenuItem>
       <MenuItem onClick={() => insert('todolist')} icon={<span class="xnote-icon-checkbox-checked"/>}>待办列表</MenuItem>
       <MenuItem onClick={() => insert('image')} icon={<span class="xnote-icon-image"/>}>图片</MenuItem>

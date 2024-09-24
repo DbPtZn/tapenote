@@ -21,6 +21,8 @@ import { headingAttr } from '../../attributes/heading.attr'
 import { BlockquoteComponent } from '../blockqoute/blockquote.component'
 import { HighlightBoxComponent } from '../highlight-box/highlight-box.component'
 import { SlotRender } from '../SlotRender'
+import { animeFormatter } from '../../formatters/anime.formatter'
+import { boldFormatter, codeFormatter, colorFormatter, fontFamilyFormatter, fontSizeFormatter, italicFormatter, underlineFormatter, linkFormatter, strikeThroughFormatter, backgroundColorFormatter } from '../../formatters/_api'
 
 export interface ParagraphComponentState {
   slot: Slot
@@ -59,6 +61,7 @@ export class ParagraphComponent extends Component<ParagraphComponentState> {
       const isEmpty = this.state.slot.isEmpty
       const afterSlot = ev.target.cut(ev.data.index)
       afterSlot.removeAttribute(headingAttr)
+      afterSlot.cleanFormats([boldFormatter, codeFormatter, colorFormatter, fontFamilyFormatter, fontSizeFormatter, italicFormatter, underlineFormatter, linkFormatter, strikeThroughFormatter, backgroundColorFormatter], 0, afterSlot.length)
       const nextParagraph = new ParagraphComponent(injector, {
         slot: afterSlot
       })
