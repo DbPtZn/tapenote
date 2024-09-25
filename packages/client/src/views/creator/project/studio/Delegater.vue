@@ -5,6 +5,7 @@ import { ArrowDownwardFilled } from '@vicons/material'
 import { usePromoter } from './hooks'
 import { Bridge } from '../bridge'
 import useStore from '@/store'
+import { useMessage } from 'naive-ui'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
@@ -12,17 +13,20 @@ const props = defineProps<{
 
 const { projectStore } = useStore()
 const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate } = usePromoter(props.id, bridge)
+const message = useMessage()
+
 const delegaterRef = ref<HTMLElement>()
 const updateRef = ref<HTMLElement>()
 const pointerRef = ref<HTMLElement>()
 const editorRef = ref<HTMLElement | null>(null)
 const scrollerRef = ref<HTMLElement | null>(null)
-const animeMap = ref<HTMLElement[]>([])
-const pointerIndex = ref(0)
+let animeMap: HTMLElement[] = []
+const pointerIndex = ref(-1)
+
 let isAutoMoveAnimePointer = false
 let lastPointerTarget: HTMLElement | null = null
-const subs3: Subscription[] = []
-const pointerTarget = computed(() => animeMap.value[pointerIndex.value])
+
+const pointerTarget = computed(() => animeMap[pointerIndex.value])
 const pointerPositon = computed(() => {
   let x = 0
   let y = 0
@@ -85,7 +89,11 @@ function getTextNodeEndPosition(element: HTMLElement | ChildNode) {
   return getTextNodeEndPosition(lastChild)
 }
 
+// TODO 开启自动移动后,预设第一个动画后会自动向下移动指针.?
+// 优化 动画列表是开启后生成的,如果中间添加了新的动画,是不会加入到列表中的,需要解决这个问题.
+
 const subs1: Subscription[] = []
+const subs2: Subscription[] = []
 onMounted(() => {
   const scroller = delegaterRef.value?.parentElement
   if(scroller)
@@ -97,14 +105,15 @@ onMounted(() => {
       isAutoMoveAnimePointer = isOpen
       if(isOpen && bridge.editorRef && bridge.scrollerRef) {
         const elements = bridge.editorRef.querySelectorAll<HTMLElement>(`[data-id]`)
-        animeMap.value = Array.from(elements)
+        animeMap = Array.from(elements)
         scrollerRef.value = bridge.scrollerRef
         scrollerRef.value.style.position = 'relative' // 添加 'relative' 作为 pointer 绝对定位参照系
-        subs3.push(
+        subs2.push(
           fromEvent<KeyboardEvent>(window, 'keydown').subscribe(e => {
             // console.log(e)
             if(['Space', 'ArrowDown'].includes(e.code)) {
-              pointerIndex.value++
+              if(pointerIndex.value < animeMap.length - 1) pointerIndex.value++
+              else message.info(`到底啦!`)
             }
             if(e.code === 'ArrowUp') {
               if(pointerIndex.value > 0) pointerIndex.value--
@@ -113,10 +122,18 @@ onMounted(() => {
           fromEvent<PointerEvent>(bridge.editorRef, 'click').subscribe(e => {
             const target = e.target as HTMLElement
             // console.log(target)
-            const index = animeMap.value.findIndex(element => element === (['anime', 'anime-component'].includes(target.tagName.toLocaleLowerCase()) ? target : ''))
+            const index = animeMap.findIndex(element => element === (['anime', 'anime-component'].includes(target.tagName.toLocaleLowerCase()) ? target : ''))
             if(index !== -1) pointerIndex.value = index
           })
         )
+      } else {
+        subs2.forEach(s => s.unsubscribe())
+        pointerTarget.value?.classList.remove('anime-box', 'anime-img', 'anime-component-box')
+        lastPointerTarget = null
+        subs2.length = 0
+        animeMap = []
+        pointerIndex.value = 0
+        
       }
     }),
     bridge.onEditorReady.subscribe(() => {
@@ -127,12 +144,13 @@ onMounted(() => {
 onUnmounted(() => {
   subs1.forEach(s => s.unsubscribe())
   subs1.length = 0
+  subs3.forEach(s => s.unsubscribe())
+  subs3.length = 0
   subs2.forEach(s => s.unsubscribe())
   subs2.length = 0
 })
 
 const handleClick = (e: MouseEvent) => {
-  // bridge.handleAutoMoveAnimePointer(true)
   const target = e.target as HTMLElement
   if(target.classList.contains('character')) {
     const fragment = getAncestorNodeByClassname(target, 'fragment')
@@ -178,22 +196,22 @@ function getFragment(fragmentId: string) {
   return projectStore.findFragment(props.id, fragmentId)
 }
 
-const subs2: Subscription[] = []
+const subs3: Subscription[] = []
 const characterMethods = {
   setFocus(target: HTMLElement) {
     if (!target.classList.contains('focus')) {
       target.classList.add('focus', 'animate__animated', 'animate__pulse', 'animate__infinite')
-      if (subs2.length > 0) {
-        subs2.forEach(s => s.unsubscribe())
-        subs2.length = 0
+      if (subs3.length > 0) {
+        subs3.forEach(s => s.unsubscribe())
+        subs3.length = 0
       }
-      subs2.push(
+      subs3.push(
         fromEvent(document, 'click', true).subscribe(event => {
           // 如果不是更新操作，则要监听是否点击元素自身
           if (event.target === updateRef.value) return
           target.classList.remove('focus', 'animate__animated', 'animate__pulse', 'animate__infinite')
-          subs2.forEach(s => s.unsubscribe())
-          subs2.length = 0
+          subs3.forEach(s => s.unsubscribe())
+          subs3.length = 0
         })
       )
     }
