@@ -16,6 +16,7 @@
     "--postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "@iconify/json": "^2.2.252",
     "@tanbo/bezier": "^1.0.1",
     "@tanbo/stream": "^1.2.5",
     "@textbus/core": "3.7.8",
@@ -71,6 +72,7 @@
     "prebuild-install": "^7.1.2",
     "sass": "^1.76.0",
     "typescript": "^5.2.2",
+    "unocss": "^0.62.4",
     "unplugin-vue-components": "^0.27.0",
     "vconsole": "^3.15.1",
     "vite": "^5.1.6",

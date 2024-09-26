@@ -16,7 +16,7 @@ import { InlineToolbarPlugin,
   OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
   preview_startTool, preview_stopTool, animeBadgeVisibleTool, animeElementVisibleTool, 
   imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
-  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider, listComponent, listComponentLoader 
+  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider, listComponent, listComponentLoader, AnimeService 
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
@@ -73,7 +73,7 @@ export function getProcedureConfig(args: {
       { provide: Commander, useClass: CustomCommander },
       AnimeProvider, AddAnimeService, AnimeAutoProvider,
       AnimeUtilsProvider, AnimeStateProvider, DialogProvider, 
-      OutlineService, ColorProvider,
+      OutlineService, ColorProvider, AnimeService,
       Structurer, ThemeProvider, Player, ImgToUrlService
     ],
     plugins: [

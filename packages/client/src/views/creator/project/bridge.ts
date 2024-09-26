@@ -39,6 +39,8 @@ export class Bridge {
 
   private autoMoveAnimePointerChangeEvent: Subject<boolean> = new Subject()
   onAutoMoveAnimePointerChange:Observable<boolean> = this.autoMoveAnimePointerChangeEvent.asObservable()
+  private addPromoterEvent: Subject<HTMLElement> = new Subject()
+  onAddPromoter: Observable<HTMLElement> = this.addPromoterEvent.asObservable()
 
   constructor() {
     this.habit = new Habit()
@@ -95,6 +97,10 @@ export class Bridge {
 
   handleAutoMoveAnimePointer(is: boolean) {
     this.autoMoveAnimePointerChangeEvent.next(is)
+  }
+  
+  handleAddPromoter(element: HTMLElement) {
+    this.addPromoterEvent.next(element)
   }
 
   /** 编辑模块重载（实现数据更新） */

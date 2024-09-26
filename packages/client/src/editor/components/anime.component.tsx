@@ -13,7 +13,12 @@ import {
   VElement,
   onDestroy,
   onContentDeleted,
-  Injector
+  Injector,
+  onBreak,
+  onCompositionStart,
+  onContentInsert,
+  onViewChecked,
+  Selection
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import {
@@ -27,15 +32,48 @@ export const animeComponent = defineComponent({
   setup(initData?: ComponentInitData<any, any>) {
     const injector = useContext()
     const commander = injector.get(Commander)
+    const selection = injector.get(Selection)
     const componentInstance = useSelf()
     /** 插槽 */
     const slots = useSlots(initData!.slots!)
-    const slot = slots.get(0)
+    const slot = slots.get(0)!
+   
     onContentDeleted((ev) => {
+      // console.log(ev)
       /** 插槽中的组件删除后如果插槽为空，则移除动画组件 */
       if (slot?.sliceContent()[0] === '\n') {
         // console.log('slot is empty, delete anime component')
         commander.removeComponent(componentInstance)
+      }
+    })
+    
+    // onCompositionStart((ev) => {
+    //   console.log('onCompositionStart', ev.target)
+    // })
+    
+    // onContentInsert(ev => {
+    //   console.log('anime component Insert', ev.target)
+    // })
+
+    // onBreak(ev => {
+    //   console.log('onBreak', ev.target)
+    // })
+
+    onViewChecked(() => {
+      if (slot.sliceContent().length > 1) {
+        console.log('anime component slot has more than one content, delete the last one')
+        slot.retain(1)
+        slot.delete(1)
+        // TODO 向上方插入段落会导致该组件中内容消失且无法撤回（每次撤回都会触发这个勾子把 slot 第二条内容删除）
+        if(componentInstance.parent) {
+          const index = componentInstance.parent.indexOf(componentInstance)
+          const nextComponent = componentInstance.parent.getContentAtIndex(index + 1)
+          if(typeof nextComponent !== 'string') {
+            selection.setPosition(nextComponent.slots.get(0)!, 0)
+            return
+          }
+          selection.setPosition(componentInstance.parent, index + 1)
+        }
       }
     })
     
@@ -63,20 +101,6 @@ export const animeComponent = defineComponent({
             data-title={state.dataTitle}
             data-state={state.dataState}
           >
-            {/* <span
-              class={'anime-component-tab'}
-              title={state.dataTitle}
-              data-serial={state.dataSerial}
-              data-state={state.dataState}
-              onMouseenter={(ev) => {
-                const target = ev.target as HTMLElement
-                target.parentElement?.classList.add('anime-component-evoke')
-              }}
-              onMouseleave={(ev) => {
-                const target = ev.target as HTMLElement
-                target.parentElement?.classList.remove('anime-component-evoke')
-              }}
-            /> */}
             {slotRender(slot!, (children) => {
               return <div class={'anime-component-content'}>{children}</div>
             })}
@@ -95,10 +119,10 @@ export const animeComponentLoader: ComponentLoader = {
     anime-component {
       position: relative;
       display: block;
-      pointer-events: none;
+      // pointer-events: none;
     }
     .anime-component-content {
-      pointer-events: auto;
+      // pointer-events: auto;
     }
     .anime-component-evoke {
       display: block;
@@ -125,7 +149,7 @@ export const animeComponentLoader: ComponentLoader = {
       -webkit-border-radius: 24px;
       text-align: center;
       box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);
-      pointer-events: auto;
+      // pointer-events: auto;
     }
     anime-component:hover:after {
       cursor: pointer;

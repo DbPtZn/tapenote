@@ -47,6 +47,7 @@ export const animeRootComponent = defineComponent({
     ])])
 
     onContentInsert(ev => {
+      // console.log('root insert')
       if (typeof ev.data.content === 'string' || ev.data.content.type !== ContentType.BlockComponent) {
         const p = paragraphComponent.createInstance(injector)
         const slot = p.slots.get(0)!

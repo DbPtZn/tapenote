@@ -275,15 +275,6 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
 
   const studioOptions: DropdownOption[] = [
     {
-      key: 'refresh',
-      label: '更新标记',
-      props: {
-        onClick: () => {
-          checkPromoter()
-        }
-      }
-    },
-    {
       key: 'auto',
       label: () => `${autoMoveAnimePointer ? '关闭' : '开启' }自动切换动画块`,
       props: {
@@ -302,6 +293,15 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
           player = bridge.editor?.get(Player)
           const fragments = projectStore.fragment(projectId).getBySort()
           applyPlay(fragments, true)
+        }
+      }
+    },
+    {
+      key: 'refresh',
+      label: '更新标记',
+      props: {
+        onClick: () => {
+          checkPromoter()
         }
       }
     },

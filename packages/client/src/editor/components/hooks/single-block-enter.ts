@@ -69,6 +69,7 @@ export function useEnterBreaking(injector: Injector, slots: Slots) {
       }
     }
     if (!component.parent) {
+      // console.log('换行，插入段落')
       parentSlot.insert(component)
     }
     selection.selectLastPosition(component)

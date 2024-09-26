@@ -14,7 +14,6 @@ import {
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 import { useEnterBreaking } from './hooks/single-block-enter'
-// import { useEnterBreaking } from './hooks/single-block-enter'
 
 export const paragraphComponent = defineComponent({
   type: ContentType.BlockComponent,

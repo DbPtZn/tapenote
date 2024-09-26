@@ -5,7 +5,9 @@ import { ArrowDownwardFilled } from '@vicons/material'
 import { usePromoter } from './hooks'
 import { Bridge } from '../bridge'
 import useStore from '@/store'
-import { useMessage } from 'naive-ui'
+import { useMessage, useThemeVars } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
+import { Icon } from '@iconify/vue'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
@@ -14,6 +16,8 @@ const props = defineProps<{
 const { projectStore } = useStore()
 const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate } = usePromoter(props.id, bridge)
 const message = useMessage()
+const themeVars = useThemeVars()
+const { t } = useI18n()
 
 const delegaterRef = ref<HTMLElement>()
 const updateRef = ref<HTMLElement>()
@@ -23,7 +27,7 @@ const scrollerRef = ref<HTMLElement | null>(null)
 let animeMap: HTMLElement[] = []
 const pointerIndex = ref(-1)
 
-let isAutoMoveAnimePointer = false
+const isAutoMoveAnimePointer = ref(false)
 let lastPointerTarget: HTMLElement | null = null
 
 const pointerTarget = computed(() => animeMap[pointerIndex.value])
@@ -44,12 +48,12 @@ const pointerPositon = computed(() => {
       pointerTarget.value?.classList.add('anime-img') // 添加 'inline-block' 属性帮助定位
       pointerTargetRect = pointerTarget.value.getBoundingClientRect()
       // 包含图片的情况, 动画标记一般位于图片文字所在的盒子右上角
-      x = pointerTargetRect.x + pointerTargetRect.width - pointerRect.width/2 - 1
+      x = pointerTargetRect.x + pointerTargetRect.width - pointerRect.width/2
       y = pointerTargetRect.top - pointerRect.height - scrollerRect.top + scrollerRef.value!.scrollTop
     } else {
       // 不包含图片的情况
       const lastTextChildRect = getTextNodeEndPosition(pointerTarget.value)
-      x = lastTextChildRect.x - pointerRect.width/2 - 1 
+      x = lastTextChildRect.x - pointerRect.width/2
       y = lastTextChildRect.y - pointerRect.height - scrollerRect.top + scrollerRef.value!.scrollTop
     }
   }
@@ -58,7 +62,7 @@ const pointerPositon = computed(() => {
     pointerTarget.value?.classList.add('anime-component-box') // 添加 'block' 'outline' 属性帮助提示范围\定位
     pointerTargetRect = pointerTarget.value.getBoundingClientRect()
     const pointerRect = pointerRef.value.getBoundingClientRect()
-    x = pointerTargetRect.x + pointerTargetRect.width - pointerRect.width/2 - 1
+    x = pointerTargetRect.x + pointerTargetRect.width - pointerRect.width/2
     y = pointerTargetRect.y - pointerRect.height - scrollerRect.top + scrollerRef.value!.scrollTop
   } 
   lastPointerTarget = pointerTarget.value
@@ -102,15 +106,16 @@ onMounted(() => {
       popoverState.showPopover = false
     }),
     bridge.onAutoMoveAnimePointerChange.subscribe(isOpen => {
-      isAutoMoveAnimePointer = isOpen
+      isAutoMoveAnimePointer.value = isOpen
       if(isOpen && bridge.editorRef && bridge.scrollerRef) {
+        message.info(`自动移动动画块指针功能已开启，预设启动动画之后自动移动到下一个动画块`)
         const elements = bridge.editorRef.querySelectorAll<HTMLElement>(`[data-id]`)
         animeMap = Array.from(elements)
         scrollerRef.value = bridge.scrollerRef
         scrollerRef.value.style.position = 'relative' // 添加 'relative' 作为 pointer 绝对定位参照系
         subs2.push(
           fromEvent<KeyboardEvent>(window, 'keydown').subscribe(e => {
-            // console.log(e)
+            if (pointerIndex.value === -1) return // -1 是关闭状态
             if(['Space', 'ArrowDown'].includes(e.code)) {
               if(pointerIndex.value < animeMap.length - 1) pointerIndex.value++
               else message.info(`到底啦!`)
@@ -120,8 +125,8 @@ onMounted(() => {
             }
           }),
           fromEvent<PointerEvent>(bridge.editorRef, 'click').subscribe(e => {
+            if (pointerIndex.value === -1) return // -1 是关闭状态
             const target = e.target as HTMLElement
-            // console.log(target)
             const index = animeMap.findIndex(element => element === (['anime', 'anime-component'].includes(target.tagName.toLocaleLowerCase()) ? target : ''))
             if(index !== -1) pointerIndex.value = index
           })
@@ -160,7 +165,17 @@ const handleClick = (e: MouseEvent) => {
         const index = parseInt(indexStr)
         characterMethods.setFocus(target) // 激活启动子预设状态聚焦动画
         if(!target.classList.contains('marked')) {
-          if(isAutoMoveAnimePointer) {
+          if(isAutoMoveAnimePointer.value) {
+            if(pointerIndex.value === -1) {
+              handlePromoterSelect(fragment.id, index)
+              // console.log('auto move pointer', editorRef.value)
+              const s = bridge.onAddPromoter.subscribe(element => {
+                const index = animeMap.findIndex(item => item === element)
+                s.unsubscribe()
+                if(index !== -1) pointerIndex.value = index + 1
+              })
+              return
+            }
             const id = pointerTarget.value.dataset.id
             const serial = pointerTarget.value.dataset.serial
             handlePromoterSelect(fragment.id, index, id, serial)
@@ -180,6 +195,10 @@ const handleClick = (e: MouseEvent) => {
       }
     }
   }
+}
+
+function handleAutoMoveAnimePointerEnd() {
+  pointerIndex.value = -1
 }
 
 function getAncestorNodeByClassname(node: HTMLElement, className: string) {
@@ -280,12 +299,68 @@ const popoverMethods = {
   <Teleport :to="scrollerRef || 'body'">
     <!-- 未使用时通过 visibility 隐藏,启用时才可以读取到其宽高 -->
     <div class="pointer" ref="pointerRef" :style="{ visibility: !!pointerTarget ? 'visible' :'hidden', zIndex: !!pointerTarget ? 999 : -1, left: pointerPositon.x + 'px', top: pointerPositon.y + 'px' }">
-      <n-icon :component="ArrowDownwardFilled" :size="36" />
+      <Icon icon="mdi:arrow-down-bold" height="36px" />
+    </div>
+  </Teleport>
+  <Teleport :to="'body'">
+    <div v-if="isAutoMoveAnimePointer && pointerIndex !== -1" class="tip">
+      <div class="tip-content">
+        <Icon class="tip-icon" icon="ic:sharp-tips-and-updates" height="20px" />
+        <span class="tip-text" >{{ $t('studio.msg.auto_move_anime_pointer_tip') }}</span>
+        <span class="tip-text">通过键盘 <Icon icon="mdi:arrow-up-bold" height="14px" /> <Icon icon="mdi:arrow-down-bold" height="14px" /> 键可以移动指针</span>
+        <Icon class="close-icon" icon="ic:round-cancel" height="20px" @click="handleAutoMoveAnimePointerEnd" />
+      </div>
     </div>
   </Teleport>
 </template>
 
 <style lang="scss" scoped>
+.tip {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  .tip-content {
+    display: flex;
+    align-items: center;
+    margin-left: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: v-bind('themeVars.textColor1');
+    background-color: v-bind('themeVars.modalColor');
+    box-shadow: v-bind('themeVars.boxShadow1');
+    .tip-icon {
+      color: v-bind('themeVars.primaryColor');
+    }
+    .tip-text {
+      display: flex;
+      align-items: center;
+      margin: 0 8px;
+      user-select: none;
+      .iconify {
+        border: 1px solid v-bind('themeVars.borderColor');
+        &:first-child {
+          margin-left: 4px;
+        }
+        &:last-child {
+          margin-left: 4px;
+          margin-right: 4px;
+        }
+      }
+    }
+    .close-icon {
+      cursor: pointer;
+      &:hover {
+        color: v-bind('themeVars.primaryColor');
+      }
+      &:active {
+        color: v-bind('themeVars.buttonColor2Pressed');
+      }
+    }
+  }
+}
 @keyframes bounce {
   0% {
     transform: translateY(-13px);
@@ -304,7 +379,7 @@ const popoverMethods = {
   position: absolute;
   color: red;
   pointer-events: none;
-  // animation: bounce 1s infinite;
+  animation: bounce 1s infinite;
 }
 
 </style>

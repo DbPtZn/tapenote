@@ -1,8 +1,8 @@
 
 import { Commander, QueryState, FormatValue, Query, QueryStateType, Injector, Selection } from '@textbus/core'
 import { ButtonTool, ButtonToolConfig } from '../../toolkit'
-import { I18n, paragraphComponent } from '@textbus/editor'
-
+import { I18n } from '@textbus/editor'
+import { paragraphComponent } from '../../../../components/paragraph.component'
 
 export function insertParagraphBeforeToolConfigFactory(injector: Injector): ButtonToolConfig {
   const i18n = injector.get(I18n)

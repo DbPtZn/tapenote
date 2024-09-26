@@ -49,7 +49,6 @@ export const listComponent = defineComponent({
   setup(data?: ComponentInitData<'ul' | 'ol'>): ListComponentExtends {
     const injector = useContext()
     const selection = injector.get(Selection)
-    console.log('setup', 'listcomponent')
     let state = data?.state || 'ul'
     const stateController = useState(state)
     const sub = stateController.onChange.subscribe(v => {
@@ -64,6 +63,7 @@ export const listComponent = defineComponent({
       ContentType.Text,
       ContentType.InlineComponent,
     ])])
+
 
     onBreak(ev => {
       if (ev.target.isEmpty && ev.target === slots.last) {

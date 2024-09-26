@@ -12,10 +12,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
   const subs: Subscription[] = []
   /** 选择启动子 */
   function handlePromoterSelect(fragmentId: string, subscript: number, id?: string, serial?: string) {
-    if(id && serial) {
-      makePreset(fragmentId, subscript, id, serial)
-      return
-    }
+    if(id && serial) return makePreset(fragmentId, subscript, id, serial)
     makePresetStart(fragmentId, subscript, null)
   }
   /** 更新启动子 */
@@ -36,54 +33,32 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     // 每次开启预设启动子进程时，取消之前的订阅并清空 subs, 确保有且只有一个订阅生效 （使得每次点击 character 时都能获得一个新的监听）
     makePresetEnd() // 结束上一个订阅
     const container = bridge.container
-    const renderer = bridge.renderer
-    if (!container || !renderer) return
+    if (!container) return
     subs.push(
       fromEvent<PointerEvent>(container, 'click').subscribe(ev => {
         // console.log(ev)
-        let id = ''
-        let serial = ''
         const target = ev.target as HTMLElement
-        if (target.tagName.toLocaleLowerCase() === 'anime') {
-          // console.log('anime click')
+        if (['anime-component', 'anime'].includes(target.tagName.toLocaleLowerCase())) {
             ev.preventDefault() // 阻止默认事件
             ev.stopPropagation() // 阻止事件冒泡
-            // console.log('anime')
             if (target.dataset.id && target.dataset.serial) {
-              id = target.dataset.id
-              serial = target.dataset.serial
-            }
-        } else if (target.tagName.toLocaleLowerCase() === 'anime-component') {
-          // const node = target.parentElement
-          // if(node?.tagName.toLocaleLowerCase() === 'anime-component') {
-            ev.preventDefault() // 阻止默认事件
-            ev.stopPropagation() // 阻止事件冒泡
-            // console.log(node)
-            const component = renderer.getComponentByNativeNode(target)
-            if(component) {
-              // console.log(component.state)
-              const state = component.state
-              if (state && state.dataId && state.dataSerial) {
-                id = state.dataId
-                serial = state.dataSerial
+              const id = target.dataset.id
+              const serial = target.dataset.serial
+              addPromoter(fragmentId, subscript, serial, id)
+              bridge.handleAddPromoter(target)
+              if (oldAniId) { // 更新操作时的判定
+                const isUnique = checkPromoterUnique(oldAniId)
+                // aniId 是唯一绑定，其被替换后，应该取消其对应动画块的激活状态
+                if (isUnique) setAnimeToInactive(oldAniId)
               }
             }
-          // }
-        } else {
-          return
-        }
-        addPromoter(fragmentId, subscript, serial, id)
-        if (oldAniId) { // 更新操作时的判定
-          const isUnique = checkPromoterUnique(oldAniId)
-          // aniId 是唯一绑定，其被替换后，应该取消其对应动画块的激活状态
-          if (isUnique) setAnimeToInactive(oldAniId)
         }
         makePresetEnd()
       }),
       fromEvent(document, 'click', true).pipe(auditTime(5)).subscribe(event => {
         // 点击动画标记以外的任意位置取消预设动画进程
         // 设置一定时间延迟，确保点击动画标记时不会触发该订阅
-        // (实际上添加了 auditTime 后，事务会变成宏任务，animeClick 作为微任务会先于该宏任务执行)
+        // 实际上添加了 auditTime 后，事务会变成宏任务，animeClick 作为微任务会先于该宏任务执行
         // 点击动画标记后结束进程时会销毁所有订阅，所以该订阅也不会触发
         makePresetEnd()
       })

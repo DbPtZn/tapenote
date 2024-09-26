@@ -61,7 +61,8 @@ const zh = {
     msg: {
       input_error: '输入发生错误，请尝试重新输入',
       create_fragment_error: '创建片段失败！',
-      whether_remove_fragment: '是否移除该片段 ?'
+      whether_remove_fragment: '是否移除该片段 ?',
+      auto_move_anime_pointer_tip: '自动移动动画指针已开启',
     }
   }
 }

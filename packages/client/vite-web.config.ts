@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import eslintPlugin from 'vite-plugin-eslint'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
+import UnoCSS from 'unocss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
@@ -13,11 +14,7 @@ export default defineConfig(({ command, mode }) => {
     base: env.VITE_ASSETS_BASE ? env.VITE_ASSETS_BASE : '',
     plugins: [
       vue(),
-      // eslintPlugin({
-      //   include: ['src/**/*.js', 'src/**/*.vue', 'src/**/*.ts'],
-      //   exclude: ['./node_modules/**'],
-      //   cache: false
-      // }),
+      UnoCSS(),
       Components({
         extensions: ['vue'],
         resolvers: [NaiveUiResolver()],
@@ -54,14 +51,7 @@ export default defineConfig(({ command, mode }) => {
     server: {
       host: '0.0.0.0',
       port: 8080,
-      open: true,
-      // proxy: {
-      //   '/api': {
-      //     target: 'http://localhost:3000',
-      //     changeOrigin: true,
-      //     rewrite: (path) => path.replace(/^\/api/, '')
-      //   }
-      // }
+      open: true
     }
   }
 })
