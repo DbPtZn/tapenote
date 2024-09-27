@@ -42,7 +42,7 @@ export interface ListComponentState {
   dataId?: string
   dataEffect?: string
   dataSerial?: string
-  dataState?: AnimeState
+  dataActive?: boolean
   dataTitle?: string
 }
 

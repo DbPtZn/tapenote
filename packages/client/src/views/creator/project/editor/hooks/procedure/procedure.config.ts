@@ -16,7 +16,8 @@ import { InlineToolbarPlugin,
   OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
   preview_startTool, preview_stopTool, animeBadgeVisibleTool, animeElementVisibleTool, 
   imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
-  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider, listComponent, listComponentLoader, AnimeService 
+  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider, listComponent, listComponentLoader, AnimeService,
+  listAnimeComponent, listAnimeComponentLoader
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
@@ -51,8 +52,8 @@ export function getProcedureConfig(args: {
     content: content || '',
     rootComponent: animeRootComponent,
     rootComponentLoader: animeRootComponentLoader,
-    components: [animeComponent, paragraphComponent, imageB2UComponent, animeIgnoreComponent, listComponent, ...defaultComponents.filter(i => !(i.name === 'ListComponent'))],
-    componentLoaders: [animeComponentLoader, paragraphComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, listComponentLoader, ...defaultComponentLoaders],
+    components: [paragraphComponent, imageB2UComponent, animeIgnoreComponent, listAnimeComponent, ...defaultComponents.filter(i => !(i.name === 'ListComponent'))],
+    componentLoaders: [paragraphComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, listAnimeComponentLoader, ...defaultComponentLoaders],
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter,...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     styleSheets: [

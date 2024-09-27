@@ -4,7 +4,7 @@ import { computed, inject, onUnmounted, reactive, ref } from 'vue'
 import { AddAnimeService } from '../../services'
 import { Editor, Layout } from '@textbus/editor'
 import { UIIcon, UIConfig } from '../../common'
-import { ANIME_COMPONENT_NAME, AnimeProvider, AnimeUtilsProvider, Structurer, animeComponent } from '../..'
+import { ANIME_COMPONENT_NAME, AnimeProvider, AnimeUtilsProvider, Structurer, addAnime, animeComponent } from '../..'
 type AnimeOption = ReturnType<AnimeProvider['getOptions']>[0]
 const injector = inject('injector') as Injector
 const anime = injector.get(AnimeProvider)
@@ -30,7 +30,7 @@ const position = reactive({
   top: 0,
   show: false
 })
-const exclude = ['RootComponent', 'ParagraphComponent', 'BlockComponent', 'AnimeIgnoreComponent', ANIME_COMPONENT_NAME]
+const exclude = ['RootComponent', 'ParagraphComponent', 'BlockComponent', 'AnimeIgnoreComponent']
 const subscription = addAnimeService.onComponentActive.subscribe(component => {
   // console.log(component)
   // 如果是只读状态，直接跳出
@@ -48,10 +48,10 @@ const subscription = addAnimeService.onComponentActive.subscribe(component => {
   }
 
   isPopoverShow.value = false // 组件变化时可以隐藏弹出层
-  if (exclude.includes(component.name)) {
+  if (exclude.includes(component.name) || component.state.dataAnime) {
     if (component.parentComponent) {
       // 如果组件属于非动画组件，且其父组件也属于非动画组件，不显示按钮
-      if (exclude.includes(component.parentComponent?.name)) {
+      if (exclude.includes(component.parentComponent.name) || component.parentComponent.state.dataAnime) {
         return
       }
       // 否则，在父组件上显示按钮
@@ -70,9 +70,8 @@ const subscription = addAnimeService.onComponentActive.subscribe(component => {
   // 如果是行内组件或文本组件，不显示按钮（可以通过 formatter 方式设置动画）
   if ([ContentType.InlineComponent, ContentType.Text].includes(component.type)) return
 
-  // 如果组件的父组件不是动画组件，说明该组件未添加动画
-  if (component.parentComponent && component.parentComponent.name === 'AnimeComponent') return
-
+  // 如果组件不是动画组件，说明该组件未添加动画
+  if (component.state.dataAnime) return
 
   const vNode = renderer.getVNodeByComponent(component)
   const nativeNode = renderer.getNativeNodeByVNode(vNode)
@@ -99,35 +98,35 @@ const offsetVal = computed(() => {
 })
 
 /** 添加动画 */
-function addAnime(componentInstance: ComponentInstance | null) {
-  if (!componentInstance) return
-  const id = animeUtilsProvider.generateAnimeId()
-  const serial = animeUtilsProvider.generateAnimeSerial().toString()
-  try {
-    const slot = new Slot([ContentType.BlockComponent])
-    const anime = animeComponent.createInstance(injector, {
-      slots: [slot],
-      state: {
-        dataId: id,
-        dataEffect: currentOption.effect,
-        dataSerial: serial.toString(),
-        dataState: '',
-        dataTitle: currentOption.title
-      }
-    })
-    commander.replaceComponent(componentInstance, anime)
-    // 可以在插入组件后再把内容插入插槽
-    slot.insert(componentInstance)
-  } catch (error) {
-    console.log(error)
-  }
-  // console.log(slot)
-}
+// function addAnime(componentInstance: ComponentInstance | null) {
+//   if (!componentInstance) return
+//   // const id = animeUtilsProvider.generateAnimeId()
+//   // const serial = animeUtilsProvider.generateAnimeSerial().toString()
+//   // try {
+//   //   const slot = new Slot([ContentType.BlockComponent])
+//   //   const anime = animeComponent.createInstance(injector, {
+//   //     slots: [slot],
+//   //     state: {
+//   //       dataId: id,
+//   //       dataEffect: currentOption.effect,
+//   //       dataSerial: serial.toString(),
+//   //       dataState: '',
+//   //       dataTitle: currentOption.title
+//   //     }
+//   //   })
+//   //   commander.replaceComponent(componentInstance, anime)
+//   //   // 可以在插入组件后再把内容插入插槽
+//   //   slot.insert(componentInstance)
+//   // } catch (error) {
+//   //   console.log(error)
+//   // }
+//   // console.log(slot)
+// }
 
 /** 应用当前值 */
 function handleClick() {
   if (currentComponent) {
-    addAnime(currentComponent)
+    addAnime(currentComponent, injector, currentOption.effect, currentOption.title)
   }
   position.show = false
   isPopoverShow.value = false
@@ -139,7 +138,8 @@ function handleSelect(option: AnimeOption) {
   currentOption.title = option.label
 
   if (currentComponent) {
-    addAnime(currentComponent)
+    // addAnime(currentComponent)
+    addAnime(currentComponent, injector, currentOption.effect, currentOption.title)
   }
   position.show = false
   isPopoverShow.value = false

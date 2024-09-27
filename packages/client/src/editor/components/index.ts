@@ -10,6 +10,7 @@ export * from './anime.component'
 export * from './animeRoot.component'
 export * from './paragraph.component'
 export * from './animeIgnore.component'
+export * from './anime/_api'
 // player
 export * from './anime-player.component'
 export * from './root-player.component'

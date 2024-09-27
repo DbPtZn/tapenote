@@ -5,6 +5,7 @@ import {
   ContentType,
   defineComponent,
   Injector,
+  onContentInsert,
   onPaste,
   Slot,
   SlotRender,

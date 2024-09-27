@@ -1,0 +1,43 @@
+[data-anime="true"] {
+  position: relative;
+}
+[data-range="true"] {
+  display: block;
+  outline: 1px dashed #aaaaaa30!important;
+}
+[data-anime="true"] .anime-component-tab:after {
+  position: absolute;
+  right: -12px;
+  top: -12px;
+
+  z-index: 1;
+  content: attr(data-serial);
+  vertical-align: super;
+  display:inline-block;
+  width:23px;
+  height:23px;
+  font-size:15px;
+  color:white;
+  text-align:center;
+  line-height:23px;
+  border-radius:24px;
+  background-color:#c8c9cc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);
+  pointer-events: auto;
+}
+[data-anime="true"] .anime-component-tab:hover:after {
+  cursor: pointer;
+  animation: .8s .5s tada infinite;
+}
+[data-anime="true"]:hover {
+  display: block;
+  outline: 1px dashed #aaaaaa30!important;
+}
+
+[data-active="true"] .anime-component-tab:after { 
+  background-color:pink 
+}
+
+/* [data-anime="false"] .anime-component-tab:after {
+  content: unset;
+} */

@@ -125,8 +125,9 @@ onMounted(() => {
             }
           }),
           fromEvent<PointerEvent>(bridge.editorRef, 'click').subscribe(e => {
-            if (pointerIndex.value === -1) return // -1 是关闭状态
+            // if (pointerIndex.value === -1) return // -1 是关闭状态
             const target = e.target as HTMLElement
+            console.log(target)
             const index = animeMap.findIndex(element => element === (['anime', 'anime-component'].includes(target.tagName.toLocaleLowerCase()) ? target : ''))
             if(index !== -1) pointerIndex.value = index
           })
