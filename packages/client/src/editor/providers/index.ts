@@ -8,9 +8,9 @@ export * from './keyboard-manager.provider'
 export * from './anime.provider'
 
 // anime
-export * from './anime-utils.provider'
-export * from './anime-state.provider'
-export * from './anime-auto.provider'
+// export * from './anime-utils.provider'
+// export * from './anime-state.provider'
+// export * from './anime-auto.provider'
 
 // player
 export * from './player.provider'

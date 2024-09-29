@@ -2,9 +2,9 @@ import useStore from '@/store'
 import { Bridge } from '../../bridge'
 import { Subscription, fromEvent, auditTime } from '@tanbo/stream'
 import { VIEW_DOCUMENT } from '@textbus/platform-browser'
-import { ANIME, ANIME_COMPONENT } from '@/editor'
 import { useMessage } from 'naive-ui'
 import { onUnmounted } from 'vue'
+import { AnimeProvider } from '@/editor'
 
 export function usePromoter(procedureId: string, bridge: Bridge) {
   const { projectStore } = useStore()
@@ -15,19 +15,23 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     if(id && serial) return makePreset(fragmentId, subscript, id, serial)
     makePresetStart(fragmentId, subscript, null)
   }
+
   /** 更新启动子 */
   function handlePromoterUpdate(fragmentId: string, subscript: number, aniId: string | null) {
     makePresetStart(fragmentId, subscript, aniId)
   }
+
   /** 移除启动子 */
   function handlePromoterRemove(fragmentId: string, subscript: number) {
     removePromoter(fragmentId, subscript)
   }
+
   /** 定位启动子 */
   function handleAnimeLocate(aniId: string | null) {
     if(!aniId) return
-    bridge.animeUtils?.locateAnimeBlock(aniId)
+    bridge.animeProvider?.locateAnimeBlock(aniId)
   }
+
   /** 开启预设进程 */
   function makePresetStart(fragmentId: string, subscript: number, oldAniId: string | null) {
     // 每次开启预设启动子进程时，取消之前的订阅并清空 subs, 确保有且只有一个订阅生效 （使得每次点击 character 时都能获得一个新的监听）
@@ -36,22 +40,30 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     if (!container) return
     subs.push(
       fromEvent<PointerEvent>(container, 'click').subscribe(ev => {
-        // console.log(ev)
+        let id
+        let serial
         const target = ev.target as HTMLElement
         if (['anime-component', 'anime'].includes(target.tagName.toLocaleLowerCase())) {
             ev.preventDefault() // 阻止默认事件
             ev.stopPropagation() // 阻止事件冒泡
-            if (target.dataset.id && target.dataset.serial) {
-              const id = target.dataset.id
-              const serial = target.dataset.serial
-              addPromoter(fragmentId, subscript, serial, id)
-              bridge.handleAddPromoter(target)
-              if (oldAniId) { // 更新操作时的判定
-                const isUnique = checkPromoterUnique(oldAniId)
-                // aniId 是唯一绑定，其被替换后，应该取消其对应动画块的激活状态
-                if (isUnique) setAnimeToInactive(oldAniId)
-              }
-            }
+            id = target.dataset.id
+            serial = target.dataset.serial
+            bridge.handleAddPromoter(target)
+        } else if (target.classList.contains('anime-component-tab')) {
+          const animeElement = target.parentElement
+          if (animeElement?.dataset.anime !== 'true') return
+          ev.preventDefault() // 阻止默认事件
+          ev.stopPropagation() // 阻止事件冒泡
+          id = animeElement.dataset.id
+          serial = animeElement.dataset.serial
+          bridge.handleAddPromoter(animeElement)
+        }
+        if(!serial || !id) return
+        addPromoter(fragmentId, subscript, serial, id)
+        if (oldAniId) { // 更新操作时的判定
+          const isUnique = checkPromoterUnique(oldAniId)
+          // aniId 是唯一绑定，其被替换后，应该取消其对应动画块的激活状态
+          if (isUnique) setAnimeToInactive(oldAniId)
         }
         makePresetEnd()
       }),
@@ -76,6 +88,8 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
   function makePreset(fragmentId: string, subscript: number, id: string, serial: string) {
     addPromoter(fragmentId, subscript, serial, id)
   }
+
+  /** 添加启动子 */
   function addPromoter(fragmentId: string, subscript: number, serial: string, aniId: string) {
     projectStore.fragment(procedureId).addPromoter({
       fragmentId: fragmentId,
@@ -84,22 +98,26 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
       promoterId: aniId
     }, (aniId) => setAnimeToActive(aniId))
   }
+
+  /** 移除启动子 */
   function removePromoter(fragmentId: string, subscript: number) {
     projectStore.fragment(procedureId).removePromoter({
       fragmentId: fragmentId,
       promoterIndex: subscript
     }, (aniId) => setAnimeToInactive(aniId))
   }
+
   function setAnimeToInactive(aniId: string) {
     // 查找启动子序列中是否还有相同的动画 id
     const isExist = projectStore.fragment(procedureId).getBySort().some((item) => {
       return item.promoters.includes(aniId)
     })
-    if (!isExist) bridge.animeState?.setInactive(aniId)
+    if (!isExist) bridge.animeProvider?.updateAnimeState(aniId, { active: false })
   }
   function setAnimeToActive(aniId: string) {
-    bridge.animeState?.setActive(aniId)
+    bridge.animeProvider?.updateAnimeState(aniId, { active: true })
   }
+
   // 校验启动子的唯一性
   function checkPromoterUnique(aniId: string) {
     const isExist = projectStore.fragment(procedureId).getBySort().some(fragment => {
@@ -108,35 +126,24 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     // isExist 为 true， 意味着该 aniId 非唯一绑定，返回 false
     return !isExist
   }
+
   /** 
    * -启动子的状态校验: 用于校验启动子是否有正确绑定动画快
    * -当发现启动子关联的动画块已经被移除时，相应的启动子也会被移除
    */
   function checkPromoter() {
-    // console.log(bridge)
     const container = bridge.editor!.get(VIEW_DOCUMENT)
     projectStore.fragment(procedureId).getBySort().forEach((fragment, index, arr) => {
       fragment.promoters.forEach((promoter, subscript) => {
-        // console.log(typeof promoter)
         if(promoter) {
-          // console.log(promoter)
           const elem = container.querySelector(`[data-id="${promoter}"]`) as HTMLElement
           if (elem) {
             // 启动子存在但动画格式未被激活的情况，处理：重新激活动画块
-            if ([ANIME, ANIME_COMPONENT].includes(elem.tagName.toLowerCase()) && elem.dataset.state === 'inactive') {
-              console.log(elem)
-              setAnimeToActive(promoter)
-            }
+            if (elem.dataset.active === 'false') setAnimeToActive(promoter)
             const serial = arr[index].tags[subscript]
             if (elem.dataset.serial && serial) {
               // 启动子编号不匹配的情况
-              if (elem.dataset.serial !== serial.toString()) {
-                // 策略一： 更新动画块编号（内容发生变化自动触发更新）
-                bridge.animeState!.updateSerial(promoter, Number(serial))
-                // 策略二： 更新启动子编号
-                // fragment.tags[subscript] = elem.dataset.serial
-                // ...更新至数据库操作
-              }
+              if (elem.dataset.serial !== serial.toString()) bridge.animeProvider!.updateAnimeState(promoter, { serial: Number(serial) })
             }
             // 动画组件的处理逻辑
           } else {
@@ -152,15 +159,14 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
    * - 所有动画块（不区分formatter和component）的状态校验: 用于校验已激活的动画块是否有正确绑定启动子，如果绑定的启动子不存在，取消动画块激活状态
    */
   function checkAnimeState() {
-    // console.log(bridge)
     const container = bridge.editor?.get(VIEW_DOCUMENT)
     if(!container) return
-    const elements = container.querySelectorAll(ANIME + ',' + ANIME_COMPONENT) as NodeListOf<HTMLElement>
+    const elements = AnimeProvider.queryAllAnimeElements(container)
     elements.forEach((element) => {
       // 找到激活态的 AnimeComponent
       if (element.dataset.state === 'active') {
         const animeId = element.dataset.id as string
-        // 查询激活态 Anime 标签块是否绑定了启动子
+        // 查询激活态 Anime 标签块是否绑定了启动子 ( 每个动画块都要遍历一遍 fragment )
         const isExist = projectStore.fragment(procedureId).getBySort().some(fragment => {
           return fragment.promoters.includes(animeId)
         })
@@ -170,49 +176,14 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     })
   }
 
-  /** 动画格式状态校验 */
-  function checkAnimeFormatter() {
-    const container = bridge.editor!.get(VIEW_DOCUMENT)
-    // 找到所有 Anime 标签块
-    const elements = container.querySelectorAll(ANIME) as NodeListOf<HTMLElement>
-    // 遍历动画 Anime 标签块
-    elements.forEach(element => {
-      // 找到激活态的 Anime 标签块
-      if (element.dataset.state === 'active') {
-        const animeId = element.dataset.id as string
-        // 查询激活态 Anime 标签块是否绑定了启动子
-        const isExist = projectStore.fragment(procedureId).getBySort().some(fragment => {
-          return fragment.promoters.includes(animeId)
-        })
-        // 如果没有绑定启动子，则将动画块置为非激活态
-        if (!isExist) setAnimeToInactive(animeId)
-      }
-    })
-  }
-  /** 动画组件状态校验 */
-  function checkAnimeComponent() {
-    const container = bridge.editor!.get(VIEW_DOCUMENT)
-    const elements = container.querySelectorAll(ANIME_COMPONENT) as NodeListOf<HTMLElement>
-    elements.forEach((element) => {
-      // 找到激活态的 AnimeComponent
-      if (element.dataset.state === 'active') {
-        const animeId = element.dataset.id as string
-        // 查询激活态 Anime 标签块是否绑定了启动子
-        const isExist = projectStore.fragment(procedureId).getBySort().some(fragment => {
-          return fragment.promoters.includes(animeId)
-        })
-        // 如果没有绑定启动子，则将动画组件置为非激活态
-        if (!isExist) setAnimeToInactive(animeId)
-      }
-    })
-  }
   /** 动画与启动子重新排序 */
   function handleReorder() {
     /** 动画标记重排序 */
-    const animeState = bridge.animeState!
-    const container = bridge.editorRef!
+    const animeProvider = bridge.animeProvider
+    const container = bridge.editorRef
+    if(!container) return
     // 查询所有动画元素（通过 dom 查询得到的结果一般就是自上而下的顺序）
-    const elements = container.querySelectorAll(ANIME + ',' + ANIME_COMPONENT) as NodeListOf<HTMLElement> 
+    const elements = AnimeProvider.queryAllAnimeElements(container)
     const sequence: string[] = []
     elements.forEach((element) => {
       if(element.dataset.id) {
@@ -223,7 +194,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     const uniqueSet = new Set(sequence)
     const uniqueSequence = [...uniqueSet]
     uniqueSequence.forEach((aniId, index) => {
-      animeState.updateSerial(aniId, index + 1)
+      animeProvider?.updateAnimeState(aniId, { serial: index + 1 })
     })
 
     /** 更新启动子标记 */
@@ -236,7 +207,6 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
           }
         })
       })
-  
       projectStore.fragment(procedureId).updateFragmentsTags()
       .then(() => {
         message.success('重新排序成功！')
@@ -259,6 +229,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     handlePromoterRemove,
     handleAnimeLocate,
     handleReorder,
+    makePreset,
     checkPromoter,
     checkAnimeState,
   }
@@ -274,3 +245,39 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
 //   }
 //   makePresetEnd()
 // })
+/** 动画格式状态校验 */
+// function checkAnimeFormatter() {
+//   const container = bridge.editor!.get(VIEW_DOCUMENT)
+//   // 找到所有 Anime 标签块
+//   const elements = container.querySelectorAll('anime') as NodeListOf<HTMLElement>
+//   // 遍历动画 Anime 标签块
+//   elements.forEach(element => {
+//     // 找到激活态的 Anime 标签块
+//     if (element.dataset.state === 'active') {
+//       const animeId = element.dataset.id as string
+//       // 查询激活态 Anime 标签块是否绑定了启动子
+//       const isExist = projectStore.fragment(procedureId).getBySort().some(fragment => {
+//         return fragment.promoters.includes(animeId)
+//       })
+//       // 如果没有绑定启动子，则将动画块置为非激活态
+//       if (!isExist) setAnimeToInactive(animeId)
+//     }
+//   })
+// }
+/** 动画组件状态校验 */
+// function checkAnimeComponent() {
+//   const container = bridge.editor!.get(VIEW_DOCUMENT)
+//   const elements = container.querySelectorAll(ANIME_COMPONENT) as NodeListOf<HTMLElement>
+//   elements.forEach((element) => {
+//     // 找到激活态的 AnimeComponent
+//     if (element.dataset.state === 'active') {
+//       const animeId = element.dataset.id as string
+//       // 查询激活态 Anime 标签块是否绑定了启动子
+//       const isExist = projectStore.fragment(procedureId).getBySort().some(fragment => {
+//         return fragment.promoters.includes(animeId)
+//       })
+//       // 如果没有绑定启动子，则将动画组件置为非激活态
+//       if (!isExist) setAnimeToInactive(animeId)
+//     }
+//   })
+// }

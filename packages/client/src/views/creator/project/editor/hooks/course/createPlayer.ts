@@ -1,4 +1,4 @@
-import { AnimeEventService, AnimeProvider, ColorProvider, CourseData, DialogProvider, ImgToUrlService, OutlineService, Player, ResizeService, RootEventService, Structurer, ThemeProvider } from '@/editor'
+import { AnimeProvider, ColorProvider, CourseData, DialogProvider, ImgToUrlService, OutlineService, Player, ResizeService, RootEventService, Structurer, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
 import { Ref, onMounted, onUnmounted, watch } from 'vue'
@@ -35,7 +35,6 @@ export function createPlayer(args: {
       editor.get(Structurer).destory()
       editor.get(ThemeProvider).destory()
       editor.get(RootEventService).destory()
-      editor.get(AnimeEventService).destory()
       console.log('销毁依赖')
     } catch (error) {
       console.error('依赖销毁失败！')

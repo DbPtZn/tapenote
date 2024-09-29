@@ -7,4 +7,4 @@ export * from './anime.service'
 export * from './add-anime.service'
 // player
 export * from './root-event.service'
-export * from './anime-event.service'
+// export * from './anime-event.service'

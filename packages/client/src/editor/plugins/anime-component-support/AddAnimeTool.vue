@@ -4,13 +4,14 @@ import { computed, inject, onUnmounted, reactive, ref } from 'vue'
 import { AddAnimeService } from '../../services'
 import { Editor, Layout } from '@textbus/editor'
 import { UIIcon, UIConfig } from '../../common'
-import { ANIME_COMPONENT_NAME, AnimeProvider, AnimeUtilsProvider, Structurer, addAnime, animeComponent } from '../..'
+import { AnimeProvider, Structurer } from '../..'
+import { animeComponent } from '../../components/anime/_api'
 type AnimeOption = ReturnType<AnimeProvider['getOptions']>[0]
 const injector = inject('injector') as Injector
 const anime = injector.get(AnimeProvider)
 const animeOptions = anime.getOptions()
 const addAnimeService = injector.get(AddAnimeService)
-const animeUtilsProvider = injector.get(AnimeUtilsProvider)
+const animeProvider = injector.get(AnimeProvider)
 const structurer = injector.get(Structurer)
 const commander = injector.get(Commander)
 const renderer = injector.get(Renderer)
@@ -30,7 +31,7 @@ const position = reactive({
   top: 0,
   show: false
 })
-const exclude = ['RootComponent', 'ParagraphComponent', 'BlockComponent', 'AnimeIgnoreComponent']
+const exclude = ['RootComponent', 'ParagraphComponent', 'BlockComponent', 'AnimeIgnoreComponent', 'AnimeComponent']
 const subscription = addAnimeService.onComponentActive.subscribe(component => {
   // console.log(component)
   // 如果是只读状态，直接跳出
@@ -70,8 +71,8 @@ const subscription = addAnimeService.onComponentActive.subscribe(component => {
   // 如果是行内组件或文本组件，不显示按钮（可以通过 formatter 方式设置动画）
   if ([ContentType.InlineComponent, ContentType.Text].includes(component.type)) return
 
-  // 如果组件不是动画组件，说明该组件未添加动画
-  if (component.state.dataAnime) return
+  // 当组件的父组件属于动画组件（动画组件包裹模式）或 组件的 state 中 dataAnime 为 true，说明该组件已经添加动画
+  if (component.parentComponent?.name === 'AnimeComponent' || component.state.dataAnime) return
 
   const vNode = renderer.getVNodeByComponent(component)
   const nativeNode = renderer.getNativeNodeByVNode(vNode)
@@ -97,36 +98,11 @@ const offsetVal = computed(() => {
   return currentOption.title.length * 14 
 })
 
-/** 添加动画 */
-// function addAnime(componentInstance: ComponentInstance | null) {
-//   if (!componentInstance) return
-//   // const id = animeUtilsProvider.generateAnimeId()
-//   // const serial = animeUtilsProvider.generateAnimeSerial().toString()
-//   // try {
-//   //   const slot = new Slot([ContentType.BlockComponent])
-//   //   const anime = animeComponent.createInstance(injector, {
-//   //     slots: [slot],
-//   //     state: {
-//   //       dataId: id,
-//   //       dataEffect: currentOption.effect,
-//   //       dataSerial: serial.toString(),
-//   //       dataState: '',
-//   //       dataTitle: currentOption.title
-//   //     }
-//   //   })
-//   //   commander.replaceComponent(componentInstance, anime)
-//   //   // 可以在插入组件后再把内容插入插槽
-//   //   slot.insert(componentInstance)
-//   // } catch (error) {
-//   //   console.log(error)
-//   // }
-//   // console.log(slot)
-// }
-
 /** 应用当前值 */
 function handleClick() {
   if (currentComponent) {
-    addAnime(currentComponent, injector, currentOption.effect, currentOption.title)
+    // console.log(currentComponent)
+    animeProvider.addAnime(currentComponent, currentOption.effect, currentOption.title)
   }
   position.show = false
   isPopoverShow.value = false
@@ -139,7 +115,7 @@ function handleSelect(option: AnimeOption) {
 
   if (currentComponent) {
     // addAnime(currentComponent)
-    addAnime(currentComponent, injector, currentOption.effect, currentOption.title)
+    animeProvider.addAnime(currentComponent, currentOption.effect, currentOption.title)
   }
   position.show = false
   isPopoverShow.value = false
@@ -216,7 +192,7 @@ onUnmounted(() => {
               :key="option.value"
               :class="['option']"
               @click="handleSelect(option)"
-              @mouseenter.self="option.applyEffect(($event.target as HTMLElement).firstChild as HTMLElement)"
+              @mouseenter.self="option.play(($event.target as HTMLElement).firstChild as HTMLElement)"
             >
               <div class="option-label">
                 {{ option.label }}

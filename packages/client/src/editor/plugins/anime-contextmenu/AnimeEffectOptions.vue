@@ -17,7 +17,7 @@ function handleSelect(option) {
         :key="option.value"
         :class="['option']"
         @click="handleSelect(option)"
-        @mouseenter.self="option.applyEffect(($event.target as HTMLElement).firstChild as HTMLElement)"
+        @mouseenter.self="option.play(($event.target as HTMLElement).firstChild as HTMLElement)"
       >
         <div class="option-label">
           {{ option.label }}

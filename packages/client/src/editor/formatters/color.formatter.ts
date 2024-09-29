@@ -9,8 +9,6 @@ class ColorFormatter implements Formatter<any> {
   constructor(public name: string) {}
 
   render(children: Array<VElement | VTextNode>, formatValue: string): FormatHostBindingRender {
-    // console.log(formatValue)
-    // console.log(rgbaToHex(formatValue))
     return {
       fallbackTagName: 'span',
       attach: (host: VElement) => {

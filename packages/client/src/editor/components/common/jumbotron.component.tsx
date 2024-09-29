@@ -11,9 +11,8 @@ import {
   RenderMode,
   Injector
 } from '@textbus/core'
-import { Dialog, FileUploader, Form, FormTextField, I18n, headingComponent } from '@textbus/editor'
+import { Dialog, FileUploader, Form, FormTextField, I18n, headingComponent, paragraphComponent } from '@textbus/editor'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
-import { paragraphComponent } from '../paragraph.component'
 
 export interface JumbotronComponentState {
   minHeight: string

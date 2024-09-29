@@ -1,14 +1,14 @@
 import { Commander, FormatValue, Injector, Query, QueryState, Selection } from '@textbus/core'
 import { Layout } from '@textbus/editor'
-import { animeFormatter } from '../../../'
-import { AnimeUtilsProvider } from '../../../providers/anime-utils.provider'
+import { AnimeProvider, animeFormatter } from '../../../'
+// import { AnimeUtilsProvider } from '../../../providers/anime-utils.provider'
 import { AnimeSegmentPopoverTool, AnimeSegmentPopoverToolConfig } from './toolkit/segment-popover'
 export function animeToolConfigFactory(injector: Injector): AnimeSegmentPopoverToolConfig {
   const query = injector.get(Query)
-  const commander = injector.get(Commander)
-  const layout = injector.get(Layout)
+  // const commander = injector.get(Commander)
+  // const layout = injector.get(Layout)
   const selection = injector.get(Selection)
-  const animeUtilsProvider = injector.get(AnimeUtilsProvider)
+  const animeProvider = injector.get(AnimeProvider)
 
   return {
     // options: [],
@@ -43,15 +43,17 @@ export function animeToolConfigFactory(injector: Injector): AnimeSegmentPopoverT
         alert('无法在该组件内设置动画元素')
         return
       }
-      const dataSerial = animeUtilsProvider.generateAnimeSerial().toString()
-      const dataId = animeUtilsProvider.generateAnimeId()
-      commander.applyFormat(animeFormatter, {
-        dataId,
-        dataSerial,
-        dataEffect: state.value,
-        dataState: '',
-        dataTitle: state.label
-      })
+      animeProvider.applyFormat(state.value, state.label)
+      // const dataSerial = animeProvider.generateAnimeSerial().toString()
+      // const dataId = animeProvider.generateAnimeId()
+      // commander.applyFormat(animeFormatter, {
+      //   dataId,
+      //   dataSerial,
+      //   dataEffect: state.value,
+      //   dataActive: false,
+      //   dataTitle: state.label,
+      //   dataRange: false
+      // })
     }
   }
 }

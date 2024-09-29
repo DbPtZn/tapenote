@@ -1,35 +1,69 @@
-import { InlineToolbarPlugin,
-  Toolbar, boldTool, 
-  historyBackTool, historyForwardTool, headingTool, 
-  italicTool, strikeThroughTool, underlineTool, olTool, ulTool, 
-  fontSizeTool, textIndentTool, colorTool, textBackgroundTool, 
-  insertParagraphBeforeTool, insertParagraphAfterTool, linkTool, 
-  fontFamilyTool, unlinkTool, imageTool, textAlignTool, tableRemoveTool, 
+import { 
+  InlineToolbarPlugin, Toolbar, boldTool,
+  historyBackTool, historyForwardTool,
+  italicTool, strikeThroughTool, underlineTool,
+  fontSizeTool, textIndentTool, colorTool, textBackgroundTool,
+  linkTool, fontFamilyTool, unlinkTool, imageTool, textAlignTool, tableRemoveTool,
   formatPainterTool, tableAddTool, cleanTool,
-  colorFormatLoader, colorFormatter, textBackgroundColorFormatter, 
-  textBackgroundColorFormatLoader, animeFormatter, animeFormatLoader, 
-  animeTool, AnimeUtilsProvider,
-  AnimeStateProvider, animeRootComponentLoader, 
-  animeRootComponent, AddAnimeService, AnimeComponentSupport, 
-  defaultGroupTool, DialogProvider, componentsTool, 
-  animeComponent, animeComponentLoader, AnimeContextmenuPlugin, 
-  OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
-  preview_startTool, preview_stopTool, animeBadgeVisibleTool, animeElementVisibleTool, 
-  imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
-  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider, listComponent, listComponentLoader, AnimeService,
-  listAnimeComponent, listAnimeComponentLoader
+  colorFormatLoader, colorFormatter, textBackgroundColorFormatter,
+  textBackgroundColorFormatLoader, animeFormatter, animeFormatLoader,
+  AddAnimeService, AnimeComponentSupport,
+  defaultGroupTool, DialogProvider, componentsTool,
+  AnimeContextmenuPlugin,
+  OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController,
+  preview_startTool, preview_stopTool,
+  imageB2UComponent, imageB2UComponentLoader,  CustomCommander,
+  ColorProvider, Structurer, ThemeProvider, Player, ImgToUrlService,
+  AnimeService,
+  preComponent,
+  imageCardComponent,
+  jumbotronComponent,
+  imageCardComponentLoader,
+  jumbotronComponentLoader,
+  preComponentLoader
 } from '@/editor'
+import { 
+  animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
+  listComponent, listComponentLoader, headingComponent, headingComponentLoader,
+  rootComponent, rootComponentLoader, paragraphComponent, paragraphComponentLoader,
+  animeComponent, animeComponentLoader, animeIgnoreComponent, animeIgnoreComponentLoader,
+  headingTool, olTool, ulTool, insertParagraphAfterTool, insertParagraphBeforeTool
+} from '@/editor/anime'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
+  alertComponent,
+  alertComponentLoader,
+  audioComponent,
+  audioComponentLoader,
+  blockComponent,
+  blockComponentLoader,
+  blockquoteComponent,
+  blockquoteComponentLoader,
   defaultComponentLoaders,
   defaultComponents,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
-  LinkJumpTipPlugin
+  katexComponent,
+  katexComponentLoader,
+  LinkJumpTipPlugin,
+  stepComponent,
+  stepComponentLoader,
+  tableComponent,
+  tableComponentLoader,
+  timelineComponent,
+  timelineComponentLoader,
+  todolistComponent,
+  todolistComponentLoader,
+  videoComponent,
+  videoComponentLoader,
+  wordExplainComponent,
+  wordExplainComponentLoader
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
+import '@/editor/anime.css'
+
 export function getProcedureConfig(args: {
   account: string,
   hostname: string,
@@ -41,7 +75,7 @@ export function getProcedureConfig(args: {
   controllerRef?: HTMLElement,
   content?: string
 }) {
-  const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  const { account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
   const config: EditorOptions = {
     theme: 'darkline',
     autoFocus: true,
@@ -50,30 +84,52 @@ export function getProcedureConfig(args: {
     historyStackSize: 30,
     placeholder: '在此输入正文',
     content: content || '',
-    rootComponent: animeRootComponent,
-    rootComponentLoader: animeRootComponentLoader,
-    components: [paragraphComponent, imageB2UComponent, animeIgnoreComponent, listAnimeComponent, ...defaultComponents.filter(i => !(i.name === 'ListComponent'))],
-    componentLoaders: [paragraphComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, listAnimeComponentLoader, ...defaultComponentLoaders],
+    rootComponent: rootComponent,
+    rootComponentLoader: rootComponentLoader,
+    components: [
+      paragraphComponent, animeComponent, imageB2UComponent, animeIgnoreComponent, listComponent, headingComponent,
+      audioComponent,
+      blockComponent,
+      blockquoteComponent,
+      headingComponent,
+      paragraphComponent,
+      preComponent,
+      tableComponent,
+      videoComponent,
+      imageCardComponent,
+      todolistComponent,
+      katexComponent,
+      wordExplainComponent,
+      timelineComponent,
+      stepComponent,
+      alertComponent,
+      jumbotronComponent
+    ],
+    componentLoaders: [
+      paragraphComponentLoader, animeComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, listComponentLoader, headingComponentLoader,
+      imageCardComponentLoader,
+      todolistComponentLoader,
+      katexComponentLoader,
+      wordExplainComponentLoader,
+      timelineComponentLoader,
+      stepComponentLoader,
+      alertComponentLoader,
+      jumbotronComponentLoader,
+      audioComponentLoader,
+      blockquoteComponentLoader,
+      blockComponentLoader,
+      headingComponentLoader,
+      listComponentLoader,
+      paragraphComponentLoader,
+      preComponentLoader,
+      tableComponentLoader,
+      videoComponentLoader,
+    ],
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter,...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
-    styleSheets: [
-      'anime:after{ position: absolute;margin-left: -12px; margin-top: -12px; content: attr(data-serial);vertical-align: super;color:white;background-color:#c8c9cc;border-radius:24px;display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;font-size:15px;line-height:0px;-webkit-border-radius:24px;text-align:center;box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);pointer-events: auto;}',
-      'anime:hover:after{cursor: pointer;animation: .8s .5s tada infinite;}',
-      '[data-theme="dark-theme"] anime:hover{outline: 1px dashed #aaaaaa30; border-radius: 3px;}',
-      'anime:hover{outline: 1px dashed #aaaaaa30; border-radius: 3px;}',
-      'anime{pointer-events:none;}',
-      'anime:active{pointer-events:none;}',
-      'anime img{ pointer-events: all;}', // 放行图片上的点击事件
-      '[data-state="active"]:after { background-color:pink }',
-      '.anime-element-hidden anime{ opacity: 0!important; }',
-      '.anime-element-hidden anime-component{opacity:0!important;}',
-      '.anime-badge-hidden anime:after{ display: none; opacity: 0!important; }',
-      '.anime-badge-hidden .anime-component-tab:after{ display: none; opacity:0!important;}'
-    ],
     providers: [
       { provide: Commander, useClass: CustomCommander },
-      AnimeProvider, AddAnimeService, AnimeAutoProvider,
-      AnimeUtilsProvider, AnimeStateProvider, DialogProvider, 
+      AnimeProvider, AddAnimeService, DialogProvider, 
       OutlineService, ColorProvider, AnimeService,
       Structurer, ThemeProvider, Player, ImgToUrlService
     ],
@@ -134,15 +190,9 @@ export function getProcedureConfig(args: {
         }
       })
       /** 依赖注入 */
-      // 动画状态依赖
-      const animeStateProvider = injector.get(AnimeStateProvider)
-      animeStateProvider.setup(injector, scrollerRef)
-      // 动画工具依赖
-      const animeUtilsProvider = injector.get(AnimeUtilsProvider)
-      animeUtilsProvider.setup(injector, scrollerRef)
-      // 自动动画依赖
-      const animeAutoProvider = injector.get(AnimeAutoProvider)
-      animeAutoProvider.setup(injector)
+      // 动画依赖
+      const animeProvider = injector.get(AnimeProvider)
+      animeProvider.setup(injector, scrollerRef)
       // 组成元素
       const structurer = injector.get(Structurer)
       structurer.setup({
@@ -159,7 +209,6 @@ export function getProcedureConfig(args: {
       const player = injector.get(Player)
       player.setup(injector, scrollerRef)
       // 图片工具
-      // const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
       const imgToUrlService = injector.get(ImgToUrlService)
       const { uploadImgFunction } = useUploadImg('/upload/img', account, hostname)
       imgToUrlService.setup(uploadImgFunction)

@@ -18,8 +18,7 @@ import {
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 
-import { paragraphComponent } from '../paragraph.component'
-import { AnimeState } from './_types'
+import { paragraphComponent } from './paragraph.component'
 
 interface SegmentedSlots<T extends Slot = Slot> {
   before: T[]
@@ -27,7 +26,7 @@ interface SegmentedSlots<T extends Slot = Slot> {
   after: T[]
 }
 
-interface ListComponentExtends extends ComponentExtends {
+export interface ListComponentExtends extends ComponentExtends {
   type: 'ul' | 'ol',
   split?(startIndex: number, endIndex: number): SegmentedSlots
 }
@@ -44,7 +43,7 @@ interface ListComponentState {
   dataRange: boolean
 }
 
-export const listAnimeComponent = defineComponent({
+export const listComponent = defineComponent({
   type: ContentType.BlockComponent,
   name: 'ListComponent',
   separable: true,
@@ -143,7 +142,7 @@ export const listAnimeComponent = defineComponent({
   }
 })
 
-export const listAnimeComponentLoader: ComponentLoader = {
+export const listComponentLoader: ComponentLoader = {
   match(element: HTMLElement): boolean {
     return element.tagName === 'OL' || element.tagName === 'UL'
   },
@@ -179,12 +178,12 @@ export const listAnimeComponentLoader: ComponentLoader = {
         newLi = null
       }
     }
-    return listAnimeComponent.createInstance(injector, {
+    return listComponent.createInstance(injector, {
       slots,
       state: {
         type: element.tagName.toLowerCase() as any,
 
-        dataAnime: element.getAttribute('data-anime') === 'true',
+        dataAnime: element.dataset.anime === 'true',
         dataId: element.dataset.id || '',
         dataEffect: element.dataset.effect || '',
         dataSerial: element.dataset.serial || '',

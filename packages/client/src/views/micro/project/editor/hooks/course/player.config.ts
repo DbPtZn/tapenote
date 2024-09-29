@@ -11,8 +11,6 @@ import {
   rootPlayerComponentLoader,
   rootPlayerComponent,
   animePlayerComponentLoader,
-  animePlayerFormatter,
-  animePlayerFormatLoader,
   startTool,
   rewindTool,
   forwardTool,
@@ -26,12 +24,13 @@ import {
   volumeDownTool,
   RootEventService,
   PlayerContextMenuPlugin,
-  AnimeEventService,
   animeIgnoreComponent,
   animeIgnoreComponentLoader,
   AnimeProvider,
   Structurer,
-  ThemeProvider
+  ThemeProvider,
+  animeFormatLoader,
+  animeFormatter
 } from '@/editor'
 import { fromEvent, Injector } from '@textbus/core'
 import {
@@ -65,8 +64,8 @@ export function getCourseConfig(args: {
     rootComponentLoader: rootPlayerComponentLoader,
     components: [animePlayerComponent, animeIgnoreComponent, ...defaultComponents],
     componentLoaders: [animePlayerComponentLoader, animeIgnoreComponentLoader, ...defaultComponentLoaders],
-    formatters: [animePlayerFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
-    formatLoaders: [animePlayerFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
+    formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
+    formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     styleSheets: [],
     providers: [
       Player,
@@ -74,7 +73,6 @@ export function getCourseConfig(args: {
       DialogProvider,
       AnimeProvider,
       RootEventService,
-      AnimeEventService,
       Structurer,
       ThemeProvider
     ],

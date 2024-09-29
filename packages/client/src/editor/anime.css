@@ -1,0 +1,35 @@
+@import './components/anime/index.css';
+@import './formatters/anime.formatter.css';
+
+.anime-box {
+  outline: 1px dashed #aaaaaa30;
+}
+
+.anime-img {
+  display: inline-block;
+}
+
+.anime-component-box {
+  display: block;
+  outline: 1px dashed #aaaaaa30;
+}
+
+.anime-preset:after {
+  padding: 3px;
+  border: 2px solid #e03f3f;
+  animation: .8s .5s tada infinite;
+}
+
+[data-anime="true"].anime-preset .anime-component-tab:after {
+  padding: 3px;
+  border: 2px solid #e03f3f;
+  animation: .8s .5s tada infinite;
+}
+
+.anime-badge-hide:after {
+  content: unset;
+}
+
+[data-anime="true"].anime-badge-hide .anime-component-tab:after {
+  content: unset;
+}

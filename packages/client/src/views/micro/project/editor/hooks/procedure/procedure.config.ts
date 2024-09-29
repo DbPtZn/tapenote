@@ -8,16 +8,18 @@ import { InlineToolbarPlugin,
   formatPainterTool, tableAddTool, cleanTool,
   colorFormatLoader, colorFormatter, textBackgroundColorFormatter, 
   textBackgroundColorFormatLoader, animeFormatter, animeFormatLoader, 
-  animeTool, AnimeUtilsProvider,
-  AnimeStateProvider, animeRootComponentLoader, 
-  animeRootComponent, AddAnimeService, AnimeComponentSupport, 
+  animeRootComponentLoader, animeRootComponent, AddAnimeService, AnimeComponentSupport, 
   defaultGroupTool, DialogProvider, componentsTool, 
   animeComponent, animeComponentLoader, AnimeContextmenuPlugin, 
   OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
-  preview_startTool, preview_stopTool, animeBadgeVisibleTool, animeElementVisibleTool, 
-  AxiosProvider, imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
-  animeIgnoreComponent, animeIgnoreComponentLoader, animeIgnoreTool, CustomCommander, ColorProvider, AnimeProvider, Structurer, ThemeProvider, Player, ImgToUrlService, AnimeClickPlugin, AnimeAutoProvider 
+  preview_startTool, preview_stopTool, imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
+  animeIgnoreComponent, animeIgnoreComponentLoader, CustomCommander, ColorProvider,
+  Structurer, ThemeProvider, Player, ImgToUrlService
 } from '@/editor'
+import { 
+  animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
+  listComponent, listComponentLoader, headingComponent, headingComponentLoader
+} from '@/editor/anime'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
   defaultComponentLoaders,
@@ -70,8 +72,7 @@ export function getProcedureConfig(args: {
     ],
     providers: [
       { provide: Commander, useClass: CustomCommander },
-      AnimeProvider, AddAnimeService, AnimeAutoProvider,
-      AnimeUtilsProvider, AnimeStateProvider, DialogProvider, 
+      AnimeProvider, AddAnimeService, DialogProvider, 
       OutlineService, ColorProvider,
       Structurer, ThemeProvider, Player, ImgToUrlService
     ],
@@ -133,14 +134,8 @@ export function getProcedureConfig(args: {
       })
       /** 依赖注入 */
       // 动画状态依赖
-      const animeStateProvider = injector.get(AnimeStateProvider)
-      animeStateProvider.setup(injector, scrollerRef)
-      // 动画工具依赖
-      const animeUtilsProvider = injector.get(AnimeUtilsProvider)
-      animeUtilsProvider.setup(injector, scrollerRef)
-      // 自动动画依赖
-      const animeAutoProvider = injector.get(AnimeAutoProvider)
-      animeAutoProvider.setup(injector)
+      const animeProvider = injector.get(AnimeProvider)
+      animeProvider.setup(injector, scrollerRef)
       // 组成元素
       const structurer = injector.get(Structurer)
       structurer.setup({

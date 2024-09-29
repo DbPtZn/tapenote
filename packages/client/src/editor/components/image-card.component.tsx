@@ -17,8 +17,7 @@ import {
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 // import { Injector } from '@tanbo/di'
-import { paragraphComponent } from './paragraph.component'
-import { Dialog, FileUploader, Form, FormTextField, I18n } from '@textbus/editor'
+import { Dialog, FileUploader, Form, FormTextField, I18n, paragraphComponent } from '@textbus/editor'
 
 export interface ImageCardComponentState {
   src: string

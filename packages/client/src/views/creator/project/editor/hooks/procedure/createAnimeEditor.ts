@@ -1,12 +1,10 @@
-import { AddAnimeService, AnimeProvider, AnimeStateProvider, AnimeUtilsProvider, ColorProvider, DialogProvider, ImgToUrlService, OutlineService, Player, Structurer, ThemeProvider } from '@/editor'
+import { AddAnimeService, AnimeProvider, ColorProvider, DialogProvider, ImgToUrlService, OutlineService, Player, Structurer, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
 import { Ref, onMounted, onUnmounted, watch } from 'vue'
 import { getProcedureConfig } from './procedure.config'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../../../../shell'
-import { Commander } from '@textbus/core'
-
 export function createAnimeEditor(args: {
   id: string,
   account: string,
@@ -34,8 +32,6 @@ export function createAnimeEditor(args: {
     try {
       editor.get(AnimeProvider).destory()
       editor.get(AddAnimeService).destory()
-      editor.get(AnimeUtilsProvider).destory()
-      editor.get(AnimeStateProvider).destory()
       editor.get(DialogProvider).destory()
       editor.get(OutlineService).destory()
       editor.get(ColorProvider).destory()

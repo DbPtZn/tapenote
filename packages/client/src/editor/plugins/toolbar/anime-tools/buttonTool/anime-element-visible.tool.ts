@@ -1,7 +1,7 @@
-import { SwitchButtonState, SwitchButtonTool, SwitchButtonToolConfig  } from '..'
+import { SwitchButtonState, SwitchButtonTool, SwitchButtonToolConfig  } from '../..'
 import { Injector } from '@textbus/core'
 import { Layout } from '@textbus/editor'
-import { MaterialTypeEnum } from '../toolkit/_utils/MaterialTypeEnum'
+import { MaterialTypeEnum } from '../../toolkit/_utils/MaterialTypeEnum'
 
 
 export function animeElementVisibleToolConfigFactory(injector: Injector, updateState: (state: SwitchButtonState) => void): SwitchButtonToolConfig {

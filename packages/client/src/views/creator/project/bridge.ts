@@ -1,11 +1,10 @@
-import { AnimeAutoProvider, AnimeStateProvider, AnimeUtilsProvider, OutlineService } from "@/editor"
+import { AnimeProvider, OutlineService } from "@/editor"
 import { Observable, Subject } from "@tanbo/stream"
 import { Editor } from "@textbus/editor"
 import { Habit } from "./habit"
 import { LibraryEnum } from "@/enums"
 import { VIEW_DOCUMENT } from "@textbus/platform-browser"
 import { Renderer } from "@textbus/core"
-import { useDialog } from "naive-ui"
 
 export class Bridge {
   habit: Habit | null = null
@@ -16,31 +15,39 @@ export class Bridge {
   projectRef: HTMLElement | null = null
   renderer: Renderer | null = null
   container: HTMLElement | null = null
-  animeState: AnimeStateProvider | null = null
-  animeUtils: AnimeUtilsProvider | null = null
+  animeProvider: AnimeProvider | null = null
   outlineService: OutlineService | null = null
   
-  private editorReadyEvent: Subject<any> = new Subject()
-  onEditorReady: Observable<Editor> = this.editorReadyEvent.asObservable()
-  private toolbarCollapseEvent: Subject<any> = new Subject()
-  onToolbarCollapse: Observable<any> = this.toolbarCollapseEvent.asObservable()
-  private saveStartEvent: Subject<any> = new Subject()
-  onSaveStart: Observable<any> = this.saveStartEvent.asObservable()
-  private saveEndEvent: Subject<any> = new Subject()
-  onSaveEnd: Observable<any> = this.saveEndEvent.asObservable()
+  // private editorReadyEvent: Subject<any> = new Subject()
+  // onEditorReady: Observable<Editor> = this.editorReadyEvent.asObservable()
+  onEditorReady = new Subject<Editor>()
+  // private toolbarCollapseEvent: Subject<any> = new Subject()
+  // onToolbarCollapse: Observable<any> = this.toolbarCollapseEvent.asObservable()
+  onToolbarCollapse = new Subject<boolean>()
+  // private saveStartEvent: Subject<any> = new Subject()
+  // onSaveStart: Observable<any> = this.saveStartEvent.asObservable()
+  onSaveStart = new Subject<void>()
+  // private saveEndEvent: Subject<any> = new Subject()
+  // onSaveEnd: Observable<any> = this.saveEndEvent.asObservable()
+  onSaveEnd = new Subject<void>()
   
-  private sidenoteShowEvent: Subject<any> = new Subject()
-  onSidenoteShow: Observable<boolean> = this.sidenoteShowEvent.asObservable()
-  private sidenoteReadyEvent: Subject<any> = new Subject()
-  onSidenoteReady: Observable<Editor> = this.sidenoteReadyEvent.asObservable()
+  // private sidenoteShowEvent: Subject<any> = new Subject()
+  // onSidenoteShow: Observable<boolean> = this.sidenoteShowEvent.asObservable()
+  onSidenoteShow = new Subject<boolean>()
+  // private sidenoteReadyEvent: Subject<any> = new Subject()
+  // onSidenoteReady: Observable<Editor> = this.sidenoteReadyEvent.asObservable()
+  onSidenoteReady = new Subject<Editor>()
 
-  private editorReloadEvent: Subject<any> = new Subject()
-  onEditorReload: Observable<Editor> = this.editorReloadEvent.asObservable()
+  // private editorReloadEvent: Subject<any> = new Subject()
+  // onEditorReload: Observable<Editor> = this.editorReloadEvent.asObservable()
+  onEditorReload = new Subject<void>()
 
-  private autoMoveAnimePointerChangeEvent: Subject<boolean> = new Subject()
-  onAutoMoveAnimePointerChange:Observable<boolean> = this.autoMoveAnimePointerChangeEvent.asObservable()
-  private addPromoterEvent: Subject<HTMLElement> = new Subject()
-  onAddPromoter: Observable<HTMLElement> = this.addPromoterEvent.asObservable()
+  // private autoMoveAnimePointerChangeEvent: Subject<boolean> = new Subject()
+  // onAutoMoveAnimePointerChange:Observable<boolean> = this.autoMoveAnimePointerChangeEvent.asObservable()
+  onAutoMoveAnimePointerChange = new Subject<boolean>()
+  // private addPromoterEvent: Subject<HTMLElement> = new Subject()
+  // onAddPromoter: Observable<HTMLElement> = this.addPromoterEvent.asObservable()
+  onAddPromoter = new Subject<HTMLElement>()
 
   constructor() {
     this.habit = new Habit()
@@ -51,25 +58,24 @@ export class Bridge {
     this.scrollerRef = scrollerRef
     this.container = editor.get(VIEW_DOCUMENT)
     this.renderer = editor.get(Renderer)
-    if (lib === LibraryEnum.PROCEDURE) {
-      this.animeState = editor.get(AnimeStateProvider)
-      this.animeUtils = editor.get(AnimeUtilsProvider)
-    }
-    this.editorReadyEvent.next(editor)
+    if (lib === LibraryEnum.PROCEDURE) this.animeProvider = editor.get(AnimeProvider)
+    // this.editorReadyEvent.next(editor)
+    this.onEditorReady.next(editor)
     this.outlineService = editor.get(OutlineService)
   }
 
   handleToolbarCollapse() {
-    this.toolbarCollapseEvent.next('')
+    this.onToolbarCollapse.next(true)
   }
 
   handleSaveStart() {
-    this.saveStartEvent.next('')
+    this.onSaveStart.next()
   }
+  
   handleSaveEnd() {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
-        this.saveEndEvent.next('')
+        this.onSaveEnd.next()
         resolve(true)
         clearTimeout(timer)
       }, 1000)
@@ -77,13 +83,13 @@ export class Bridge {
   }
 
   handleSidenoteReady(editor: Editor) {
-    this.sidenoteReadyEvent.next(editor)
+    this.onSidenoteReady.next(editor)
   }
   handleSidenoteShow(is: boolean) {
-    this.sidenoteShowEvent.next(is)
+    this.onSidenoteShow.next(is)
   }
   handleSidenoteToolbarCollapse(value: boolean) {
-    this.toolbarCollapseEvent.next(value)
+    this.onToolbarCollapse.next(value)
   }
 
   handleOutlineShow() {
@@ -91,21 +97,21 @@ export class Bridge {
   }
 
   handleAutoAnime() {
-    const animeAutoProvider = this.editor?.get(AnimeAutoProvider)
-    animeAutoProvider?.autoAdd()
+    const animeProvider = this.editor?.get(AnimeProvider)
+    animeProvider?.autoAdd()
   }
 
   handleAutoMoveAnimePointer(is: boolean) {
-    this.autoMoveAnimePointerChangeEvent.next(is)
+    this.onAutoMoveAnimePointerChange.next(is)
   }
   
   handleAddPromoter(element: HTMLElement) {
-    this.addPromoterEvent.next(element)
+    this.onAddPromoter.next(element)
   }
 
   /** 编辑模块重载（实现数据更新） */
   handleEditorReload() {
-    this.editorReloadEvent.next('')
+    this.onEditorReload.next()
   }
 
   destory() {
@@ -115,7 +121,6 @@ export class Bridge {
     this.studioRef = null
     this.scrollerRef = null
     this.projectRef = null
-    this.animeState = null
-    this.animeUtils = null
+    this.animeProvider = null
   }
 }

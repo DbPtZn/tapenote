@@ -482,7 +482,7 @@ export class Player {
     el.style.visibility = 'visible'
     const anime = this.anime.getAnime(effectValue)
     if (anime) {
-      anime.applyEffect(el).finished.then(() => {
+      anime.play(el).finished.then(() => {
         el.style.display = display
       })
     } else {

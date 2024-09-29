@@ -14,7 +14,7 @@ export default defineConfig(({ command, mode }) => {
     base: env.VITE_ASSETS_BASE ? env.VITE_ASSETS_BASE : '',
     plugins: [
       vue(),
-      UnoCSS(),
+      // UnoCSS(),
       Components({
         extensions: ['vue'],
         resolvers: [NaiveUiResolver()],

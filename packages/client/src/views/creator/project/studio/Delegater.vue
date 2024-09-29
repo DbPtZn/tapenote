@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Subscription, fromEvent } from '@tanbo/stream'
+import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
 import { computed, inject, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { ArrowDownwardFilled } from '@vicons/material'
 import { usePromoter } from './hooks'
@@ -8,13 +8,14 @@ import useStore from '@/store'
 import { useMessage, useThemeVars } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
+import { AnimeProvider } from '@/editor'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
 }>()
 
 const { projectStore } = useStore()
-const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate } = usePromoter(props.id, bridge)
+const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, makePreset } = usePromoter(props.id, bridge)
 const message = useMessage()
 const themeVars = useThemeVars()
 const { t } = useI18n()
@@ -57,7 +58,7 @@ const pointerPositon = computed(() => {
       y = lastTextChildRect.y - pointerRect.height - scrollerRect.top + scrollerRef.value!.scrollTop
     }
   }
-  if(pointerTarget.value?.tagName.toLocaleLowerCase() === 'anime-component' && pointerRef.value) {
+  if((pointerTarget.value?.tagName.toLocaleLowerCase() === 'anime-component' || pointerTarget.value?.dataset.anime === 'true') && pointerRef.value) {
     // 动画组件一般是 block div 盒子,动画标记一般位于右上角
     pointerTarget.value?.classList.add('anime-component-box') // 添加 'block' 'outline' 属性帮助提示范围\定位
     pointerTargetRect = pointerTarget.value.getBoundingClientRect()
@@ -98,9 +99,11 @@ function getTextNodeEndPosition(element: HTMLElement | ChildNode) {
 
 const subs1: Subscription[] = []
 const subs2: Subscription[] = []
+const subs5: Subscription[] = []
+let selectAnimeElement: HTMLElement | null = null
 onMounted(() => {
   const scroller = delegaterRef.value?.parentElement
-  if(scroller)
+  if(!scroller) return
   subs1.push(
     fromEvent(scroller, 'scroll').subscribe(e => {
       popoverState.showPopover = false
@@ -109,7 +112,7 @@ onMounted(() => {
       isAutoMoveAnimePointer.value = isOpen
       if(isOpen && bridge.editorRef && bridge.scrollerRef) {
         message.info(`自动移动动画块指针功能已开启，预设启动动画之后自动移动到下一个动画块`)
-        const elements = bridge.editorRef.querySelectorAll<HTMLElement>(`[data-id]`)
+        const elements = bridge.editorRef.querySelectorAll<HTMLElement>(`[data-id]:not([data-id=""])`)
         animeMap = Array.from(elements)
         scrollerRef.value = bridge.scrollerRef
         scrollerRef.value.style.position = 'relative' // 添加 'relative' 作为 pointer 绝对定位参照系
@@ -127,8 +130,12 @@ onMounted(() => {
           fromEvent<PointerEvent>(bridge.editorRef, 'click').subscribe(e => {
             // if (pointerIndex.value === -1) return // -1 是关闭状态
             const target = e.target as HTMLElement
-            console.log(target)
-            const index = animeMap.findIndex(element => element === (['anime', 'anime-component'].includes(target.tagName.toLocaleLowerCase()) ? target : ''))
+            const animeElement = AnimeProvider.toAnimeElement(target)
+            console.log(animeElement)
+            if (!animeElement) return
+            const index = animeMap.findIndex(element => element === animeElement)
+            console.log(index)
+            // ((['anime', 'anime-component'].includes(target.tagName.toLocaleLowerCase()) || target.dataset.anime === 'true') ? target : '')
             if(index !== -1) pointerIndex.value = index
           })
         )
@@ -139,23 +146,48 @@ onMounted(() => {
         subs2.length = 0
         animeMap = []
         pointerIndex.value = 0
-        
       }
     }),
     bridge.onEditorReady.subscribe(() => {
       editorRef.value = bridge.editorRef
+      subs5.push(
+        fromEvent(editorRef.value!, 'click').pipe(auditTime(5)).subscribe(e => {
+          // 延迟 5ms , 与 s 错开时间，这样在动画块之间切换的时候 selectAnimeElement 不会被 s 事件覆盖消除
+          if(isAutoMoveAnimePointer.value) return
+          const target = e.target as HTMLElement
+          const animeElement = AnimeProvider.toAnimeElement(target)
+          if (!animeElement) return
+          if (animeElement.dataset.active === 'true') return
+          selectAnimeElement = animeElement
+          selectAnimeElement.classList.add('anime-preset')
+          const s = fromEvent(document, 'click', true).pipe(auditTime(0)).subscribe(event => {
+            // 延迟 0ms, 转化成宏任务，这样 handleClick(微任务) 将优先执行，能正确获取到 selectAnimeElement
+            const node = event.target as HTMLElement
+            const animeNode = AnimeProvider.toAnimeElement(node)
+            if(animeNode === animeElement) return // 再次点击相同动画块的时候不处理
+            animeElement?.classList.remove('anime-preset')
+            selectAnimeElement = null
+            s.unsubscribe()
+          })
+        })
+      )
     })
   )
 })
 onUnmounted(() => {
   subs1.forEach(s => s.unsubscribe())
   subs1.length = 0
-  subs3.forEach(s => s.unsubscribe())
-  subs3.length = 0
   subs2.forEach(s => s.unsubscribe())
   subs2.length = 0
+  subs3.forEach(s => s.unsubscribe())
+  subs3.length = 0
+  subs4.forEach(s => s.unsubscribe())
+  subs4.length = 0
+  subs5.forEach(s => s.unsubscribe())
+  subs5.length = 0
 })
 
+let subs4: Subscription[] = []
 const handleClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement
   if(target.classList.contains('character')) {
@@ -169,18 +201,25 @@ const handleClick = (e: MouseEvent) => {
           if(isAutoMoveAnimePointer.value) {
             if(pointerIndex.value === -1) {
               handlePromoterSelect(fragment.id, index)
-              // console.log('auto move pointer', editorRef.value)
-              const s = bridge.onAddPromoter.subscribe(element => {
+              subs4.length === 0 && subs4.push(bridge.onAddPromoter.subscribe(element => {
                 const index = animeMap.findIndex(item => item === element)
-                s.unsubscribe()
+                subs4.forEach(sub => sub.unsubscribe())
+                subs4.length = 0
                 if(index !== -1) pointerIndex.value = index + 1
-              })
+              }))
               return
             }
             const id = pointerTarget.value.dataset.id
             const serial = pointerTarget.value.dataset.serial
             handlePromoterSelect(fragment.id, index, id, serial)
             pointerIndex.value++
+            return
+          }
+          if(selectAnimeElement) {
+            const id = selectAnimeElement.dataset.id
+            const serial = selectAnimeElement.dataset.serial
+            if(!id || !serial) return
+            makePreset(fragment.id, index, id, serial)
             return
           }
           handlePromoterSelect(fragment.id, index)
@@ -199,6 +238,7 @@ const handleClick = (e: MouseEvent) => {
 }
 
 function handleAutoMoveAnimePointerEnd() {
+  pointerTarget.value?.classList.remove('anime-box', 'anime-img', 'anime-component-box')
   pointerIndex.value = -1
 }
 
@@ -378,7 +418,7 @@ const popoverMethods = {
 
 .pointer {
   position: absolute;
-  color: red;
+  color: #e03f3f;
   pointer-events: none;
   animation: bounce 1s infinite;
 }

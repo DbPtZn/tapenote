@@ -4,50 +4,39 @@ import {
   VTextNode,
   RenderMode,
 } from '@textbus/core'
-import { ANIME, ANIME_FORMATTER_NAME } from '../anime.constant'
 import { FormatLoader } from '@textbus/platform-browser'
-
+interface AnimeState {
+  dataId: string
+  dataEffect: string
+  dataSerial: string
+  dataActive: boolean
+  dataTitle: string
+  dataRange: boolean
+}
 export class AnimeFormatter implements Formatter<any> {
-  name = ANIME_FORMATTER_NAME
-  tagName = ANIME
+  name = 'AnimeFormatter'
+  tagName = 'anime'
   columned = false
   priority = 0
   
   render(
     children: Array<VElement | VTextNode>,
-    formatValue: Record<string, string>,
+    formatValue: Record<string, any>,
     renderMode: RenderMode
   ): VElement {
     const vdom = new VElement(
-      ANIME,
+      'anime',
       {
         'data-id': formatValue.dataId,
         'data-serial': formatValue.dataSerial,
         'data-effect': formatValue.dataEffect,
-        'data-state': formatValue.dataState || 'inactive', // 默认是未激活状态
+        'data-active': `${formatValue.dataActive}`, // 默认是未激活状态
         'data-title': formatValue.dataTitle,
+        'data-range': `${formatValue.dataRange}`,
         'title': formatValue.dataTitle, // 鼠标在标记上时显示动画名称
       },
       children
     )
-    /** ----------------- 弃用 （ 改用事件委托 ）  -------------------- */
-    // vdom.listeners.click = (ev: Event) => {
-    //   // console.log('anime formatter click ------>')
-    //   // ev.preventDefault()
-    //   // ev.stopPropagation()
-    //   // const element = ev.target as HTMLElement
-    //   // animeFormatterService.handleSelectAnime({
-    //   //   id: element.dataset.id!,
-    //   //   effect: element.dataset.effect!,
-    //   //   serial: element.dataset.serial!
-    //   // })
-    // }
-    // vdom.listeners.contextmenu = (event: Event) => {
-    //   // console.log('anime formatter contextmenu ------>')
-    //   // event.preventDefault() // 阻止默认事件
-    //   // event.stopPropagation() // 阻止事件冒泡
-    //   // animeFormatterService.handleAnimeContextmenu({ vdom, event })
-    // }
     return vdom
   }
 }
@@ -56,16 +45,17 @@ export const animeFormatter = new AnimeFormatter()
 
 export const animeFormatLoader: FormatLoader<any> = {
   match(element: HTMLElement) {
-    return [ANIME].includes(element.tagName.toLowerCase())
+    return element.tagName.toLowerCase() === 'anime'
   },
   // 当元素匹配成功时，会调用 read 方法获取样式的值
   read(node: HTMLElement) {
     const data = {
-      dataId: node.dataset.id as string,
-      dataSerial: node.dataset.serial as string,
-      dataEffect: node.dataset.effect as string,
-      dataState:  node.dataset.state as string,
-      dataTitle: node.dataset.title as string,
+      dataId: node.dataset.id,
+      dataSerial: node.dataset.serial,
+      dataEffect: node.dataset.effect,
+      dataActive:  node.dataset.active === 'true',
+      dataTitle: node.dataset.title,
+      dataRange: node.dataset.range === 'true'
     }
     return {
       formatter: animeFormatter,

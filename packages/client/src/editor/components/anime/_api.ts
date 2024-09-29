@@ -1,2 +1,6 @@
 export * from './list.component'
-export * from './_function'
+export * from './heading.component'
+export * from './paragraph.component'
+export * from './root.component'
+export * from './anime.component'
+export * from './animeIgnore.component'

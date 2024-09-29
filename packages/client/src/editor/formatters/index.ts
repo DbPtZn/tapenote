@@ -4,4 +4,4 @@ export * from './textBackgroundColor.formatter' // 配置主题颜色
 // anime
 export * from './anime.formatter'
 // player
-export * from './anime-player.formatter'
+// export * from './anime-player.formatter'

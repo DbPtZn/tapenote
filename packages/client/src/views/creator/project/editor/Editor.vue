@@ -89,7 +89,7 @@ useEditor({
         data.value!.isContentUpdating = true
         if(props.readonly()) return
         const content = editor.getHTML()
-        console.log(content)
+        // console.log(content)
         if(lastContent === content) {
           data.value!.isContentUpdating = false
           return

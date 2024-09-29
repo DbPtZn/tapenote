@@ -4,21 +4,16 @@ import {
   ContentType,
   defineComponent,
   onBreak,
-  onContentInsert,
-  onContentInserted,
-  onCompositionStart,
-  onCompositionEnd,
   Slot,
   SlotRender,
   Selection,
   useContext,
   useSlots,
   VElement,
-  ComponentInitData, useState, onDestroy, Injector, Keyboard, useSelf, Renderer,
+  ComponentInitData, useState, onDestroy, Injector
 } from '@textbus/core'
+import { paragraphComponent } from '@textbus/editor'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
-
-import { paragraphComponent } from './paragraph.component'
 
 export interface SegmentedSlots<T extends Slot = Slot> {
   before: T[]

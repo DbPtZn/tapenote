@@ -4,19 +4,15 @@ import {
   Plugin,
   Selection,
   Renderer,
-  VElement,
   Subscription,
   ComponentInstance,
   fromEvent,
 } from '@textbus/core'
 import { AnimeProvider, Structurer, animeFormatter } from '../..'
 import { App, Ref, createApp, h, ref } from 'vue'
-import { NDropdown } from 'naive-ui'
 import { VIEW_CONTAINER, createElement } from '@textbus/platform-browser'
 import { DropdownOption } from 'naive-ui'
-import { UIConfig } from '@/editor'
 import AnimeEffectOptions from './AnimeEffectOptions.vue'
-import { Editor } from '@textbus/editor'
 import Dropdown from './Dropdown.vue'
 export class AnimeContextmenuPlugin implements Plugin {
   private commander!: Commander
@@ -24,8 +20,8 @@ export class AnimeContextmenuPlugin implements Plugin {
   private renderer!: Renderer
   private subs: Subscription[] = []
   private contextmenu: App<Element> | null = null
-  private anime!: AnimeProvider
-  private animeOptions: ReturnType<typeof this.anime.getOptions> = []
+  private animeProvider!: AnimeProvider
+  private animeOptions: ReturnType<typeof this.animeProvider.getOptions> = []
   private scrollSubscription: Subscription | null = null
   private injector!: Injector
   private container: HTMLElement | null = null
@@ -42,9 +38,8 @@ export class AnimeContextmenuPlugin implements Plugin {
     this.commander = injector.get(Commander)
     this.selection = injector.get(Selection)
     this.renderer = injector.get(Renderer)
-    this.anime = injector.get(AnimeProvider)
-    this.animeOptions = this.anime.getOptions()
-    // const editor = injector.get(Editor)
+    this.animeProvider = injector.get(AnimeProvider)
+    this.animeOptions = this.animeProvider.getOptions()
     const structurer = this.injector.get(Structurer)
     this.container = this.injector.get(VIEW_CONTAINER)
     this.scrollerRef = structurer.scrollerRef
@@ -70,9 +65,12 @@ export class AnimeContextmenuPlugin implements Plugin {
 
     this.subs.push(
       fromEvent<PointerEvent>(this.container, 'contextmenu').subscribe(ev => {
-        // console.log(ev)
+
         const target = ev.target as HTMLElement
-        if (target.tagName.toLocaleLowerCase() === 'anime') {
+        const element = AnimeProvider.toAnimeElement(target)
+        console.log(element)
+        if(!element) return
+        if (element.tagName.toLocaleLowerCase() === 'anime') {
             ev.preventDefault() // 阻止默认事件
             ev.stopPropagation() // 阻止事件冒泡
             // console.log('anime')
@@ -82,10 +80,7 @@ export class AnimeContextmenuPlugin implements Plugin {
             this.Options.value = options
             this.show()
         }
-        if (target.tagName.toLocaleLowerCase() === 'anime-component') {
-          // console.log('anime-component')
-          // const node = target.parentElement
-          // if(node?.tagName.toLocaleLowerCase() === 'anime-component') {
+        if (element.tagName.toLocaleLowerCase() === 'anime-component') {
             ev.preventDefault() // 阻止默认事件
             ev.stopPropagation() // 阻止事件冒泡
             // console.log(node)
@@ -98,6 +93,19 @@ export class AnimeContextmenuPlugin implements Plugin {
               this.show()
             }
           // }
+        }
+        if (element.dataset.anime) {
+          ev.preventDefault() // 阻止默认事件
+          ev.stopPropagation() // 阻止事件冒泡
+          const component = this.renderer.getComponentByNativeNode(element)
+          if(component) {
+            const { x, y, options } = this.createComponentMenu(element, component)
+            this.xRef.value = x
+            this.yRef.value = y
+            this.Options.value = options
+            this.show()
+            console.log('show')
+          }
         }
       }),
       // 滚动时隐藏菜单
@@ -156,7 +164,10 @@ export class AnimeContextmenuPlugin implements Plugin {
             render: () => h(AnimeEffectOptions, {
               options: this.animeOptions,
               onSelect: (name, value) => {
-                this.updataAnimeFormatter(target, { name, value })
+                // this.updataAnimeFormatter(target, { name, value })
+                const animeId = target.dataset.id
+                if(!animeId) return
+                this.animeProvider.updateAnimeState(animeId, { effect: value, title: name })
                 this.hide()
               }
             })
@@ -190,15 +201,7 @@ export class AnimeContextmenuPlugin implements Plugin {
         label: '移除',
         props: {
           onClick: () => {
-            this.removeAnimeComponent(component)
-            // component.slots.toArray().forEach((slot) => {
-            //   slot.sliceContent().forEach((content) => {
-            //     if (typeof content !== 'string') {
-            //       console.log('移除动画组件')
-            //       this.commander.replaceComponent(component, content)
-            //     }
-            //   })
-            // })
+            this.animeProvider.removeAnime(component)
           }
         }
       },
@@ -213,7 +216,8 @@ export class AnimeContextmenuPlugin implements Plugin {
             render: () => h(AnimeEffectOptions, {
               options: this.animeOptions,
               onSelect: (name, value) => {
-                this.updataAnimeComponent(component, { name, value })
+                const animeId = component.state.dataId
+                this.animeProvider.updateAnimeState(animeId, { effect: value, title: name })
                 this.hide()
               }
             })
@@ -236,35 +240,6 @@ export class AnimeContextmenuPlugin implements Plugin {
     return { x: position.x, y: position.y, options: menus }
   }
 
-  /** 更新动画特效 */
-  updataAnimeFormatter(dom: HTMLElement, option: { name: string, value: string }) {
-    /** 根据虚拟dom获取对应文档中的位置 */
-    const location = this.renderer.getLocationByNativeNode(dom)
-    if (location) {
-      /** 设置选区锚点位置 */
-      this.selection.setAnchor(location.slot, location.startIndex)
-      /** 设置选区焦点位置 */
-      this.selection.setFocus(location.slot, location.endIndex)
-      const dataId = dom.dataset.id as string
-      const dataSerial = dom.dataset.serial as string
-      const dataState = dom.dataset.state as string
-      // console.log([dataId, dataSerial, dataState])
-      // console.log(option)
-      this.commander.applyFormat(animeFormatter, {
-        dataId,
-        dataSerial,
-        dataState,
-        dataEffect: option.value,
-        dataTitle: option.name,
-      })
-    }
-  }
-  updataAnimeComponent(component: ComponentInstance, option: { name: string, value: string }) {
-    component.updateState((draft) => {
-      draft.dataEffect = option.value
-      draft.dataTitle = option.name
-    })
-  }
   /** 移除动画标记 */
   removeAnimeFormatter(dom: HTMLElement) {
     /** 根据虚拟dom获取对应文档中的位置 */
@@ -279,27 +254,20 @@ export class AnimeContextmenuPlugin implements Plugin {
     }
   }
 
-  removeAnimeComponent(component: ComponentInstance) {
-    component.slots.toArray().forEach((slot) => {
-      slot.sliceContent().forEach((content) => {
-        if (typeof content !== 'string') {
-          this.commander.replaceComponent(component, content)
-        }
-      })
-    })
-  }
-
   /** 测试动画效果 */
   playAnime(target: HTMLElement, effect: string, isInline = false) {
+    target.classList.add('anime-badge-hide')
     const display = target.style.display
     isInline && (target.style.display = 'inline-block') // 设置成 block 才能正常播放动画
-    const anime = this.anime.getAnime(effect)
+    const anime = this.animeProvider.getAnime(effect)
     if(anime) {
-      anime.applyEffect(target).finished.then(() => {
+      anime.play(target).finished.then(() => {
         isInline && (target.style.display = display)
+        target.classList.remove('anime-badge-hide')
       })
     } else {
       isInline && (target.style.display = display)
+      target.classList.remove('anime-badge-hide')
     }
   }
   // 可选，编辑器销毁时调用

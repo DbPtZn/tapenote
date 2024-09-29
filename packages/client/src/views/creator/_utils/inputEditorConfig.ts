@@ -13,12 +13,6 @@ import {
 } from '@textbus/editor'
 import {
   ImgToUrlService,
-  animeIgnoreComponent,
-  animeIgnoreComponentLoader,
-  animePlayerComponent,
-  animePlayerComponentLoader,
-  animePlayerFormatLoader,
-  animePlayerFormatter,
   imageB2UComponent,
   imageB2UComponentLoader,
   colorFormatLoader,
@@ -26,18 +20,25 @@ import {
   textBackgroundColorFormatLoader,
   textBackgroundColorFormatter,
   preComponent,
-  preComponentLoader
+  preComponentLoader,
+  animeFormatter,
+  animeFormatLoader
 } from '@/editor'
-
+import {   
+  animeIgnoreComponent,
+  animeIgnoreComponentLoader,
+  animeComponent,
+  animeComponentLoader
+} from '@/editor/anime'
 export function getInputEditorConfig(account: string, hostname: string) {
   const config = {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: '',
-    components: [imageB2UComponent, animePlayerComponent, animeIgnoreComponent, preComponent, ...defaultComponents],
-    componentLoaders: [imageB2UComponentLoader, animePlayerComponentLoader, animeIgnoreComponentLoader, preComponentLoader, ...defaultComponentLoaders],
-    formatters: [animePlayerFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
-    formatLoaders: [animePlayerFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
+    components: [imageB2UComponent, animeComponent, animeIgnoreComponent, preComponent, ...defaultComponents],
+    componentLoaders: [imageB2UComponentLoader, animeComponentLoader, animeIgnoreComponentLoader, preComponentLoader, ...defaultComponentLoaders],
+    formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
+    formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     plugins: [],
     providers: [ImgToUrlService],
     setup(injector: Injector) {

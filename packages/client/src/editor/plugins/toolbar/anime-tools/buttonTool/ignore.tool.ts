@@ -1,8 +1,8 @@
 
 import { Commander, FormatValue, Injector, Query, QueryState, QueryStateType, Selection } from '@textbus/core'
-import { animeIgnoreComponent } from '../../../'
-import { ButtonTool, ButtonToolConfig } from '..'
-import { MaterialTypeEnum } from '../toolkit/_utils/MaterialTypeEnum'
+import { animeIgnoreComponent } from '../../../../components/anime/_api'
+import { ButtonTool, ButtonToolConfig } from '../..'
+import { MaterialTypeEnum } from '../../toolkit/_utils/MaterialTypeEnum'
 export function animeIgnoreToolConfigFactory(injector: Injector): ButtonToolConfig {
   const query = injector.get(Query)
   const commander = injector.get(Commander)
