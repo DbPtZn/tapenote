@@ -3,12 +3,20 @@ import Recorder from 'js-audio-recorder'
 import { useThemeVars } from 'naive-ui'
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { KeyboardOutlined } from '@vicons/material'
-import { fromEvent, Subscription, debounceTime, auditTime, throttleTime, distinctUntilChanged } from '@tanbo/stream'
+import { fromEvent, Subscription, debounceTime, auditTime, throttleTime, distinctUntilChanged, filter } from '@tanbo/stream'
 const props = defineProps<{
   shortcut: boolean
   readonly: boolean
 }>()
-const emits = defineEmits(['onAudioOutput'])
+const emits = defineEmits<{
+  output: [
+    data: {
+      audio: Blob | undefined
+      duration: number
+    }
+  ]
+  inputting: [boolean]
+}>()
 const themeVars = useThemeVars()
 const recorder = new Recorder({
   sampleBits: 16,
@@ -50,7 +58,7 @@ const stopRecorder = () => {
   data.audio = recorder.getWAVBlob()
   data.duration = recorder.duration //语音的时长
   // console.log('录音结束')
-  emits('onAudioOutput', data)
+  emits('output', data)
   recorder
     .destroy()
     .then(() => {
@@ -74,21 +82,28 @@ const keyupEvent: Subscription[] = []
 function useShortcut(state: boolean) {
   if (state) {
     keydownEvent.push(
+      fromEvent<KeyboardEvent>(window, 'keydown').subscribe(e => {
+        console.log(e)
+      }),
       fromEvent<KeyboardEvent>(document, 'keydown')
-        .pipe(debounceTime(50))
+        .pipe(
+          debounceTime(50),
+          filter(e => e.ctrlKey && e.code === 'Numpad0' && e.key === '0')
+        )
         .subscribe(e => {
-          // console.log(e)
-          if (e.ctrlKey && e.key === ' ' && !isPress.value) {
-            console.log('录音中')
+          if (e.ctrlKey && e.key === '0' && !isPress.value) {
             isPress.value = true
+            emits('inputting', isPress.value)
             startRecorder()
             if (isPress.value) {
               keyupEvent.push(
                 fromEvent<KeyboardEvent>(document, 'keyup').subscribe(e => {
-                  if (e.key === ' ') {
+                  console.log('松开')
+                  if (e.key === '0') {
                     console.log('停止录音')
                     setTimeout(() => {
                       isPress.value = false
+                      emits('inputting', isPress.value)
                     }, 100)
                     stopRecorder()
                     keyupEvent.forEach(sub => sub.unsubscribe())
@@ -107,7 +122,6 @@ function useShortcut(state: boolean) {
 watch(
   () => props.shortcut,
   state => {
-    // console.log(state)
     useShortcut(state)
   }
 )
@@ -127,17 +141,6 @@ onUnmounted(() => {
     <button v-if="recorder" :class="['btn', readonly ? 'disabled' : '']" :disabled="readonly" @mousedown="startRecorder()" @mouseup="stopRecorder()">
       按住 说话
     </button>
-    <div v-show="shortcut" class="shortcut">
-      <n-popover trigger="hover" placement="bottom">
-        <template #trigger>
-          <n-icon :component="KeyboardOutlined" :size="24" />
-        </template>
-        <span>Ctrl + Space</span>
-      </n-popover>
-    </div>
-  </div>
-  <div v-if="isPress" class="recording">
-    录音中...
   </div>
 </template>
 
@@ -146,34 +149,13 @@ onUnmounted(() => {
   opacity: 0.8;
   cursor: not-allowed !important;
 }
-.shortcut {
-  cursor: pointer;
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  opacity: 0.5;
-}
-.recording {
-  // z-index: 999;
-  position: fixed;
-  // width: 100%;
-  // height: 100%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  // background-color: rgba(104, 104, 104, 0.158);
-}
 .ASR {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  height: 100%;
   width: 100%;
-  // background-color: v-bind('themeVars.cardColor');
   background-color: v-bind('themeVars.bodyColor');
   .btn {
     height: 100px;

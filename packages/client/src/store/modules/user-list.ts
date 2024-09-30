@@ -20,6 +20,13 @@ export interface SubscriptionConfig {
   code: string
   desc: string
 }
+export interface ShortcutConfig {
+  action: string
+  ctrl: boolean
+  alt: boolean
+  shift: boolean
+  key: string
+}
 export interface User {
   resourceDomain: string
   account: string
@@ -39,7 +46,8 @@ export interface User {
     saveInterval: number // 自动保存间隔毫秒
   }
   submissionConfig: SubmissionConfig[],
-  subscriptionConfig: SubscriptionConfig[]
+  subscriptionConfig: SubscriptionConfig[],
+  shortcutConfig: ShortcutConfig[]
 }
 
 export interface UserState extends User {
@@ -216,7 +224,8 @@ export const useUserListStore = defineStore('userListStore', {
         },
         config: data.config || { autosave: true , saveInterval: 15000 },
         submissionConfig: data.submissionConfig || [],
-        subscriptionConfig: data.subscriptionConfig || []
+        subscriptionConfig: data.subscriptionConfig || [],
+        shortcutConfig: data.shortcutConfig || []
       }
 
       // 添加默认投稿配置（硬编码，所有通过该客户端登录的用户都会有这一条配置）

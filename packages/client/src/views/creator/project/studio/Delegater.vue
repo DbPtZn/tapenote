@@ -18,7 +18,7 @@ const { projectStore } = useStore()
 const { handlePromoterSelect, handlePromoterUpdate, handlePromoterRemove, handleAnimeLocate, makePreset } = usePromoter(props.id, bridge)
 const message = useMessage()
 const themeVars = useThemeVars()
-const { t } = useI18n()
+// const { t } = useI18n()
 
 const delegaterRef = ref<HTMLElement>()
 const updateRef = ref<HTMLElement>()
@@ -117,7 +117,7 @@ onMounted(() => {
         scrollerRef.value = bridge.scrollerRef
         scrollerRef.value.style.position = 'relative' // 添加 'relative' 作为 pointer 绝对定位参照系
         subs2.push(
-          fromEvent<KeyboardEvent>(window, 'keydown').subscribe(e => {
+          fromEvent<KeyboardEvent>(window, 'keydown').pipe(auditTime(0)).subscribe(e => {
             if (pointerIndex.value === -1) return // -1 是关闭状态
             if(['Space', 'ArrowDown'].includes(e.code)) {
               if(pointerIndex.value < animeMap.length - 1) pointerIndex.value++
@@ -128,14 +128,10 @@ onMounted(() => {
             }
           }),
           fromEvent<PointerEvent>(bridge.editorRef, 'click').subscribe(e => {
-            // if (pointerIndex.value === -1) return // -1 是关闭状态
             const target = e.target as HTMLElement
             const animeElement = AnimeProvider.toAnimeElement(target)
-            console.log(animeElement)
             if (!animeElement) return
             const index = animeMap.findIndex(element => element === animeElement)
-            console.log(index)
-            // ((['anime', 'anime-component'].includes(target.tagName.toLocaleLowerCase()) || target.dataset.anime === 'true') ? target : '')
             if(index !== -1) pointerIndex.value = index
           })
         )

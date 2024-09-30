@@ -84,6 +84,7 @@ function handleRegister(e: MouseEvent) {
   if (!isHostValid.value) return message.error('服务器地址不可用！')
   formRef.value?.validate(errors => {
     if (!errors) {
+      const registerMsg = message.loading('正在注册...', { duration: 0 })
       userListStore
         .register(
           {
@@ -96,10 +97,12 @@ function handleRegister(e: MouseEvent) {
         )
         .then(res => {
           console.log(res)
+          registerMsg.destroy()
           message.success('注册成功！')
           router.push(RoutePathEnum.LOGIN)
         })
         .catch(err => {
+          registerMsg.destroy()
           const data = err?.response?.data || '注册失败！'
           console.log(data.message)
           if (data) {

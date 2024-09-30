@@ -15,14 +15,14 @@
 }
 
 .anime-preset:after {
-  padding: 3px;
   border: 2px solid #e03f3f;
+  background: #e03f3f;
   animation: .8s .5s tada infinite;
 }
 
 [data-anime="true"].anime-preset .anime-component-tab:after {
-  padding: 3px;
   border: 2px solid #e03f3f;
+  background: #e03f3f;
   animation: .8s .5s tada infinite;
 }
 

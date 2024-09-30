@@ -10,11 +10,12 @@ import { useFragment, usePromoter } from './hooks'
 import { auditTime } from '@tanbo/stream'
 import { LibraryEnum } from '@/enums'
 import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
-import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp } from '@vicons/material'
+import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp, KeyboardOutlined } from '@vicons/material'
 import Delegater from './Delegater.vue'
 import { splitText } from './_utils'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useI18n } from 'vue-i18n'
+import { Icon } from '@iconify/vue'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 const bridge = inject('bridge') as Bridge
@@ -35,6 +36,9 @@ const scrollerRef = ref()
 const state = reactive({
   isReadonly: computed(() => props.readonly()),
   isFocus: computed(() => props.focus()),
+  isShortcutAllow: true, 
+  isAudioInputting: false,
+  duration: '00:00:00',
   ttsSpeed: 1,
   recorderMode: 'TTS' as 'TTS' | 'ASR',
 })
@@ -95,7 +99,8 @@ const {
       message.error(t('studio.msg.create_fragment_error'))
     })
   },
-  handleAudioOutput(data: { audio: Blob, duration: number }) {
+  handleAudioOutput(data: { audio: Blob | undefined, duration: number }) {
+    if (!data.audio) return
     projectStore.fragment(props.id).createByAudio({
       audio: data.audio,
       duration: data.duration,
@@ -243,6 +248,34 @@ function collapseText(transcript: string[]) {
   const tail = transcript.slice(-4)
   return [...head, '...', ...tail]
 }
+function formatTime(sec: number): string {
+  const minutes = Math.floor(sec / 60);
+  const seconds = Math.floor(sec % 60);
+  const centiseconds = Math.floor((sec * 100) % 100); // Get first two digits of milliseconds
+  return [minutes.toString().padStart(2, '0'), seconds.toString().padStart(2, '0'), centiseconds.toString().padStart(2, '0')].join(':');
+}
+function setTimer(callback: (duration: string) => void, remaining: number) {
+  let sec = 0
+  const intervalId = setInterval(() => {
+    sec += 0.01
+    const formattedTime = formatTime(sec)
+    callback(formattedTime)
+    if (sec > remaining) {
+      clearInterval(intervalId)
+    }
+  }, 10)
+  return () => clearInterval(intervalId)
+}
+
+let timer: (() => void) | null = null
+function handleInputting(is) {
+  state.isAudioInputting = is
+  if(is) timer = setTimer(duration => state.duration = duration, 60)
+  else {
+    timer?.()
+    state.duration = '00:00:00'
+  }
+}
 </script>
 <template>
   <div class="studio" ref="studioRef">
@@ -384,8 +417,27 @@ function collapseText(transcript: string[]) {
         </template>
       </StudioToolbar>
       <!-- 输入区 -->
-      <TTS v-if="state.recorderMode === 'TTS'" :readonly="state.isReadonly" @on-text-output="handleTextOutput"  />
-      <ASR v-if="state.recorderMode === 'ASR'" :readonly="state.isReadonly" :shortcut="state.isFocus" @on-audio-output="handleAudioOutput" />
+      <div class="input-area" v-show="state.recorderMode === 'TTS'">
+        <TTS  :readonly="state.isReadonly" @on-text-output="handleTextOutput"  />
+      </div>
+      <div class="input-area" v-show="state.recorderMode === 'ASR'">
+        <ASR  :readonly="state.isReadonly" :shortcut="state.isShortcutAllow && state.isFocus" @output="handleAudioOutput" @inputting="handleInputting" />
+      </div>
+      <div v-show="state.isFocus" class="shortcut">
+        <n-popover trigger="hover" placement="bottom">
+          <template #trigger>
+            <Icon @click="state.isShortcutAllow = !state.isShortcutAllow" :icon="state.isShortcutAllow ? 'material-symbols:keyboard-outline-rounded' : 'material-symbols:keyboard-off-outline-rounded'" :height="24" />
+          </template>
+          <span>{{ state.isShortcutAllow ? 'Ctrl + Number0' : '快捷键已禁用' }}</span>
+        </n-popover>
+      </div>
+      <div v-if="state.isAudioInputting" class="recording">
+        <div class="recording-content">
+          <Icon class="icon" icon="ic:sharp-settings-voice" height="64px"/>
+          <span class="text">正在录音</span>
+        </div>
+        <span class="duration"> {{ state.duration }} </span>
+      </div>
     </div>
     <!-- 下拉列表 -->
     <n-dropdown
@@ -476,11 +528,59 @@ function collapseText(transcript: string[]) {
   }
 }
 .footer {
+  position: relative;
   display: flex;
   flex-direction: column;
   background-color:  v-bind('themeVars.bodyColor');
   .toolbar-btn {
     padding: 2px 4px;
+  }
+  .input-area {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .shortcut {
+    cursor: pointer;
+    position: absolute;
+    top: 46px;
+    right: 6px;
+    opacity: 0.5;
+  }
+  .recording {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    .recording-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      background-color: v-bind('themeVars.infoColor');
+      padding: 12px;
+      height: 160px;
+      width: 160px;
+      border-radius: 90px;
+      box-shadow: v-bind('themeVars.boxShadow1');
+      .icon {
+        
+      }
+      .text {
+        margin-top: 12px;
+        font-size: 16px;        
+      }
+    }
+    .duration {
+      margin-top: 6px;
+    }
   }
 }
 /** 定制滚动条 */
@@ -503,4 +603,4 @@ function collapseText(transcript: string[]) {
   box-shadow: unset;
   background-color: unset;
 }
-</style>./hooks/usePromoter
+</style>

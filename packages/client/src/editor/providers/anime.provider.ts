@@ -166,7 +166,7 @@ export class AnimeProvider {
     }
   }
 
-  // 更新 Formatter 的状态
+  // 更新 Formatter 的状态 （设置成私有是因为存在动画块被分割的情况，所以不应该直接通过 element 去修改动画属性 ）
   private updateFormatterState(element: HTMLElement, state: AnimeState) {
     const location = this.renderer.getLocationByNativeNode(element)
     if (location) {
@@ -274,10 +274,10 @@ export class AnimeProvider {
    */
   autoAdd(selectAnimeOption?: { key: string; value: { name: string } }) {
     // console.log('add anime auto')
-    // 获取根节点插槽
-    const content = this.rootComponentRef.component.state.content.sliceContent()
-    for(let i = 0; i < content.length; i++) {
-      const components = content[i]
+    const slots = this.rootComponentRef.component.slots.toArray()
+    const group = slots.map(slot => slot.sliceContent())
+    for(let i = 0; i < group.length; i++) {
+      const components = group[i]
       outerLoop: for(let k = 0; k < components.length; k++) {
         const component = components[k]
         if (typeof component !== 'string') {
@@ -287,7 +287,7 @@ export class AnimeProvider {
 
           // 要采用 formatter 设置动画的组件
           if (['ParagraphComponent'].includes(component.name)) {
-            console.log('formatter anime')
+            // console.log('formatter anime')
             component.slots.toArray().forEach(slot => {
               setTimeout(() => {
                 this.addFormatterAnime(slot, selectAnimeOption)
@@ -311,7 +311,7 @@ export class AnimeProvider {
 
           // 如果是行内组件或文本组件, 也采用 formatter 设置动画
           if ([ContentType.InlineComponent, ContentType.Text].includes(component.type)) {
-            console.log('行内组件或文本组件')
+            // console.log('行内组件或文本组件')
             component.slots.toArray().forEach(slot => {
               setTimeout(() => {
                 this.addFormatterAnime(slot, selectAnimeOption)
@@ -335,6 +335,7 @@ export class AnimeProvider {
             })
           }
         }
+        // 暂时无法对 string 进行预设，因为不知道怎么选中它
       }
     }
   }

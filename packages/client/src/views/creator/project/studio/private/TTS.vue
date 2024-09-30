@@ -55,8 +55,9 @@ function containsEnglish(text: string) {
 .TTS {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  // flex: 1;
   width: 100%;
+  height: 100%;
   // background-color: v-bind('themeVars.cardColor');
   background-color:  v-bind('themeVars.bodyColor');
   .text-input {

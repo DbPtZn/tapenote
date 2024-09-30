@@ -10,6 +10,7 @@ import Password from './Password.vue'
 import PwdByEmail from './PwdByEmail.vue'
 import SubmissionConfig from './SubmissionConfig.vue'
 import SubscriptionConfig from './SubscriptionConfig.vue'
+import ShortcutConfig from './ShortcutConfig.vue'
 import { onMounted } from 'vue'
 import { useSubmissionConfig, useSubscriptionConfig } from './hooks/_index'
 
@@ -76,6 +77,10 @@ const subscriptionConfig = useSubscriptionConfig()
                 <SubscriptionConfig :config="panel" />
               </n-tab-pane>
             </n-tabs>
+          </n-tab-pane>
+          <!-- 快捷键 -->
+          <n-tab-pane name="shortcut" tab="快捷键">
+            <ShortcutConfig />
           </n-tab-pane>
           <!-- 关联账号 -->
           <n-tab-pane name="association" tab="关联账号" disabled>

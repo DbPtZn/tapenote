@@ -30,7 +30,8 @@ export const useUserStore = defineStore('userStore', {
         saveInterval: 15000
       },
       submissionConfig: [],
-      subscriptionConfig: []
+      subscriptionConfig: [],
+      shortcutConfig: []
     }
   },
   actions: {

@@ -121,6 +121,7 @@ const submit = () => {
       }
       // const isAllow = await validateCode()
       // if (!isAllow) return
+      const loggingMsg = message.loading('正在登录...', { duration: 0 })
       userListStore
         .login(
           {
@@ -131,11 +132,13 @@ const submit = () => {
           model.value.hostname
         )
         .then(avatar => {
+          loggingMsg.destroy()
           /** In Electron */
           window.electronAPI && setLoginStorage(avatar)
           router.push(RoutePathEnum.HOME)
         })
         .catch(err => {
+          loggingMsg.destroy()
           console.log(err)
           // console.log(err?.response?.data?.message)
           const msg = err?.response?.data?.message
@@ -213,7 +216,7 @@ function handleMenuShow() {
 
 let loginInfoData: Awaited<ReturnType<typeof getLoginInfoData>> = []
 const loginData = ref<Awaited<ReturnType<typeof getLoginInfoData>>>([])
-const options = ref<(DropdownOption | DropdownGroupOption)[]>([])
+const options = ref<DropdownOption[]>()
 
 onMounted(async () => {
   /** In Electron */
@@ -234,7 +237,7 @@ onMounted(async () => {
 })
 
 async function getLoginInfoData() {
-  const options: Array<{
+  const opts: Array<{
     key: string
     avatar: string
     account: string
@@ -265,11 +268,11 @@ async function getLoginInfoData() {
         option.pwd = item.value.pwd || ''
         option.avatar = item.value.avatar || ''
       }
-      options.push(option)
+      opts.push(option)
     }
   })
   // console.log(options)
-  return options
+  return opts
 }
 
 /** In Electron */
@@ -300,7 +303,7 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
       // console.log(window.electronAPI.removeLoginInfo)
       window.electronAPI.removeLoginInfo(key).then(result => {
         if (result) {
-          options.value.some((item, index, arr) => {
+          options.value?.some((item, index, arr) => {
             if (item.key === key) {
               arr.splice(index, 1)
               return true
@@ -458,7 +461,7 @@ function handleSendCode() {
                     <n-dropdown
                       v-if="inElectron"
                       trigger="click"
-                      :show="isMenuShow && options.length > 0"
+                      :show="isMenuShow && options && options.length > 0"
                       :options="options"
                       :render-option="renderOption"
                       :animated="false"

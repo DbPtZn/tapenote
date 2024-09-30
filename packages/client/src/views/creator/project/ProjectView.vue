@@ -80,7 +80,7 @@ const data = reactive<FractalContainerConfig>({
           id: containerId.studio,
           type: 'component',
           name: `project-studio-${containerId.studio}`,
-          cmpt: markRaw(h(Studio, { id: props.id, lib: props.lib, account: props.account, hostname: props.hostname, focus: () => shell.workbench.itemId === props.id, readonly: () => isReadonly.value })),
+          cmpt: markRaw(h(Studio, { id: props.id, lib: props.lib, account: props.account, hostname: props.hostname, focus: () => shell?.workbench?.itemId === props.id, readonly: () => isReadonly.value })),
           isSplitterRender: true,
           isRow: true,
           ratio: 30,
