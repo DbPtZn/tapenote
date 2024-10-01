@@ -116,6 +116,7 @@ export interface Project {
   subtitleKeyframeSequence: Array<number>
   sidenote: string
   annotations: Array<any>
+  memos: Array<any>
 
   detial: Detial
   submissionHistory: SubmissionHistory[]
@@ -261,7 +262,8 @@ export const useProjectStore = defineStore('projectStore', {
         fromProcedureId: data.fromProcedureId || '',
         snapshotId: data.snapshotId || '',
         createAt: data.createAt || '',
-        updateAt: data.updateAt || ''
+        updateAt: data.updateAt || '',
+        memos: data.memos || []
       }
       // console.log(item)
       const index = this.data.findIndex(i => i.id === item.id && i.account === item.account && i.hostname === item.hostname)

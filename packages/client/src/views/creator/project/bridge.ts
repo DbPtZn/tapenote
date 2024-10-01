@@ -5,10 +5,12 @@ import { Habit } from "./habit"
 import { LibraryEnum } from "@/enums"
 import { VIEW_DOCUMENT } from "@textbus/platform-browser"
 import { Renderer } from "@textbus/core"
+import { Ref, ref } from "vue"
 
 export class Bridge {
   habit: Habit | null = null
   editor: Editor | null = null
+  rootEl = ref<HTMLElement>()
   editorRef: HTMLElement | null = null
   studioRef: HTMLElement | null = null
   scrollerRef: HTMLElement | null = null

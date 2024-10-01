@@ -7,6 +7,7 @@ import { computed, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounte
 import { useEditor } from './hooks/_index'
 import _ from 'lodash'
 import useStore from '@/store'
+import Memo from './Memo.vue'
 // import { debounceTime, Subscription } from '@tanbo/stream'
 import { Editor } from '@textbus/editor'
 import { Bridge } from '../bridge'
@@ -30,6 +31,7 @@ const toolbarRef = ref()
 const controllerRef = ref()
 const toolbarWrapperRef = ref() 
 const scrollerRef = ref()
+bridge.rootEl = scrollerRef
 const editorRef = ref()
 const subs: Subscription[] = []
 const data = computed(() => projectStore.get(props.id))
@@ -275,6 +277,7 @@ onUnmounted(() => {
         <!-- v-if="data" 保证在数据获取之前不会渲染标题栏 -->
         <TitleInput v-if="data" class="title-input" @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
         <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
+        <Memo :root-el="rootRef" />
       </div>
     </div>
     <div
@@ -290,10 +293,10 @@ onUnmounted(() => {
       {{ state.subtitle }}
     </div>
   </div>
-  
 </template>
 
 <style lang="scss" scoped>
+
 .procedure-controller {
   width: 100%;
 }
@@ -388,6 +391,7 @@ onUnmounted(() => {
     // background-color: var(--dpz-editor-pgColor);
   }
   .scroller {
+    position: relative;
     display: flex;
     flex-direction: column;
     width: 100%;

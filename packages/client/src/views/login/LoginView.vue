@@ -217,7 +217,7 @@ function handleMenuShow() {
 let loginInfoData: Awaited<ReturnType<typeof getLoginInfoData>> = []
 const loginData = ref<Awaited<ReturnType<typeof getLoginInfoData>>>([])
 const options = ref<DropdownOption[]>()
-
+options.value = []
 onMounted(async () => {
   /** In Electron */
   if (inElectron) {

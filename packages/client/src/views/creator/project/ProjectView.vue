@@ -8,21 +8,19 @@ import { computed, h, markRaw, onErrorCaptured, onMounted, onUnmounted, provide,
 import useStore from '@/store'
 import { Bridge } from './bridge'
 import { LibraryEnum } from '@/enums'
-import { Sidenote } from './sidenote'
+// import { Sidenote } from './sidenote'
 import { CreatorShell } from '../shell'
 import { useThemeVars } from 'naive-ui'
 import elementResizeDetector from 'element-resize-detector'
 
 const { projectStore, userStore } = useStore()
 const shell = useShell<CreatorShell>()
-// watch(() => shell.workbench.itemId, (newVal, oldVal) => {
-//   console.log(newVal)
-// })
 const erd = elementResizeDetector()
 const themeVars = useThemeVars()
 const implementRef = ref()
 const bridge = new Bridge()
 const isReadonly = ref(false)
+
 provide('bridge', bridge)
 
 const props = defineProps<{
