@@ -22,7 +22,7 @@
     "@textbus/core": "3.7.8",
     "@textbus/editor": "3.7.10",
     "@textbus/platform-browser": "3.7.10",
-    "@vueuse/core": "^10.9.0",
+    "@vueuse/core": "^11.1.0",
     "animate.css": "^4.1.1",
     "animejs": "^3.2.2",
     "axios": "^1.6.8",

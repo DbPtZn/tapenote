@@ -1,0 +1,3 @@
+function resizeDirective(el, binding) {
+  
+}

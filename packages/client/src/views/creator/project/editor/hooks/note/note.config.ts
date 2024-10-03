@@ -51,7 +51,8 @@ import {
   ImgToUrlService,
   preComponent,
   preComponentLoader,
-  KeyboardManager
+  KeyboardManager,
+  MemoService
 } from '@/editor'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {
@@ -60,6 +61,7 @@ import {
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
+  I18n,
   LinkJumpTipPlugin
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
@@ -91,7 +93,13 @@ export function getNoteConfig(args: {
     componentLoaders: [imageB2UComponentLoader, preComponentLoader, listComponentLoader, ...defaultComponentLoaders],
     formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
-    // styleSheets: [],
+    i18n: {
+      editor: {
+        memo: '便笺',
+      },
+      plugins: {},
+      components: {}
+    },
     providers: [
       { provide: Commander, useClass: CustomCommander },
       ResizeService,
@@ -101,6 +109,7 @@ export function getNoteConfig(args: {
       Structurer,
       ThemeProvider,
       ImgToUrlService,
+      MemoService
     ],
     plugins: [
       () =>
@@ -140,9 +149,9 @@ export function getNoteConfig(args: {
           scrollerRef
         ),
       () => new LinkJumpTipPlugin(),
-      () => new OutlinePlugin()
+      () => new OutlinePlugin(),
       // () => new Clipboard(),
-      // () => new ContextMenu()
+      () => new ContextMenu()
     ],
     setup(injector: Injector) {
       const input = injector.get(Input)

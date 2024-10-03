@@ -4,7 +4,7 @@ import { useThemeVars, useMessage } from 'naive-ui'
 import { TitleInput } from './private'
 import { useToolbarResize } from '../../_hooks'
 import { computed, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { useEditor } from './hooks/_index'
+import { useEditor, useMemo } from './hooks/_index'
 import _ from 'lodash'
 import useStore from '@/store'
 import Memo from './Memo.vue'
@@ -31,7 +31,7 @@ const toolbarRef = ref()
 const controllerRef = ref()
 const toolbarWrapperRef = ref() 
 const scrollerRef = ref()
-bridge.rootEl = scrollerRef
+bridge.scrollerEl = scrollerRef
 const editorRef = ref()
 const subs: Subscription[] = []
 const data = computed(() => projectStore.get(props.id))
@@ -49,6 +49,7 @@ const state = reactive({
 })
 const autosave = computed(() => userStore.config.autosave) // 自动保存
 const saveInterval = computed(() => userStore.config.saveInterval) // 自动保存的间隔
+
 onBeforeMount(() => {
   // loadingBar.start() // 加载条开始
 })
@@ -217,6 +218,8 @@ const methods = {
 
 const { handleContentSave, handleSavingEnd, handleTitleSave, handleSavingStart, handleTitleEnter, handleTitleInput } = methods
 
+const { handleContextmenu } = useMemo(props.id)
+
 /** 离开页面前 */
 const debounceB = _.debounce(func => func(), 2000)
 onBeforeUnmount(() => {
@@ -273,11 +276,27 @@ onUnmounted(() => {
         />
       </div>
       <!-- 滚动区 -->
-      <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
+      <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }" @contextmenu="handleContextmenu">
         <!-- v-if="data" 保证在数据获取之前不会渲染标题栏 -->
         <TitleInput v-if="data" class="title-input" @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
         <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
-        <Memo :root-el="rootRef" />
+        <Memo
+          v-for="item in data?.memos"
+          :id="item.id"
+          :content="item.content"
+          :is-expanded="item.isExpanded"
+          :x="item.x"
+          :y="item.y"
+          :width="item.width"
+          :height="item.height"
+          :bgcolor="item.bgColor"
+          @resize="''"
+          @move="''"
+          @update-color="''"
+          @expand="''"
+          @delete="''"
+          @save="''"
+        />
       </div>
     </div>
     <div

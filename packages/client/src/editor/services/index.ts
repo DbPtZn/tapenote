@@ -2,6 +2,7 @@
 export * from './resize.service'
 export * from './img2base64.service'
 export * from './img2url.service'
+export * from './memo.service'
 // anime
 export * from './anime.service'
 export * from './add-anime.service'

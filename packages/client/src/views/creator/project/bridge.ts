@@ -10,7 +10,7 @@ import { Ref, ref } from "vue"
 export class Bridge {
   habit: Habit | null = null
   editor: Editor | null = null
-  rootEl = ref<HTMLElement>()
+  scrollerEl = ref<HTMLElement>()
   editorRef: HTMLElement | null = null
   studioRef: HTMLElement | null = null
   scrollerRef: HTMLElement | null = null

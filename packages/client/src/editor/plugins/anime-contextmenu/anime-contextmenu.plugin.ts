@@ -8,7 +8,7 @@ import {
   ComponentInstance,
   fromEvent,
 } from '@textbus/core'
-import { AnimeProvider, Structurer, animeFormatter } from '../..'
+import { AnimeProvider, AnimeService, Structurer, animeFormatter } from '../..'
 import { App, Ref, createApp, h, ref } from 'vue'
 import { VIEW_CONTAINER, createElement } from '@textbus/platform-browser'
 import { DropdownOption } from 'naive-ui'
@@ -43,6 +43,7 @@ export class AnimeContextmenuPlugin implements Plugin {
     const structurer = this.injector.get(Structurer)
     this.container = this.injector.get(VIEW_CONTAINER)
     this.scrollerRef = structurer.scrollerRef
+    const animeService = injector.get(AnimeService)
 
     this.host = createElement('div')
     this.contextmenu = createApp(Dropdown, {
@@ -65,38 +66,43 @@ export class AnimeContextmenuPlugin implements Plugin {
 
     this.subs.push(
       fromEvent<PointerEvent>(this.container, 'contextmenu').subscribe(ev => {
-
+        ev.preventDefault() // 阻止默认事件
+        ev.stopPropagation() // 阻止事件冒泡
         const target = ev.target as HTMLElement
         const element = AnimeProvider.toAnimeElement(target)
-        console.log(element)
+        // console.log(element)
         if(!element) return
         if (element.tagName.toLocaleLowerCase() === 'anime') {
-            ev.preventDefault() // 阻止默认事件
-            ev.stopPropagation() // 阻止事件冒泡
-            // console.log('anime')
-            const { x, y, options } = this.createFormatMenu(target)
+          // ev.preventDefault() // 阻止默认事件
+          // ev.stopPropagation() // 阻止事件冒泡
+          animeService.handleAnimeContextmenu()
+          // console.log('anime')
+          const { x, y, options } = this.createFormatMenu(target)
+          this.xRef.value = x
+          this.yRef.value = y
+          this.Options.value = options
+          this.show()
+          return
+        }
+        if (element.tagName.toLocaleLowerCase() === 'anime-component') {
+          // ev.preventDefault() // 阻止默认事件
+          // ev.stopPropagation() // 阻止事件冒泡
+          animeService.handleAnimeContextmenu()
+          // console.log(node)
+          const component = this.renderer.getComponentByNativeNode(target)
+          if(component) {
+            const { x, y, options } = this.createComponentMenu(target, component)
             this.xRef.value = x
             this.yRef.value = y
             this.Options.value = options
             this.show()
-        }
-        if (element.tagName.toLocaleLowerCase() === 'anime-component') {
-            ev.preventDefault() // 阻止默认事件
-            ev.stopPropagation() // 阻止事件冒泡
-            // console.log(node)
-            const component = this.renderer.getComponentByNativeNode(target)
-            if(component) {
-              const { x, y, options } = this.createComponentMenu(target, component)
-              this.xRef.value = x
-              this.yRef.value = y
-              this.Options.value = options
-              this.show()
-            }
-          // }
+          }
+          return
         }
         if (element.dataset.anime) {
-          ev.preventDefault() // 阻止默认事件
-          ev.stopPropagation() // 阻止事件冒泡
+          // ev.preventDefault() // 阻止默认事件
+          // ev.stopPropagation() // 阻止事件冒泡
+          animeService.handleAnimeContextmenu()
           const component = this.renderer.getComponentByNativeNode(element)
           if(component) {
             const { x, y, options } = this.createComponentMenu(element, component)
@@ -104,7 +110,7 @@ export class AnimeContextmenuPlugin implements Plugin {
             this.yRef.value = y
             this.Options.value = options
             this.show()
-            console.log('show')
+            // console.log('show')
           }
         }
       }),

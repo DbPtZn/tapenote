@@ -77,6 +77,18 @@ interface HistoryCourse {
     name: string
   }
 }
+interface Memo {
+  id: string
+  content: string
+  updateAt: string
+  createAt: string
+  isExpanded: boolean
+  bgColor: 'yellow' | 'green' | 'pink' | 'purple' | 'blue' | 'white' | 'gray'
+  height: number
+  width: number
+  x: number
+  y: number
+}
 
 interface Folder {
   id: string
@@ -116,7 +128,7 @@ export interface Project {
   subtitleKeyframeSequence: Array<number>
   sidenote: string
   annotations: Array<any>
-  memos: Array<any>
+  memos: Memo[]
 
   detial: Detial
   submissionHistory: SubmissionHistory[]

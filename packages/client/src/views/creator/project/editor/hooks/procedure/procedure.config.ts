@@ -20,7 +20,9 @@ import {
   jumbotronComponent,
   imageCardComponentLoader,
   jumbotronComponentLoader,
-  preComponentLoader
+  preComponentLoader,
+  ContextMenu,
+  MemoService
 } from '@/editor'
 import { 
   animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
@@ -131,7 +133,8 @@ export function getProcedureConfig(args: {
       { provide: Commander, useClass: CustomCommander },
       AnimeProvider, AddAnimeService, DialogProvider, 
       OutlineService, ColorProvider, AnimeService,
-      Structurer, ThemeProvider, Player, ImgToUrlService
+      Structurer, ThemeProvider, Player, ImgToUrlService,
+      MemoService
     ],
     plugins: [
       () => new Toolbar([
@@ -166,6 +169,7 @@ export function getProcedureConfig(args: {
           [cleanTool]
         ], scrollerRef),
       () => new OutlinePlugin(),
+      () => new ContextMenu(),
       () => new LinkJumpTipPlugin(),
       () => new AnimeContextmenuPlugin(),
       () => new AnimeComponentSupport(),

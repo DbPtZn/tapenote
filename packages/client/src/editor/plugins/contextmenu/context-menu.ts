@@ -1,5 +1,5 @@
 
-import { fromEvent, Subscription } from '@tanbo/stream'
+import { auditTime, filter, fromEvent, Subscription } from '@tanbo/stream'
 import {
   Commander,
   ComponentInstance,
@@ -22,7 +22,10 @@ import {
   VIEW_CONTAINER,
   Parser
 } from '@textbus/platform-browser'
-// import { I18n } from '../i18n'
+import { AnimeService } from '../../services/anime.service'
+import { MaterialTypeEnum } from '../toolbar/toolkit/_utils/MaterialTypeEnum'
+import { MemoService } from '../../services/memo.service'
+// import { I18n } from '../../i18n'
 // import { Message } from '../message'
 // import { paragraphComponent } from '../components/paragraph.component'
 
@@ -45,11 +48,25 @@ export class ContextMenu implements Plugin {
     const message = injector.get(Message)
     const parser = injector.get(Parser)
     const renderer = injector.get(Renderer)
+    const memoService = injector.get(MemoService)
+    let animeService: AnimeService | null = null
+    try {
+      animeService = injector.get(AnimeService)
+    } catch (error) {
+      // 非动画模式
+    }
+    let isAnimeContextmenu = false
+    animeService && this.subs.push(
+      animeService.onAnimeContextmenu.subscribe(() => {
+        isAnimeContextmenu = true
+      })
+    )
     this.subs.push(
       fromEvent(document, 'mousedown').subscribe(() => {
         this.hide()
       }),
-      fromEvent<MouseEvent>(container, 'contextmenu').subscribe((ev) => {
+      fromEvent<MouseEvent>(container, 'contextmenu').pipe(animeService ? auditTime(0) : filter(() => true)).subscribe((ev) => {
+        if(isAnimeContextmenu) return isAnimeContextmenu = false
         const nativeSelection = document.getSelection()!
         const focusNode = nativeSelection.focusNode
         const offset = nativeSelection.focusOffset
@@ -63,6 +80,13 @@ export class ContextMenu implements Plugin {
         })
         const menus = ContextMenu.makeContextmenu(ev.target as HTMLElement, selection, renderer)
         const defaultMenus: ContextMenuConfig[] = [{
+          iconClasses: [`${MaterialTypeEnum.OUTLINED}sticky_note_2`],
+          label: i18n.get('editor.memo'),
+          onClick: () => {
+            console.log(ev.offsetX, ev.offsetY)
+            memoService.createMeno(ev.offsetX, ev.offsetY)
+          }
+        },{
           iconClasses: ['textbus-icon-copy'],
           label: i18n.get('editor.copy'),
           disabled: selection.isCollapsed,
