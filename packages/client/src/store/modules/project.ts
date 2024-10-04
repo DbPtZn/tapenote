@@ -192,7 +192,7 @@ export const useProjectStore = defineStore('projectStore', {
           }).catch(err => reject(err))
         }
         if (lib === LibraryEnum.PROCEDURE) {
-          console.log(sourceId)
+          // console.log(sourceId)
           const procedureId = sourceId
           return this.creatorApi(account, hostname).project.create<Project>({ folderId, procedureId, lib: LibraryEnum.COURSE, ...author }).then(res => {
             res.data.account = account
@@ -212,7 +212,7 @@ export const useProjectStore = defineStore('projectStore', {
     },
     fetchAndSet(id: string, account: string, hostname: string) {
       // console.log('fetchAndSet')
-      console.log([id, account, hostname])
+      // console.log([id, account, hostname])
       return new Promise<Project>((resolve, reject) => {
         // console.log('fetchAndset')
         const index = this.data.findIndex(i => i.id === id)
@@ -398,31 +398,74 @@ export const useProjectStore = defineStore('projectStore', {
         }
       })
     },
-    updateSidenoteContent(params: Parameters<typeof CreatorApi.prototype.project.updateSidenoteContent>[0], savingcb: () => void, account: string, hostname: string) {
-      return new Promise((resolve, reject) => {
-        const index = this.data.findIndex(i => i.id === params.id)
-        const account = this.data[index].account
-        const hostname = this.data[index].hostname
-        if (utils.isDiff(this.data[index].content, params.content)) {
-          savingcb && savingcb()
-          this.creatorApi(account, hostname).project
-            .updateSidenoteContent<{ updateAt: string }>(params)
-            .then(res => {
-              // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才进行 store 数据更新
-              if (this.data[index].id === params.id) {
-                this.data[index].updateAt = res.data.updateAt
-                this.data[index].sidenote = params.content
-              }
-              resolve(true)
-            })
-            .catch(err => {
-              resolve(false)
-            })
-        } else {
-          resolve(true)
-        }
+    addMemo(params: Parameters<typeof CreatorApi.prototype.project.addMemo>[0], account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.addMemo<Memo>(params).then(res => {
+        const memo = res.data
+        this.get(params.projectId)?.memos.push(memo)
       })
     },
+    deleteMemo(params: Parameters<typeof CreatorApi.prototype.project.deleteMemo>[0], account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.deleteMemo(params).then(() => {
+        this.get(params.projectId)?.memos.some((i, index, arr) => {
+          if (i.id === params.memoId) {
+            arr.splice(index, 1)
+            return true
+          }
+        })
+      })
+    },
+    updateMemoContent(params: Parameters<typeof CreatorApi.prototype.project.updateMemoContent>[0], account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.updateMemoContent<{ updateAt: string }>(params).then(res => {
+        this.get(params.projectId)?.memos.some(i => {
+          if (i.id === params.memoId) {
+            i.content = params.content
+            i.updateAt = res.data.updateAt
+            return true
+          }
+        })
+      })
+    },
+    updateMemoState(params: Parameters<typeof CreatorApi.prototype.project.updateMemoState>[0], account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.updateMemoState<{ updateAt: string }>(params).then(res => {
+        this.get(params.projectId)?.memos.some(i => {
+          if (i.id === params.memoId) {
+            if(params.bgColor !== undefined) i.bgColor = params.bgColor
+            if(params.isExpanded !== undefined) i.isExpanded = params.isExpanded
+            if(params.width !== undefined) i.width = params.width
+            if(params.height !== undefined) i.height = params.height
+            if(params.x !== undefined) i.x = params.x
+            if(params.y !== undefined) i.y = params.y
+            i.updateAt = res.data.updateAt
+            return true
+          }
+        })
+      })
+    },
+    // updateSidenoteContent(params: Parameters<typeof CreatorApi.prototype.project.updateSidenoteContent>[0], savingcb: () => void, account: string, hostname: string) {
+    //   return new Promise((resolve, reject) => {
+    //     const index = this.data.findIndex(i => i.id === params.id)
+    //     const account = this.data[index].account
+    //     const hostname = this.data[index].hostname
+    //     if (utils.isDiff(this.data[index].content, params.content)) {
+    //       savingcb && savingcb()
+    //       this.creatorApi(account, hostname).project
+    //         .updateSidenoteContent<{ updateAt: string }>(params)
+    //         .then(res => {
+    //           // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才进行 store 数据更新
+    //           if (this.data[index].id === params.id) {
+    //             this.data[index].updateAt = res.data.updateAt
+    //             this.data[index].sidenote = params.content
+    //           }
+    //           resolve(true)
+    //         })
+    //         .catch(err => {
+    //           resolve(false)
+    //         })
+    //     } else {
+    //       resolve(true)
+    //     }
+    //   })
+    // },
     updateSpeakerHistory(params: Parameters<typeof CreatorApi.prototype.project.updateSpeakerHistory>[0], account: string, hostname: string) {
       const { id, speakerId, type } = params
       // console.log(params)

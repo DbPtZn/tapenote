@@ -9,6 +9,7 @@ import { UpdateSidenoteContentDto } from './dto/update-sidenote-content.dto'
 import { UpdateSpeakerHistoryDto } from './dto/update.dto'
 import { AddSubmissionHistoryDto } from './dto/add-submission.dts'
 import { InputProjectDto } from './dto/input-project.dto'
+import { AddMemoDto, DeleteMemoDto, UpdateMemoContentDto, UpdateMemoStateDto } from './dto/memo.dto'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('project')
@@ -19,16 +20,6 @@ export class ProjectController {
   async create(@Body() dto: CreateProjectDto, @Req() req, @Res() res) {
     try {
       const project = await this.projectService.create(dto, req.user.id, req.user.dirname)
-      /** 用于项目列表展示的数据 */
-      // const data = {
-      //   id: project.id,
-      //   folderId: project.folderId,
-      //   title: project.title,
-      //   content: project.content,
-      //   abbrev: project.abbrev,
-      //   updateAt: project.updateAt,
-      //   createAt: project.createAt
-      // }
       res.status(201).send(project)
     } catch (error) {
       console.log(error)
@@ -42,27 +33,6 @@ export class ProjectController {
       // console.log(id)
       await this.projectService.checkAndCorrectFragmentSquence(id) // 确保片段顺序正确
       const project = await this.projectService.findOne(id, req.user.id, req.user.dirname)
-      // switch (project.lib) {
-      //   case LibraryEnum.NOTE:
-      //     //
-      //     break
-      //   case LibraryEnum.PROCEDURE:
-      //     // 替换片段音频路径
-      //     project.fragments = project.fragments.map(fragment => {
-      //       fragment['id'] = fragment.id // 用于前端的 id
-      //       fragment.audio = '/public' + fragment.audio.split('public')[1]
-      //       if (fragment.speaker.avatar) {
-      //         fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
-      //       }
-      //       return fragment
-      //     }) as any
-      //     break
-      //   case LibraryEnum.COURSE:
-      //     // 替换音频路径
-      //     project.audio = '/public' + project.audio.split('public')[1] || ''
-      //     break
-      // }
-      // console.log(project)
       res.status(200).send(project)
     } catch (error) {
       // TODO 错误处理的问题， 未处理的错误会阻塞程序运行
@@ -70,7 +40,6 @@ export class ProjectController {
       res.status(400).send(error)
     }
   }
-
 
   @Get(`/recent`)
   async getRecent(
@@ -81,7 +50,7 @@ export class ProjectController {
     @Res() res
   ) {
     try {
-      console.log(skip, take, lib)
+      // console.log(skip, take, lib)
       const result = await this.projectService.findByUpdateAtDESC(skip, take, lib, req.user.id)
       res.status(200).send(result)
     } catch (error) {
@@ -173,6 +142,46 @@ export class ProjectController {
     }
   }
 
+  @Patch(`${REST.U}/memo/add`)
+  async addMemo(@Body() dto: AddMemoDto, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.addMemo(dto, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error)
+    }
+  }
+  
+  @Patch(`${REST.U}/memo/content`)
+  async updateMemoContent(@Body() dto: UpdateMemoContentDto, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.updateMemoContent(dto, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send()
+    }
+  }
+  
+  @Patch(`${REST.U}/memo/delete`)
+  async deleteMemo(@Body() dto: DeleteMemoDto, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.deleteMemo(dto, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send()
+    }
+  }
+  
+  @Patch(`${REST.U}/memo/state`)
+  async updateMemo(@Body() dto: UpdateMemoStateDto, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.updateMemoState(dto, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send()
+    }
+  }
+  
   @Patch(`${REST.U}/speaker/history`)
   async updateSpeakerHistory(@Body() updateSpeakerHistoryDto: UpdateSpeakerHistoryDto, @Req() req, @Res() res) {
     try {

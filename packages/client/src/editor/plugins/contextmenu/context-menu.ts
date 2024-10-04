@@ -25,6 +25,7 @@ import {
 import { AnimeService } from '../../services/anime.service'
 import { MaterialTypeEnum } from '../toolbar/toolkit/_utils/MaterialTypeEnum'
 import { MemoService } from '../../services/memo.service'
+import { Structurer } from '../../providers/structurer.provider'
 // import { I18n } from '../../i18n'
 // import { Message } from '../message'
 // import { paragraphComponent } from '../components/paragraph.component'
@@ -49,6 +50,8 @@ export class ContextMenu implements Plugin {
     const parser = injector.get(Parser)
     const renderer = injector.get(Renderer)
     const memoService = injector.get(MemoService)
+    const structurer = injector.get(Structurer)
+    const scroller = structurer.scrollerRef
     let animeService: AnimeService | null = null
     try {
       animeService = injector.get(AnimeService)
@@ -80,11 +83,14 @@ export class ContextMenu implements Plugin {
         })
         const menus = ContextMenu.makeContextmenu(ev.target as HTMLElement, selection, renderer)
         const defaultMenus: ContextMenuConfig[] = [{
-          iconClasses: [`${MaterialTypeEnum.OUTLINED}sticky_note_2`],
+          iconClasses: [`material-icons-outlined-sticky_note_2`],
           label: i18n.get('editor.memo'),
           onClick: () => {
-            console.log(ev.offsetX, ev.offsetY)
-            memoService.createMeno(ev.offsetX, ev.offsetY)
+            const target = ev.target as HTMLElement
+            const targetRect = target.getBoundingClientRect()
+            const containeRect = container.getBoundingClientRect()
+            const scrollerRect = scroller!.getBoundingClientRect()
+            memoService.createMeno(ev.offsetX + containeRect.left, ev.offsetY + targetRect.top - scrollerRect.top)
           }
         },{
           iconClasses: ['textbus-icon-copy'],

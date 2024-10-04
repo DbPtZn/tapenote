@@ -66,6 +66,7 @@ import {
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
+import { i18n } from '../i18n'
 export function getNoteConfig(args: {
   account: string
   hostname: string
@@ -93,13 +94,7 @@ export function getNoteConfig(args: {
     componentLoaders: [imageB2UComponentLoader, preComponentLoader, listComponentLoader, ...defaultComponentLoaders],
     formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
-    i18n: {
-      editor: {
-        memo: '便笺',
-      },
-      plugins: {},
-      components: {}
-    },
+    i18n: i18n,
     providers: [
       { provide: Commander, useClass: CustomCommander },
       ResizeService,

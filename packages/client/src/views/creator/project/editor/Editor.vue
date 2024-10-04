@@ -218,7 +218,7 @@ const methods = {
 
 const { handleContentSave, handleSavingEnd, handleTitleSave, handleSavingStart, handleTitleEnter, handleTitleInput } = methods
 
-const { handleContextmenu } = useMemo(props.id)
+const { options, showDropdownRef, xRef, yRef, onClickoutside, handleSelect, handleContextmenu, handleDeleteMemo, handleMoveMemo, handleResizeMemo, handleExpandMemo, handleSaveMemo, handleUpdateMemoBgColor } = useMemo(props.id, props.account, props.hostname, scrollerRef, bridge)
 
 /** 离开页面前 */
 const debounceB = _.debounce(func => func(), 2000)
@@ -282,6 +282,7 @@ onUnmounted(() => {
         <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
         <Memo
           v-for="item in data?.memos"
+          :key="item.id"
           :id="item.id"
           :content="item.content"
           :is-expanded="item.isExpanded"
@@ -290,12 +291,12 @@ onUnmounted(() => {
           :width="item.width"
           :height="item.height"
           :bgcolor="item.bgColor"
-          @resize="''"
-          @move="''"
-          @update-color="''"
-          @expand="''"
-          @delete="''"
-          @save="''"
+          @resize="handleResizeMemo"
+          @move="handleMoveMemo"
+          @update-color="handleUpdateMemoBgColor"
+          @expand="handleExpandMemo"
+          @delete="handleDeleteMemo"
+          @save="handleSaveMemo"
         />
       </div>
     </div>
@@ -311,6 +312,16 @@ onUnmounted(() => {
     <div v-if="lib === LibraryEnum.COURSE && state.isSubtitleShow" class="subtitle">
       {{ state.subtitle }}
     </div>
+    <n-dropdown
+      placement="bottom-start"
+      trigger="manual"
+      :x="xRef"
+      :y="yRef"
+      :options="options"
+      :show="showDropdownRef"
+      :on-clickoutside="onClickoutside"
+      @select="handleSelect"
+    />
   </div>
 </template>
 

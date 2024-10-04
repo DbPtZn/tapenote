@@ -100,6 +100,11 @@
 
 /* [class^="material-icons-"], [class*=" material-icons-"] {
 } */
-/* .material-icons-cloud::before {
-  content: 'cloud';
-} */
+.material-icons-outlined-sticky_note_2::before {
+  content: 'sticky_note_2';
+  font-size: 18px;
+  line-height: 18px;
+  display: block;
+  padding-top: 4px;
+  opacity: 0.8;
+}

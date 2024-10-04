@@ -65,6 +65,7 @@ import {
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
 import '@/editor/anime.css'
+import { i18n } from '../i18n'
 
 export function getProcedureConfig(args: {
   account: string,
@@ -86,6 +87,7 @@ export function getProcedureConfig(args: {
     historyStackSize: 30,
     placeholder: '在此输入正文',
     content: content || '',
+    i18n: i18n,
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     components: [

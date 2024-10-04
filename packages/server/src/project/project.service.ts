@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common'
 import { CreateProjectDto } from './dto/create-project.dto'
-import { Annotation, Project, ProjectBGM } from './entities/project.entity'
+import { Annotation, Memo, Project, ProjectBGM } from './entities/project.entity'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Not, Repository, DataSource } from 'typeorm'
 import { StorageService } from 'src/storage/storage.service'
@@ -27,6 +27,7 @@ import { User } from 'src/user/entities/user.entity'
 import { commonConfig } from 'src/config'
 import { ConfigService } from '@nestjs/config'
 import { UploadService } from 'src/upload/upload.service'
+import { AddMemoDto, DeleteMemoDto, UpdateMemoContentDto, UpdateMemoStateDto } from './dto/memo.dto'
 /** 继承数据 */
 interface InheritDto {
   title?: string
@@ -137,6 +138,7 @@ export class ProjectService {
       project.title = data.title || ''
       project.content = data.content || '<br>'
       project.abbrev = data.abbrev || ''
+      project.memos = []
       project.removed = RemovedEnum.NEVER
 
       project.detail = {
@@ -382,6 +384,7 @@ export class ProjectService {
       project.abbrev = txt ? txt.slice(0, 100) : ''
       project.cover = cover
       project.removed = RemovedEnum.NEVER
+      project.memos = []
 
       project.detail = {
         penname: penname || '佚名',
@@ -635,6 +638,87 @@ export class ProjectService {
       throw error
     }
   }
+
+  async addMemo(dto: AddMemoDto, userId: string) {
+    try {
+      const { projectId, x, y } = dto
+      const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
+      const memo: Memo = {
+        id: randomstring.generate(8),
+        content: '',
+        isExpanded: true,
+        bgColor: 'yellow',
+        height: 300,
+        width: 300,
+        x,
+        y,
+        updateAt: new Date(),
+        createAt: new Date()
+      }
+      console.log(memo)
+      project.memos 
+      ? project.memos.push(memo)
+      : project.memos = [memo]
+      
+      await this.projectsRepository.save(project)
+      return memo
+    } catch (error) {
+      throw error
+    }
+    
+  }
+  
+  async updateMemoContent(dto: UpdateMemoContentDto, userId: string) {
+    try {
+      const { memoId, projectId, content } = dto
+      const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
+      if(!project.memos || project.memos.length === 0) throw new Error('便笺不存在')
+      const index = project.memos.findIndex(item => item.id === memoId)
+      if (index === -1) throw new Error('便笺不存在')
+      project.memos[index].content = content
+      project.updateAt = new Date()
+      await this.projectsRepository.save(project)
+      return ''
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async updateMemoState(dto: UpdateMemoStateDto, userId: string) {
+    try {
+      const  { memoId, projectId, isExpanded, bgColor, height, width, x, y } = dto
+      const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
+      const index = project.memos.findIndex(item => item.id === memoId)
+      if (index === -1) throw new Error('便笺不存在')
+      if(isExpanded !== undefined) project.memos[index].isExpanded = isExpanded
+      if(bgColor !== undefined) project.memos[index].bgColor = bgColor
+      if(height !== undefined) project.memos[index].height = height
+      if(width !== undefined) project.memos[index].width = width
+      if(x !== undefined) project.memos[index].x = x
+      if(y !== undefined) project.memos[index].y = y
+      project.updateAt = new Date()
+      await this.projectsRepository.save(project)
+      return ''
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async deleteMemo(dto: DeleteMemoDto, userId: string) {
+    try {
+      const { memoId, projectId } = dto
+      const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
+      const index = project.memos.findIndex(item => item.id === memoId)
+      if (index === -1) throw new Error('便笺不存在')
+      project.memos.splice(index, 1)
+      await this.projectsRepository.save(project)
+      return ''
+    } catch (error) {
+      throw error
+    }
+  }
+
+  
   /** -------------------------------- 更新 ------------------------------------ */
 
   /** -------------------------------- 移除与恢复 ------------------------------------ */

@@ -174,7 +174,7 @@ export const imageB2UComponent = defineComponent({
   setup(data?: ComponentInitData<ImageComponentLiteral>) {
     const injector = useContext()
     const img2Url = injector.get(ImgToUrlService) 
-    console.log('img component init')
+    // console.log('img component init')
     // 若图片为 base64
     if (data && data.state && ImgToUrlService.isBase64(data.state.src)) {
       img2Url.addUploadProcess(

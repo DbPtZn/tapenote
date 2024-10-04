@@ -61,6 +61,34 @@ interface InputDto {
   cover: string
 }
 
+export interface AddMemoDto {
+  projectId: string
+  x: number
+  y: number
+}
+
+export interface DeleteMemoDto {
+  projectId: string
+  memoId: string
+}
+
+export interface UpdateMemoContentDto {
+  projectId: string
+  memoId: string
+  content: string
+}
+
+export interface UpdateMemoStateDto {
+  projectId: string
+  memoId: string
+  isExpanded?: boolean
+  bgColor?: 'yellow' | 'green' | 'pink' | 'purple' | 'blue' | 'white' | 'gray'
+  height?: number
+  width?: number
+  x?: number
+  y?: number
+}
+
 
 export const project = (axios: AxiosInstance) => {
   return {
@@ -95,10 +123,24 @@ export const project = (axios: AxiosInstance) => {
     updateContent<T>(dto: UpdateContentDto) {
       return axios.patch<T>('/project/update/content', dto)
     },
-    /** sidenote update */
-    updateSidenoteContent<T>(dto: UpdateSidenoteContentDto) {
-      return axios.patch<T>('/project/update/sidenote/content', dto)
+    /** memo */
+    addMemo<T>(dto: AddMemoDto) {
+      return axios.patch<T>('/project/update/memo/add', dto)
     },
+    deleteMemo<T>(dto: DeleteMemoDto) {
+      return axios.patch<T>('/project/update/memo/delete', dto)
+    },
+    updateMemoContent<T>(dto: UpdateMemoContentDto) {
+      // console.log('更新')
+      return axios.patch<T>('/project/update/memo/content', dto)
+    },
+    updateMemoState<T>(dto: UpdateMemoStateDto) {
+      return axios.patch<T>('/project/update/memo/state', dto)
+    },
+    /** sidenote update */
+    // updateSidenoteContent<T>(dto: UpdateSidenoteContentDto) {
+    //   return axios.patch<T>('/project/update/sidenote/content', dto)
+    // },
     updateSpeakerHistory<T>(dto: UpdateSpeakerHistoryDto) {
       return axios.patch<T>('/project/update/speaker/history', dto)
     },

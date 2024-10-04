@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Editor, createEditor } from '@textbus/editor'
+import { Editor, createEditor, paragraphComponent, paragraphComponentLoader } from '@textbus/editor'
 import { onMounted, ref, useTemplateRef } from 'vue'
 import { useThemeVars } from 'naive-ui'
 import { useDraggable } from '@vueuse/core'
@@ -9,8 +9,12 @@ import { Bridge } from '../bridge'
 import { Subscription, filter, fromEvent } from '@tanbo/stream'
 import { onUnmounted } from 'vue'
 import { computed } from 'vue'
-
+import useStore from '@/store'
+import { watch } from 'vue'
+type Memo = ReturnType<typeof useStore>['projectStore']['data'][0]['memos'][0]
+type BgColor = Memo['bgColor']
 const bridge = inject('bridge') as Bridge
+
 const props = defineProps<{
   id: string
   isExpanded: boolean
@@ -18,23 +22,24 @@ const props = defineProps<{
   width: number
   x: number
   y: number
-  bgcolor: 'yellow' | 'green' | 'pink' | 'purple' | 'blue' | 'white' | 'gray'
+  bgcolor: BgColor
   content: string
 }>()
 
 const emits = defineEmits<{
-  resize: [ height: number, width: number ]
-  move: [ x: number, y:number ]
-  updateColor: [ bgcolor: string ]
-  expand: [ isExpanded: boolean ]
-  delete: []
+  resize: [id: string, height: number, width: number]
+  move: [id: string, x: number, y: number]
+  updateColor: [id: string, bgcolor: BgColor]
+  expand: [id: string, isExpanded: boolean]
+  delete: [id: string]
   save: [id: string, content: string]
 }>()
 
 const themeVars = useThemeVars()
 
 const memoEl = useTemplateRef<HTMLElement>('memoEl')
-const draggerEl = useTemplateRef<HTMLElement>('draggerEl')
+// const draggerEl = useTemplateRef<HTMLElement>('draggerEl')
+const handlerEl = useTemplateRef<HTMLElement>('handlerEl')
 const editorEl = useTemplateRef<HTMLElement>('editorEl')
 const verticalEl = useTemplateRef<HTMLElement>('verticalEl')
 const horizontalEl = useTemplateRef<HTMLElement>('horizontalEl')
@@ -52,17 +57,23 @@ const { x, y } = useDraggable(memoEl, {
   initialValue: { x: props.x, y: props.y },
   containerElement: bridge.scrollerEl,
   stopPropagation: true, // 阻止冒泡
-  handle: draggerEl, // 指定控制元素, 区别于 draggingElement 指定的是拽动元素（触发 move 和 up 的元素，start 事件依旧会在根元素上触发）
+  handle: handlerEl, // 指定控制元素, 区别于 draggingElement 指定的是拽动元素（触发 move 和 up 的元素，start 事件依旧会在根元素上触发）
   onMove(position, event) {
-    // 避免触底时增加滚动高度
-    if(position.y + memoEl.value!.offsetHeight >= bridge.scrollerEl.value!.offsetHeight + bridge.scrollerEl.value!.scrollTop - 30) {
-      y.value = bridge.scrollerEl.value!.offsetHeight + bridge.scrollerEl.value!.scrollTop - memoEl.value!.offsetHeight - 30
+    // 达到最大滚动高度后，避免触底时增加滚动高度
+    if (!bridge.scrollerEl.value || !memoEl.value) return
+    const scrollerEl = bridge.scrollerEl.value
+    const maxScrollHeight = scrollerEl.scrollHeight - scrollerEl.clientHeight;
+    if(scrollerEl.scrollTop >= maxScrollHeight) {
+      if (position.y + memoEl.value.offsetHeight >= scrollerEl.offsetHeight + scrollerEl.scrollTop - 30) {
+        y.value = scrollerEl.offsetHeight + scrollerEl.scrollTop - memoEl.value.offsetHeight - 30
+      }
     }
+    
   },
   onEnd(position) {
-    if(lastX === x.value && lastY === y.value) return // 避免点击的时候触发 position 更新
+    if (lastX === x.value && lastY === y.value) return // 避免点击的时候触发 position 更新
     // console.log('end', position)
-    emits('move', position.x, position.y)
+    emits('move', props.id, position.x, position.y)
     lastX = x.value
     lastY = y.value
   }
@@ -81,6 +92,10 @@ function useEditor() {
     autoHeight: true,
     placeholder: '在此输入内容',
     content: props.content,
+    formatters: [],
+    formatLoaders: [],
+    components: [paragraphComponent],
+    componentLoaders: [paragraphComponentLoader],
     plugins: []
   })
   editor.mount(editorEl.value)
@@ -95,8 +110,12 @@ function useEditor() {
     })
   )
 }
+function handleHeaderClick() {
+  console.log('header click')
+  editor?.blur()
+}
 
-let isDrag = false
+let isDrag = false // 拖拽时避免触发展开
 let timer
 function handleMouseDown(ev) {
   ev.preventDefault()
@@ -108,18 +127,18 @@ function handleMouseDown(ev) {
 function handleMouseUp(ev) {
   clearTimeout(timer)
   if (isDrag) {
-    console.log(x.value, y.value)
+    // console.log(x.value, y.value)
     isDrag = false
     return
   }
   isCollapsed.value = !isCollapsed.value
-  emits('expand', !isCollapsed.value)
+  emits('expand', props.id, !isCollapsed.value)
   isDrag = false
   useEditor()
 }
 
 function getSize() {
-  emits('resize', heightVal.value, widthVal.value)
+  emits('resize', props.id, heightVal.value, widthVal.value)
 }
 const widthVal = ref(props.width || 300)
 const heightVal = ref(props.height || 300)
@@ -178,34 +197,44 @@ onUnmounted(() => {
 })
 
 function handleFocus() {
-  // console.log('focus')
+  // console.log('div focus')
   isMemoFocus.value = true
 }
 function handleBlur() {
-  // console.log('blur')
+  // console.log('div blur')
   isMemoFocus.value = false
 }
 const isFocus = computed(() => isEditorFocus.value || isMemoFocus.value)
 
+watch(
+  () => isFocus.value,
+  is => {
+    if (!is && editor) {
+      const content = editor.getHTML()
+      if (content === props.content) return
+      emits('save', props.id, editor.getHTML())
+    }
+  }
+)
 
-const colors = new Map<string, { bgcolor: string, opcolor: string, tbcolor: string }>([
+const colors = new Map<BgColor, { bgcolor: string; opcolor: string; tbcolor: string }>([
   ['yellow', { bgcolor: '#fff7d1', opcolor: '#ffe66e', tbcolor: '#fff2ab' }],
   ['green', { bgcolor: '#e4f9e0', opcolor: '#a1ef9b', tbcolor: '#cbf1c4' }],
   ['pink', { bgcolor: '#ffe4f1', opcolor: '#ffafdf', tbcolor: '#ffcce5' }],
   ['purple', { bgcolor: '#f2e6ff', opcolor: '#c9a3ee', tbcolor: '#e7cfff' }],
-  ['blue', { bgcolor: '#e2f1ff', opcolor: '#93d0ee', tbcolor: '#cde9ff' }],  
+  ['blue', { bgcolor: '#e2f1ff', opcolor: '#93d0ee', tbcolor: '#cde9ff' }],
   ['white', { bgcolor: '#f3f2f1', opcolor: '#d1d1d1', tbcolor: '#e1dfdd' }],
   ['gray', { bgcolor: '#696969', opcolor: '#767676', tbcolor: '#494745' }]
 ])
 const bgcolor = ref(colors.get(props.bgcolor)?.bgcolor || '#fff7d1')
 const tbColor = ref(colors.get(props.bgcolor)?.tbcolor || '#ffe66e')
 const textColor = ref('#000000')
-function handleBgColorChange(key: string) {
-  emits('updateColor', key)
+function handleBgColorChange(key: BgColor) {
+  emits('updateColor', props.id, key)
   const color = colors.get(key)!
   bgcolor.value = color.bgcolor
   tbColor.value = color.tbcolor
-  if(bgcolor.value === '#696969') {
+  if (bgcolor.value === '#696969') {
     textColor.value = '#ffffff'
   } else {
     textColor.value = '#000000'
@@ -214,57 +243,72 @@ function handleBgColorChange(key: string) {
 
 function handleDrawerVisible() {
   isDrawerVisible.value = true
-  const s = fromEvent(document, 'mousedown').pipe(filter(ev => !(ev.target instanceof HTMLElement && ev.target.closest('.drawer')))).subscribe(() => {
-    isDrawerVisible.value = false
-    s.unsubscribe()
-  })
+  const s = fromEvent(document, 'mousedown')
+    .pipe(filter(ev => !(ev.target instanceof HTMLElement && ev.target.closest('.drawer'))))
+    .subscribe(() => {
+      isDrawerVisible.value = false
+      s.unsubscribe()
+    })
 }
 </script>
 
 <template>
   <div
-    ref="memoEl" 
+    ref="memoEl"
     tabindex="0"
-    :class="{ memo: true, expand: !isCollapsed }" 
+    :class="{ memo: true, expand: !isCollapsed }"
     :style="{ maxHeight: `${heightVal}px`, maxWidth: `${widthVal}px`, left: `${x}px`, top: `${y}px`, backgroundColor: bgcolor }"
     @focus="handleFocus"
     @blur="handleBlur"
-    >
+    @contextmenu.stop=""
+  >
     <!-- 垂直控制器 -->
     <div class="handler-vertical">
-      <div class="content" ref="draggerEl">
-        <div v-if="isCollapsed" class="collapse-box" @mousedown="handleMouseDown" @mouseup="handleMouseUp">
-          <Icon v-if="isCollapsed" icon="basil:expand-outline" height="24px" />
-        </div>
-        <div v-show="!isCollapsed" class="expand-box" >
-          <div class="header">
-            <div :class="{ 'btn-group': true, focus: isFocus }" :style="{ backgroundColor: tbColor }">
-              <div class="btn" @mousedown="handleMouseDown" @mouseup="handleMouseUp">
-                <Icon v-if="!isCollapsed" icon="basil:collapse-outline" height="24px" />
+      <div class="content">
+        <div :class="{ 'expand-box': !isCollapsed, 'collapse-box': isCollapsed }">
+          <div class="header" ref="handlerEl">
+            <div v-if="isCollapsed" class="collapse-box" @mousedown="handleMouseDown" @mouseup="handleMouseUp">
+              <Icon v-if="isCollapsed" icon="basil:expand-outline" height="24px" />
+            </div>
+            <div v-show="!isCollapsed" :class="{ 'btn-group': true, focus: isFocus }" :style="{ backgroundColor: tbColor }" @mousedown.stop.prevent="">
+              <div class="btn" @mousedown.stop="handleMouseDown" @mouseup.stop="handleMouseUp">
+                <Icon icon="basil:collapse-outline" height="24px" />
               </div>
               <div class="btn" @click="handleDrawerVisible">
                 <Icon icon="material-symbols:more-horiz" height="24px" />
               </div>
             </div>
           </div>
-          <div class="main">
+          <div class="main" v-show="!isCollapsed">
             <div class="editor" ref="editorEl" />
           </div>
-          <div class="footer"></div>
+          <!-- <div class="footer" v-show="!isCollapsed"></div> -->
         </div>
         <div ref="drawerEl" v-show="!isCollapsed" :class="{ drawer: true, 'drawer-visible': isDrawerVisible }">
-        <div class="bgcolor-group">
-          <div class="bgcolor-item" v-for="(color, index) in colors" :key="index" :style="{ backgroundColor: color[1].opcolor }" @click="handleBgColorChange(color[0])">
-            <Icon class="check" v-if="bgcolor === color[1].bgcolor" :style="{ backgroundColor: color[1].opcolor }" icon="material-symbols:check-rounded" height="20px" />
+          <div class="bgcolor-group">
+            <div
+              class="bgcolor-item"
+              v-for="(color, index) in colors"
+              :key="index"
+              :style="{ backgroundColor: color[1].opcolor }"
+              @click="handleBgColorChange(color[0])"
+            >
+              <Icon
+                class="check"
+                v-if="bgcolor === color[1].bgcolor"
+                :style="{ backgroundColor: color[1].opcolor }"
+                icon="material-symbols:check-rounded"
+                height="20px"
+              />
+            </div>
+          </div>
+          <div class="option" @click="emits('delete', props.id)">
+            <Icon class="icon" icon="material-symbols:delete" height="24px" />
+            <span class="text"> 删除便笺 </span>
           </div>
         </div>
-        <div class="option" @click="emits('delete')">
-          <Icon class="icon" icon="material-symbols:delete" height="24px" />
-          <span class="text"> 删除便笺 </span>
-        </div>
       </div>
-      </div>
-      <div class="vertical" ref="verticalEl" />
+      <div v-show="!isCollapsed" class="vertical" ref="verticalEl" />
     </div>
 
     <!-- 水平控制器 -->
@@ -311,7 +355,7 @@ function handleDrawerVisible() {
       }
     }
   }
-  
+
   .option {
     color: #2b2b2b;
     background-color: aliceblue;
@@ -326,7 +370,7 @@ function handleDrawerVisible() {
     .text {
       margin-left: 16px;
     }
-    
+
     &:hover {
       background-color: #e2e2e2;
     }
@@ -367,14 +411,7 @@ function handleDrawerVisible() {
   flex-direction: row;
   overflow: hidden;
 }
-.collapse-box {
-  display: flex;
-  align-items: center;
-  height: 36px;
-  padding: 0 4px;
-  border-radius: 3px;
-  color: v-bind(textColor);
-}
+
 .handler-vertical {
   display: flex;
   flex-direction: row;
@@ -402,6 +439,14 @@ function handleDrawerVisible() {
   }
 }
 
+.collapse-box {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 2px;
+  border-radius: 3px;
+  color: v-bind(textColor);
+}
 .expand-box {
   height: 100%;
   width: 100%;
@@ -444,7 +489,6 @@ function handleDrawerVisible() {
   flex: 1;
   overflow-x: hidden;
   overflow-y: auto;
-  max-height: 300px;
   .editor {
     // height: 100%;
     width: 95%;
@@ -460,6 +504,11 @@ function handleDrawerVisible() {
         // height: 100%;
         border: none;
         background-color: unset;
+        p {
+          margin-top: 2px;
+          margin-bottom: 2px;
+          font-size: 13px;
+        }
       }
     }
   }

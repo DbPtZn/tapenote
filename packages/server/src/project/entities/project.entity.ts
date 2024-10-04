@@ -49,6 +49,19 @@ export interface SubmissionHistory {
   date: string
 }
 
+export interface Memo {
+  id: string
+  content: string
+  isExpanded: boolean
+  bgColor: 'yellow' | 'green' | 'pink' | 'purple' | 'blue' | 'white' | 'gray'
+  height: number
+  width: number
+  x: number
+  y: number
+  updateAt: Date
+  createAt: Date
+}
+
 @Entity()
 export class Project {
   @PrimaryGeneratedColumn('uuid')
@@ -113,7 +126,13 @@ export class Project {
     default: ''
   })
   abbrev: string // 内容缩略
-
+  
+  @Column({
+    type: 'simple-json',
+    nullable: true
+  })
+  memos: Memo[]
+  
   @Column({
     type: 'varchar',
     length: 12,
