@@ -1,20 +1,20 @@
 <script lang="ts" setup>
-import { Editor, createEditor, paragraphComponent, paragraphComponentLoader } from '@textbus/editor'
-import { onMounted, ref, useTemplateRef } from 'vue'
+import { Editor, Layout, createEditor, paragraphComponent, paragraphComponentLoader } from '@textbus/editor'
+import { Injector } from '@textbus/core'
+import { onMounted, ref, useTemplateRef, inject, onUnmounted, watch, computed } from 'vue'
 import { useThemeVars } from 'naive-ui'
-import { useDraggable, useResizeObserver } from '@vueuse/core'
-import { inject } from 'vue'
+import { useDraggable } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
-import { Bridge } from '../bridge'
 import { Subscription, filter, fromEvent } from '@tanbo/stream'
-import { onUnmounted } from 'vue'
-import { computed } from 'vue'
-import useStore from '@/store'
-import { watch } from 'vue'
-type Memo = ReturnType<typeof useStore>['projectStore']['data'][0]['memos'][0]
+import { MemoService, Structurer } from '../..'
+import { Memo } from './memo.provider'
 type BgColor = Memo['bgColor']
-const bridge = inject('bridge') as Bridge
+const injector = inject('injector') as Injector
+const layout = injector.get(Layout)
+const workbenchEl = layout.workbench
 
+const structurer = injector.get(Structurer)
+const scrollerEl = structurer.scrollerRef
 const props = defineProps<{
   id: string
   isExpanded: boolean
@@ -55,13 +55,12 @@ let lastX = props.x
 let lastY = props.y
 const { x, y } = useDraggable(memoEl, {
   initialValue: { x: props.x, y: props.y },
-  containerElement: bridge.scrollerEl,
+  containerElement: scrollerEl, //workbenchEl,
   stopPropagation: true, // 阻止冒泡
   handle: handlerEl, // 指定控制元素, 区别于 draggingElement 指定的是拽动元素（触发 move 和 up 的元素，start 事件依旧会在根元素上触发）
   onMove(position, event) {
     // 达到最大滚动高度后，避免触底时增加滚动高度
-    if (!bridge.scrollerEl.value || !memoEl.value) return
-    const scrollerEl = bridge.scrollerEl.value
+    if (!scrollerEl || !memoEl.value) return
     const maxScrollHeight = scrollerEl.scrollHeight - scrollerEl.clientHeight;
     if(scrollerEl.scrollTop >= maxScrollHeight) {
       if (position.y + memoEl.value.offsetHeight >= scrollerEl.offsetHeight + scrollerEl.scrollTop - 30) {
@@ -72,21 +71,22 @@ const { x, y } = useDraggable(memoEl, {
   },
   onEnd(position) {
     if (lastX === x.value && lastY === y.value) return // 避免点击的时候触发 position 更新
-    // console.log('end', position)
     emits('move', props.id, position.x, position.y)
     lastX = x.value
     lastY = y.value
   }
 })
 
-// const lastScrollerWidth = ref(bridge.scrollerEl.value?.offsetWidth)
-// const lasxX = ref(x.value)
-// useResizeObserver(bridge.scrollerEl, (entries) => {
-//   const entry = entries[0]
-//   const { width, height } = entry.contentRect
-//   x.value = lasxX.value - (lastScrollerWidth.value! - width)
-//   // console.log(`width: ${width}, height: ${height}`)
-// })
+const offsetX = computed(() => {
+  const workbenchRect = workbenchEl.getBoundingClientRect()
+  return x.value - workbenchRect.left
+})
+const offsetY = computed(() => {
+  const workbenchRect = workbenchEl.getBoundingClientRect()
+  const scrollerRect = scrollerEl!.getBoundingClientRect()
+  console.log(scrollerRect.top)
+  return y.value - workbenchRect.top + scrollerRect.top - scrollerEl!.scrollTop
+})
 
 
 
@@ -107,8 +107,13 @@ function useEditor() {
     formatLoaders: [],
     components: [paragraphComponent],
     componentLoaders: [paragraphComponentLoader],
-    plugins: []
+    plugins: [],
   })
+  const layout = editor.get(Layout)
+  const middleEl = layout.middle
+  const containerEl = layout.container
+  containerEl.classList.add('memo-container')
+  middleEl.classList.add('memo-middle')
   editor.mount(editorEl.value)
   subs2.push(
     editor.onFocus.subscribe(() => {
@@ -121,10 +126,7 @@ function useEditor() {
     })
   )
 }
-function handleHeaderClick() {
-  console.log('header click')
-  editor?.blur()
-}
+
 
 let isDrag = false // 拖拽时避免触发展开
 let timer
@@ -138,7 +140,6 @@ function handleMouseDown(ev) {
 function handleMouseUp(ev) {
   clearTimeout(timer)
   if (isDrag) {
-    // console.log(x.value, y.value)
     isDrag = false
     return
   }
@@ -158,7 +159,9 @@ onMounted(() => {
   subs.push(
     fromEvent<MouseEvent>(verticalEl.value!, 'mousedown').subscribe(ev => {
       // console.log('vertical down')
-      const rect = bridge.scrollerEl.value!.getBoundingClientRect()
+      ev.preventDefault() // 缩放的时候不会选中主编辑器富文本
+      ev.stopPropagation()
+      const rect = scrollerEl!.getBoundingClientRect()
       const moveSub = fromEvent<MouseEvent>(document, 'mousemove').subscribe(ev => {
         // console.log('vertical move', ev.clientX - x.value)
         widthVal.value = ev.clientX - x.value - rect.left
@@ -172,10 +175,12 @@ onMounted(() => {
     }),
     fromEvent<MouseEvent>(horizontalEl.value!, 'mousedown').subscribe(ev => {
       // console.log('horizontal down')
-      const rect = bridge.scrollerEl.value!.getBoundingClientRect()
+      ev.stopPropagation()
+      ev.preventDefault()
+      const rect = scrollerEl!.getBoundingClientRect()
       const moveSub = fromEvent<MouseEvent>(document, 'mousemove').subscribe(ev => {
         // console.log('horizontal move', rect, rect.top)
-        heightVal.value = ev.clientY - y.value - rect.top + bridge.scrollerEl.value!.scrollTop
+        heightVal.value = ev.clientY - y.value - rect.top + scrollerEl!.scrollTop
       })
       const upSub = fromEvent<MouseEvent>(document, 'mouseup').subscribe(ev => {
         // console.log('horizontal up')
@@ -186,11 +191,13 @@ onMounted(() => {
     }),
     fromEvent<MouseEvent>(nwseEl.value!, 'mousedown').subscribe(ev => {
       // console.log('nwse down')
-      const rect = bridge.scrollerEl.value!.getBoundingClientRect()
+      ev.stopPropagation()
+      ev.preventDefault()
+      const rect = scrollerEl!.getBoundingClientRect()
       const moveSub = fromEvent<MouseEvent>(document, 'mousemove').subscribe(ev => {
         // console.log('nwse move', ev.clientX - x.value,)
         widthVal.value = ev.clientX - x.value - rect.left
-        heightVal.value = ev.clientY - y.value - rect.top + bridge.scrollerEl.value!.scrollTop
+        heightVal.value = ev.clientY - y.value - rect.top + scrollerEl!.scrollTop
       })
       const upSub = fromEvent<MouseEvent>(document, 'mouseup').subscribe(ev => {
         // console.log('nwse up')
@@ -251,6 +258,13 @@ function handleBgColorChange(key: BgColor) {
     textColor.value = '#000000'
   }
 }
+onMounted(() => {
+  if (bgcolor.value === '#696969') {
+    textColor.value = '#ffffff'
+  } else {
+    textColor.value = '#000000'
+  }
+})
 
 function handleDrawerVisible() {
   isDrawerVisible.value = true
@@ -261,6 +275,7 @@ function handleDrawerVisible() {
       s.unsubscribe()
     })
 }
+
 </script>
 
 <template>
@@ -268,7 +283,7 @@ function handleDrawerVisible() {
     ref="memoEl"
     tabindex="0"
     :class="{ memo: true, expand: !isCollapsed }"
-    :style="{ maxHeight: `${heightVal}px`, maxWidth: `${widthVal}px`, left: `${x}px`, top: `${y}px`, backgroundColor: bgcolor }"
+    :style="{ maxHeight: `${heightVal}px`, maxWidth: `${widthVal}px`, left: `${offsetX}px`, top: `${offsetY}px`, backgroundColor: bgcolor }"
     @focus="handleFocus"
     @blur="handleBlur"
     @contextmenu.stop=""
@@ -501,18 +516,19 @@ function handleDrawerVisible() {
   overflow-x: hidden;
   overflow-y: auto;
   .editor {
-    // height: 100%;
     width: 95%;
     margin: 0 auto;
-    :deep(.textbus-container) {
-      // height: 100% !important;
+    :deep(.memo-container) {
       outline: none;
       border: none;
       border-radius: 0;
-      color: v-bind(textColor);
-      // background-color: #bfdaa6;
-      .textbus-ui-middle {
-        // height: 100%;
+      height: unset!important;
+      margin: 0!important;
+      color: v-bind(textColor)!important;
+      background-color: v-bind(bgcolor)!important;
+      .memo-middle {
+        max-width: unset!important;
+        background-color: v-bind(bgcolor)!important;
         border: none;
         background-color: unset;
         p {

@@ -4,7 +4,7 @@ import { h, onUnmounted, reactive, ref } from 'vue'
 import { Bridge } from '../../bridge'
 import _ from 'lodash'
 import { useDialog, useMessage } from 'naive-ui'
-import { TxtEdit } from '../private'
+import { TxtEdit, FragmentEditor } from '../private'
 import { usePromoter } from './usePromoter'
 import { Player } from '@/editor'
 import { Subscription } from '@tanbo/stream'
@@ -390,9 +390,11 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   function handleEdit(fragment: Fragment) {
     dialog.create({
       showIcon: false,
+      style: { width: '800px' },
       title: '转写文字更改',
       content: () =>
-        h(TxtEdit, {
+        h(FragmentEditor, {
+          audio: fragment.audio,
           transcript: fragment.transcript,
           onConfirm: (newTranscript: string[]) => {
             if (_.isEqual(fragment.transcript, newTranscript)) {

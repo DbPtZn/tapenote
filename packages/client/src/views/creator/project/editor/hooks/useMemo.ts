@@ -1,11 +1,10 @@
 import useStore from '@/store'
 import { DropdownOption, useMessage } from 'naive-ui'
-import { MaybeRefOrGetter, Ref, h, nextTick, ref } from 'vue'
+import { Ref, h, nextTick, onMounted, ref } from 'vue'
 import { Icon } from '@iconify/vue'
-import { Editor } from '@textbus/editor'
 import { Bridge } from '../../bridge'
 import { MemoService } from '@/editor'
-import { VIEW_CONTAINER } from '@textbus/platform-browser'
+import { Subscription } from '@tanbo/stream'
 
 type Memo = ReturnType<typeof useStore>['projectStore']['data'][0]['memos'][0]
 export function useMemo(projectId: string, account: string, hostname: string, container: Ref<HTMLElement>, bridge: Bridge) {
@@ -14,7 +13,6 @@ export function useMemo(projectId: string, account: string, hostname: string, co
   const showDropdownRef = ref(false)
   const xRef = ref(0)
   const yRef = ref(0)
- 
   const options: DropdownOption[] = [
     {
       key: 'newMemo',
@@ -68,6 +66,43 @@ export function useMemo(projectId: string, account: string, hostname: string, co
       message.error('添加便笺失败!')
     }
   }
+
+  let subs1: Subscription[] = []
+  let subs2: Subscription[] = [] 
+  onMounted(() => {
+    subs1.push(
+      bridge.onEditorReady.subscribe(editor => {
+        const memoService = editor.get(MemoService)
+        memoService.onResize.subscribe()
+        subs2.push(
+          memoService.onResize.subscribe(memo => {
+            const { id, height, width } = memo
+            handleResizeMemo(id, height, width)
+          }),
+          memoService.onMove.subscribe(memo => {
+            const { id, x, y } = memo
+            handleMoveMemo(id, x, y)
+          }),
+          memoService.onDelete.subscribe(memo => {
+            const { id } = memo
+            handleDeleteMemo(id)
+          }),
+          memoService.onExpand.subscribe(memo => {
+            const { id, isExpanded } = memo
+            handleExpandMemo(id, isExpanded)
+          }),
+          memoService.onSave.subscribe(memo => {
+            const { id, content } = memo
+            handleSaveMemo(id, content)
+          }),
+          memoService.onUpdateBgColor.subscribe(memo => {
+            const { id, bgColor } = memo
+            handleUpdateMemoBgColor(id, bgColor)
+          })
+        )
+      })
+    )
+  })
 
   const handleResizeMemo = async (id: string, height: number, width: number) => {
     try {
@@ -140,22 +175,5 @@ export function useMemo(projectId: string, account: string, hostname: string, co
     } catch (error) {
       message.error('保存便笺内容失败!')
     }
-  }
-
-  
-  return {
-    options,
-    showDropdownRef,
-    xRef,
-    yRef,
-    onClickoutside,
-    handleSelect,
-    handleContextmenu,
-    handleResizeMemo,
-    handleMoveMemo,
-    handleUpdateMemoBgColor,
-    handleExpandMemo,
-    handleDeleteMemo,
-    handleSaveMemo
   }
 }

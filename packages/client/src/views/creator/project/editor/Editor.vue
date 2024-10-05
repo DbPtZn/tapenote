@@ -9,10 +9,10 @@ import _ from 'lodash'
 import useStore from '@/store'
 import Memo from './Memo.vue'
 // import { debounceTime, Subscription } from '@tanbo/stream'
-import { Editor } from '@textbus/editor'
+import { Editor, Layout } from '@textbus/editor'
 import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
-import { Player } from '@/editor'
+import { MemoProvider, Player } from '@/editor'
 import { Subscription, debounceTime } from '@textbus/core'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
@@ -80,6 +80,8 @@ useEditor({
 }).then(({ editor: edi, content }) => {
   // loadingBar.finish() // 加载条完成
   editor = edi
+  const memoProvider = editor.get(MemoProvider)
+  memoProvider.setup(editor, data.value!.memos)
   lastContent = content
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
@@ -218,7 +220,7 @@ const methods = {
 
 const { handleContentSave, handleSavingEnd, handleTitleSave, handleSavingStart, handleTitleEnter, handleTitleInput } = methods
 
-const { options, showDropdownRef, xRef, yRef, onClickoutside, handleSelect, handleContextmenu, handleDeleteMemo, handleMoveMemo, handleResizeMemo, handleExpandMemo, handleSaveMemo, handleUpdateMemoBgColor } = useMemo(props.id, props.account, props.hostname, scrollerRef, bridge)
+useMemo(props.id, props.account, props.hostname, scrollerRef, bridge)
 
 /** 离开页面前 */
 const debounceB = _.debounce(func => func(), 2000)
@@ -276,28 +278,10 @@ onUnmounted(() => {
         />
       </div>
       <!-- 滚动区 -->
-      <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }" @contextmenu="handleContextmenu">
+      <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
         <!-- v-if="data" 保证在数据获取之前不会渲染标题栏 -->
         <TitleInput v-if="data" class="title-input" @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
         <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
-        <Memo
-          v-for="item in data?.memos"
-          :key="item.id"
-          :id="item.id"
-          :content="item.content"
-          :is-expanded="item.isExpanded"
-          :x="item.x"
-          :y="item.y"
-          :width="item.width"
-          :height="item.height"
-          :bgcolor="item.bgColor"
-          @resize="handleResizeMemo"
-          @move="handleMoveMemo"
-          @update-color="handleUpdateMemoBgColor"
-          @expand="handleExpandMemo"
-          @delete="handleDeleteMemo"
-          @save="handleSaveMemo"
-        />
       </div>
     </div>
     <div
@@ -312,16 +296,6 @@ onUnmounted(() => {
     <div v-if="lib === LibraryEnum.COURSE && state.isSubtitleShow" class="subtitle">
       {{ state.subtitle }}
     </div>
-    <n-dropdown
-      placement="bottom-start"
-      trigger="manual"
-      :x="xRef"
-      :y="yRef"
-      :options="options"
-      :show="showDropdownRef"
-      :on-clickoutside="onClickoutside"
-      @select="handleSelect"
-    />
   </div>
 </template>
 

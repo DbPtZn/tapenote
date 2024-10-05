@@ -45,9 +45,10 @@ export default defineConfig(({ command, mode }) => {
         '#': path.resolve(__dirname, '.')
       }
     },
-    // optimizeDeps: {
-    //   exclude: ["@textbus/core", "@textbus/platform-browser", "@textbus/editor", "reflect-metadata", "@tanbo/bezier", "@tanbo/stream"]
-    // },
+    optimizeDeps: {
+      exclude: ["wavesurfer.js"]
+      // exclude: ["@textbus/core", "@textbus/platform-browser", "@textbus/editor", "reflect-metadata", "@tanbo/bezier", "@tanbo/stream"]
+    },
     server: {
       host: '0.0.0.0',
       port: 8080,

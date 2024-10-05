@@ -167,6 +167,9 @@ importers:
       '@iconify/json':
         specifier: ^2.2.252
         version: 2.2.252
+      '@iconify/vue':
+        specifier: ^4.1.2
+        version: 4.1.2(vue@3.5.10(typescript@5.6.2))
       '@tanbo/bezier':
         specifier: ^1.0.1
         version: 1.0.1
@@ -197,6 +200,9 @@ importers:
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
+      crunker:
+        specifier: ^2.4.0
+        version: 2.4.0
       crypto-js:
         specifier: ^4.2.0
         version: 4.2.0
@@ -278,13 +284,13 @@ importers:
       vue3-touch-events:
         specifier: ^4.2.0
         version: 4.2.0
+      wavesurfer.js:
+        specifier: ^7.8.6
+        version: 7.8.6
     devDependencies:
       '@electron/rebuild':
         specifier: ^3.6.0
         version: 3.6.0
-      '@iconify/vue':
-        specifier: ^4.1.2
-        version: 4.1.2(vue@3.5.10(typescript@5.6.2))
       '@types/animejs':
         specifier: ^3.1.12
         version: 3.1.12
@@ -5631,6 +5637,9 @@ packages:
     peerDependenciesMeta:
       uWebSockets.js:
         optional: true
+
+  crunker@2.4.0:
+    resolution: {integrity: sha512-3J0aBgLaB8jpGh6o+bisjYzOEkJLYxhnisHXogjY4fxYewh1aVCptWAz7RSTYPncCyxdfA+UaWAM1BrQiZvZgQ==}
 
   crypto-js@4.2.0:
     resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
@@ -11533,6 +11542,9 @@ packages:
 
   wav@1.0.2:
     resolution: {integrity: sha512-viHtz3cDd/Tcr/HbNqzQCofKdF6kWUymH9LGDdskfWFoIy/HJ+RTihgjEcHfnsy1PO4e9B+y4HwgTwMrByquhg==}
+
+  wavesurfer.js@7.8.6:
+    resolution: {integrity: sha512-EDexkMwkkQBTWruhfWQRkTtvRggtKFTPuJX/oZ5wbIZEfyww9EBeLr2mtkxzA1S8TlWPx6adY5WyjOlNYNyHSg==}
 
   wbuf@1.7.3:
     resolution: {integrity: sha512-O84QOnr0icsbFGLS0O3bI5FswxzRr8/gHwWkDlQFskhSPryQXvrTMxjxGP4+iWYoauLoBvfDpkrOauZ+0iZpDA==}
@@ -18145,6 +18157,8 @@ snapshots:
       which: 2.0.2
 
   crossws@0.2.4: {}
+
+  crunker@2.4.0: {}
 
   crypto-js@4.2.0: {}
 
@@ -25180,6 +25194,8 @@ snapshots:
       stream-parser: 0.3.1
     transitivePeerDependencies:
       - supports-color
+
+  wavesurfer.js@7.8.6: {}
 
   wbuf@1.7.3:
     dependencies:

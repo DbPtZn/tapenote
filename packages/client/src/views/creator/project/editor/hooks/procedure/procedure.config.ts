@@ -22,7 +22,8 @@ import {
   jumbotronComponentLoader,
   preComponentLoader,
   ContextMenu,
-  MemoService
+  MemoService,
+  MemoProvider
 } from '@/editor'
 import { 
   animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
@@ -136,7 +137,7 @@ export function getProcedureConfig(args: {
       AnimeProvider, AddAnimeService, DialogProvider, 
       OutlineService, ColorProvider, AnimeService,
       Structurer, ThemeProvider, Player, ImgToUrlService,
-      MemoService
+      MemoService, MemoProvider
     ],
     plugins: [
       () => new Toolbar([
