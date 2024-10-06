@@ -18,6 +18,7 @@
   "dependencies": {
     "@iconify/json": "^2.2.252",
     "@iconify/vue": "^4.1.2",
+    "@losting/timeline": "^5.0.0",
     "@tanbo/bezier": "^1.0.1",
     "@tanbo/stream": "^1.2.5",
     "@textbus/core": "3.7.8",

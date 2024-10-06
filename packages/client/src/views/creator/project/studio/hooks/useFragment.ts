@@ -391,11 +391,10 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     dialog.create({
       showIcon: false,
       style: { width: '800px' },
-      title: '转写文字更改',
+      title: '片段编辑器',
       content: () =>
         h(FragmentEditor, {
-          audio: fragment.audio,
-          transcript: fragment.transcript,
+          fragment: fragment,
           onConfirm: (newTranscript: string[]) => {
             if (_.isEqual(fragment.transcript, newTranscript)) {
               message.warning('未进行任何更改')
