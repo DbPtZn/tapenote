@@ -3,6 +3,13 @@ import { onUnmounted, ref, reactive, useTemplateRef, onMounted } from 'vue'
 import { useThemeVars } from 'naive-ui'
 import WaveSurfer from 'wavesurfer.js/dist/wavesurfer'
 import Timeline from 'wavesurfer.js/plugins/timeline'
+import HoverPlugin from 'wavesurfer.js/dist/plugins/hover'
+import Minimap from 'wavesurfer.js/dist/plugins/minimap'
+import Envelope from 'wavesurfer.js/dist/plugins/envelope'
+import Regions from 'wavesurfer.js/dist/plugins/regions'
+import spectrogram from 'wavesurfer.js/dist/plugins/spectrogram'
+
+
 // import Timeline from '@losting/timeline'
 import useStore from '@/store'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
@@ -25,12 +32,13 @@ const inputs = reactive(props.fragment.transcript.map(item => item))
 // 波形图宽度 (考虑到要显示 transcript, 应该比 transcript 列更长;等于时间轴总宽度)
 const waveWidth = fragment.transcript.length * 25 * 1.5
 
-// 切片长度（波形图长度）
-const section = fragment.duration / waveWidth
+// 每一秒的宽度（波形图长度）
+const secondWidth = waveWidth / fragment.duration
 
+let wavesurfer: WaveSurfer
 onMounted(() => {
   if (!waveEl.value) return
-  const wavesurfer = WaveSurfer.create({
+  wavesurfer = WaveSurfer.create({
     container: waveEl.value,
     waveColor: '#4F4A85',
     progressColor: '#383351',
@@ -46,7 +54,22 @@ onMounted(() => {
     primaryLabelSpacing: 10,
   })
   wavesurfer.registerPlugin(timeline)
-
+  const hoverPlugin = HoverPlugin.create()
+  wavesurfer.registerPlugin(hoverPlugin)
+  // const minimap = Minimap.create()
+  // wavesurfer.registerPlugin(minimap)
+  // const envelope = Envelope.create({})
+  // wavesurfer.registerPlugin(envelope)
+  // const regions = Regions.create()
+  // wavesurfer.registerPlugin(regions)
+  // regions.addRegion({
+  //   start: 20,
+  //   end: 25,
+  //   color: '#fff',
+  //   drag: true,
+  //   resize: true,
+  //   content: 'test',
+  // })
   // const timeline = new Timeline(timelineEl.value!, {
   //   fill: false,
   //   width: waveWidth,
@@ -60,6 +83,12 @@ onMounted(() => {
   //   }]
   // })
 })
+
+const methods = {
+  handlePlay() {
+    wavesurfer.play()
+  }
+}
 
 const focus = ref(-1)
 function handleConfirm() {
@@ -83,7 +112,11 @@ onUnmounted(() => {})
 <template>
   <div class="fragment-edit">
     <!-- <div class="duration">{{ fragment.duration }}</div> -->
-    <div ref="waveEl" class="wave"></div>
+    <div ref="waveEl" class="wave">
+      <div class="keyframe" v-for="(item, index) in fragment.timestamps" :key="index" :style="{ left: item * secondWidth + 'px' }">
+        <span>{{ fragment.transcript[index] }}</span>
+      </div>
+    </div>
     <!-- <div class="timeline-wrapper" >
       <canvas ref="timelineEl" />
     </div> -->
@@ -93,20 +126,43 @@ onUnmounted(() => {})
         <div v-show="focus !== index" class="text" @click.stop="handleFocus(index)">{{ inputs[index] }}</div>
       </div>
     </div>
-    <!-- <div class="footer">
-      <n-button class="btn" type="primary" @click="handleConfirm()"> 确定 </n-button>
-      <n-button class="btn" type="primary" @click="onCancel"> 取消 </n-button>
-    </div> -->
+    <div class="footer">
+      <div class="controls">
+        <div class="btn" @click="methods.handlePlay">
+          播放          
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
 $bgcolor: #2e2e2e;
+.keyframe {
+  position: absolute;
+  width: 2px;
+  height: 14px;
+  background-color: red;
+  left: 24px;
+  bottom: -14px;
+}
 .fragment-edit {
   width: 100%;
   overflow-x: scroll;
+  .btn {
+    padding: 6px;
+    border: 1px solid #3a3a3a;
+    cursor: pointer;
+    &:hover {
+      background-color: #3a3a3a;
+    }
+    &:active {
+      background-color: #1d1d1d;
+    }
+  }
 }
 .wave {
+  position: relative;
   width: fit-content;
   border: 1px dashed #3a3a3a;
 }
