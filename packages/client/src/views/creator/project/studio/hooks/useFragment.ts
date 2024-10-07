@@ -392,6 +392,11 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       showIcon: false,
       style: { width: '800px' },
       title: '片段编辑器',
+      maskClosable: false,
+      onMaskClick: (ev) => {
+        ev.preventDefault()
+        // dialog.destroyAll()
+      },
       content: () =>
         h(FragmentEditor, {
           fragment: fragment,

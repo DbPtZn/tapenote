@@ -27,6 +27,7 @@
     "@vueuse/core": "^11.1.0",
     "animate.css": "^4.1.1",
     "animejs": "^3.2.2",
+    "audiobuffer-to-wav": "^1.0.0",
     "axios": "^1.6.8",
     "classnames": "^2.5.1",
     "crunker": "^2.4.0",
@@ -62,6 +63,7 @@
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",
     "@types/animejs": "^3.1.12",
+    "@types/audiobuffer-to-wav": "^1.0.4",
     "@types/element-resize-detector": "^1.1.6",
     "@types/howler": "^2.2.11",
     "@types/jsrsasign": "^10.5.14",
