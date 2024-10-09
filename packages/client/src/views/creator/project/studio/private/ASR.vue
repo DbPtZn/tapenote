@@ -4,6 +4,7 @@ import { useThemeVars } from 'naive-ui'
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { KeyboardOutlined } from '@vicons/material'
 import { fromEvent, Subscription, debounceTime, auditTime, throttleTime, distinctUntilChanged, filter } from '@tanbo/stream'
+import { AudioRecorder } from '../_utils/recorder'
 const props = defineProps<{
   shortcut: boolean
   readonly: boolean
@@ -18,26 +19,28 @@ const emits = defineEmits<{
   inputting: [boolean]
 }>()
 const themeVars = useThemeVars()
-const recorder = new Recorder({
+const recorder = new AudioRecorder({
+  sampleRate: 16000,
   sampleBits: 16,
-  sampleRate: 16000
 })
+
 // console.log(recorder)
-const data = reactive({
-  audio: ref<Blob>(),
+let data = {
+  audio: undefined as Blob | undefined,
   duration: 0
-})
+}
 let isRecording = ref(false)
 const startRecorder = () => {
   // 开始录音
   // console.log('开始录音')
+  if(isRecording.value) return
   isRecording.value = true
-  recorder
-    .start()
+  recorder.start()
     .then(() => {
       // console.log('开始录音成功')
       // 处理在快速点击启动按钮后，创建在销毁之后，导致录音状态没有停止的问题
       if (!isRecording.value) {
+        console.log('录音已停止，无法继续录音')
         recorder.destroy()
       }
     })
@@ -46,35 +49,27 @@ const startRecorder = () => {
     })
 }
 
-// recorder.onprocess = (data) => {
-//   console.log('录音中', data)
-// }
-const stopRecorder = () => {
+const stopRecorder = async () => {
   // 停止录音
   isRecording.value = false
-  // console.log('停止录音')
-  recorder.stop()
-
-  data.audio = recorder.getWAVBlob()
-  data.duration = recorder.duration //语音的时长
-  // console.log('录音结束')
-  emits('output', data)
-  recorder
-    .destroy()
-    .then(() => {
-      // console.log('销毁成功')
-    })
-    .catch(err => {
-      // console.log('销毁失败', err)
-    })
-  // console.log('录音销毁')
-  // 采用 base64 编码的策略
-  // const reader = new FileReader();
-  // reader.readAsBinaryString(recorder.getWAVBlob())
-  // reader.onload = function (e) {
-  //   data.audio = e.target?.result as string
-  //   emits('onAudioOutput', data)
-  // }
+  console.log('停止录音')
+  // recorder.stop()
+  recorder.stop().then(async (audio) => {
+    // console.log('录音结束')
+    const wavBlob = await recorder.getWAVBlob()
+    data.audio = wavBlob!
+    data.duration = audio.duration
+    console.log('Recording stopped.', audio.duration)
+    emits('output', data)
+    // 可以在这里处理音频 Blob，比如上传或播放
+    // const audioUrl = URL.createObjectURL(wavBlob!)
+    // const audioElement = new Audio(audioUrl)
+    // audioElement.play()
+    recorder.destroy()
+  }).catch(err => {
+    recorder.destroy()
+    console.log('录音失败', err)
+  })
 }
 const isPress = ref(false)
 const keydownEvent: Subscription[] = []

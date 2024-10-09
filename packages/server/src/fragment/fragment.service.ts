@@ -233,7 +233,7 @@ export class FragmentService {
       fragment.timestamps = []
       fragment.speaker = fragmentSpeaker
       fragment.removed = RemovedEnum.NEVER
-
+      return fragment
       // 先添加到项目工程文件中（占位）
       this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
       await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })

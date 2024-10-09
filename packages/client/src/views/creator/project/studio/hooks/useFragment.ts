@@ -285,6 +285,15 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       }
     },
     {
+      key: 'lecture', // 演讲
+      label: () => `演讲模式`,
+      props: {
+        onClick: () => {
+          
+        }
+      }
+    },
+    {
       key: 'preview',
       label: '播放预览',
       props: {

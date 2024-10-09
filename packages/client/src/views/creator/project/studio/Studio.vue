@@ -6,7 +6,7 @@ import { DropdownOption, NIcon, NMessageProvider, useDialog, useMessage, useThem
 import { Bridge } from '../bridge'
 import _ from 'lodash'
 import utils from '@/utils'
-import { useFragment, usePromoter } from './hooks'
+import { useFragment, usePromoter, useRecorder } from './hooks'
 import { auditTime } from '@tanbo/stream'
 import { LibraryEnum } from '@/enums'
 import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
@@ -276,12 +276,13 @@ function handleInputting(is) {
     state.duration = '00:00:00'
   }
 }
+
+const { handleStartRecord, handleStopRecord } = useRecorder()
 </script>
 <template>
   <div class="studio" ref="studioRef">
     <!-- 顶部 -->
     <div class="header" :height="47">
-      <!-- 占位 -->
       <div style="width: 24px;" />
       <strong :class="[state.isReadonly ? 'disabled' : '']" style="white-space: nowrap; user-select: none;" @click="isTotalDurationShow = !isTotalDurationShow">
         <span v-if="!isTotalDurationShow && !playerState.isPlaying" style="display: inline-block; min-width: 72px;">录音台</span>
@@ -449,10 +450,44 @@ function handleInputting(is) {
       :show="dropdownState.isShow"
       :on-clickoutside="() => dropdownState.isShow = false"
     />
+    
+    <div class="speech-mode">
+      <div class="btn"></div>
+      <div class="btn" @click="handleStartRecord">{{ '开始' }}</div>
+      <div class="btn" @click="handleStopRecord">停止</div>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.speech-mode {
+  position: absolute;
+  width: 60px;
+  height: 360px;
+  right: 30px;
+  bottom: 50%;
+  transform: translateY(50%);
+  background-color: rgb(95, 95, 95);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    width: 60px;
+    margin-top: 6px;
+    background-color: v-bind('themeVars.buttonColor2');
+    cursor: pointer;
+    &:hover {
+      background-color: v-bind('themeVars.buttonColor2Hover');
+    }
+    &:active {
+      background-color: v-bind('themeVars.buttonColor2Pressed');
+    }
+  }
+}
 .role {
   display: flex;
   flex-direction: column;
@@ -488,6 +523,7 @@ function handleInputting(is) {
 }
 .header {
   display: flex;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   font-size: 24px;
@@ -570,9 +606,6 @@ function handleInputting(is) {
       width: 160px;
       border-radius: 90px;
       box-shadow: v-bind('themeVars.boxShadow1');
-      .icon {
-        
-      }
       .text {
         margin-top: 12px;
         font-size: 16px;        
