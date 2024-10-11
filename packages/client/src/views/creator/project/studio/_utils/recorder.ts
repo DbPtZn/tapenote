@@ -1,117 +1,125 @@
+import { Subject } from "@tanbo/stream"
+
 export class AudioRecorder {
   private audioContext: AudioContext
   private mediaStream: MediaStream | null = null
   private mediaRecorder: MediaRecorder | null = null
   private audioChunks: Blob[] = []
-  private audioSegments: Blob[] = []
   private sampleRate: number
   private sampleBits: number
-  // private silenceThreshold: number // 静音阈值时长 (秒)
-  private onSegmentCallback: ((arg: { segment: Blob; duration: number }) => void) | null = null // 分段回调
-  // private longRecording: boolean // 是否启用静音分段功能
 
   public totalDuration: number = 0
   private startTime: number = 0
-  private isRecording = false
-
   private audioBlob: Blob | null = null
+  
 
   constructor(args: { sampleRate?: number; sampleBits?: number; }) {
     const { sampleRate, sampleBits } = args
     this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
     this.sampleRate = sampleRate || 44100
     this.sampleBits = sampleBits || 16
-    // this.silenceThreshold = silenceThreshold || 0.01 // 静音阈值
-    // this.longRecording = longRecording || false // 是否为长录制(长录制模式下，开启分段功能)
   }
+  
+  // longRecording(callback: (arg: { blob: Blob; duration: number }) => void, silenceThreshold: number) {
+  //   const sampleRate = this.sampleRate
+  //   const sampleBits = this.sampleBits
+  //   const onStateUpdate = new Subject<boolean>()
+    
+  //   let isRecording = false
+  //   let mediaRecorder: MediaRecorder | null = null
+  //   async function startRecording() {
+  //     const stream = await navigator.mediaDevices.getUserMedia({
+  //       audio: {
+  //         sampleRate: sampleRate,
+  //         sampleSize: sampleBits,
+  //         channelCount: 1
+  //       },
+  //       video: false
+  //     })
 
-  public onSegment(callback?: (arg: { segment: Blob; duration: number }) => void) {
-    this.onSegmentCallback = callback || null // 设置回调函数，默认没有回调
-  }
-
-  longRecording(callback: (arg: { blob: Blob; duration: number }) => void, silenceThreshold: number) {
-    const sampleRate = this.sampleRate
-    const sampleBits = this.sampleBits
-    let mediaRecorder: MediaRecorder | null = null
-    async function startRecording() {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: sampleRate,
-          sampleSize: sampleBits,
-          channelCount: 1
-        },
-        video: false
-      })
-
-      let totalDuration = 0
-      let startTime = Date.now()
+  //     let totalDuration = 0
+  //     let startTime = Date.now()
       
-      mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-      let audioChunks: Blob[] = [] // 重置音频块
+  //     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+  //     let audioChunks: Blob[] = [] // 重置音频块
 
-      mediaRecorder.ondataavailable = async event => {
-        if (event.data.size > 0) {
-          // console.log('add chunk', event, '音频数据块的大小（MB）:', event.data.size / (1024 * 1024))
-          const endTime = Date.now()
-          totalDuration += (endTime - startTime) / 1000
-          startTime = Date.now()
+  //     mediaRecorder.ondataavailable = async event => {
+  //       if (event.data.size > 0) {
+  //         // console.log('add chunk', event, '音频数据块的大小（MB）:', event.data.size / (1024 * 1024))
+  //         const endTime = Date.now()
+  //         totalDuration += (endTime - startTime) / 1000
+  //         startTime = Date.now()
 
-          audioChunks.push(event.data)
-        }
-      }
+  //         audioChunks.push(event.data)
+  //       }
+  //     }
 
-      mediaRecorder.start()
+  //     mediaRecorder.start()
 
-      const audioCtx = new AudioContext()
-      const source = audioCtx.createMediaStreamSource(stream)
-      const analyser = audioCtx.createAnalyser()
-      source.connect(analyser)
+  //     const audioCtx = new AudioContext()
+  //     const source = audioCtx.createMediaStreamSource(stream)
+  //     const analyser = audioCtx.createAnalyser()
+  //     source.connect(analyser)
 
-      const dataArray = new Uint8Array(analyser.fftSize)
-      const threshold = silenceThreshold // 0.01 表示将频谱数据的阈值设为 255 的 1%，即 2.55
-      const silenceDuration = 1500 // 静音检测长度(ms)
-      const checkInterval = 100 // 检查间隔(ms)
-      const requiredSilentFrames = silenceDuration / checkInterval // 需要的连续静音帧数
+  //     const dataArray = new Uint8Array(analyser.fftSize)
+  //     const threshold = silenceThreshold // 0.01 表示将频谱数据的阈值设为 255 的 1%，即 2.55
+  //     const silenceDuration = 1500 // 静音检测长度(ms)
+  //     const checkInterval = 100 // 检查间隔(ms)
+  //     const requiredSilentFrames = silenceDuration / checkInterval // 需要的连续静音帧数
 
-      let silentFrameCount = 0
-      let isRecording = true
+  //     let silentFrameCount = 0
+      
+  //     isRecording = true
+  //     onStateUpdate.next(isRecording)
+  //     const checkSilence = () => {
+  //       if (!isRecording) return // 停止后退出检测
 
-      const checkSilence = () => {
-        if (!isRecording) return // 停止后退出检测
+  //       analyser.getByteTimeDomainData(dataArray)
+  //       const rms = calculateRMS(dataArray)
+  //       const isSilent = rms < threshold
+  //       if (isSilent) {
+  //         silentFrameCount++ // 如果当前检测到静音，计数器加1
+  //       } else {
+  //         silentFrameCount = 0 // 如果检测到非静音，重置计数器
+  //       }
+  //       // 如果连续静音的帧数达到了要求，停止录音
+  //       if (silentFrameCount >= requiredSilentFrames) {
+  //         mediaRecorder?.stop()
+  //         startRecording() // 新起录音
+  //         return
+  //       }
 
-        analyser.getByteTimeDomainData(dataArray)
-        const rms = calculateRMS(dataArray)
-        const isSilent = rms < threshold
-        if (isSilent) {
-          silentFrameCount++ // 如果当前检测到静音，计数器加1
-        } else {
-          silentFrameCount = 0 // 如果检测到非静音，重置计数器
-        }
-        // 如果连续静音的帧数达到了要求，停止录音
-        if (silentFrameCount >= requiredSilentFrames) {
-          mediaRecorder?.stop()
-          startRecording() // 新起录音
-          return
-        }
+  //       setTimeout(checkSilence, checkInterval)
+  //     }
 
-        setTimeout(checkSilence, checkInterval)
-      }
+  //     mediaRecorder.addEventListener('stop', () => {
+  //       const finalBlob = new Blob(audioChunks, { type: 'audio/webm' })
+  //       callback({ blob: finalBlob, duration: totalDuration })
+  //       isRecording = false
+  //       onStateUpdate.next(isRecording)
+  //     })
 
-      mediaRecorder.addEventListener('stop', () => {
-        const finalBlob = new Blob(audioChunks, { type: 'audio/webm' })
-        callback({ blob: finalBlob, duration: totalDuration })
-        isRecording = false
-      })
+  //     checkSilence() // 开启静音检测
+  //   }
 
-      checkSilence() // 开启静音检测
-    }
+  //   startRecording()
 
-    startRecording()
-
-    return () => {
-      mediaRecorder?.stop()
-    }
-  }
+  //   return {
+  //     start: () => {
+  //       startRecording()
+  //     },
+  //     pause: () => {
+  //       mediaRecorder?.pause()
+  //     },
+  //     resume: () => {
+  //       mediaRecorder?.resume()
+  //     },
+  //     stop: () => {
+  //       mediaRecorder?.stop()
+  //     },
+  //     onStateUpdate
+  //   }
+  // }
 
   public start(isSilenceEnd?: boolean) {
     return navigator.mediaDevices
@@ -124,14 +132,11 @@ export class AudioRecorder {
         video: false
       })
       .then(stream => {
-        // console.log('media stream', stream)
         this.startTime = Date.now()
-        this.isRecording = true
 
         this.mediaStream = stream
         this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
         this.audioChunks = [] // 重置音频块
-        this.audioSegments = [] // 重置音频分段
 
         this.mediaRecorder.ondataavailable = async event => {
           if (event.data.size > 0) {
@@ -153,7 +158,6 @@ export class AudioRecorder {
 
   public pause(): void {
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-      // this.isRecording = false
       this.mediaRecorder.requestData()
       this.mediaRecorder.pause()
     }
@@ -161,7 +165,6 @@ export class AudioRecorder {
 
   public resume(): void {
     if (this.mediaRecorder && this.mediaRecorder.state === 'paused') {
-      // this.isRecording = true
       this.mediaRecorder.resume()
     }
   }
@@ -169,8 +172,6 @@ export class AudioRecorder {
   public stop(): Promise<{ blob: Blob; duration: number }> {
     return new Promise((resolve, reject) => {
       if (this.mediaRecorder) {
-        // this.isRecording = false
-        // console.log('stop recorder', this.isRecording)
         this.mediaRecorder.onstop = async () => {
           try {
             const finalBlob = new Blob(this.audioChunks, { type: 'audio/webm' })

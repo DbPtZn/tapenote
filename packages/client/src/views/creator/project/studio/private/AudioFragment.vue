@@ -27,9 +27,9 @@ const props = defineProps<{
   readonly: boolean
 }>()
 const emits = defineEmits<{
-  onContextmenu: [MouseEvent]
-  onExpand: []
-  onSelect: [boolean]
+  contextmenu: [MouseEvent]
+  expand: []
+  select: [boolean]
 }>()
 const subs: Subscription[] = []
 const themeVars = useThemeVars()
@@ -42,15 +42,15 @@ const isFocus = ref(false)
 const handleContextmenu = (ev: MouseEvent) => {
   if ((!isFocus.value && !props.multiple) || ev.ctrlKey) {
     isFocus.value = true
-    emits('onSelect', isFocus.value)
+    emits('select', isFocus.value)
   }
-  emits('onContextmenu', ev)
+  emits('contextmenu', ev)
   useClickoutside()
 }
 const handleClick = (ev: MouseEvent) => {
   if (ev.ctrlKey) {
     isFocus.value = !isFocus.value
-    emits('onSelect', isFocus.value)
+    emits('select', isFocus.value)
     useClickoutside()
   }
 }
@@ -62,7 +62,7 @@ function useClickoutside() {
       .subscribe(event => {
         if (!event.ctrlKey) {
           isFocus.value = false
-          emits('onSelect', isFocus.value)
+          emits('select', isFocus.value)
           subs.forEach(sub => sub.unsubscribe())
           subs.length = 0
         }
@@ -70,7 +70,7 @@ function useClickoutside() {
     fromEvent<MouseEvent>(document, 'contextmenu', true).subscribe(event => {
       if (!event.ctrlKey && !props.multiple) {
         isFocus.value = false
-        emits('onSelect', isFocus.value)
+        emits('select', isFocus.value)
         subs.forEach(sub => sub.unsubscribe())
         subs.length = 0
       }
@@ -108,7 +108,7 @@ onUnmounted(() => {
           </div>
           <div :class="['msg', 'msg-left', collapsed && 'collapse']">
             <slot name="txt" />
-            <span v-if="collapsed" class="collapse-btn" @click="emits('onExpand')">展开</span>
+            <span v-if="collapsed" class="collapse-btn" @click="emits('expand')">展开</span>
           </div>
         </div>
         <div v-if="isLoading" class="loading">
@@ -165,7 +165,7 @@ onUnmounted(() => {
           </div>
           <div :class="['msg', 'msg-right', collapsed && 'collapse']">
             <slot name="txt" />
-            <span v-if="collapsed" class="collapse-btn" @click="emits('onExpand')">展开</span>
+            <span v-if="collapsed" class="collapse-btn" @click="emits('expand')">展开</span>
           </div>
         </div>
       </div>

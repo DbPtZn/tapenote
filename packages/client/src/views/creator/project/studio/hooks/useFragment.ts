@@ -15,6 +15,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   const { projectStore, clipboardStore, studioStore } = useStore()
   const isShowName = ref(false)
   const isShowOrder = ref(false)
+  const isShowSpeechModeToolbar = ref(false)
   let autoMoveAnimePointer = false
   const dialog = useDialog()
   const message = useMessage()
@@ -286,10 +287,10 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     },
     {
       key: 'lecture', // 演讲
-      label: () => `演讲模式`,
+      label: () => `${isShowSpeechModeToolbar.value ? '隐藏' : '显示'}演讲模式控制台`,
       props: {
         onClick: () => {
-          
+          isShowSpeechModeToolbar.value = !isShowSpeechModeToolbar.value
         }
       }
     },
@@ -536,6 +537,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     studioOptions,
     isShowName,
     isShowOrder,
+    isShowSpeechModeToolbar,
     handleContextmenu,
     handleExpand,
     handleSelect,

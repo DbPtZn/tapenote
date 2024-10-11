@@ -1,21 +1,22 @@
 <script lang="ts" setup>
-import { Character, AudioFragment, TTS, ASR, StudioToolbar, SpeakerSelectList, TxtEdit, FragmentTrash, CreateBlankFragment } from './private'
+import { Character, AudioFragment, TTS, ASR, TipBtn, StudioToolbar, SpeakerSelectList, TxtEdit, FragmentTrash, CreateBlankFragment } from './private'
 import useStore from '@/store'
-import { computed, h, inject, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { DropdownOption, NIcon, NMessageProvider, useDialog, useMessage, useThemeVars } from 'naive-ui'
+import { computed, h, inject, nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue'
+import { DropdownOption, MessageReactive, NIcon, NMessageProvider, SelectOption, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import { Bridge } from '../bridge'
 import _ from 'lodash'
 import utils from '@/utils'
-import { useFragment, usePromoter, useRecorder } from './hooks'
+import { useFragment, usePromoter, useRecorder, checkSilenceAudio, useInput, useTrash, useSpeech } from './hooks'
 import { auditTime } from '@tanbo/stream'
 import { LibraryEnum } from '@/enums'
 import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
 import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp, KeyboardOutlined } from '@vicons/material'
 import Delegater from './Delegater.vue'
-import { splitText } from './_utils'
+import { splitText, collapseText } from './_utils'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
+import { AudioRecorder } from './_utils/recorder'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 const bridge = inject('bridge') as Bridge
@@ -27,8 +28,8 @@ const props = defineProps<{
   focus: () => boolean
   readonly: () => boolean
 }>()
-const { projectStore, speakerStore, clipboardStore } = useStore()
-const dialog = useDialog()
+const { projectStore, clipboardStore } = useStore()
+// const dialog = useDialog()
 const message = useMessage()
 const themeVars = useThemeVars()
 const { t } = useI18n()
@@ -36,159 +37,18 @@ const scrollerRef = ref()
 const state = reactive({
   isReadonly: computed(() => props.readonly()),
   isFocus: computed(() => props.focus()),
-  isShortcutAllow: true, 
-  isAudioInputting: false,
-  duration: '00:00:00',
-  ttsSpeed: 1,
-  recorderMode: 'TTS' as 'TTS' | 'ASR',
+  isShortcutAllow: true,
 })
+const studioEl = useTemplateRef<HTMLElement>('studioEl')
+
 onMounted(() => {
-  // 获取说话人列表
-  speakerStore.fetchAndSet(props.account, props.hostname)
+  bridge.studioRef = studioEl.value
 })
-const speakerId = computed(() => state.recorderMode === 'TTS' ? projectStore.get(props.id)?.speakerHistory.machine : projectStore.get(props.id)?.speakerHistory.human)
-const speaker = computed(() => {
-  return speakerStore.get(speakerId.value || '', props.account, props.hostname, state.recorderMode === 'TTS' ? 'machine' : 'human')
-})
-const speedOptions = [
-  { label: '2.0x', value: 2.0 },
-  { label: '1.5x', value: 1.5 },
-  { label: '1.25x', value: 1.25 },
-  { label: '1.0x', value: 1.0 },
-  { label: '0.75x', value: 0.75 },
-  { label: '0.5x', value: 0.5 },
-]
-const {
-  handleAudioOutput,
-  handleTextOutput,
-  handleModeSwitch
-} = {
-  handleTextOutput(text: string) {
-    if (text.length === 0) return
-    // TODO 对过长的文本进行分片
-    if (text.length > 32) {
-      const chunks = splitText(text)
-      if(typeof chunks === 'string') {
-        console.log(chunks)
-        // 防御：避免字符串文本，因为会被 for let...of 解析为单字符数组
-        message.error(t('studio.msg.input_error'))
-        return
-      }
-      const promiseArr: Promise<any>[] = []
-      for(let chunk of chunks) {
-        promiseArr.push(
-          projectStore.fragment(props.id).createByText({
-            txt: chunk,
-            speakerId: speakerId.value || '',
-            speed: state.ttsSpeed
-          })
-        )
-      }
-      // TODO 这里涉及并发问题，无法确定并发数量，如果中间有失败，则需要对失败片段重新上传，再次失败则放弃并提示用户
-      // 理论上我们可以限制最大 6 个并发，这样用户一次输入的文本长度不应该超过 32 * 6 个字符（中文），当超过时提示用户手动分片
-      Promise.all(promiseArr).catch(e => {
-        message.error(t('studio.msg.create_fragment_error'))
-      })
-      return
-    }
-    projectStore.fragment(props.id).createByText({
-      txt: text,
-      speakerId: speakerId.value || '',
-      speed: state.ttsSpeed
-    }).catch(e => {
-      message.error(t('studio.msg.create_fragment_error'))
-    })
-  },
-  handleAudioOutput(data: { audio: Blob | undefined, duration: number }) {
-    if (!data.audio) return
-    projectStore.fragment(props.id).createByAudio({
-      audio: data.audio,
-      duration: data.duration,
-      speakerId: speakerId.value || '',
-    }).catch(e => {
-      message.error(t('studio.msg.create_fragment_error'))
-    })
-  },
-  handleModeSwitch() {
-    state.recorderMode = state.recorderMode === 'ASR' ? 'TTS' : 'ASR'
-  }
-}
-const { handleSpeakerChange, handleTrashManage, handleAddBlank } = {
-  /** 切换语音合成角色 */
-  handleSpeakerChange(type: 'human' | 'machine') {
-    dialog.destroyAll()
-    dialog.create({
-      icon: () => h(NIcon, { component: AddReactionSharp, size: 24, style: { marginRight: '8px' } }),
-      title: t('studio.changeRoles'),
-      content: () => h(SpeakerSelectList, {
-        account: props.account,
-        hostname: props.hostname,
-        speakerHistory: projectStore.get(props.id)?.speakerHistory || { human: '', machine: '' },
-        data: speakerStore.data,
-        type: type,
-        onSelect: (speakerId: string, type: 'human' | 'machine') => {
-          projectStore.updateSpeakerHistory({ id: props.id, type, speakerId }, props.account, props.hostname).catch(e => {
-            message.error('Speaker history update error！')
-          })
-          dialog.destroyAll()
-        },
-        onAdd: (result) => {
-          speakerStore.create({
-            role: result.role,
-            name: result.name,
-            avatar: result.avatar,
-            changer: result.changer
-          }, props.account, props.hostname)
-        },
-        onRemove: (id: string) => {
-          speakerStore.delete(id, props.account, props.hostname)
-        },
-      }),
-    })
-  },
-  /** 添加空白音频过渡 */
-  handleAddBlank() {
-    dialog.create({
-      title: '创建空白音频',
-      content: () => h(NMessageProvider, null, 
-        () => h(
-          CreateBlankFragment, {
-          onConfirm: (result) => {
-            projectStore.fragment(props.id).createBlank(result).catch(e => {
-              message.error(t('studio.msg.create_fragment_error'))
-            })
-            dialog.destroyAll()
-          },
-          onCancel: () => {
-            dialog.destroyAll()
-          }
-        })
-      )
-    })
-  },
-  /** 打开回收站 */
-  handleTrashManage() {
-    dialog.create({
-      title: '回收站',
-      content: () => h(FragmentTrash, {
-        data: removedFragments.value,
-        onRestore: (fragmentId: string) => {
-          projectStore.fragment(props.id).restore({ fragmentId })
-        },
-        onDelete: (fragmentId: string) => {
-          projectStore.fragment(props.id).dele({
-            fragmentId
-          })
-        },
-        onExit: () => {
-          dialog.destroyAll()
-        }
-      })
-    })
-  }
-}
+
+const { recorderMode, ttsSpeed, speakerId, speaker, isAudioInputting, inputtingDuration, speedOptions, handleTextOutput, handleAudioOutput, handleInputting, handleAddBlank, handleModeSwitch, handleSpeakerChange } = useInput(props.id, props.account, props.hostname)
+const { removedFragments, handleTrashManage } = useTrash(props.id, props.account, props.hostname)
 const { checkAnimeState, checkPromoter, handleReorder } = usePromoter(props.id, bridge)
-const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, isShowOrder, handleContextmenu, handleExpand, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge, checkAnimeState, checkPromoter, handleReorder)
+const { dropdownState, selectedFragments, playerState, studioOptions, isShowName, isShowOrder, isShowSpeechModeToolbar, handleContextmenu, handleExpand, handleSelect, handlePlay, handleEdit, handleRemove, handleMove } = useFragment(props.id, bridge, checkAnimeState, checkPromoter, handleReorder)
 
 const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort())
 const fragmentsLength = computed(() => fragments.value.length)
@@ -201,10 +61,7 @@ watch(() => projectStore.fragment(props.id).getBySort(), (fragmentsData) => {
   }
   fragments.value = fragmentsData
 })
-const removedFragments = ref<Fragment[]>(projectStore.fragment(props.id).getRemovedBySort())
-watch(() => projectStore.fragment(props.id).getRemovedBySort(), (removedFragmentsData) => {
-  removedFragments.value = removedFragmentsData
-})
+
 /** 编辑器挂载完成后校验启动子和动画标记 */
 const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe((editor) => {
   checkPromoter()
@@ -223,10 +80,6 @@ const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe((editor
   // })
 })
 
-const studioRef = ref()
-onMounted(() => {
-  bridge.studioRef = studioRef.value
-})
 onUnmounted(() => {
   subscription.unsubscribe()
 })
@@ -242,45 +95,72 @@ const totalDuration = computed(() => {
       }, 0)
   })
 
-/** 折叠转写文本的函数 */
-function collapseText(transcript: string[]) {
-  const head = transcript.slice(0, 6)
-  const tail = transcript.slice(-4)
-  return [...head, '...', ...tail]
-}
-function formatTime(sec: number): string {
-  const minutes = Math.floor(sec / 60);
-  const seconds = Math.floor(sec % 60);
-  const centiseconds = Math.floor((sec * 100) % 100); // Get first two digits of milliseconds
-  return [minutes.toString().padStart(2, '0'), seconds.toString().padStart(2, '0'), centiseconds.toString().padStart(2, '0')].join(':');
-}
-function setTimer(callback: (duration: string) => void, remaining: number) {
-  let sec = 0
-  const intervalId = setInterval(() => {
-    sec += 0.01
-    const formattedTime = formatTime(sec)
-    callback(formattedTime)
-    if (sec > remaining) {
-      clearInterval(intervalId)
-    }
-  }, 10)
-  return () => clearInterval(intervalId)
-}
+const { waveEl, isRecording, isWaveformVisible, isStarted, onStateUpdate, ondataavailable, handleStartPause, handleStopRecord, handleCut, handleWaveformVisible } = useRecorder()
+const { startSpeech } = useSpeech(bridge)
 
-let timer: (() => void) | null = null
-function handleInputting(is) {
-  state.isAudioInputting = is
-  if(is) timer = setTimer(duration => state.duration = duration, 60)
-  else {
-    timer?.()
-    state.duration = '00:00:00'
+const isWaitForSelectAnime = ref(false)
+let msg: MessageReactive | undefined = undefined
+const speechMethods = {
+  start: () => {
+    if(!isStarted.value) {
+      if(isWaitForSelectAnime.value) {
+        isWaitForSelectAnime.value = false
+        message.info('已取消')
+        msg?.destroy()
+        return 
+      }
+      isWaitForSelectAnime.value = true
+      msg = message.info('请选择一个动画块后开始录制', { duration: 0 })
+      startSpeech(
+        () => {
+          handleStartPause()
+          isWaitForSelectAnime.value = false
+          msg?.destroy()
+        }
+      )
+      return
+    }
+    handleStartPause()
+  },
+  stop: () => {
+    // TODO
   }
 }
 
-const { handleStartRecord, handleStopRecord } = useRecorder()
+ondataavailable.subscribe(async data => {
+  if(!data.isSilence) {
+    const blob = await AudioRecorder.toWAVBlob(data.blob)
+    const duration = data.duration
+    // handleAudioOutput({ audio: blob, duration })
+    return
+  }
+  // TODO 一般可能最后一段音频才需要考虑是否包含说话声音
+  // const txtLength = Math.floor(data.duration / 0.5)
+  // projectStore.fragment(props.id).createBlank({
+  //   txtLength,
+  //   duration: data.duration
+  // }).catch(e => {
+  //   message.error(t('studio.msg.create_fragment_error'))
+  // })
+})
+
+const recMode = ref('speech')
+const options: SelectOption[] = [
+  {
+    label: '演讲模式',
+    value: 'speech',
+    txt: '演讲'
+  },
+  {
+    label: '自由模式',
+    value: 'free',
+    txt: '自由'
+  }
+]
+
 </script>
 <template>
-  <div class="studio" ref="studioRef">
+  <div class="studio" ref="studioEl">
     <!-- 顶部 -->
     <div class="header" :height="47">
       <div style="width: 24px;" />
@@ -317,9 +197,9 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
               :multiple="selectedFragments.length > 1"
               :duration="Number(element.duration)"
               :readonly="state.isReadonly"
-              @on-expand="handleExpand(element)"
-              @on-contextmenu="handleContextmenu($event, element)"
-              @on-select="handleSelect($event, element)"
+              @expand="handleExpand(element)"
+              @contextmenu="handleContextmenu($event, element)"
+              @select="handleSelect($event, element)"
             >
               <template #txt>
                 <Character
@@ -367,7 +247,7 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
             <template #trigger>
               <n-button class="toolbar-btn" quaternary size="small" :disabled="state.isReadonly">
                 <template #icon>
-                  <n-icon :component="Interpreter" :size="24" @click="handleSpeakerChange(state.recorderMode === 'ASR'? 'human' : 'machine')" />
+                  <n-icon :component="Interpreter" :size="24" @click="handleSpeakerChange(recorderMode === 'ASR'? 'human' : 'machine')" />
                 </template>
               </n-button>
             </template>
@@ -378,7 +258,7 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
                 :alt="speaker?.name"
                 :style="{ width: '50px', height: '50px', objectFit: 'contain' }"
                 @error="(e) => (e.target! as HTMLImageElement).src='./avatar03.png'"
-                @click="handleSpeakerChange(state.recorderMode === 'ASR'? 'human' : 'machine')"
+                @click="handleSpeakerChange(recorderMode === 'ASR'? 'human' : 'machine')"
               >
               <span class="role-name">{{ speaker?.name || '' }}</span>
             </div>
@@ -386,9 +266,9 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
         </template>
         <template #right>
           <!-- 语速选择 -->
-          <n-popselect v-if="state.recorderMode === 'TTS'" v-model:value="state.ttsSpeed" :options="speedOptions" placement="top" trigger="click">
+          <n-popselect v-if="recorderMode === 'TTS'" v-model:value="ttsSpeed" :options="speedOptions" placement="top" trigger="click">
             <n-button class="toolbar-btn"  ghost size="small" :style="{ width: '50px' }" :disabled="state.isReadonly">
-              {{ `${state.ttsSpeed === 1 ? '语速' : `${state.ttsSpeed}x`}`}}
+              {{ `${ttsSpeed === 1 ? '语速' : `${ttsSpeed}x`}`}}
             </n-button>
           </n-popselect>
           <!-- 导入音频文件 -->
@@ -406,7 +286,7 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
           <!-- 模式切换 -->
           <n-button class="toolbar-btn" quaternary size="small" :disabled="state.isReadonly" @keydown.prevent="" @click="handleModeSwitch">
             <template #icon>
-              <n-icon :component="state.recorderMode === 'TTS' ? Voice : TextT24Filled" :size="24"/>
+              <n-icon :component="recorderMode === 'TTS' ? Voice : TextT24Filled" :size="24"/>
             </template>
           </n-button>
           <!-- 回收站 -->
@@ -418,11 +298,14 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
         </template>
       </StudioToolbar>
       <!-- 输入区 -->
-      <div class="input-area" v-show="state.recorderMode === 'TTS'">
+      <div class="input-area" v-show="recorderMode === 'TTS' && !isStarted">
         <TTS  :readonly="state.isReadonly" @on-text-output="handleTextOutput"  />
       </div>
-      <div class="input-area" v-show="state.recorderMode === 'ASR'">
-        <ASR  :readonly="state.isReadonly" :shortcut="state.isShortcutAllow && state.isFocus" @output="handleAudioOutput" @inputting="handleInputting" />
+      <div class="input-area" v-show="recorderMode === 'ASR' && !isStarted">
+        <ASR :readonly="state.isReadonly" :shortcut="state.isShortcutAllow && state.isFocus" @output="handleAudioOutput" @inputting="handleInputting" />
+      </div>
+      <div class="wave-area" v-show="isStarted">
+        <canvas v-show="isWaveformVisible" class="wave" ref="waveEl" />
       </div>
       <div v-show="state.isFocus" class="shortcut">
         <n-popover trigger="hover" placement="bottom">
@@ -432,12 +315,12 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
           <span>{{ state.isShortcutAllow ? 'Ctrl + Number0' : '快捷键已禁用' }}</span>
         </n-popover>
       </div>
-      <div v-if="state.isAudioInputting" class="recording">
+      <div v-if="isAudioInputting" class="recording">
         <div class="recording-content">
           <Icon class="icon" icon="ic:sharp-settings-voice" height="64px"/>
           <span class="text">正在录音</span>
         </div>
-        <span class="duration"> {{ state.duration }} </span>
+        <span class="duration"> {{ inputtingDuration }} </span>
       </div>
     </div>
     <!-- 下拉列表 -->
@@ -451,28 +334,69 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
       :on-clickoutside="() => dropdownState.isShow = false"
     />
     
-    <div class="speech-mode">
-      <div class="btn"></div>
-      <div class="btn" @click="handleStartRecord">{{ '开始' }}</div>
-      <div class="btn" @click="handleStopRecord">停止</div>
+    <div :class="{ 'speech-mode': 1, 'speech-mode-hide' : !isShowSpeechModeToolbar }">
+      <div class="btn-group">
+        <div class="btn">
+          <n-popselect v-model:value="recMode" :options="options" trigger="click">
+            <div :style="{ display: 'flex', flexDirection: 'column', alignItems: 'center' }">
+              <span>{{ options.find(item => item.value === recMode)?.txt }}</span>
+              <span>模式</span>
+            </div>
+          </n-popselect>
+        </div>
+        <div class="btn" @click="speechMethods.start()">
+          {{ isRecording ? '暂停' : (isStarted ? '继续' : isWaitForSelectAnime ? '选择' : '开始') }}
+          <Icon v-if="!isRecording && !isStarted && !isWaitForSelectAnime" icon="fluent:mic-48-regular" height="24" />
+          <Icon v-if="!isRecording && isStarted"  icon="fluent:mic-pulse-48-regular" height="24" />
+          <Icon v-if="isWaitForSelectAnime" icon="mynaui:location-selected" height="24" />
+          <Icon v-if="isRecording" icon="svg-spinners:blocks-wave" height="24" />
+        </div>
+        <div :class="{ btn: 1, disabled: !isStarted }" @click="handleStopRecord">
+          停止
+          <Icon icon="fluent:mic-off-48-regular" height="24" />
+        </div>
+        <div :class="{ btn: 1, disabled: !isStarted }" @click="handleCut">
+          分段
+          <Icon icon="solar:video-frame-cut-broken" height="24" />
+        </div>
+        <div :class="{ btn: 1, disabled: !isStarted }" @click="handleWaveformVisible">
+          波形图
+          <Icon icon="mage:sound-waves" height="24" />
+        </div>
+      </div>
+      <div class="collapse-btn" @click="isShowSpeechModeToolbar = !isShowSpeechModeToolbar">
+        <Icon :icon="isShowSpeechModeToolbar ?'material-symbols:arrow-forward-ios-rounded' : 'material-symbols:arrow-back-ios-rounded'" height="24" />
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.speech-mode-hide {
+  display: none;
+  right: -80px!important;
+  .collapse-btn {
+    position: absolute;
+    left: -44px;
+    cursor: pointer;
+  }
+}
 .speech-mode {
   position: absolute;
-  width: 60px;
-  height: 360px;
-  right: 30px;
   bottom: 50%;
+  right: 0;
   transform: translateY(50%);
-  background-color: rgb(95, 95, 95);
+  background-color: v-bind('themeVars.cardColor');
   border-radius: 3px;
+  padding: 6px 6px;
+  box-shadow: v-bind('themeVars.boxShadow3');
   display: flex;
   flex-direction: column;
+  transition: all 0.2s ease-in-out;
   .btn {
+    user-select: none;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 60px;
@@ -486,6 +410,21 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
     &:active {
       background-color: v-bind('themeVars.buttonColor2Pressed');
     }
+    &:first-child {
+      margin-top: 0px;
+    }
+  }
+  .disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .collapse-btn {
+    z-index: 1;
+    position: absolute;
+    bottom: 50%;
+    left: -20px;
+    transform: translateY(50%);
+    cursor: pointer;
   }
 }
 .role {
@@ -577,6 +516,22 @@ const { handleStartRecord, handleStopRecord } = useRecorder()
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .wave-area {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    cursor: not-allowed;
+    background-color: #3a3a3a3a;
+    .wave {
+      position: absolute;
+      top: 38px;
+      left: 0px;
+      width: 100%;
+      height: 100%;
+      background-color: #2e2e2e36;
+      // transform: rotateZ(90deg);
+    }
   }
   .shortcut {
     cursor: pointer;

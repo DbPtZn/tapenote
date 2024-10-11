@@ -34,6 +34,7 @@ const startRecorder = () => {
   // 开始录音
   // console.log('开始录音')
   if(isRecording.value) return
+  emits('inputting', true)
   isRecording.value = true
   recorder.start()
     .then(() => {
@@ -52,6 +53,7 @@ const startRecorder = () => {
 const stopRecorder = async () => {
   // 停止录音
   isRecording.value = false
+  emits('inputting', false)
   console.log('停止录音')
   // recorder.stop()
   recorder.stop().then(async (audio) => {

@@ -2,6 +2,7 @@ import AudioFragment from './AudioFragment.vue'
 import Character from './Character.vue'
 import TTS from './TTS.vue'
 import ASR from './ASR.vue'
+import TipBtn from './TipBtn.vue'
 import StudioToolbar from './StudioToolbar.vue'
 import ToolbarButton from './ToolbarButton.vue'
 import SpeakerSelectList from './SpeakerSelectList.vue'
@@ -9,4 +10,4 @@ import TxtEdit from './TxtEdit.vue'
 import FragmentEditor from './FragmentEditor.vue'
 import FragmentTrash from './FragmentTrash.vue'
 import CreateBlankFragment from './CreateBlankFragment.vue'
-export { AudioFragment, Character, TTS, ASR, StudioToolbar, ToolbarButton, SpeakerSelectList, TxtEdit, FragmentTrash, CreateBlankFragment, FragmentEditor }
+export { AudioFragment, Character, TTS, ASR, TipBtn, StudioToolbar, ToolbarButton, SpeakerSelectList, TxtEdit, FragmentTrash, CreateBlankFragment, FragmentEditor }

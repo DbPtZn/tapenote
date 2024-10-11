@@ -12,11 +12,12 @@ import spectrogram from 'wavesurfer.js/dist/plugins/spectrogram'
 import Crunker from 'crunker'
 import ControlBtn from './_utils/ControlBtn.vue'
 import audiobufferToWav from 'audiobuffer-to-wav'
-import { cropAudio, playCroppedAudio, formatTimeToMinutesSecondsMilliseconds, deleteAudioSegments } from './_utils/audio-process'
+import { cropAudio, playCroppedAudio, deleteAudioSegments } from './_utils/audio-process'
 
 // import Timeline from '@losting/timeline'
 import useStore from '@/store'
 import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
+import { formatTimeToMinutesSecondsMilliseconds } from '../_utils/formatTime'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 
 const props = defineProps<{
@@ -131,34 +132,14 @@ onMounted(() => {
     // wavesurfer.loadDecodedBuffer(newBuffer);
   })
   regions.on('region-created', region => {
-    fromEvent<MouseEvent>(region.element, 'contextmenu').subscribe(ev => {
+    const contextmenu = fromEvent<MouseEvent>(region.element, 'contextmenu').subscribe(ev => {
       console.log('region-contextmenu', ev)
       handleContextmenu(ev, region)
     })
-    // region.on('over', () => {
-    //   // isInsideRegion.value = true
-    //   // console.log('region-over', region)
-    //   // focuRegion = region
-    // })
-    // region.on('leave', () => {
-    //   // console.log('region-out', region)
-    //   // isInsideRegion.value = false
-    // })
-    // region.on('dblclick', () => {
-    //   console.log('region-click', region)
-    //   focuRegion = region
-    //   isRegionSelected.value = true
-    //   region.element.classList.add('selected')
-    //   region.element.style.border = '2px solid #add8e6'
-    //   region.element.style.boxShadow = '0 0 10px rgba(173, 216, 230, 0.7)'
-    // })
-    // region.on('click', () => {
-    //   console.log('region-click', region)
-    //   isRegionSelected.value = false
-    //   region.element.classList.remove('selected')
-    //   region.element.style.border = 'none'
-    //   region.element.style.boxShadow = 'none'
-    // })
+    subs.push(contextmenu)
+    region.on('remove', () => {
+      contextmenu.unsubscribe()
+    })
   })
   regions.on('region-in', region => {
     // console.log('region-in', region)
@@ -273,7 +254,7 @@ onMounted(() => {
   )
 })
 onUnmounted(() => {
-  subs.forEach(sub => sub.unsubscribe())
+  subs.forEach(sub => sub?.unsubscribe())
 })
 
 const options = computed<DropdownOption[]>(() => {
@@ -396,7 +377,7 @@ function handleSelect(ev: MouseEvent) {
             <input
               v-show="focus === index"
               class="input"
-              :value="fragment.transcript[index]"
+              :value="inputs[index]"
               @input="handleInput($event, index)"
               @blur="handleBlur"
             />
@@ -427,9 +408,16 @@ function handleSelect(ev: MouseEvent) {
       </div>
       <div class="control-item right">
         <span>指针操作：</span>
-        <ControlBtn tip="从指针位置裁剪" @click="methods.handleCut">
-          <Icon icon="material-symbols:content-cut-rounded" height="24" />
-        </ControlBtn>
+        <div>
+          <ControlBtn tip="从指针位置裁剪" @click="methods.handleCut">
+            <Icon icon="material-symbols:content-cut-rounded" height="24" />
+          </ControlBtn>
+        </div>
+        <div :style="{ marginLeft: '8px' }">
+          <ControlBtn tip="擦除首尾静音" @click=";" :disabled="true">
+            <Icon icon="icon-park-outline:clear" height="24" />
+          </ControlBtn>
+        </div>
       </div>
     </div>
     <div class="footer"></div>

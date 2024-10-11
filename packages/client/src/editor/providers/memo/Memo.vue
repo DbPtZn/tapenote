@@ -15,6 +15,7 @@ const workbenchEl = layout.workbench
 
 const structurer = injector.get(Structurer)
 const scrollerEl = structurer.scrollerRef
+const rootEl = structurer.rootRef
 const props = defineProps<{
   id: string
   isExpanded: boolean
@@ -79,12 +80,13 @@ const { x, y } = useDraggable(memoEl, {
 
 const offsetX = computed(() => {
   const workbenchRect = workbenchEl.getBoundingClientRect()
-  return x.value - workbenchRect.left
+  const rootRect = rootEl!.getBoundingClientRect()
+  return x.value - workbenchRect.left + rootRect.left
 })
 const offsetY = computed(() => {
   const workbenchRect = workbenchEl.getBoundingClientRect()
   const scrollerRect = scrollerEl!.getBoundingClientRect()
-  console.log(scrollerRect.top)
+  // console.log(scrollerRect.top)
   return y.value - workbenchRect.top + scrollerRect.top - scrollerEl!.scrollTop
 })
 

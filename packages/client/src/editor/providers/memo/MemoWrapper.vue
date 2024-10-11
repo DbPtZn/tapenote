@@ -21,7 +21,6 @@ const methods = {
   handleUpdateMemoBgColor(id: string, bgColor: 'yellow' | 'green' | 'pink' | 'purple' | 'blue' | 'white' | 'gray') {
     memoService.onUpdateBgColor.next({ id, bgColor })
   },
-
   handleExpandMemo(id: string, isExpanded: boolean) {
     memoService.onExpand.next({ id, isExpanded })
   },
@@ -49,7 +48,7 @@ const methods = {
     :bgcolor="item.bgColor"
     @resize="methods.handleResizeMemo"
     @move="methods.handleMoveMemo"
-    @update-color="methods.handleUpdateMemoBgColor"
+    @updateColor="methods.handleUpdateMemoBgColor"
     @expand="methods.handleExpandMemo"
     @delete="methods.handleDeleteMemo"
     @save="methods.handleSaveMemo"
