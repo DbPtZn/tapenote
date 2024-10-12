@@ -6,6 +6,7 @@ import WaveSurfer from 'wavesurfer.js'
 import { useThemeVars } from 'naive-ui'
 
 export function useRecorder() {
+  const onRecorderEnd = new Subject<string>()
   const onStateUpdate = new Subject<boolean>()
   const ondataavailable = new Subject<{ blob: Blob; duration: number; isSilence?: boolean }>()
 
@@ -23,6 +24,9 @@ export function useRecorder() {
   let audioChunks: Blob[] = []
 
   let isNewRecorder = false // 是否为新的录音（新录音有个静音等待期）
+  let currentDuration = 0
+  let startTime = 0
+  let pausedTime = 0
   async function startRecording() {
     init()
     isStarted.value = true
@@ -36,8 +40,9 @@ export function useRecorder() {
       video: false
     })
 
-    let totalDuration = 0
-    let startTime = Date.now()
+    currentDuration = 0
+    startTime = 0
+    pausedTime = 0
 
     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
     audioChunks = [] // 重置音频块
@@ -46,11 +51,24 @@ export function useRecorder() {
       if (event.data.size > 0) {
         // console.log('add chunk', event, '音频数据块的大小（MB）:', event.data.size / (1024 * 1024))
         const endTime = Date.now()
-        totalDuration += (endTime - startTime) / 1000
+        currentDuration += (endTime - startTime) / 1000
         startTime = Date.now()
 
         audioChunks.push(event.data)
       }
+    }
+
+    mediaRecorder.onstart = () => {
+      startTime = Date.now() // 记录开始时间
+    }
+
+    mediaRecorder.onpause = () => {
+      pausedTime = Date.now() // 记录暂停的时间
+    }
+    
+    mediaRecorder.onresume = () => {
+      const resumedTime = Date.now()
+      startTime += resumedTime - pausedTime // 更新开始时间，以补偿暂停的时间
     }
 
     mediaRecorder.start()
@@ -96,6 +114,7 @@ export function useRecorder() {
         }
         // 连续长时间静音的时候直接结束录制状态
         if (silentFrameCount >= endSilentFrames) {
+          onRecorderEnd.next('长时间无活动')
           handleStopRecord()
         }
       }
@@ -122,7 +141,7 @@ export function useRecorder() {
 
     mediaRecorder.addEventListener('stop', () => {
       const finalBlob = new Blob(audioChunks, { type: 'audio/webm' })
-      ondataavailable.next({ blob: finalBlob, duration: totalDuration, isSilence: isNewRecorder })
+      ondataavailable.next({ blob: finalBlob, duration: currentDuration, isSilence: isNewRecorder })
       isRecording.value = false
       onStateUpdate.next(isRecording.value)
       const { width, height } = cvs
@@ -151,6 +170,10 @@ export function useRecorder() {
     }
   }
 
+  function getCurrentDuration() {
+    return (Date.now() - startTime) / 1000
+  }
+  
   function handlePauseRecord() {
     mediaRecorder?.pause()
     isRecording.value = false
@@ -178,6 +201,7 @@ export function useRecorder() {
     stream = null
     audioCtx?.close()
     audioCtx = null
+    onRecorderEnd.next('录制结束')
   }
 
   function init() {
@@ -195,11 +219,14 @@ export function useRecorder() {
 
   return {
     waveEl,
+    currentDuration,
     isWaveformVisible,
     isRecording,
     isStarted,
     onStateUpdate,
     ondataavailable,
+    onRecorderEnd,
+    getCurrentDuration,
     handleStartPause,
     handleStopRecord,
     handleCut,

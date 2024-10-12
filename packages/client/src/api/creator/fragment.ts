@@ -66,6 +66,15 @@ interface CopyFragmentDto {
   type: 'copy' | 'cut'
 }
 
+interface CreateASRChunkDto {
+  procedureId?: string
+  key?: string
+  speakerId: string
+  audio: Blob
+  duration: number
+  actions: { animeId: string, keyframe: number }[]
+}
+
 
 export const fragment = (axios: AxiosInstance) => {
   return {
@@ -77,6 +86,20 @@ export const fragment = (axios: AxiosInstance) => {
       formdata.append('speakerId', dto.speakerId)
       formdata.append('key', dto.key!)
       return axios.post<T>('/fragment/write/create/asr', formdata, {
+        headers: {
+          'Content-Type':'multipart/form-data'
+        }
+      })
+    },
+    createChunk<T>(dto: CreateASRChunkDto) {
+      const formdata = new FormData()
+      formdata.append('procedureId', dto.procedureId!)
+      formdata.append('audio', dto.audio, 'audio.wav') // 必须添加文件名和后缀
+      formdata.append('duration', dto.duration.toString())
+      formdata.append('speakerId', dto.speakerId)
+      formdata.append('key', dto.key!)
+      formdata.append('actions', JSON.stringify(dto.actions))
+      return axios.post<T>('/fragment/write/create/chunk', formdata, {
         headers: {
           'Content-Type':'multipart/form-data'
         }

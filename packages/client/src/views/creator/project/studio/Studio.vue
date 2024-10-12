@@ -80,10 +80,6 @@ const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe((editor
   // })
 })
 
-onUnmounted(() => {
-  subscription.unsubscribe()
-})
-
 // 总时长
 const isTotalDurationShow = ref(false)
 const totalDuration = computed(() => {
@@ -95,8 +91,8 @@ const totalDuration = computed(() => {
       }, 0)
   })
 
-const { waveEl, isRecording, isWaveformVisible, isStarted, onStateUpdate, ondataavailable, handleStartPause, handleStopRecord, handleCut, handleWaveformVisible } = useRecorder()
-const { startSpeech } = useSpeech(bridge)
+const { waveEl, isRecording, isWaveformVisible, isStarted, onStateUpdate, onRecorderEnd, ondataavailable, getCurrentDuration, handleStartPause, handleStopRecord, handleCut, handleWaveformVisible } = useRecorder()
+const { startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration)
 
 const isWaitForSelectAnime = ref(false)
 let msg: MessageReactive | undefined = undefined
@@ -110,7 +106,7 @@ const speechMethods = {
         return 
       }
       isWaitForSelectAnime.value = true
-      msg = message.info('请选择一个动画块后开始录制', { duration: 0 })
+      msg = message.info('在选择一个动画块后开始录制', { duration: 0 })
       startSpeech(
         () => {
           handleStartPause()
@@ -123,26 +119,36 @@ const speechMethods = {
     handleStartPause()
   },
   stop: () => {
-    // TODO
+    handleStopRecord()
+    stopSpeech()
   }
 }
 
-ondataavailable.subscribe(async data => {
-  if(!data.isSilence) {
-    const blob = await AudioRecorder.toWAVBlob(data.blob)
-    const duration = data.duration
-    // handleAudioOutput({ audio: blob, duration })
-    return
-  }
-  // TODO 一般可能最后一段音频才需要考虑是否包含说话声音
-  // const txtLength = Math.floor(data.duration / 0.5)
-  // projectStore.fragment(props.id).createBlank({
-  //   txtLength,
-  //   duration: data.duration
-  // }).catch(e => {
-  //   message.error(t('studio.msg.create_fragment_error'))
-  // })
-})
+const subs = [
+  ondataavailable.subscribe(async data => {
+    if(!data.isSilence) {
+      const blob = await AudioRecorder.toWAVBlob(data.blob)
+      const duration = data.duration
+      const actions = getActionSequence()
+      console.log('duration:', duration, 'actions:', actions)
+      // handleAudioOutput({ audio: blob, duration })
+      return
+    }
+    // TODO 一般可能最后一段音频才需要考虑是否包含说话声音
+    // const txtLength = Math.floor(data.duration / 0.5)
+    // projectStore.fragment(props.id).createBlank({
+    //   txtLength,
+    //   duration: data.duration
+    // }).catch(e => {
+    //   message.error(t('studio.msg.create_fragment_error'))
+    // })
+  }),
+  onRecorderEnd.subscribe(info => {
+    message.info(info)
+    stopSpeech()
+  })
+]
+
 
 const recMode = ref('speech')
 const options: SelectOption[] = [
@@ -157,6 +163,11 @@ const options: SelectOption[] = [
     txt: '自由'
   }
 ]
+
+onUnmounted(() => {
+  subscription.unsubscribe()
+  subs.forEach(sub => sub.unsubscribe())
+})
 
 </script>
 <template>

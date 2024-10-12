@@ -478,6 +478,9 @@ export class Player {
       case 'anime-component':
         el.style.display = 'block'
         break
+      default:
+        el.style.display = 'block'
+        break
     }
     el.style.visibility = 'visible'
     const anime = this.anime.getAnime(effectValue)

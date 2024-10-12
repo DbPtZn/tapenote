@@ -2,7 +2,6 @@ import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { Fragment, FragmentSpeaker } from './entities/fragment.entity'
 import { StorageService } from 'src/storage/storage.service'
-import { CreateASRFragmentDto } from './dto/create-asr-fragment.dto'
 import { RemovedEnum } from 'src/enum'
 import {
   AddPromoterDto,
@@ -12,7 +11,8 @@ import {
   RestoreFragmentDto,
   UpdateFragmentsTagsDto,
   UpdateSequenceDto,
-  UpdateTranscriptDto
+  UpdateTranscriptDto,
+  CreateASRFragmentDto
 } from './dto'
 import { SherpaService } from 'src/sherpa/sherpa.service'
 import { exec, execSync } from 'child_process'
@@ -50,12 +50,7 @@ export class FragmentService {
     private readonly logger: LoggerService
   ) {}
 
-  async getFragmentSpeaker(
-    speakerId: string,
-    type: 'human' | 'machine',
-    userId: string,
-    dirname: string
-  ) {
+  async getFragmentSpeaker(speakerId: string, type: 'human' | 'machine', userId: string, dirname: string) {
     try {
       let fragmentSpeaker: FragmentSpeaker
       if (speakerId) {
@@ -87,6 +82,221 @@ export class FragmentService {
       return fragmentSpeaker
     } catch (error) {
       console.log(error)
+      throw error
+    }
+  }
+
+  async createChunk(
+    createASRFragmentDto: {
+      procedureId: string
+      audio: string
+      duration: number
+      actions: { animeId: string; serial: string; keyframe: number }[]
+      speakerId: string
+    },
+    userId: string,
+    dirname: string
+  ) {
+    const { procedureId, audio, duration, speakerId, actions } = createASRFragmentDto
+    try {
+      this.userlogger.log(`正在为项目${procedureId}创建音频转文本片段...`)
+      if (!audio || !procedureId || !dirname) {
+        console.log('输入错误, 缺少必要参数!')
+        throw new Error('输入错误, 缺少必要参数！')
+      }
+      if (duration === 0 || Number(duration) === 0) {
+        throw new Error('音频时长为 0 秒，录入音频数据失败，请检查录音设备是否存在问题')
+      }
+      const procudure = await this.projectService.findOneById(procedureId, userId)
+      if (!procudure) throw new Error('找不到项目工程文件！')
+
+      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname)
+
+      const fragmentId = UUID.v4()
+      const fragment = new Fragment()
+      fragment.id = fragmentId
+      fragment.userId = userId
+      fragment.project = procudure
+      fragment.audio = ''
+      fragment.duration = Number(duration)
+      fragment.txt = ''
+      fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
+      fragment.tags = []
+      fragment.promoters = []
+      fragment.timestamps = []
+      fragment.speaker = fragmentSpeaker
+      fragment.removed = RemovedEnum.NEVER
+      // 先添加到项目工程文件中（占位）
+      this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
+      await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
+
+      const filepath = this.storageService.createTempFilePath('.wav')
+      fragment.audio = basename(filepath)
+
+      // 格式化音频文件
+      await this.ffmpegService.audioformat(audio, filepath)
+
+      // 重新计算处理后音频的时长
+      fragment.duration = await this.ffmpegService.calculateDuration(filepath)
+      this.userlogger.log(`静音清理后音频时长为：${fragment.duration}`)
+
+      // 语音识别
+      try {
+        const result = await this.sherpaService.asr(filepath)
+        if (result) {
+          const punText = await this.sherpaService.addPunct(result.text)
+          const data = this.sherpaService.align(punText, result)
+          this.userlogger.log(`语音识别成功，转写文本为: ${result.text}`)
+
+          fragment.txt = data.text
+          fragment.timestamps = data.timestamps
+          const length = data.tokens?.length
+          fragment.transcript = data.tokens
+          fragment.tags = new Array(length)
+          fragment.promoters = new Array(length)
+
+          // 添加动作
+          if (actions.length > 0) {
+            const minTimestamp = Math.min(...fragment.timestamps)
+            const maxTimestamp = Math.max(...fragment.timestamps)
+            for (let i = 0; i < actions.length; i++) {
+              const { animeId, serial, keyframe } = actions[i]
+              // 确认 keyframe 是否在音频范围内
+              if (keyframe > fragment.duration) continue
+              // 比最小的时间戳更小的情况(左侧无元素)
+              if (keyframe < minTimestamp) {
+                // 下一个 action 的 keyframe 肯定比当前的大，使用 minTimestamp 查找位置能确保后一个 action 的 timestamp 始终比前一个的大，确保插入顺序
+                const position = fragment.timestamps.indexOf(minTimestamp)
+                fragment.timestamps.splice(position, 0, keyframe)
+                fragment.transcript.splice(position, 0, '#')
+                fragment.promoters.splice(position, 0, animeId)
+                continue
+              }
+              // 比最大的时间戳更大的情况(右侧无元素)
+              if (keyframe > maxTimestamp) {
+                // 同理，下一个 action 的 keyframe 肯定比当前的大，所以直接使用 push
+                fragment.timestamps.push(keyframe)
+                fragment.transcript.push('#')
+                fragment.promoters.push(animeId)
+                continue
+              }
+
+              let index = findClosestIndex(fragment.timestamps, keyframe)
+
+              let isBinding = false
+
+              if (fragment.promoters[index] === null) {
+                fragment.promoters[index] = animeId
+                fragment.tags[index] = serial
+                isBinding = true
+              }
+              if (isBinding) continue
+
+              // 如果 index 处已经被占用，向前检查
+              // for (let i = index - 1; i >= 0; i--) {
+              //   if (fragment.promoters[i] === null) {
+              //     fragment.promoters[i] = animeId
+              //     fragment.tags[i] = serial
+              //     isBinding = true
+              //     break
+              //   }
+              // }
+              // if (isBinding) continue
+
+              // // 如果 index 处已经被占用，向后检查
+              // for (let i = index + 1; i < fragment.timestamps.length; i++) {
+              //   if (fragment.promoters[i] === null) {
+              //     fragment.promoters[i] = animeId
+              //     fragment.tags[i] = serial
+              //     isBinding = true
+              //     break
+              //   }
+              // }
+              // if (isBinding) continue
+              const emptySlot = findEmptySlot(fragment.promoters, index)
+              if (emptySlot !== -1) {
+                fragment.promoters[emptySlot] = animeId
+                fragment.tags[emptySlot] = serial
+                continue
+              }
+
+              if (keyframe === fragment.timestamps[index]) {
+                if (fragment.timestamps[index + 1]) {
+                  // 先取到与下一个时间戳中间位置作为新的时间戳
+                  let newKeyframe =
+                    fragment.timestamps[index] + (fragment.timestamps[index + 1] - fragment.timestamps[index]) / 2
+                  // 如果新的时间戳还大于下一个 action 的 keyframe, 那么就改为取到当前时间戳到下一个 keyframe 之间的位置
+                  if (actions[i] && newKeyframe > actions[i].keyframe) {
+                    newKeyframe = fragment.timestamps[index] + (actions[i].keyframe - fragment.timestamps[index]) / 2
+                  }
+                  fragment.timestamps.splice(index + 1, 0, newKeyframe)
+                  fragment.transcript.splice(index + 1, 0, '#')
+                  fragment.promoters.splice(index + 1, 0, animeId)
+                  continue
+                }
+                // 如果 index + 1 已经没有了，那意味着是最后一个元素了
+                // 如果没有下一个动作，则取到最后一个时间戳到结束时间之间的位置
+                let newKeyframe = fragment.timestamps[index] + (fragment.duration - fragment.timestamps[index]) / 2
+                // 如果还有下一个动作，则取到下一个动作之间的时间
+                if (actions[i + 1]) {
+                  newKeyframe = fragment.timestamps[index] + (actions[i + 1].keyframe - fragment.timestamps[index]) / 2
+                }
+                fragment.timestamps.splice(index + 1, 0, newKeyframe)
+                fragment.transcript.splice(index + 1, 0, '#')
+                fragment.promoters.splice(index + 1, 0, animeId)
+                continue
+              }
+              // if (keyframe < fragment.timestamps[index]) {
+              //   fragment.timestamps.splice(index, 0, keyframe)
+              //   fragment.transcript.splice(index, 0, '#')
+              //   fragment.promoters.splice(index, 0, animeId)
+              //   continue
+              // }
+              // if (keyframe > fragment.timestamps[index]) {
+              //   fragment.timestamps.splice(index + 1, 0, keyframe)
+              //   fragment.transcript.splice(index + 1, 0, '#')
+              //   fragment.promoters.splice(index + 1, 0, animeId)
+              // }
+              const insertIndex = keyframe < fragment.timestamps[index] ? index : index + 1
+              fragment.timestamps.splice(insertIndex, 0, keyframe)
+              fragment.transcript.splice(insertIndex, 0, '#')
+              fragment.promoters.splice(insertIndex, 0, animeId)
+            }
+          }
+        }
+
+        if (filepath && fragment.duration !== 0) {
+          // TODO 这里应该用事务确保音频文件上传成功，否则应该回滚
+          await this.fragmentsRepository.save(fragment)
+
+          // 确定创建片段成功后再上传文件
+          await this.uploadService.upload(
+            {
+              filename: fragment.audio,
+              path: filepath,
+              mimetype: 'audio/wav'
+            },
+            userId,
+            dirname,
+            fragment.id
+          )
+        } else {
+          fsx.removeSync(filepath)
+          throw new Error('语音识别失败！')
+        }
+      } catch (error) {
+        console.log(`语音识别失败：${error.message}`)
+        this.userlogger.log(`语音识别失败，错误原因：${error.message} `)
+        fsx.removeSync(filepath)
+        await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
+        throw error
+      }
+
+      fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
+      fragment.speaker.avatar = this.storageService.getResponsePath(fragmentSpeaker.avatar, dirname)
+      return fragment
+    } catch (error) {
+      this.userlogger.error(`创建片段失败，错误原因：${error.message} `)
       throw error
     }
   }
@@ -175,11 +385,16 @@ export class FragmentService {
           if (filepath && fragment.duration !== 0) {
             // console.log(fragment)
             await this.fragmentsRepository.save(fragment)
-            await this.uploadService.upload({
-              filename: fragment.audio,
-              path: filepath,
-              mimetype: 'audio/wav'
-            }, userId, dirname, fragment.id)
+            await this.uploadService.upload(
+              {
+                filename: fragment.audio,
+                path: filepath,
+                mimetype: 'audio/wav'
+              },
+              userId,
+              dirname,
+              fragment.id
+            )
           }
         })
         .catch(async error => {
@@ -280,15 +495,20 @@ export class FragmentService {
             fragment.tags = new Array(length)
             fragment.promoters = new Array(length)
           }
-          if (filepath  && fragment.duration !== 0) {
+          if (filepath && fragment.duration !== 0) {
             // TODO 这里应该用事务确保音频文件上传成功，否则应该回滚
             await this.fragmentsRepository.save(fragment)
             // 确定创建片段成功后再上传文件
-            await this.uploadService.upload({
-              filename: fragment.audio,
-              path: filepath,
-              mimetype: 'audio/wav'
-            }, userId, dirname, fragment.id)
+            await this.uploadService.upload(
+              {
+                filename: fragment.audio,
+                path: filepath,
+                mimetype: 'audio/wav'
+              },
+              userId,
+              dirname,
+              fragment.id
+            )
           } else {
             fsx.removeSync(filepath)
             throw new Error('语音识别失败！')
@@ -368,12 +588,16 @@ export class FragmentService {
       fragment.audio = basename(filepath)
 
       const result = await this.fragmentsRepository.save(fragment)
-      await this.uploadService.upload({
-        filename: fragment.audio,
-        path: filepath,
-        mimetype: 'audio/wav'
-      }, userId, dirname, result.id)
-
+      await this.uploadService.upload(
+        {
+          filename: fragment.audio,
+          path: filepath,
+          mimetype: 'audio/wav'
+        },
+        userId,
+        dirname,
+        result.id
+      )
 
       this.userlogger.log(`创建空白片段成功，片段ID为：${result.id}`)
       await this.projectService.updateSequence({ procedureId, fragmentId: fragment.id, userId, type: 'add' })
@@ -696,7 +920,7 @@ export class FragmentService {
         newFragment.id = UUID.v4()
         newFragment.promoters.fill(null)
         newFragment.tags.fill(null)
-      
+
         // 建立实体关系并更新排序信息
         // let targetProjectDirname = ''
         if (sourceProjectId === targetProjectId) {
@@ -776,5 +1000,69 @@ export class FragmentService {
       this.userlogger.error(`${type}片段失败`, error.message)
       throw error
     }
+  }
+}
+
+function findEmptySlot(promoters: string[], index: number) {
+  // 向前查找
+  for (let i = index - 1; i >= 0; i--) {
+    if (promoters[i] === null) {
+      return i
+    }
+  }
+
+  // 向后查找
+  for (let i = index + 1; i < promoters.length; i++) {
+    if (promoters[i] === null) {
+      return i
+    }
+  }
+
+  // 没有找到空闲位置
+  return -1
+}
+
+function findClosestIndex(arr: number[], target: number): number {
+  let left = 0
+  let right = arr.length - 1
+
+  // 当数组为空时，返回 -1 表示没有找到
+  if (arr.length === 0) {
+    return -1
+  }
+
+  // 二分查找，找到接近 target 的位置
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2)
+
+    if (arr[mid] === target) {
+      return mid // 如果找到精确匹配的元素
+    } else if (arr[mid] < target) {
+      left = mid + 1
+    } else {
+      right = mid
+    }
+  }
+
+  // 到此处，left 和 right 应该指向相同的元素，即 arr[left] 或 arr[right]
+
+  // 如果 target 比数组中的最小值还小
+  if (left === 0) {
+    return 0
+  }
+
+  // 如果 target 比数组中的最大值还大
+  if (left === arr.length) {
+    return arr.length - 1
+  }
+
+  // 比较 left 和 left - 1 之间哪个更接近 target
+  const closestLeft = arr[left - 1]
+  const closestRight = arr[left]
+
+  if (Math.abs(closestLeft - target) <= Math.abs(closestRight - target)) {
+    return left - 1
+  } else {
+    return left
   }
 }

@@ -11,7 +11,9 @@ import { Memo } from './memo.provider'
 type BgColor = Memo['bgColor']
 const injector = inject('injector') as Injector
 const layout = injector.get(Layout)
-const workbenchEl = layout.workbench
+// const workbenchEl = layout.workbench
+// positive: relative; 在 middle 上，虽然元素插入到 workbench 中，但实际相对于 middle 进行定位
+const middleEl = layout.middle 
 
 const structurer = injector.get(Structurer)
 const scrollerEl = structurer.scrollerRef
@@ -79,15 +81,16 @@ const { x, y } = useDraggable(memoEl, {
 })
 
 const offsetX = computed(() => {
-  const workbenchRect = workbenchEl.getBoundingClientRect()
+  const middleRect = middleEl.getBoundingClientRect()
   const rootRect = rootEl!.getBoundingClientRect()
-  return x.value - workbenchRect.left + rootRect.left
+  console.log(middleRect, rootRect)
+  return x.value - middleRect.left + rootRect.left
 })
 const offsetY = computed(() => {
-  const workbenchRect = workbenchEl.getBoundingClientRect()
+  const middleRect = middleEl.getBoundingClientRect()
   const scrollerRect = scrollerEl!.getBoundingClientRect()
   // console.log(scrollerRect.top)
-  return y.value - workbenchRect.top + scrollerRect.top - scrollerEl!.scrollTop
+  return y.value - middleRect.top + scrollerRect.top - scrollerEl!.scrollTop
 })
 
 
