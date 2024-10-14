@@ -27,6 +27,8 @@ export function useRecorder() {
   let currentDuration = 0
   let startTime = 0
   let pausedTime = 0
+  let silentFrameCount = 0
+
   async function startRecording() {
     init()
     isStarted.value = true
@@ -81,12 +83,12 @@ export function useRecorder() {
     // const waveArray = new Uint8Array(analyser.frequencyBinCount)
     const dataArray = new Uint8Array(analyser.fftSize)
     const threshold = 0.01 // 0.01 表示将频谱数据的阈值设为 255 的 1%，即 2.55
-    const silenceDuration = 1500 // 静音检测长度(ms)
+    const silenceDuration = 2000 // 静音检测长度(ms)
     const checkInterval = 100 // 检查间隔(ms)
     const endSilentFrames = 15000 / checkInterval // 连续15秒没有操作时结束录音
     const requiredSilentFrames = silenceDuration / checkInterval // 需要的连续静音帧数
 
-    let silentFrameCount = 0
+    silentFrameCount = 0
 
     isRecording.value = true
     isNewRecorder = true // 每一轮录音都有一个新任务静音等待期，在这个阶段不会因为静音检测而停止
@@ -142,8 +144,6 @@ export function useRecorder() {
     mediaRecorder.addEventListener('stop', () => {
       const finalBlob = new Blob(audioChunks, { type: 'audio/webm' })
       ondataavailable.next({ blob: finalBlob, duration: currentDuration, isSilence: isNewRecorder })
-      isRecording.value = false
-      onStateUpdate.next(isRecording.value)
       const { width, height } = cvs
       ctx.clearRect(0, 0, width, height)
     })
@@ -153,6 +153,10 @@ export function useRecorder() {
     mediaRecorder.onerror = function (event) {
       console.error('MediaRecorder error:', event)
     }
+  }
+
+  function handleOperate() {
+    silentFrameCount = 0
   }
 
   function handleStartPause() {
@@ -195,6 +199,7 @@ export function useRecorder() {
   // 停止录音
   function handleStopRecord() {
     mediaRecorder?.stop()
+    isRecording.value = false
     isStarted.value = false
     mediaRecorder = null
     stream?.getTracks().forEach(track => track.stop())
@@ -202,6 +207,7 @@ export function useRecorder() {
     audioCtx?.close()
     audioCtx = null
     onRecorderEnd.next('录制结束')
+    onStateUpdate.next(isRecording.value)
   }
 
   function init() {
@@ -227,6 +233,7 @@ export function useRecorder() {
     ondataavailable,
     onRecorderEnd,
     getCurrentDuration,
+    handleOperate,
     handleStartPause,
     handleStopRecord,
     handleCut,

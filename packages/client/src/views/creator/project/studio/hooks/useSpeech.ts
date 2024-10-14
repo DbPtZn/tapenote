@@ -2,14 +2,16 @@ import { Bridge } from '../../bridge'
 import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
 import { AnimeProvider } from '@/editor'
 import { useMessage } from 'naive-ui'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { Editor, Layout } from '@textbus/editor'
-type Action = { animeId: string, keyframe: number }
+import useStore from '@/store'
+type Action = Required<Parameters<ReturnType<ReturnType<typeof useStore>['projectStore']['fragment']>['createByAudio']>[0]['actions']>[0]
 
-export function useSpeech(bridge: Bridge, getCurrentDuration: () => number) {
+export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, handleOperate: () => void) {
   const message = useMessage()
 
   const subs1: Subscription[] = []
+  const subs2: Subscription[] = []
 
   let studioEl: HTMLElement
   let editorEl: HTMLElement
@@ -48,7 +50,11 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number) {
       animeMap.forEach((element, index) => {
         if (element === animeElement) {
           startpoint = true
-          pointerIndex.value = index
+          // 等待录音器启动，否则会出现错误计时
+          const timer = setTimeout(() => {
+            pointerIndex.value = index
+            clearTimeout(timer)
+          }, 500)
           return
         }
         if (!startpoint) return
@@ -56,9 +62,32 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number) {
       })
   
       callback()
-      blur()
-      startTime = Date.now()
+      bridge.handleBlur()
+      // startTime = Date.now()
       startEvent.unsubscribe()
+
+      // 允许通过点击动画来添加动作
+      subs2.push(
+        fromEvent<PointerEvent>(editorEl, 'click').subscribe(e => {
+          const target = e.target as HTMLElement
+          const animeElement = AnimeProvider.toAnimeElement(target)
+          if (!animeElement) return
+          const index = animeMap.findIndex(element => element === animeElement)
+          if(index !== -1) pointerIndex.value = index
+          
+          const el = animeMap[index]
+          const animeId = el.dataset.id
+          const serial = el.dataset.serial
+          if(!animeId || !serial) return
+          const currentDuration = getCurrentDuration()
+          // console.log(currentDuration)
+          actionSequence.push({
+            animeId,
+            serial,
+            keyframe: currentDuration
+          })
+        })
+      )
     })
 
     subs1.push(
@@ -69,7 +98,9 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number) {
         }
         if (e.code === 'ArrowUp') {
           if (pointerIndex.value > 0) pointerIndex.value--
+          else message.info(`到顶啦!`)
         }
+        // TODO 通知录音器，如果用户保持操作，不要重起新录音
       })
     )
   }
@@ -80,7 +111,14 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number) {
     })
     animeMap = []
     subs1.forEach(sub => sub.unsubscribe())
+    subs2.forEach(sub => sub.unsubscribe())
   }
+
+  onUnmounted(() => {
+    animeMap = []
+    subs1.forEach(sub => sub.unsubscribe())
+    subs2.forEach(sub => sub.unsubscribe())
+  })
 
   function getActionSequence() {
     const sequence = actionSequence
@@ -89,12 +127,15 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number) {
   }
 
   watch(() => pointerIndex.value, index => {
+    handleOperate()
     const el = animeMap[index]
     const animeId = el.dataset.id
-    if(!animeId) return
+    const serial = el.dataset.serial
+    if(!animeId || !serial) return
     const effect = el.dataset.effect || 'bounceIn'
     const handler = animeProvider.getAnime(effect)
     if (!handler) return
+    const isMarked = animeMap[index].style.visibility !== 'visible'
     applyAnime(el, handler.play)
     applyScroll({
       el,
@@ -107,11 +148,12 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number) {
       overflowBottomRollSpeed: 2,
       overflowBottomReservedZone: 200
     })
-    animeMap[index].style.visibility = 'visible'
+    if(!isMarked) return // 已经播放过的动画块通过 ↑↓ 操作不会再记录动作
     const currentDuration = getCurrentDuration()
-    console.log(currentDuration)
+    // console.log(currentDuration)
     actionSequence.push({
       animeId,
+      serial,
       keyframe: currentDuration
     })
   })
@@ -146,13 +188,16 @@ function applyAnime(
 }
 
 
-const div = document.createElement('div')
-div.tabIndex = 0
-document.body.appendChild(div)
-/** 将焦点从编辑器上移除 */
-function blur() {
-  div.focus()
-}
+// const div = document.createElement('div')
+// div.tabIndex = 0
+// document.body.appendChild(div)
+// /** 将焦点从编辑器上移除 */
+// function blur() {
+//   div.focus()
+// }
+// function clearDiv() {
+//   div.remove()
+// }
 
 let scrollTimer: NodeJS.Timeout
 function applyScroll(args: {

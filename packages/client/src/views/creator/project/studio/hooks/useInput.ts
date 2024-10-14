@@ -72,7 +72,8 @@ export function useInput(id: string, account: string, hostname: string) {
       .createByAudio({
         audio: data.audio,
         duration: data.duration,
-        speakerId: speakerId.value || ''
+        speakerId: speakerId.value || '',
+        actions: []
       })
       .catch(e => {
         message.error(t('studio.msg.create_fragment_error'))
@@ -88,7 +89,11 @@ export function useInput(id: string, account: string, hostname: string) {
             onConfirm: result => {
               projectStore
                 .fragment(id)
-                .createBlank(result)
+                .createBlank({
+                  txtLength: result.txtLength,
+                  duration: result.duration,
+                  actions: []
+                })
                 .catch(e => {
                   message.error(t('studio.msg.create_fragment_error'))
                 })

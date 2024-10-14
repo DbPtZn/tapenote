@@ -96,7 +96,13 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
       promoterIndex: subscript,
       promoterSerial: serial,
       promoterId: aniId
-    }, (aniId) => setAnimeToActive(aniId))
+    }).then(aniId => {
+      setAnimeToActive(aniId)
+      console.log('移除焦点')
+      setTimeout(() => {
+        bridge.handleBlur()
+      }, 10)
+    })
   }
 
   /** 移除启动子 */
@@ -104,7 +110,10 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
     projectStore.fragment(procedureId).removePromoter({
       fragmentId: fragmentId,
       promoterIndex: subscript
-    }, (aniId) => setAnimeToInactive(aniId))
+    }).then(aniId => {
+      aniId && setAnimeToInactive(aniId)
+      bridge.handleBlur()
+    })
   }
 
   function setAnimeToInactive(aniId: string) {
@@ -159,12 +168,10 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
    * - 所有动画块（不区分formatter和component）的状态校验: 用于校验已激活的动画块是否有正确绑定启动子，如果绑定的启动子不存在，取消动画块激活状态
    */
   function checkAnimeState() {
-    const container = bridge.editor?.get(VIEW_DOCUMENT)
-    if(!container) return
-    const elements = AnimeProvider.queryAllAnimeElements(container)
-    elements.forEach((element) => {
+    const animeProvider = bridge.editor?.get(AnimeProvider)
+    animeProvider?.animeElementIterator(element => {
       // 找到激活态的 AnimeComponent
-      if (element.dataset.state === 'active') {
+      if (element.dataset.active === 'true') {
         const animeId = element.dataset.id as string
         // 查询激活态 Anime 标签块是否绑定了启动子 ( 每个动画块都要遍历一遍 fragment )
         const isExist = projectStore.fragment(procedureId).getBySort().some(fragment => {
@@ -173,7 +180,22 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
         // 如果没有绑定启动子，则将动画组件置为非激活态
         if (!isExist) setAnimeToInactive(animeId)
       }
-    })
+    }, true)
+    // const container = bridge.editor?.get(VIEW_DOCUMENT)
+    // if(!container) return
+    // const elements = AnimeProvider.queryAllAnimeElements(container)
+    // elements.forEach((element) => {
+    //   // 找到激活态的 AnimeComponent
+    //   if (element.dataset.active === 'true') {
+    //     const animeId = element.dataset.id as string
+    //     // 查询激活态 Anime 标签块是否绑定了启动子 ( 每个动画块都要遍历一遍 fragment )
+    //     const isExist = projectStore.fragment(procedureId).getBySort().some(fragment => {
+    //       return fragment.promoters.includes(animeId)
+    //     })
+    //     // 如果没有绑定启动子，则将动画组件置为非激活态
+    //     if (!isExist) setAnimeToInactive(animeId)
+    //   }
+    // })
   }
 
   /** 动画与启动子重新排序 */

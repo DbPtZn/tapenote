@@ -12,7 +12,8 @@ import {
   UpdateFragmentsTagsDto,
   UpdateSequenceDto,
   UpdateTranscriptDto,
-  CreateASRFragmentDto
+  CreateASRFragmentDto,
+  Action
 } from './dto'
 import { SherpaService } from 'src/sherpa/sherpa.service'
 import { exec, execSync } from 'child_process'
@@ -86,12 +87,12 @@ export class FragmentService {
     }
   }
 
-  async createChunk(
+  async createByAudio(
     createASRFragmentDto: {
       procedureId: string
       audio: string
       duration: number
-      actions: { animeId: string; serial: string; keyframe: number }[]
+      actions: Action[]
       speakerId: string
     },
     userId: string,
@@ -113,7 +114,7 @@ export class FragmentService {
       const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname)
 
       const fragmentId = UUID.v4()
-      const fragment = new Fragment()
+      let fragment = new Fragment()
       fragment.id = fragmentId
       fragment.userId = userId
       fragment.project = procudure
@@ -156,115 +157,123 @@ export class FragmentService {
           fragment.promoters = new Array(length)
 
           // 添加动作
-          if (actions.length > 0) {
-            const minTimestamp = Math.min(...fragment.timestamps)
-            const maxTimestamp = Math.max(...fragment.timestamps)
-            for (let i = 0; i < actions.length; i++) {
-              const { animeId, serial, keyframe } = actions[i]
-              // 确认 keyframe 是否在音频范围内
-              if (keyframe > fragment.duration) continue
-              // 比最小的时间戳更小的情况(左侧无元素)
-              if (keyframe < minTimestamp) {
-                // 下一个 action 的 keyframe 肯定比当前的大，使用 minTimestamp 查找位置能确保后一个 action 的 timestamp 始终比前一个的大，确保插入顺序
-                const position = fragment.timestamps.indexOf(minTimestamp)
-                fragment.timestamps.splice(position, 0, keyframe)
-                fragment.transcript.splice(position, 0, '#')
-                fragment.promoters.splice(position, 0, animeId)
-                continue
-              }
-              // 比最大的时间戳更大的情况(右侧无元素)
-              if (keyframe > maxTimestamp) {
-                // 同理，下一个 action 的 keyframe 肯定比当前的大，所以直接使用 push
-                fragment.timestamps.push(keyframe)
-                fragment.transcript.push('#')
-                fragment.promoters.push(animeId)
-                continue
-              }
+          if (actions.length > 0) fragment = addPromoter(fragment, actions)
+          // if (actions.length > 0) {
+          //   const minTimestamp = Math.min(...fragment.timestamps)
+          //   console.log('minTimestamp', minTimestamp)
+          //   const maxTimestamp = Math.max(...fragment.timestamps)
+          //   console.log('maxTimestamp', maxTimestamp)
+          //   for (let i = 0; i < actions.length; i++) {
+          //     const { animeId, serial, keyframe } = actions[i]
+          //     // 确认 keyframe 是否在音频范围内
+          //     if (keyframe > fragment.duration) continue
 
-              let index = findClosestIndex(fragment.timestamps, keyframe)
+          //     // 比最小的时间戳更小的情况(左侧无元素)
+          //     if (keyframe < minTimestamp) {
+          //       // 下一个 action 的 keyframe 肯定比当前的大，使用 minTimestamp 查找位置能确保后一个 action 的 timestamp 始终比前一个的大，确保插入顺序
+          //       const position = fragment.timestamps.indexOf(minTimestamp)
+          //       fragment.timestamps.splice(position, 0, keyframe)
+          //       fragment.tags.splice(position, 0, serial)
+          //       fragment.transcript.splice(position, 0, '#')
+          //       fragment.promoters.splice(position, 0, animeId)
+          //       continue
+          //     }
 
-              let isBinding = false
+          //     // 比最大的时间戳更大的情况(右侧无元素)
+          //     if (keyframe > maxTimestamp) {
+          //       // 同理，下一个 action 的 keyframe 肯定比当前的大，所以直接使用 push
+          //       fragment.timestamps.push(keyframe)
+          //       fragment.tags.push(serial)
+          //       fragment.transcript.push('#')
+          //       fragment.promoters.push(animeId)
+          //       continue
+          //     }
 
-              if (fragment.promoters[index] === null) {
-                fragment.promoters[index] = animeId
-                fragment.tags[index] = serial
-                isBinding = true
-              }
-              if (isBinding) continue
+          //     let closestIndex = findClosestIndex(fragment.timestamps, keyframe)
+          //     // console.log('closestIndex', closestIndex)
+          //     // console.log(fragment.promoters[closestIndex], fragment.promoters[closestIndex] === null)
+          //     if (!fragment.promoters[closestIndex]) {
+          //       fragment.promoters[closestIndex] = animeId
+          //       fragment.tags[closestIndex] = serial
+          //       continue
+          //     }
 
-              // 如果 index 处已经被占用，向前检查
-              // for (let i = index - 1; i >= 0; i--) {
-              //   if (fragment.promoters[i] === null) {
-              //     fragment.promoters[i] = animeId
-              //     fragment.tags[i] = serial
-              //     isBinding = true
-              //     break
-              //   }
-              // }
-              // if (isBinding) continue
+          //     // 如果 index 处已经被占用，向前检查
+          //     // for (let i = index - 1; i >= 0; i--) {
+          //     //   if (fragment.promoters[i] === null) {
+          //     //     fragment.promoters[i] = animeId
+          //     //     fragment.tags[i] = serial
+          //     //     isBinding = true
+          //     //     break
+          //     //   }
+          //     // }
+          //     // if (isBinding) continue
 
-              // // 如果 index 处已经被占用，向后检查
-              // for (let i = index + 1; i < fragment.timestamps.length; i++) {
-              //   if (fragment.promoters[i] === null) {
-              //     fragment.promoters[i] = animeId
-              //     fragment.tags[i] = serial
-              //     isBinding = true
-              //     break
-              //   }
-              // }
-              // if (isBinding) continue
-              const emptySlot = findEmptySlot(fragment.promoters, index)
-              if (emptySlot !== -1) {
-                fragment.promoters[emptySlot] = animeId
-                fragment.tags[emptySlot] = serial
-                continue
-              }
+          //     // 如果 index 处已经被占用，向后检查空余位置
+          //     let isBinding = false
+          //     for (let i = closestIndex + 1; i < fragment.timestamps.length; i++) {
+          //       if (!fragment.promoters[i]) {
+          //         fragment.promoters[i] = animeId
+          //         fragment.tags[i] = serial
+          //         isBinding = true
+          //         break
+          //       }
+          //     }
+          //     if (isBinding) continue
 
-              if (keyframe === fragment.timestamps[index]) {
-                if (fragment.timestamps[index + 1]) {
-                  // 先取到与下一个时间戳中间位置作为新的时间戳
-                  let newKeyframe =
-                    fragment.timestamps[index] + (fragment.timestamps[index + 1] - fragment.timestamps[index]) / 2
-                  // 如果新的时间戳还大于下一个 action 的 keyframe, 那么就改为取到当前时间戳到下一个 keyframe 之间的位置
-                  if (actions[i] && newKeyframe > actions[i].keyframe) {
-                    newKeyframe = fragment.timestamps[index] + (actions[i].keyframe - fragment.timestamps[index]) / 2
-                  }
-                  fragment.timestamps.splice(index + 1, 0, newKeyframe)
-                  fragment.transcript.splice(index + 1, 0, '#')
-                  fragment.promoters.splice(index + 1, 0, animeId)
-                  continue
-                }
-                // 如果 index + 1 已经没有了，那意味着是最后一个元素了
-                // 如果没有下一个动作，则取到最后一个时间戳到结束时间之间的位置
-                let newKeyframe = fragment.timestamps[index] + (fragment.duration - fragment.timestamps[index]) / 2
-                // 如果还有下一个动作，则取到下一个动作之间的时间
-                if (actions[i + 1]) {
-                  newKeyframe = fragment.timestamps[index] + (actions[i + 1].keyframe - fragment.timestamps[index]) / 2
-                }
-                fragment.timestamps.splice(index + 1, 0, newKeyframe)
-                fragment.transcript.splice(index + 1, 0, '#')
-                fragment.promoters.splice(index + 1, 0, animeId)
-                continue
-              }
-              // if (keyframe < fragment.timestamps[index]) {
-              //   fragment.timestamps.splice(index, 0, keyframe)
-              //   fragment.transcript.splice(index, 0, '#')
-              //   fragment.promoters.splice(index, 0, animeId)
-              //   continue
-              // }
-              // if (keyframe > fragment.timestamps[index]) {
-              //   fragment.timestamps.splice(index + 1, 0, keyframe)
-              //   fragment.transcript.splice(index + 1, 0, '#')
-              //   fragment.promoters.splice(index + 1, 0, animeId)
-              // }
-              const insertIndex = keyframe < fragment.timestamps[index] ? index : index + 1
-              fragment.timestamps.splice(insertIndex, 0, keyframe)
-              fragment.transcript.splice(insertIndex, 0, '#')
-              fragment.promoters.splice(insertIndex, 0, animeId)
-            }
-          }
+          //     if (keyframe === fragment.timestamps[closestIndex]) {
+          //       if (fragment.timestamps[closestIndex + 1]) {
+          //         // 先取到与下一个时间戳中间位置作为新的时间戳
+          //         let newKeyframe =
+          //           fragment.timestamps[closestIndex] +
+          //           (fragment.timestamps[closestIndex + 1] - fragment.timestamps[closestIndex]) / 2
+          //         // 如果新的时间戳还大于下一个 action 的 keyframe, 那么就改为取到当前时间戳到下一个 keyframe 之间的位置
+          //         if (actions[i] && newKeyframe > actions[i].keyframe) {
+          //           newKeyframe =
+          //             fragment.timestamps[closestIndex] + (actions[i].keyframe - fragment.timestamps[closestIndex]) / 2
+          //         }
+          //         fragment.timestamps.splice(closestIndex + 1, 0, newKeyframe)
+          //         fragment.tags.splice(closestIndex + 1, 0, serial)
+          //         fragment.transcript.splice(closestIndex + 1, 0, '#')
+          //         fragment.promoters.splice(closestIndex + 1, 0, animeId)
+          //         continue
+          //       }
+          //       // 如果 index + 1 已经没有了，那意味着是最后一个元素了
+          //       // 如果没有下一个动作，则取到最后一个时间戳到结束时间之间的位置
+          //       let newKeyframe =
+          //         fragment.timestamps[closestIndex] + (fragment.duration - fragment.timestamps[closestIndex]) / 2
+          //       // 如果还有下一个动作，则取到下一个动作之间的时间
+          //       if (actions[i + 1]) {
+          //         newKeyframe =
+          //           fragment.timestamps[closestIndex] +
+          //           (actions[i + 1].keyframe - fragment.timestamps[closestIndex]) / 2
+          //       }
+          //       fragment.timestamps.splice(closestIndex + 1, 0, newKeyframe)
+          //       fragment.tags.splice(closestIndex + 1, 0, serial)
+          //       fragment.transcript.splice(closestIndex + 1, 0, '#')
+          //       fragment.promoters.splice(closestIndex + 1, 0, animeId)
+          //       continue
+          //     }
+          //     // if (keyframe < fragment.timestamps[index]) {
+          //     //   fragment.timestamps.splice(index, 0, keyframe)
+          //     //   fragment.transcript.splice(index, 0, '#')
+          //     //   fragment.promoters.splice(index, 0, animeId)
+          //     //   continue
+          //     // }
+          //     // if (keyframe > fragment.timestamps[index]) {
+          //     //   fragment.timestamps.splice(index + 1, 0, keyframe)
+          //     //   fragment.transcript.splice(index + 1, 0, '#')
+          //     //   fragment.promoters.splice(index + 1, 0, animeId)
+          //     // }
+          //     const insertIndex = keyframe < fragment.timestamps[closestIndex] ? closestIndex : closestIndex + 1
+          //     fragment.timestamps.splice(insertIndex, 0, keyframe)
+          //     fragment.tags.splice(insertIndex, 0, serial)
+          //     fragment.transcript.splice(insertIndex, 0, '#')
+          //     fragment.promoters.splice(insertIndex, 0, animeId)
+          //   }
+          // }
         }
-
+        // console.log(fragment)
         if (filepath && fragment.duration !== 0) {
           // TODO 这里应该用事务确保音频文件上传成功，否则应该回滚
           await this.fragmentsRepository.save(fragment)
@@ -414,7 +423,7 @@ export class FragmentService {
     }
   }
 
-  async createByAudio(
+  async createByAudio1(
     createASRFragmentDto: { procedureId: string; audio: string; duration: number; speakerId: string },
     userId: string,
     dirname: string
@@ -532,7 +541,7 @@ export class FragmentService {
 
   async createBlank(dto: CreateBlankFragmentDto, userId: string, dirname: string) {
     try {
-      const { procedureId, txtLength, duration } = dto
+      const { procedureId, txtLength, duration, actions } = dto
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
       const text: string[] = []
@@ -544,7 +553,7 @@ export class FragmentService {
       const timestamps = text.map((char, index) => {
         return Number((section * index).toFixed(3))
       })
-      const fragment = new Fragment()
+      let fragment = new Fragment()
       fragment.id = UUID.v4()
       fragment.userId = userId
       fragment.project = procudure
@@ -586,6 +595,8 @@ export class FragmentService {
       }
 
       fragment.audio = basename(filepath)
+
+      if (actions.length > 0) fragment = addPromoter(fragment, actions)
 
       const result = await this.fragmentsRepository.save(fragment)
       await this.uploadService.upload(
@@ -1025,44 +1036,191 @@ function findEmptySlot(promoters: string[], index: number) {
 function findClosestIndex(arr: number[], target: number): number {
   let left = 0
   let right = arr.length - 1
+  let closestIndex = -1
+  let minDiff = Number.MAX_VALUE // 初始化为最大差异
 
-  // 当数组为空时，返回 -1 表示没有找到
   if (arr.length === 0) {
     return -1
   }
 
-  // 二分查找，找到接近 target 的位置
-  while (left < right) {
+  while (left <= right) {
     const mid = Math.floor((left + right) / 2)
 
     if (arr[mid] === target) {
-      return mid // 如果找到精确匹配的元素
+      return mid // 如果找到目标值，直接返回索引
     } else if (arr[mid] < target) {
       left = mid + 1
     } else {
-      right = mid
+      right = mid - 1
+    }
+
+    // 更新最接近的索引和最小差异
+    if (Math.abs(arr[mid] - target) < minDiff) {
+      minDiff = Math.abs(arr[mid] - target)
+      closestIndex = mid
     }
   }
 
-  // 到此处，left 和 right 应该指向相同的元素，即 arr[left] 或 arr[right]
-
-  // 如果 target 比数组中的最小值还小
-  if (left === 0) {
-    return 0
-  }
-
-  // 如果 target 比数组中的最大值还大
-  if (left === arr.length) {
-    return arr.length - 1
-  }
-
-  // 比较 left 和 left - 1 之间哪个更接近 target
-  const closestLeft = arr[left - 1]
-  const closestRight = arr[left]
-
-  if (Math.abs(closestLeft - target) <= Math.abs(closestRight - target)) {
-    return left - 1
-  } else {
-    return left
-  }
+  // 如果没有找到目标值，返回最接近的索引
+  return closestIndex
 }
+
+function addPromoter(fragment: Fragment, actions: Action[]) {
+  const minTimestamp = Math.min(...fragment.timestamps)
+  // console.log('minTimestamp', minTimestamp)
+  const maxTimestamp = Math.max(...fragment.timestamps)
+  // console.log('maxTimestamp', maxTimestamp)
+  for (let i = 0; i < actions.length; i++) {
+    const { animeId, serial, keyframe } = actions[i]
+    // 确认 keyframe 是否在音频范围内
+    if (keyframe > fragment.duration) continue
+
+    // 比最小的时间戳更小的情况(左侧无元素)
+    if (keyframe < minTimestamp) {
+      // 下一个 action 的 keyframe 肯定比当前的大，使用 minTimestamp 查找位置能确保后一个 action 的 timestamp 始终比前一个的大，确保插入顺序
+      const position = fragment.timestamps.indexOf(minTimestamp)
+      fragment.timestamps.splice(position, 0, keyframe)
+      fragment.tags.splice(position, 0, serial)
+      fragment.transcript.splice(position, 0, '#')
+      fragment.promoters.splice(position, 0, animeId)
+      continue
+    }
+
+    // 比最大的时间戳更大的情况(右侧无元素)
+    if (keyframe > maxTimestamp) {
+      // 同理，下一个 action 的 keyframe 肯定比当前的大，所以直接使用 push
+      fragment.timestamps.push(keyframe)
+      fragment.tags.push(serial)
+      fragment.transcript.push('#')
+      fragment.promoters.push(animeId)
+      continue
+    }
+
+    let closestIndex = findClosestIndex(fragment.timestamps, keyframe)
+    // console.log('closestIndex', closestIndex)
+    // console.log(fragment.promoters[closestIndex], fragment.promoters[closestIndex] === null)
+    if (!fragment.promoters[closestIndex]) {
+      fragment.promoters[closestIndex] = animeId
+      fragment.tags[closestIndex] = serial
+      continue
+    }
+
+    // 如果 index 处已经被占用，向前检查
+    // for (let i = index - 1; i >= 0; i--) {
+    //   if (fragment.promoters[i] === null) {
+    //     fragment.promoters[i] = animeId
+    //     fragment.tags[i] = serial
+    //     isBinding = true
+    //     break
+    //   }
+    // }
+    // if (isBinding) continue
+
+    // 如果 index 处已经被占用，向后检查空余位置
+    let isBinding = false
+    for (let i = closestIndex + 1; i < fragment.timestamps.length; i++) {
+      if (!fragment.promoters[i]) {
+        fragment.promoters[i] = animeId
+        fragment.tags[i] = serial
+        isBinding = true
+        break
+      }
+    }
+    if (isBinding) continue
+
+    if (keyframe === fragment.timestamps[closestIndex]) {
+      if (fragment.timestamps[closestIndex + 1]) {
+        // 先取到与下一个时间戳中间位置作为新的时间戳
+        let newKeyframe =
+          fragment.timestamps[closestIndex] +
+          (fragment.timestamps[closestIndex + 1] - fragment.timestamps[closestIndex]) / 2
+        // 如果新的时间戳还大于下一个 action 的 keyframe, 那么就改为取到当前时间戳到下一个 keyframe 之间的位置
+        if (actions[i] && newKeyframe > actions[i].keyframe) {
+          newKeyframe =
+            fragment.timestamps[closestIndex] + (actions[i].keyframe - fragment.timestamps[closestIndex]) / 2
+        }
+        fragment.timestamps.splice(closestIndex + 1, 0, newKeyframe)
+        fragment.tags.splice(closestIndex + 1, 0, serial)
+        fragment.transcript.splice(closestIndex + 1, 0, '#')
+        fragment.promoters.splice(closestIndex + 1, 0, animeId)
+        continue
+      }
+      // 如果 index + 1 已经没有了，那意味着是最后一个元素了
+      // 如果没有下一个动作，则取到最后一个时间戳到结束时间之间的位置
+      let newKeyframe = fragment.timestamps[closestIndex] + (fragment.duration - fragment.timestamps[closestIndex]) / 2
+      // 如果还有下一个动作，则取到下一个动作之间的时间
+      if (actions[i + 1]) {
+        newKeyframe =
+          fragment.timestamps[closestIndex] + (actions[i + 1].keyframe - fragment.timestamps[closestIndex]) / 2
+      }
+      fragment.timestamps.splice(closestIndex + 1, 0, newKeyframe)
+      fragment.tags.splice(closestIndex + 1, 0, serial)
+      fragment.transcript.splice(closestIndex + 1, 0, '#')
+      fragment.promoters.splice(closestIndex + 1, 0, animeId)
+      continue
+    }
+    // if (keyframe < fragment.timestamps[index]) {
+    //   fragment.timestamps.splice(index, 0, keyframe)
+    //   fragment.transcript.splice(index, 0, '#')
+    //   fragment.promoters.splice(index, 0, animeId)
+    //   continue
+    // }
+    // if (keyframe > fragment.timestamps[index]) {
+    //   fragment.timestamps.splice(index + 1, 0, keyframe)
+    //   fragment.transcript.splice(index + 1, 0, '#')
+    //   fragment.promoters.splice(index + 1, 0, animeId)
+    // }
+    const insertIndex = keyframe < fragment.timestamps[closestIndex] ? closestIndex : closestIndex + 1
+    fragment.timestamps.splice(insertIndex, 0, keyframe)
+    fragment.tags.splice(insertIndex, 0, serial)
+    fragment.transcript.splice(insertIndex, 0, '#')
+    fragment.promoters.splice(insertIndex, 0, animeId)
+  }
+
+  return fragment
+}
+
+// function findClosestIndex(arr: number[], target: number): number {
+//   let left = 0
+//   let right = arr.length - 1
+
+//   // 当数组为空时，返回 -1 表示没有找到
+//   if (arr.length === 0) {
+//     return -1
+//   }
+
+//   // 二分查找，找到接近 target 的位置
+//   while (left < right) {
+//     const mid = Math.floor((left + right) / 2)
+
+//     if (arr[mid] === target) {
+//       return mid // 如果找到精确匹配的元素
+//     } else if (arr[mid] < target) {
+//       left = mid + 1
+//     } else {
+//       right = mid
+//     }
+//   }
+
+//   // 到此处，left 和 right 应该指向相同的元素，即 arr[left] 或 arr[right]
+
+//   // 如果 target 比数组中的最小值还小
+//   if (left === 0) {
+//     return 0
+//   }
+
+//   // 如果 target 比数组中的最大值还大
+//   if (left === arr.length) {
+//     return arr.length - 1
+//   }
+
+//   // 比较 left 和 left - 1 之间哪个更接近 target
+//   const closestLeft = arr[left - 1]
+//   const closestRight = arr[left]
+
+//   if (Math.abs(closestLeft - target) <= Math.abs(closestRight - target)) {
+//     return left - 1
+//   } else {
+//     return left
+//   }
+// }

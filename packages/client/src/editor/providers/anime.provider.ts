@@ -33,7 +33,7 @@ export class AnimeProvider {
   private commander!: Commander
   private rootComponentRef!: RootComponentRef
   private injector!: Injector
-  
+
   constructor() {
     this.animesMap = new Map([
       ['bounceIn', { name: '弹入', play: bounce.bounceIn }],
@@ -66,7 +66,7 @@ export class AnimeProvider {
     return this.animesMap.get(key)
   }
 
-  getRandomAnime() { 
+  getRandomAnime() {
     // 获取所有键的数组
     const map = this.animesMap
     const keys = Array.from(map.keys())
@@ -74,8 +74,8 @@ export class AnimeProvider {
     const randomKey = keys[Math.floor(Math.random() * keys.length)]
     // 获取对应的值
     const value = map.get(randomKey)
-    
-    return { key: randomKey, value } 
+
+    return { key: randomKey, value }
   }
 
   getOptions() {
@@ -96,7 +96,7 @@ export class AnimeProvider {
   generateAnimeSerial() {
     if (!this.viewContainer) return 1
     const serialArr: number[] = []
-    
+
     const animeFormatsArr = this.viewContainer.getElementsByTagName('anime') as HTMLCollectionOf<HTMLElement>
     const animeComponentsArr = this.viewContainer.getElementsByTagName('anime-component') as HTMLCollectionOf<HTMLElement>
     const animeAttributesArr = this.viewContainer.querySelectorAll<HTMLElement>('[data-anime="true"]')
@@ -106,7 +106,7 @@ export class AnimeProvider {
     const animeAttributeElements = Array.from(animeAttributesArr)
 
     const animeElements = [...animeFormatElements, ...animeComponentElements, ...animeAttributeElements]
-    
+
     const anime_amount = animeElements.length
     if (!anime_amount) {
       return 1
@@ -139,7 +139,7 @@ export class AnimeProvider {
   /** 通过动画块 id 定位动画块位置 */
   locateAnimeBlock(aniId: string) {
     const element = <HTMLElement | null>this.viewContainer?.querySelector(`[data-id="${aniId}"]`)
-    if(!element || !this.viewContainer || !this.scroller) return
+    if (!element || !this.viewContainer || !this.scroller) return
     applyNativeScroll(element, this.viewContainer, this.scroller)
     // 滚动到目标元素位置
     const location = this.renderer.getLocationByNativeNode(element)
@@ -150,10 +150,10 @@ export class AnimeProvider {
     // 组件无选中行为，不处理
   }
 
-   /** 更新动画的状态 */
+  /** 更新动画的状态 */
   updateAnimeState(aniId: string, state: AnimeState) {
     const elements = this.viewContainer?.querySelectorAll<HTMLElement>(`[data-id="${aniId}"]`)
-    if(elements) {
+    if (elements) {
       elements.forEach(element => {
         if (element.tagName.toLowerCase() === 'anime') {
           this.updateFormatterState(element, state)
@@ -192,7 +192,7 @@ export class AnimeProvider {
       this.selection.toNext()
     }
   }
-  
+
   // 通过 element 查询 component，通过 compoent 实例直接更新其状态
   private updateComponentState(element: HTMLElement, state: AnimeState) {
     const component = this.renderer.getComponentByNativeNode(element)
@@ -201,11 +201,11 @@ export class AnimeProvider {
     if (component.state.dataAnime || component.name === 'AnimeComponent') {
       component.updateState(draft => {
         if (state.id !== undefined) draft.dataId = state.id
-        if (state.effect!== undefined) draft.dataEffect = state.effect
+        if (state.effect !== undefined) draft.dataEffect = state.effect
         if (state.serial !== undefined) draft.dataSerial = state.serial?.toString()
         if (state.title !== undefined) draft.dataTitle = state.title
         if (state.active !== undefined) draft.dataActive = state.active
-        if (state.range  !== undefined) draft.dataRange = state.range
+        if (state.range !== undefined) draft.dataRange = state.range
       })
       return
     }
@@ -215,7 +215,7 @@ export class AnimeProvider {
     if (!componentInstance) return
     const id = this.generateAnimeId()
     const serial = this.generateAnimeSerial().toString()
-    if(componentInstance.state.dataAnime === false) {
+    if (componentInstance.state.dataAnime === false) {
       // 将光标聚焦到目标组件内（当组件状态更新的时候会将页面滚动到光标所在的位置）
       this.selection.selectFirstPosition(componentInstance)
       componentInstance.updateState(draft => {
@@ -229,22 +229,22 @@ export class AnimeProvider {
       })
       return
     }
-      const slot = new Slot([ContentType.BlockComponent])
-      const anime = animeComponent.createInstance(this.injector, {
-        slots: [slot],
-        state: {
-          dataId: id,
-          dataEffect: effect,
-          dataSerial: serial.toString(),
-          dataState: '',
-          dataTitle: title
-        }
-      })
-      this.commander.replaceComponent(componentInstance, anime)
-      // 可以在插入组件后再把内容插入插槽
-      slot.insert(componentInstance)
+    const slot = new Slot([ContentType.BlockComponent])
+    const anime = animeComponent.createInstance(this.injector, {
+      slots: [slot],
+      state: {
+        dataId: id,
+        dataEffect: effect,
+        dataSerial: serial.toString(),
+        dataState: '',
+        dataTitle: title
+      }
+    })
+    this.commander.replaceComponent(componentInstance, anime)
+    // 可以在插入组件后再把内容插入插槽
+    slot.insert(componentInstance)
   }
-  
+
   removeAnime(componentInstance: ComponentInstance | null) {
     if (!componentInstance) return
     if (componentInstance.state.dataAnime) {
@@ -259,8 +259,8 @@ export class AnimeProvider {
       })
       return
     }
-    componentInstance.slots.toArray().forEach((slot) => {
-      slot.sliceContent().forEach((content) => {
+    componentInstance.slots.toArray().forEach(slot => {
+      slot.sliceContent().forEach(content => {
         if (typeof content !== 'string') {
           this.commander.replaceComponent(componentInstance, content)
         }
@@ -276,9 +276,9 @@ export class AnimeProvider {
     // console.log('add anime auto')
     const slots = this.rootComponentRef.component.slots.toArray()
     const group = slots.map(slot => slot.sliceContent())
-    for(let i = 0; i < group.length; i++) {
+    for (let i = 0; i < group.length; i++) {
       const components = group[i]
-      outerLoop: for(let k = 0; k < components.length; k++) {
+      outerLoop: for (let k = 0; k < components.length; k++) {
         const component = components[k]
         if (typeof component !== 'string') {
           // 排除列表，不设置动画
@@ -358,7 +358,7 @@ export class AnimeProvider {
    */
   addFormatterAnime(slot: Slot, selectAnimeOption?: { key: string; value: { name: string } }) {
     try {
-      if(slot.sliceContent()[0] !== '\n') {
+      if (slot.sliceContent()[0] !== '\n') {
         const id = this.generateAnimeId()
         const serial = this.generateAnimeSerial().toString()
         const animeOption = selectAnimeOption || this.getRandomAnime()
@@ -380,9 +380,8 @@ export class AnimeProvider {
     }
   }
 
-
   /** 应用动画样式 */
-  applyFormat(effect: string, title: string ) {
+  applyFormat(effect: string, title: string) {
     const dataSerial = this.generateAnimeSerial().toString()
     const dataId = this.generateAnimeId()
     this.commander.applyFormat(animeFormatter, {
@@ -395,7 +394,23 @@ export class AnimeProvider {
     })
   }
 
-  /** 如果是动画元素则返回改元素，如果是动画标签元素则返回其父元素  ， */
+  /**
+   * 动画元素迭代器：会找到所有动画元素并遍历循环
+   * @param handler 执行的任务
+   * @param isPerformChunk 是否使用分时任务进行处理
+  */
+  animeElementIterator(handler: (element: HTMLElement, index: number) => void, isPerformChunk: boolean = false) {
+    const container = this.viewContainer
+    if (!container) return
+    const elements = AnimeProvider.queryAllAnimeElements(container)
+    isPerformChunk
+      ? browserPerformChunk(elements, (element, index) => handler(element, index))
+      : elements.forEach((element, index) => {
+          handler(element, index)
+        })
+  }
+
+  /** 如果是动画元素则返回改元素，如果是动画标签元素则返回其父元素 */
   static toAnimeElement(target: HTMLElement) {
     if (['anime-component', 'anime'].includes(target.tagName.toLocaleLowerCase())) return target
     if (target.classList.contains('anime-component-tab') && target.parentElement?.dataset.anime === 'true') return target.parentElement
@@ -415,7 +430,7 @@ export class AnimeProvider {
  * 应用原生页面滚动
  * @param el 元素对象
  * @param container // 容器层
- * @param scroller // 滚动层 
+ * @param scroller // 滚动层
  * @param offset // 偏移值
  */
 function applyNativeScroll(el: HTMLElement, container: HTMLElement, scroller: HTMLElement, offset?: number) {
@@ -429,17 +444,17 @@ function applyNativeScroll(el: HTMLElement, container: HTMLElement, scroller: HT
 }
 
 /**
-  * 获取最外层（祖先）元素到顶部的距离
-  * @param el 目标元素
-  * @returns 返回距离
-  */
+ * 获取最外层（祖先）元素到顶部的距离
+ * @param el 目标元素
+ * @returns 返回距离
+ */
 function getTopDistance(el: HTMLElement) {
- let i = el.offsetTop
- while (el.offsetParent) {
-   el = el.offsetParent as HTMLElement
-   i += el.offsetTop
- }
- return i
+  let i = el.offsetTop
+  while (el.offsetParent) {
+    el = el.offsetParent as HTMLElement
+    i += el.offsetTop
+  }
+  return i
 }
 
 const DURATION = 1000 // 动画持续时间基本量 / 1秒
@@ -569,4 +584,79 @@ const zoom = {
       duration: DURATION
     })
   }
+}
+
+/**
+ * 分时函数，用于按分片执行任务数组中的任务
+ * @param datas 任务数组，如果传入的是一个数字，则会创建一个从0到该数字的数组
+ * @param taskHandler 任务处理器，一个接受单个任务并执行相应操作的函数
+ * @param scheduler 分片调度器，一个接受一个回调函数作为参数的函数，用于控制下一分片的执行
+ * @returns 无返回值
+ */
+export function performChunk<T>(datas: T[], taskHandler: (data: T, index: number) => void, scheduler: (task: (goOn: () => boolean) => void) => void) {
+  // 如果datas是一个数字，则生成一个从0到该数字的数组
+  if (typeof datas === 'number') {
+    datas = Array.from({ length: datas }, (_, i) => i) as T[]
+  }
+  // 如果任务数组为空，则直接返回
+  if (datas.length === 0) {
+    return
+  }
+
+  let i = 0
+
+  // 开启下一个分片的执行
+  function _run() {
+    // 如果已经处理完所有任务，则直接返回
+    if (i >= datas.length) {
+      return
+    }
+
+    // 调度器函数，根据分片调度器的控制来执行任务
+    scheduler((goOn: () => any) => {
+      // 在 goOn() 返回 true 且还有任务未处理的情况下，持续执行任务处理器
+      while (goOn() && i < datas.length) {
+        taskHandler(datas[i], i)
+        i++
+      }
+      // 所有任务处理完毕后，再次调用_run函数，开始下一分片的执行
+      _run()
+    })
+  }
+  // 开始执行第一个分片
+  _run()
+}
+
+/**
+ * 在浏览器环境中处理数据块
+ * 该函数使用requestIdleCallback来安排任务，在浏览器空闲时执行任务处理
+ *
+ * @param datas - 待处理的数据数组
+ * @param taskHandler - 用于处理每个数据的函数
+ */
+export function browserPerformChunk<T>(datas: T[], taskHandler: (data: T, index: number) => void) {
+  // 定义一个调度器函数，用于将任务安排在浏览器空闲时执行
+  const scheduler = task => {
+    requestIdleCallback(idle => {
+      // 执行任务，并允许其在浏览器空闲时运行
+      task(() => idle.timeRemaining())
+    })
+  }
+  // 调用performChunk函数，传入数据数组、任务处理器和调度器
+  performChunk(datas, taskHandler, scheduler)
+}
+
+/**
+ * 模拟环境中使用 setTimeout 来分时处理数据块（非浏览器环境）
+ * @param datas - 待处理的数据数组
+ * @param taskHandler - 用于处理每个数据的函数
+ */
+export function timeoutPerformChunk<T>(datas: T[], taskHandler: (data: T) => void, delay = 100) {
+  const scheduler = task => {
+    setTimeout(() => {
+      task(() => true)
+    }, delay)
+  }
+
+  performChunk(datas, taskHandler, scheduler)
 }

@@ -924,33 +924,39 @@ export const useProjectStore = defineStore('projectStore', {
         })
       }
       const addPromoter = (params: Parameters<typeof CreatorApi.prototype.fragment.addPromoter>[0], cb?: (aniId: string) => void) => {
-        getBySort()?.some((item, index, arr) => {
-          if (item.id === params.fragmentId) {
-            arr[index].tags[params.promoterIndex] = params.promoterSerial
-            arr[index].promoters[params.promoterIndex] = params.promoterId
-            // 更新至数据库
-            params.procedureId = procedureId
-            this.creatorApi(account!, hostname!).fragment.addPromoter<{ updateAt: string }>(params).then(res => {
-              this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
-              cb && cb(params.promoterId) // 设置动画状态的回调（确认成功后才会设置动画状态）
-            })
-            return true
-          }
+        return new Promise<string>((resolve, reject) => {
+          getBySort()?.some((item, index, arr) => {
+            if (item.id === params.fragmentId) {
+              arr[index].tags[params.promoterIndex] = params.promoterSerial
+              arr[index].promoters[params.promoterIndex] = params.promoterId
+              // 更新至数据库
+              params.procedureId = procedureId
+              this.creatorApi(account!, hostname!).fragment.addPromoter<{ updateAt: string }>(params).then(res => {
+                this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
+                // cb && cb(params.promoterId) // 设置动画状态的回调（确认成功后才会设置动画状态）
+                resolve(params.promoterId)
+              }).catch(err => reject(err))
+              return true
+            }
+          })
         })
       }
       const removePromoter = (params: Parameters<typeof CreatorApi.prototype.fragment.removePromoter>[0], cb?: (aniId: string) => void) => {
-        getBySort()?.some((item, index, arr) => {
-          if (item.id === params.fragmentId) {
-            const aniId = arr[index].promoters[params.promoterIndex]
-            arr[index].tags[params.promoterIndex] = null
-            arr[index].promoters[params.promoterIndex] = null
-            // 更新至数据库
-            params.procedureId = procedureId
-            return this.creatorApi(account!, hostname!).fragment.removePromoter<{ updateAt: string }>(params).then(res => {
-              this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
-              cb && aniId && cb(aniId)
-            })
-          }
+        return new Promise<string | null>((resolve, reject) => {
+          getBySort()?.some((item, index, arr) => {
+            if (item.id === params.fragmentId) {
+              const aniId = arr[index].promoters[params.promoterIndex]
+              arr[index].tags[params.promoterIndex] = null
+              arr[index].promoters[params.promoterIndex] = null
+              // 更新至数据库
+              params.procedureId = procedureId
+              this.creatorApi(account!, hostname!).fragment.removePromoter<{ updateAt: string }>(params).then(res => {
+                this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
+                // cb && aniId && cb(aniId)
+                resolve(aniId)
+              }).catch(err => reject(err))
+            }
+          })
         })
       } 
       return {

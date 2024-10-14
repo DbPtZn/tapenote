@@ -1,10 +1,12 @@
 import { AxiosInstance } from 'axios'
+type Action = { animeId: string, serial: string, keyframe: number }
 interface CreateASRFragmentDto {
   procedureId?: string
   key?: string
   audio: Blob
   duration: number
   speakerId: string
+  actions: Action[]
 }
 interface CreateTTSFragmentDto {
   procedureId?: string
@@ -17,6 +19,7 @@ interface CreateBlankFragmentDto {
   procedureId?: string
   txtLength: number
   duration: number
+  actions?: Action[]
 }
 interface UpdateTranscriptDto {
   procedureId?: string
@@ -66,14 +69,15 @@ interface CopyFragmentDto {
   type: 'copy' | 'cut'
 }
 
-interface CreateASRChunkDto {
-  procedureId?: string
-  key?: string
-  speakerId: string
-  audio: Blob
-  duration: number
-  actions: { animeId: string, keyframe: number }[]
-}
+
+// interface CreateASRChunkDto {
+//   procedureId?: string
+//   key?: string
+//   speakerId: string
+//   audio: Blob
+//   duration: number
+//   actions: Action[]
+// }
 
 
 export const fragment = (axios: AxiosInstance) => {
@@ -85,26 +89,27 @@ export const fragment = (axios: AxiosInstance) => {
       formdata.append('duration', dto.duration.toString())
       formdata.append('speakerId', dto.speakerId)
       formdata.append('key', dto.key!)
+      formdata.append('actions', JSON.stringify(dto.actions))
       return axios.post<T>('/fragment/write/create/asr', formdata, {
         headers: {
           'Content-Type':'multipart/form-data'
         }
       })
     },
-    createChunk<T>(dto: CreateASRChunkDto) {
-      const formdata = new FormData()
-      formdata.append('procedureId', dto.procedureId!)
-      formdata.append('audio', dto.audio, 'audio.wav') // 必须添加文件名和后缀
-      formdata.append('duration', dto.duration.toString())
-      formdata.append('speakerId', dto.speakerId)
-      formdata.append('key', dto.key!)
-      formdata.append('actions', JSON.stringify(dto.actions))
-      return axios.post<T>('/fragment/write/create/chunk', formdata, {
-        headers: {
-          'Content-Type':'multipart/form-data'
-        }
-      })
-    },
+    // createChunk<T>(dto: CreateASRChunkDto) {
+    //   const formdata = new FormData()
+    //   formdata.append('procedureId', dto.procedureId!)
+    //   formdata.append('audio', dto.audio, 'audio.wav') // 必须添加文件名和后缀
+    //   formdata.append('duration', dto.duration.toString())
+    //   formdata.append('speakerId', dto.speakerId)
+    //   formdata.append('key', dto.key!)
+    //   formdata.append('actions', JSON.stringify(dto.actions))
+    //   return axios.post<T>('/fragment/write/create/chunk', formdata, {
+    //     headers: {
+    //       'Content-Type':'multipart/form-data'
+    //     }
+    //   })
+    // },
     createByText<T>(dto: CreateTTSFragmentDto) {
       return axios.post<T>('/fragment/write/create/tts', dto)
     },

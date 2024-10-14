@@ -38,6 +38,7 @@ const state = reactive({
   isReadonly: computed(() => props.readonly()),
   isFocus: computed(() => props.focus()),
   isShortcutAllow: true,
+  isStartedRecorder: false
 })
 const studioEl = useTemplateRef<HTMLElement>('studioEl')
 
@@ -91,14 +92,15 @@ const totalDuration = computed(() => {
       }, 0)
   })
 
-const { waveEl, isRecording, isWaveformVisible, isStarted, onStateUpdate, onRecorderEnd, ondataavailable, getCurrentDuration, handleStartPause, handleStopRecord, handleCut, handleWaveformVisible } = useRecorder()
-const { startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration)
+const { waveEl, isRecording, isWaveformVisible, isStarted, onStateUpdate, onRecorderEnd, ondataavailable, getCurrentDuration, handleOperate, handleStartPause, handleStopRecord, handleCut, handleWaveformVisible } = useRecorder()
+const { startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration, handleOperate)
 
 const isWaitForSelectAnime = ref(false)
 let msg: MessageReactive | undefined = undefined
 const speechMethods = {
   start: () => {
     if(!isStarted.value) {
+      state.isStartedRecorder = true
       if(isWaitForSelectAnime.value) {
         isWaitForSelectAnime.value = false
         message.info('已取消')
@@ -121,27 +123,41 @@ const speechMethods = {
   stop: () => {
     handleStopRecord()
     stopSpeech()
+    state.isStartedRecorder = false
   }
 }
 
 const subs = [
   ondataavailable.subscribe(async data => {
-    if(!data.isSilence) {
-      const blob = await AudioRecorder.toWAVBlob(data.blob)
-      const duration = data.duration
+    try {
       const actions = getActionSequence()
-      console.log('duration:', duration, 'actions:', actions)
-      // handleAudioOutput({ audio: blob, duration })
-      return
+      const duration = data.duration
+      if(!data.isSilence) {
+        const blob = await AudioRecorder.toWAVBlob(data.blob)
+        console.log('duration:', duration, 'actions:', actions)
+        await projectStore
+          .fragment(props.id)
+          .createByAudio({
+            audio: blob,
+            duration: duration,
+            speakerId: speakerId.value || '',
+            actions
+          })
+        return
+      }
+      // TODO 一般可能最后一段音频才需要考虑是否包含说话声音
+      if (actions && actions.length > 0) {
+        const txtLength = Math.floor(data.duration / 0.5)
+        console.log('空白语音段：', data.duration, txtLength)
+        await projectStore.fragment(props.id).createBlank({
+          txtLength,
+          duration,
+          actions
+        })
+      }
+    } catch (error) {
+      message.error('创建音频片段失败')
     }
-    // TODO 一般可能最后一段音频才需要考虑是否包含说话声音
-    // const txtLength = Math.floor(data.duration / 0.5)
-    // projectStore.fragment(props.id).createBlank({
-    //   txtLength,
-    //   duration: data.duration
-    // }).catch(e => {
-    //   message.error(t('studio.msg.create_fragment_error'))
-    // })
   }),
   onRecorderEnd.subscribe(info => {
     message.info(info)
@@ -191,7 +207,7 @@ onUnmounted(() => {
     </div>
     <!-- 主展示区 -->
     <div ref="scrollerRef" class="main" @contextmenu="handleContextmenu">
-      <Delegater :id="id">
+      <Delegater :id="id" :allow-select-anime="!state.isStartedRecorder">
         <!-- 拖拽组件 -->
         <VueDraggable class="draggable" v-model="fragments" :itemKey="'id'" @end="handleMove($event)">
             <AudioFragment

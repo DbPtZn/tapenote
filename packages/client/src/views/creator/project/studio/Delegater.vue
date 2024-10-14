@@ -12,6 +12,7 @@ import { AnimeProvider } from '@/editor'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
+  allowSelectAnime: boolean
 }>()
 
 const { projectStore } = useStore()
@@ -118,6 +119,7 @@ onMounted(() => {
         scrollerRef.value.style.position = 'relative' // 添加 'relative' 作为 pointer 绝对定位参照系
         subs2.push(
           fromEvent<KeyboardEvent>(window, 'keydown').pipe(auditTime(0)).subscribe(e => {
+            if(!props.allowSelectAnime) return
             if (pointerIndex.value === -1) return // -1 是关闭状态
             if(['Space', 'ArrowDown'].includes(e.code)) {
               if(pointerIndex.value < animeMap.length - 1) pointerIndex.value++
@@ -128,6 +130,7 @@ onMounted(() => {
             }
           }),
           fromEvent<PointerEvent>(bridge.editorRef, 'click').subscribe(e => {
+            if(!props.allowSelectAnime) return
             const target = e.target as HTMLElement
             const animeElement = AnimeProvider.toAnimeElement(target)
             if (!animeElement) return
@@ -149,11 +152,12 @@ onMounted(() => {
       subs5.push(
         fromEvent(editorRef.value!, 'click').pipe(auditTime(5)).subscribe(e => {
           // 延迟 5ms , 与 s 错开时间，这样在动画块之间切换的时候 selectAnimeElement 不会被 s 事件覆盖消除
+          if(!props.allowSelectAnime) return
           if(isAutoMoveAnimePointer.value) return
           const target = e.target as HTMLElement
           const animeElement = AnimeProvider.toAnimeElement(target)
           if (!animeElement) return
-          if (animeElement.dataset.active === 'true') return
+          // if (animeElement.dataset.active === 'true') return
           selectAnimeElement = animeElement
           selectAnimeElement.classList.add('anime-preset')
           const s = fromEvent(document, 'click', true).pipe(auditTime(0)).subscribe(event => {
@@ -194,8 +198,10 @@ const handleClick = (e: MouseEvent) => {
         const index = parseInt(indexStr)
         characterMethods.setFocus(target) // 激活启动子预设状态聚焦动画
         if(!target.classList.contains('marked')) {
+          // 是否开启自动移动动画指针功能
           if(isAutoMoveAnimePointer.value) {
             if(pointerIndex.value === -1) {
+              // 先通过片段选择文字再选择动画的情况
               handlePromoterSelect(fragment.id, index)
               subs4.length === 0 && subs4.push(bridge.onAddPromoter.subscribe(element => {
                 const index = animeMap.findIndex(item => item === element)
@@ -211,6 +217,8 @@ const handleClick = (e: MouseEvent) => {
             pointerIndex.value++
             return
           }
+          // 未开启动画指针模式的情况
+          // 已经选中动画元素的情况
           if(selectAnimeElement) {
             const id = selectAnimeElement.dataset.id
             const serial = selectAnimeElement.dataset.serial
@@ -218,6 +226,7 @@ const handleClick = (e: MouseEvent) => {
             makePreset(fragment.id, index, id, serial)
             return
           }
+          // 未选择动画元素的情况
           handlePromoterSelect(fragment.id, index)
         } else {
           const rect = target.getBoundingClientRect()

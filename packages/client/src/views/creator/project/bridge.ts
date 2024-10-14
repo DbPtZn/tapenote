@@ -19,6 +19,7 @@ export class Bridge {
   container: HTMLElement | null = null
   animeProvider: AnimeProvider | null = null
   outlineService: OutlineService | null = null
+  focusDiv: HTMLElement | null = null
   
   // private editorReadyEvent: Subject<any> = new Subject()
   // onEditorReady: Observable<Editor> = this.editorReadyEvent.asObservable()
@@ -53,6 +54,10 @@ export class Bridge {
 
   constructor() {
     this.habit = new Habit()
+
+    this.focusDiv = document.createElement('div')
+    this.focusDiv.tabIndex = 0
+    document.body.appendChild(this.focusDiv)
   }
   setup(editor: Editor, lib: LibraryEnum, editorRef: HTMLElement, scrollerRef: HTMLElement) {
     this.editor = editor
@@ -116,6 +121,11 @@ export class Bridge {
     this.onEditorReload.next()
   }
 
+  /** 将焦点从编辑器上移除 */
+  handleBlur() {
+    this.focusDiv?.focus()
+  }
+
   destory() {
     this.habit = null
     this.editor = null
@@ -124,5 +134,6 @@ export class Bridge {
     this.scrollerRef = null
     this.projectRef = null
     this.animeProvider = null
+    this.focusDiv?.remove()
   }
 }

@@ -75,7 +75,8 @@ export class FragmentController {
           procedureId: formData.procedureId,
           audio: audio.path,
           duration: formData.duration,
-          speakerId: formData.speakerId
+          speakerId: formData.speakerId,
+          actions: JSON.parse(formData.actions) || []
         },
         req.user.id,
         req.user.dirname
