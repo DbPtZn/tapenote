@@ -172,7 +172,7 @@ export function getProcedureConfig(args: {
           [cleanTool]
         ], scrollerRef),
       () => new OutlinePlugin(),
-      () => new ContextMenu(),
+      // () => new ContextMenu(),
       () => new LinkJumpTipPlugin(),
       () => new AnimeContextmenuPlugin(),
       () => new AnimeComponentSupport(),

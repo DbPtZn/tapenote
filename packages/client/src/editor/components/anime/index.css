@@ -14,7 +14,8 @@
   content: attr(data-serial);
   vertical-align: super;
   display:inline-block;
-  width:23px;
+  /* padding: 0 3px; */
+  min-width:23px;
   height:23px;
   font-size:15px;
   color:white;
@@ -69,7 +70,7 @@ anime-component:after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 23px;
+  min-width:23px;
   height: 23px;
   font-size: 15px;
   line-height: 0px;

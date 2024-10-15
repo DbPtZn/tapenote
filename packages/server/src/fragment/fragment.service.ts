@@ -139,7 +139,7 @@ export class FragmentService {
 
       // 重新计算处理后音频的时长
       fragment.duration = await this.ffmpegService.calculateDuration(filepath)
-      this.userlogger.log(`静音清理后音频时长为：${fragment.duration}`)
+      // this.userlogger.log(`格式化后音频时长为：${fragment.duration}`)
 
       // 语音识别
       try {
@@ -1097,9 +1097,8 @@ function addPromoter(fragment: Fragment, actions: Action[]) {
     }
 
     let closestIndex = findClosestIndex(fragment.timestamps, keyframe)
-    // console.log('closestIndex', closestIndex)
-    // console.log(fragment.promoters[closestIndex], fragment.promoters[closestIndex] === null)
-    if (!fragment.promoters[closestIndex]) {
+    // 排除空字符的情况，否则会把标记添加到空字符上，导致前端排版错误
+    if (!fragment.promoters[closestIndex] && fragment.transcript[closestIndex] !== ' ') {
       fragment.promoters[closestIndex] = animeId
       fragment.tags[closestIndex] = serial
       continue
@@ -1119,7 +1118,7 @@ function addPromoter(fragment: Fragment, actions: Action[]) {
     // 如果 index 处已经被占用，向后检查空余位置
     let isBinding = false
     for (let i = closestIndex + 1; i < fragment.timestamps.length; i++) {
-      if (!fragment.promoters[i]) {
+      if (!fragment.promoters[i] && fragment.transcript[i] !== ' ') {
         fragment.promoters[i] = animeId
         fragment.tags[i] = serial
         isBinding = true

@@ -202,15 +202,20 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
   function handleReorder() {
     /** 动画标记重排序 */
     const animeProvider = bridge.animeProvider
-    const container = bridge.editorRef
-    if(!container) return
-    // 查询所有动画元素（通过 dom 查询得到的结果一般就是自上而下的顺序）
-    const elements = AnimeProvider.queryAllAnimeElements(container)
+    // const container = bridge.editorRef
+    // if(!container) return
+    // // 查询所有动画元素（通过 dom 查询得到的结果一般就是自上而下的顺序）
+    // const elements = AnimeProvider.queryAllAnimeElements(container)
+    // const sequence: string[] = []
+    // elements.forEach((element) => {
+    //   if(element.dataset.id) {
+    //     sequence.push(element.dataset.id)
+    //   }
+    // })
     const sequence: string[] = []
-    elements.forEach((element) => {
-      if(element.dataset.id) {
-        sequence.push(element.dataset.id)
-      }
+    animeProvider?.animeElementIterator((element) => {
+      const id = element.dataset.id
+      id && sequence.push(id)
     })
     // 去重（动画标签可能有重复的情况）
     const uniqueSet = new Set(sequence)

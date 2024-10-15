@@ -16,6 +16,8 @@ export function useRecorder() {
   const isRecording = ref(false)
   const isStarted = ref(false)
   const isWaveformVisible = ref(false)
+  const totalDuration = ref(0)
+  let timer
   // const isPaused = ref(false)
 
   let mediaRecorder: MediaRecorder | null = null
@@ -42,6 +44,10 @@ export function useRecorder() {
       video: false
     })
 
+    timer = setInterval(() => {
+      totalDuration.value += 0.01
+    }, 10)
+
     currentDuration = 0
     startTime = 0
     pausedTime = 0
@@ -66,11 +72,15 @@ export function useRecorder() {
 
     mediaRecorder.onpause = () => {
       pausedTime = Date.now() // 记录暂停的时间
+      clearInterval(timer)
     }
     
     mediaRecorder.onresume = () => {
       const resumedTime = Date.now()
       startTime += resumedTime - pausedTime // 更新开始时间，以补偿暂停的时间
+      timer = setInterval(() => {
+        totalDuration.value += 0.01
+      }, 10)
     }
 
     mediaRecorder.start()
@@ -125,33 +135,34 @@ export function useRecorder() {
     }
 
     // console.log('waveEl.value', waveEl.value)
-    const cvs = waveEl.value!
-    const ctx = cvs.getContext('2d')!
+    // const cvs = waveEl.value!
+    // const ctx = cvs.getContext('2d')!
 
     // 循环调用纯函数绘制波形
-    const renderFrame = () => {
-        if(!isStarted.value) return
+    // const renderFrame = () => {
+    //     if(!isStarted.value) return
 
-        // 使用 requestAnimationFrame 实现流畅动画
-        requestAnimationFrame(renderFrame)
+    //     // 使用 requestAnimationFrame 实现流畅动画
+    //     requestAnimationFrame(renderFrame)
         
-        // 调用纯函数 `drawWaveform`
-        drawWaveform(ctx, analyser, cvs.width, cvs.height, isWaveformVisible.value && isRecording.value, themeVars.value.textColor1)
-    }
+    //     // 调用纯函数 `drawWaveform`
+    //     drawWaveform(ctx, analyser, cvs.width, cvs.height, isWaveformVisible.value && isRecording.value, themeVars.value.textColor1)
+    // }
     // 开始绘制
-    renderFrame()
+    // renderFrame()
 
     mediaRecorder.addEventListener('stop', () => {
       const finalBlob = new Blob(audioChunks, { type: 'audio/webm' })
       ondataavailable.next({ blob: finalBlob, duration: currentDuration, isSilence: isNewRecorder })
-      const { width, height } = cvs
-      ctx.clearRect(0, 0, width, height)
+      // const { width, height } = cvs
+      // ctx.clearRect(0, 0, width, height)
     })
 
     checkSilence() // 开启静音检测
 
     mediaRecorder.onerror = function (event) {
       console.error('MediaRecorder error:', event)
+      handleStopRecord()
     }
   }
 
@@ -208,6 +219,7 @@ export function useRecorder() {
     audioCtx = null
     onRecorderEnd.next('录制结束')
     onStateUpdate.next(isRecording.value)
+    clearInterval(timer)
   }
 
   function init() {
@@ -225,6 +237,7 @@ export function useRecorder() {
 
   return {
     waveEl,
+    totalDuration,
     currentDuration,
     isWaveformVisible,
     isRecording,

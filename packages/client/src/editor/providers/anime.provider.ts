@@ -211,10 +211,10 @@ export class AnimeProvider {
     }
   }
 
-  addAnime(componentInstance: ComponentInstance | null, effect: string, title: string) {
+  addAnime(componentInstance: ComponentInstance | null, effect: string, title: string, customSerial?: number) {
     if (!componentInstance) return
     const id = this.generateAnimeId()
-    const serial = this.generateAnimeSerial().toString()
+    const serial = customSerial || this.generateAnimeSerial().toString()
     if (componentInstance.state.dataAnime === false) {
       // 将光标聚焦到目标组件内（当组件状态更新的时候会将页面滚动到光标所在的位置）
       this.selection.selectFirstPosition(componentInstance)
@@ -229,6 +229,7 @@ export class AnimeProvider {
       })
       return
     }
+    if (componentInstance.state.dataAnime === true) return // 如果为 true, 直接跳出，自动添加动画的时候会遇到这个情况
     const slot = new Slot([ContentType.BlockComponent])
     const anime = animeComponent.createInstance(this.injector, {
       slots: [slot],
@@ -279,24 +280,27 @@ export class AnimeProvider {
     for (let i = 0; i < group.length; i++) {
       const components = group[i]
       outerLoop: for (let k = 0; k < components.length; k++) {
-        const component = components[k]
+        const component = components[k] // 组件内的情况
         if (typeof component !== 'string') {
           // 排除列表，不设置动画
           if (['RootComponent', 'AnimeIgnoreComponent', 'AnimeComponent'].includes(component.name)) continue
+          if (component.state && component.state.dataAnime) continue
           // console.log('a')
 
           // 要采用 formatter 设置动画的组件
           if (['ParagraphComponent'].includes(component.name)) {
             // console.log('formatter anime')
             component.slots.toArray().forEach(slot => {
-              setTimeout(() => {
-                this.addFormatterAnime(slot, selectAnimeOption)
-              }, 0)
+              if (slot.sliceContent()[0] !== '\n') {
+                setTimeout(() => {
+                  this.addFormatterAnime(slot, selectAnimeOption)
+                }, 0)
+              }
             })
             continue
           }
 
-          // 父组件包含在 AnimeIgnoreComponent 中，不设置动画
+          // 不需要设置动画的情况
           let parentComponent = component.parentComponent
           while (parentComponent) {
             if (parentComponent && parentComponent.name === 'RootComponent') break
@@ -345,10 +349,10 @@ export class AnimeProvider {
    * @param componentInstance 组件
    * @param selectAnimeOption 指定一种动画，不传的时候会在动画列表中随机选择
    */
-  addComponentAnime(componentInstance: ComponentInstance | null, selectAnimeOption?: { key: string; value: { name: string } }) {
+  addComponentAnime(componentInstance: ComponentInstance | null, selectAnimeOption?: { key: string; value: { name: string } }, customSerial?: number) {
     if (!componentInstance) return
     const animeOption = selectAnimeOption || this.getRandomAnime()
-    this.addAnime(componentInstance, animeOption.key, animeOption.value?.name || '')
+    this.addAnime(componentInstance, animeOption.key, animeOption.value?.name || '', customSerial)
   }
 
   /**
@@ -356,11 +360,11 @@ export class AnimeProvider {
    * @param slot 插槽
    * @param selectAnimeOption 指定一种动画，不传的时候会在动画列表中随机选择
    */
-  addFormatterAnime(slot: Slot, selectAnimeOption?: { key: string; value: { name: string } }) {
+  addFormatterAnime(slot: Slot, selectAnimeOption?: { key: string; value: { name: string } }, customSerial?: number) {
     try {
       if (slot.sliceContent()[0] !== '\n') {
         const id = this.generateAnimeId()
-        const serial = this.generateAnimeSerial().toString()
+        const serial = customSerial || this.generateAnimeSerial().toString()
         const animeOption = selectAnimeOption || this.getRandomAnime()
         slot.applyFormat(animeFormatter, {
           startIndex: 0,

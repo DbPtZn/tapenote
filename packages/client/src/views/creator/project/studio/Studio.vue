@@ -11,12 +11,13 @@ import { auditTime } from '@tanbo/stream'
 import { LibraryEnum } from '@/enums'
 import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
 import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp, KeyboardOutlined } from '@vicons/material'
-import Delegater from './Delegater.vue'
 import { splitText, collapseText } from './_utils'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
-import { AudioRecorder } from './_utils/recorder'
+import Delegater from './Delegater.vue'
+import Station from './Station.vue'
+
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 const bridge = inject('bridge') as Bridge
@@ -37,8 +38,7 @@ const scrollerRef = ref()
 const state = reactive({
   isReadonly: computed(() => props.readonly()),
   isFocus: computed(() => props.focus()),
-  isShortcutAllow: true,
-  isStartedRecorder: false
+  isShortcutAllow: true
 })
 const studioEl = useTemplateRef<HTMLElement>('studioEl')
 
@@ -92,97 +92,106 @@ const totalDuration = computed(() => {
       }, 0)
   })
 
-const { waveEl, isRecording, isWaveformVisible, isStarted, onStateUpdate, onRecorderEnd, ondataavailable, getCurrentDuration, handleOperate, handleStartPause, handleStopRecord, handleCut, handleWaveformVisible } = useRecorder()
-const { startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration, handleOperate)
+// const { waveEl, isRecording, isWaveformVisible, isStarted, onStateUpdate, onRecorderEnd, ondataavailable, getCurrentDuration, handleOperate, handleStartPause, handleStopRecord, handleCut, handleWaveformVisible } = useRecorder()
+// const { startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration, handleOperate)
 
-const isWaitForSelectAnime = ref(false)
-let msg: MessageReactive | undefined = undefined
-const speechMethods = {
-  start: () => {
-    if(!isStarted.value) {
-      state.isStartedRecorder = true
-      if(isWaitForSelectAnime.value) {
-        isWaitForSelectAnime.value = false
-        message.info('已取消')
-        msg?.destroy()
-        return 
-      }
-      isWaitForSelectAnime.value = true
-      msg = message.info('在选择一个动画块后开始录制', { duration: 0 })
-      startSpeech(
-        () => {
-          handleStartPause()
-          isWaitForSelectAnime.value = false
-          msg?.destroy()
-        }
-      )
-      return
-    }
-    handleStartPause()
+// const isWaitForSelectAnime = ref(false)
+// let msg: MessageReactive | undefined = undefined
+// const speechMethods = {
+//   start: () => {
+//     if(!isStarted.value) {
+//       state.isStartedRecorder = true
+//       if(isWaitForSelectAnime.value) {
+//         isWaitForSelectAnime.value = false
+//         message.info('已取消')
+//         msg?.destroy()
+//         return 
+//       }
+//       isWaitForSelectAnime.value = true
+//       msg = message.info('在选择一个动画块后开始录制', { duration: 0 })
+//       startSpeech(
+//         () => {
+//           handleStartPause()
+//           isWaitForSelectAnime.value = false
+//           msg?.destroy()
+//         }
+//       )
+//       return
+//     }
+//     handleStartPause()
+//   },
+//   stop: () => {
+//     handleStopRecord()
+//     stopSpeech()
+//     state.isStartedRecorder = false
+//   }
+// }
+
+// const subs = [
+//   ondataavailable.subscribe(async data => {
+//     try {
+//       const actions = getActionSequence()
+//       const duration = data.duration
+//       if(!data.isSilence) {
+//         const blob = await AudioRecorder.toWAVBlob(data.blob)
+//         console.log('duration:', duration, 'actions:', actions)
+//         await projectStore
+//           .fragment(props.id)
+//           .createByAudio({
+//             audio: blob,
+//             duration: duration,
+//             speakerId: speakerId.value || '',
+//             actions
+//           })
+//         return
+//       }
+//       // TODO 一般可能最后一段音频才需要考虑是否包含说话声音
+//       if (actions && actions.length > 0) {
+//         const txtLength = Math.floor(data.duration / 0.5)
+//         console.log('空白语音段：', data.duration, txtLength)
+//         await projectStore.fragment(props.id).createBlank({
+//           txtLength,
+//           duration,
+//           actions
+//         })
+//       }
+//     } catch (error) {
+//       message.error('创建音频片段失败')
+//     }
+//   }),
+//   onRecorderEnd.subscribe(info => {
+//     message.info(info)
+//     stopSpeech()
+//   })
+// ]
+
+
+// const recMode = ref('speech')
+// const options: SelectOption[] = [
+//   {
+//     label: '演讲模式',
+//     value: 'speech',
+//     txt: '演讲'
+//   },
+//   {
+//     label: '自由模式',
+//     value: 'free',
+//     txt: '自由'
+//   }
+// ]
+const isStartedRecorder = ref(false)
+const stationMethods = {
+  handleStart() {
+    isStartedRecorder.value = true
   },
-  stop: () => {
-    handleStopRecord()
-    stopSpeech()
-    state.isStartedRecorder = false
+  handleEnd() {
+    isStartedRecorder.value = false
+    checkPromoter()
   }
 }
-
-const subs = [
-  ondataavailable.subscribe(async data => {
-    try {
-      const actions = getActionSequence()
-      const duration = data.duration
-      if(!data.isSilence) {
-        const blob = await AudioRecorder.toWAVBlob(data.blob)
-        console.log('duration:', duration, 'actions:', actions)
-        await projectStore
-          .fragment(props.id)
-          .createByAudio({
-            audio: blob,
-            duration: duration,
-            speakerId: speakerId.value || '',
-            actions
-          })
-        return
-      }
-      // TODO 一般可能最后一段音频才需要考虑是否包含说话声音
-      if (actions && actions.length > 0) {
-        const txtLength = Math.floor(data.duration / 0.5)
-        console.log('空白语音段：', data.duration, txtLength)
-        await projectStore.fragment(props.id).createBlank({
-          txtLength,
-          duration,
-          actions
-        })
-      }
-    } catch (error) {
-      message.error('创建音频片段失败')
-    }
-  }),
-  onRecorderEnd.subscribe(info => {
-    message.info(info)
-    stopSpeech()
-  })
-]
-
-
-const recMode = ref('speech')
-const options: SelectOption[] = [
-  {
-    label: '演讲模式',
-    value: 'speech',
-    txt: '演讲'
-  },
-  {
-    label: '自由模式',
-    value: 'free',
-    txt: '自由'
-  }
-]
-
 onUnmounted(() => {
   subscription.unsubscribe()
-  subs.forEach(sub => sub.unsubscribe())
+  // subs.forEach(sub => sub.unsubscribe())
 })
 
 </script>
@@ -207,7 +216,7 @@ onUnmounted(() => {
     </div>
     <!-- 主展示区 -->
     <div ref="scrollerRef" class="main" @contextmenu="handleContextmenu">
-      <Delegater :id="id" :allow-select-anime="!state.isStartedRecorder">
+      <Delegater :id="id" :allow-select-anime="!isStartedRecorder">
         <!-- 拖拽组件 -->
         <VueDraggable class="draggable" v-model="fragments" :itemKey="'id'" @end="handleMove($event)">
             <AudioFragment
@@ -325,15 +334,15 @@ onUnmounted(() => {
         </template>
       </StudioToolbar>
       <!-- 输入区 -->
-      <div class="input-area" v-show="recorderMode === 'TTS' && !isStarted">
+      <div class="input-area" v-show="recorderMode === 'TTS' && !isStartedRecorder">
         <TTS  :readonly="state.isReadonly" @on-text-output="handleTextOutput"  />
       </div>
-      <div class="input-area" v-show="recorderMode === 'ASR' && !isStarted">
+      <div class="input-area" v-show="recorderMode === 'ASR' && !isStartedRecorder">
         <ASR :readonly="state.isReadonly" :shortcut="state.isShortcutAllow && state.isFocus" @output="handleAudioOutput" @inputting="handleInputting" />
       </div>
-      <div class="wave-area" v-show="isStarted">
+      <!-- <div class="wave-area" v-show="isStartedRecorder">
         <canvas v-show="isWaveformVisible" class="wave" ref="waveEl" />
-      </div>
+      </div> -->
       <div v-show="state.isFocus" class="shortcut">
         <n-popover trigger="hover" placement="bottom">
           <template #trigger>
@@ -360,8 +369,7 @@ onUnmounted(() => {
       :show="dropdownState.isShow"
       :on-clickoutside="() => dropdownState.isShow = false"
     />
-    
-    <div :class="{ 'speech-mode': 1, 'speech-mode-hide' : !isShowSpeechModeToolbar }">
+    <!-- <div :class="{ 'speech-mode': 1, 'speech-mode-hide' : !isShowSpeechModeToolbar }">
       <div class="btn-group">
         <div class="btn">
           <n-popselect v-model:value="recMode" :options="options" trigger="click">
@@ -394,66 +402,20 @@ onUnmounted(() => {
       <div class="collapse-btn" @click="isShowSpeechModeToolbar = !isShowSpeechModeToolbar">
         <Icon :icon="isShowSpeechModeToolbar ?'material-symbols:arrow-forward-ios-rounded' : 'material-symbols:arrow-back-ios-rounded'" height="24" />
       </div>
-    </div>
+    </div> -->
   </div>
+  <Station
+    :id="id"
+    :account="account"
+    :hostname="hostname"
+    :speaker-id="speakerId"
+    @start="stationMethods.handleStart"
+    @end="stationMethods.handleEnd"
+    />
 </template>
 
 <style lang="scss" scoped>
-.speech-mode-hide {
-  display: none;
-  right: -80px!important;
-  .collapse-btn {
-    position: absolute;
-    left: -44px;
-    cursor: pointer;
-  }
-}
-.speech-mode {
-  position: absolute;
-  bottom: 50%;
-  right: 0;
-  transform: translateY(50%);
-  background-color: v-bind('themeVars.cardColor');
-  border-radius: 3px;
-  padding: 6px 6px;
-  box-shadow: v-bind('themeVars.boxShadow3');
-  display: flex;
-  flex-direction: column;
-  transition: all 0.2s ease-in-out;
-  .btn {
-    user-select: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 60px;
-    width: 60px;
-    margin-top: 6px;
-    background-color: v-bind('themeVars.buttonColor2');
-    cursor: pointer;
-    &:hover {
-      background-color: v-bind('themeVars.buttonColor2Hover');
-    }
-    &:active {
-      background-color: v-bind('themeVars.buttonColor2Pressed');
-    }
-    &:first-child {
-      margin-top: 0px;
-    }
-  }
-  .disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  .collapse-btn {
-    z-index: 1;
-    position: absolute;
-    bottom: 50%;
-    left: -20px;
-    transform: translateY(50%);
-    cursor: pointer;
-  }
-}
+
 .role {
   display: flex;
   flex-direction: column;
