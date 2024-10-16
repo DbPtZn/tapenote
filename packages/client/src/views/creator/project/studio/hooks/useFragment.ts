@@ -1,22 +1,25 @@
 import useStore from '@/store'
 import { DropdownOption } from 'naive-ui'
 import { h, onUnmounted, reactive, ref } from 'vue'
-import { Bridge } from '../../bridge'
 import _ from 'lodash'
 import { useDialog, useMessage } from 'naive-ui'
+import { Player } from '@/editor'
+import { Icon } from '@iconify/vue'
+import { Subject, Subscription } from '@tanbo/stream'
+import { SortableEvent } from 'vue-draggable-plus'
+import { Bridge } from '../../bridge'
 import { TxtEdit, FragmentEditor } from '../private'
 import { usePromoter } from './usePromoter'
-import { Player } from '@/editor'
-import { Subscription } from '@tanbo/stream'
-import { SortableEvent } from 'vue-draggable-plus'
+
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: () => void, checkPromoter: () => void, handleReorder: () => void) {
   // console.log('useFragment：', bridge)
-  const { projectStore, clipboardStore, studioStore } = useStore()
-  const isShowName = ref(false)
+  const { projectStore, clipboardStore } = useStore()
+  // const isShowName = ref(false)
+  const onPlayerStateUpdate = new Subject<boolean>()
   const isShowOrder = ref(false)
-  const isShowSpeechModeToolbar = ref(false)
-  let autoMoveAnimePointer = false
+  // const isShowSpeechModeToolbar = ref(false)
+  // let autoMoveAnimePointer = false
   const dialog = useDialog()
   const message = useMessage()
   let player: Player | undefined = undefined
@@ -73,6 +76,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'collapse',
         label: () => `${ fragment?.collapsed ? '展开' : '折叠' }`,
+        icon: () => h(Icon, { icon: 'mdi:collapse-all' }),
         show: !!fragment && fragment.transcript.length > 16,  // 长度大于 16 才显示折叠按钮
         props: {
           onClick: () => {
@@ -90,6 +94,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'order',
         label: () => `${ isShowOrder.value ? '隐藏排序' : '显示排序' }`,
+        icon: () => h(Icon, { icon: 'icon-park-solid:recent-views-sort' }),
         show: !!fragment, // 长度大于 16 才显示折叠按钮
         props: {
           onClick: () => {
@@ -101,6 +106,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'preview',
         label: '播放预览',
+        icon: () => h(Icon, { icon: 'iconamoon:player-play-bold' }),
         show: !!fragment,
         props: {
           onClick: () => {
@@ -112,6 +118,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'preview-from-here',
         label: '向下播放',
+        icon: () => h(Icon, { icon: 'iconamoon:player-next-duotone' }),
         show: fragments.length === 1,
         props: {
           onClick: () => {
@@ -127,6 +134,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'copy',
         label: '复制',
+        icon: () => h(Icon, { icon: 'mdi:content-copy' }),
         show: fragments.length === 1,
         props: {
           onClick: () => {
@@ -147,6 +155,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'cut',
         label: '剪切',
+        icon: () => h(Icon, { icon: 'mdi:content-cut' }),
         show: fragments.length === 1,
         props: {
           onClick: () => {
@@ -168,6 +177,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'insert-before',
         label: '在前面粘贴片段',
+        icon: () => h(Icon, { icon: 'hugeicons:insert-top-image' }),
         disabled: !(clipboardStore.fragment.length === 1),
         show: fragments.length === 1,
         props: {
@@ -193,6 +203,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'insert-after',
         label: '在后面粘贴片段',
+        icon: () => h(Icon, { icon: 'hugeicons:insert-bottom-image' }),
         disabled: !(clipboardStore.fragment.length === 1),
         show: fragments.length === 1,
         props: {
@@ -218,6 +229,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'insert',
         label: '粘贴片段',
+        icon: () => h(Icon, { icon: 'mdi:content-paste' }),
         disabled: !(clipboardStore.fragment.length === 1),
         show: fragments.length === 0,
         props: {
@@ -240,6 +252,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'copy-txt',
         label: '复制文本',
+        icon: () => h(Icon, { icon: 'lucide-lab:copy-type' }),
         show: fragments.length === 1,
         props: {
           onClick: () => {
@@ -253,6 +266,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       {
         key: 'remove',
         label: '移除',
+        icon: () => h(Icon, { icon: 'material-symbols:delete-outline' }),
         show: !!fragment,
         props: {
           onClick: () => {
@@ -274,106 +288,123 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     ]
   }
 
-  const studioOptions: DropdownOption[] = [
-    {
-      key: 'auto',
-      label: () => `${autoMoveAnimePointer ? '关闭' : '开启' }自动切换动画块`,
-      props: {
-        onClick: () => {
-          autoMoveAnimePointer = !autoMoveAnimePointer
-          bridge.handleAutoMoveAnimePointer(autoMoveAnimePointer)
-        }
-      }
-    },
-    {
-      key: 'lecture', // 演讲
-      label: () => `${isShowSpeechModeToolbar.value ? '隐藏' : '显示'}演讲模式控制台`,
-      props: {
-        onClick: () => {
-          isShowSpeechModeToolbar.value = !isShowSpeechModeToolbar.value
-        }
-      }
-    },
-    {
-      key: 'preview',
-      label: '播放预览',
-      props: {
-        onClick: () => {
-          message.warning('注意：预览模式与作品成品的播放效果不完全一致')
-          player = bridge.editor?.get(Player)
-          const fragments = projectStore.fragment(projectId).getBySort()
-          applyPlay(fragments, true)
-        }
-      }
-    },
-    {
-      key: 'refresh',
-      label: '更新标记',
-      props: {
-        onClick: () => {
-          checkPromoter()
-        }
-      }
-    },
-    {
-      key: 'reorder',
-      label: '标记重排序',
-      props: {
-        onClick: () => {
-          handleReorder()
-        }
-      }
-    },
-    {
-      key: 'bgm',
-      disabled: true,
-      label: '背景音乐',
-      props: {
-        onClick: () => {
-          //
-        }
-      }
-    },
-    {
-      key: 'showname',
-      label: () => `${isShowName.value ? '隐藏' : '显示'}名称`,
-      props: {
-        onClick: () => {
-          isShowName.value = !isShowName.value
-        }
-      }
-    },
-    {
-      key: 'showorder',
-      label: () => `${ isShowOrder.value ? '隐藏' : '显示' }排序`,
-      props: {
-        onClick: () => {
-          isShowOrder.value = !isShowOrder.value
-          dropdownState.isShow = false
-        }
-      }
-    },
-    {
-      key: 'language',
-      disabled: true,
-      label: '语言',
-      props: {
-        onClick: () => {
-          //
-        }
-      }
-    },
-    {
-      key: 'settings',
-      disabled: true,
-      label: '设置',
-      props: {
-        onClick: () => {
-          //
-        }
-      }
-    }
-  ]
+
+  function handlePreview() {
+    player = bridge.editor?.get(Player) // 获取播放器实例
+    const fragments = projectStore.fragment(projectId).getBySort()
+    applyPlay(fragments, true)
+  }
+
+  // const studioOptions: DropdownOption[] = [
+  //   // {
+  //   //   key: 'auto',
+  //   //   label: () => `${autoMoveAnimePointer ? '关闭' : '开启' }自动切换动画块`,
+  //   //   icon: () => h(Icon, { icon: 'mdi:animation-play-outline' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       autoMoveAnimePointer = !autoMoveAnimePointer
+  //   //       bridge.handleAutoMoveAnimePointer(autoMoveAnimePointer)
+  //   //     }
+  //   //   }
+  //   // },
+  //   // {
+  //   //   key: 'lecture', // 演讲
+  //   //   label: () => `${isShowSpeechModeToolbar.value ? '隐藏' : '显示'}演讲模式控制台`,
+  //   //   icon: () => h(Icon, { icon: 'mdi:speaker' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       isShowSpeechModeToolbar.value = !isShowSpeechModeToolbar.value
+  //   //     }
+  //   //   }
+  //   // },
+  //   // {
+  //   //   key: 'preview',
+  //   //   label: '播放预览',
+  //   //   icon: () => h(Icon, { icon: 'mdi:play' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       message.warning('注意：预览模式与作品成品的播放效果不完全一致')
+  //   //       // player = bridge.editor?.get(Player)
+  //   //       const fragments = projectStore.fragment(projectId).getBySort()
+  //   //       applyPlay(fragments, true)
+  //   //     }
+  //   //   }
+  //   // },
+  //   // {
+  //   //   key: 'refresh',
+  //   //   label: '更新标记',
+  //   //   icon: () => h(Icon, { icon: 'mdi:refresh' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       checkPromoter()
+  //   //     }
+  //   //   }
+  //   // },
+  //   // {
+  //   //   key: 'reorder',
+  //   //   label: '标记重排序',
+  //   //   icon: () => h(Icon, { icon: 'mdi:sort' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       handleReorder()
+  //   //     }
+  //   //   }
+  //   // },
+  //   // {
+  //   //   key: 'bgm',
+  //   //   disabled: true,
+  //   //   label: '背景音乐',
+  //   //   icon: () => h(Icon, { icon: 'mdi:music-note-outline' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       //
+  //   //     }
+  //   //   }
+  //   // },
+  //   // {
+  //   //   key: 'showname',
+  //   //   label: () => `${isShowName.value ? '隐藏' : '显示'}名称`,
+  //   //   icon: () => h(Icon, { icon: 'mdi:account-group-outline' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       isShowName.value = !isShowName.value
+  //   //     }
+  //   //   }
+  //   // },
+  //   // {
+  //   //   key: 'showorder',
+  //   //   label: () => `${ isShowOrder.value ? '隐藏' : '显示' }排序`,
+  //   //   icon: () => h(Icon, { icon: 'mdi:sort' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       isShowOrder.value = !isShowOrder.value
+  //   //       dropdownState.isShow = false
+  //   //     }
+  //   //   }
+  //   // },
+  //   // {
+  //   //   key: 'language',
+  //   //   disabled: true,
+  //   //   label: '语言',
+  //   //   icon: () => h(Icon, { icon: 'mdi:translate' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       //
+  //   //     }
+  //   //   }
+  //   // },
+  //   // {
+  //   //   key: 'settings',
+  //   //   disabled: true,
+  //   //   label: '设置',
+  //   //   icon: () => h(Icon, { icon: 'mdi:cog' }),
+  //   //   props: {
+  //   //     onClick: () => {
+  //   //       //
+  //   //     }
+  //   //   }
+  //   // }
+  // ]
 
   /** 播放音频 */
   let aud: HTMLAudioElement | null = null 
@@ -496,6 +527,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
         // 3.加载完成后启动播放
         player!.start()
         playerState.isPlaying = true
+        onPlayerStateUpdate.next(true)
         const timer = setInterval(() => {
           playerState.currentTime = player!.totalTime
         }, 300)
@@ -503,6 +535,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
           player!.onPlayOver.subscribe(() => {
             // console.log(parsedata)
             playerState.isPlaying = false
+            onPlayerStateUpdate.next(false)
             playerState.currentTime = 0
             clearInterval(timer)
             if (isHidden) {
@@ -534,10 +567,12 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     selectedFragments,
     dropdownState,
     playerState,
-    studioOptions,
-    isShowName,
+    // studioOptions,
+    // isShowName,
+    onPlayerStateUpdate,
     isShowOrder,
-    isShowSpeechModeToolbar,
+    // isShowSpeechModeToolbar,
+    handlePreview,
     handleContextmenu,
     handleExpand,
     handleSelect,

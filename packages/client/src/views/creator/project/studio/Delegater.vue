@@ -112,7 +112,6 @@ onMounted(() => {
     bridge.onAutoMoveAnimePointerChange.subscribe(isOpen => {
       isAutoMoveAnimePointer.value = isOpen
       if(isOpen && bridge.editorRef && bridge.scrollerRef) {
-        message.info(`自动移动动画块指针功能已开启，预设启动动画之后自动移动到下一个动画块`)
         const elements = bridge.editorRef.querySelectorAll<HTMLElement>(`[data-id]:not([data-id=""])`)
         animeMap = Array.from(elements)
         scrollerRef.value = bridge.scrollerRef

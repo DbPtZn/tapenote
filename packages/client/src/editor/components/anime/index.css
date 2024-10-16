@@ -96,3 +96,22 @@ anime-component p:empty::before {
   content: "在此输入内容";
   color: rgba(143, 143, 143, 0.64);
 }
+
+.anime-element-hidden anime-component {
+  opacity: 0 !important;
+}
+
+.anime-element-hidden [data-anime="true"] {
+  opacity: 0 !important;
+}
+
+
+.anime-badge-hidden anime-component:after {
+  display: none;
+  opacity: 0 !important;
+}
+
+.anime-badge-hidden .anime-component-tab:after {
+  display: none;
+  opacity: 0 !important;
+}

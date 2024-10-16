@@ -49,14 +49,7 @@ anime[data-active='true']:after {
 .anime-element-hidden anime {
   opacity: 0 !important;
 }
-.anime-element-hidden anime-component {
-  opacity: 0 !important;
-}
 .anime-badge-hidden anime:after {
-  display: none;
-  opacity: 0 !important;
-}
-.anime-badge-hidden .anime-component-tab:after {
   display: none;
   opacity: 0 !important;
 }

@@ -158,7 +158,7 @@ export function getProcedureConfig(args: {
         [formatPainterTool],
         [cleanTool],
         // [outlineTool],
-        [animeBadgeVisibleTool, animeElementVisibleTool]
+        // [animeBadgeVisibleTool, animeElementVisibleTool]
       ], toolbarRef!),
       () =>
         new InlineToolbarPlugin([

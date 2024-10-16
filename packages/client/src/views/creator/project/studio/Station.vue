@@ -35,7 +35,7 @@ const isShowStationToolbar = ref(true)
 const isRow = ref(true)
 
 const { x, y } = useDraggable(stationEl, {
-  initialValue: { x: 0, y: 80 },
+  initialValue: { x: 0, y: 90 },
   containerElement: bridge.projectRef,
   stopPropagation: true, // 阻止冒泡
   preventDefault: true,
@@ -170,14 +170,16 @@ onUnmounted(() => {
         <span class="drag-line" />
         <span class="drag-line" />
       </div>
-      <div class="btn">
-        <n-popselect v-model:value="recMode" :options="options" trigger="click">
+
+      <n-popselect v-model:value="recMode" :options="options" trigger="click">
+        <div class="btn">
           <div :style="{ display: 'flex', flexDirection: 'column', alignItems: 'center' }">
             <span>{{ options.find(item => item.value === recMode)?.txt }}</span>
             <span>模式</span>
           </div>
-        </n-popselect>
-      </div>
+        </div>
+      </n-popselect>
+
       <div class="btn" @click="speechMethods.start()">
         {{ isRecording ? '暂停' : isStarted ? '继续' : isWaitForSelectAnime ? '选择' : '开始' }}
         <Icon v-if="!isRecording && !isStarted && !isWaitForSelectAnime" icon="fluent:mic-48-regular" height="24" />
@@ -298,8 +300,8 @@ onUnmounted(() => {
 .station {
   z-index: 1;
   position: absolute;
-  top: 0;
-  left: 0;
+  // top: 0;
+  // right: 0;
   background-color: v-bind('themeVars.cardColor');
   border-radius: 3px;
   padding: 6px 6px;

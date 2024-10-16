@@ -413,6 +413,21 @@ export class AnimeProvider {
           handler(element, index)
         })
   }
+  
+  hideAnimeBadge() {
+    const container = this.viewContainer!
+    container.classList.contains('anime-badge-hidden')
+    ? container.classList.remove('anime-badge-hidden')
+    : container.classList.add('anime-badge-hidden')
+    return container.classList.contains('anime-badge-hidden')
+  }
+  hideAnimeElement() {
+    const container = this.viewContainer!
+    container.classList.contains('anime-element-hidden')
+    ? container.classList.remove('anime-element-hidden')
+    : container.classList.add('anime-element-hidden')
+    return container.classList.contains('anime-element-hidden')
+  }
 
   /** 如果是动画元素则返回改元素，如果是动画标签元素则返回其父元素 */
   static toAnimeElement(target: HTMLElement) {
