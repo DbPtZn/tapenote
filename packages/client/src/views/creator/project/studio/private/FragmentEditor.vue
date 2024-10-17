@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onUnmounted, ref, reactive, useTemplateRef, onMounted, computed, h, nextTick } from 'vue'
-import { DropdownOption, useThemeVars } from 'naive-ui'
+import { DropdownOption, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import WaveSurfer from 'wavesurfer.js/dist/wavesurfer'
 import Timeline from 'wavesurfer.js/plugins/timeline'
@@ -12,7 +12,7 @@ import spectrogram from 'wavesurfer.js/dist/plugins/spectrogram'
 import Crunker from 'crunker'
 import ControlBtn from './_utils/ControlBtn.vue'
 import audiobufferToWav from 'audiobuffer-to-wav'
-import { cropAudio, playCroppedAudio, deleteAudioSegments } from './_utils/audio-process'
+import { cropAudio, splitAudio, playCroppedAudio, deleteAudioSegments } from './_utils/audio-process'
 
 // import Timeline from '@losting/timeline'
 import useStore from '@/store'
@@ -30,6 +30,8 @@ const emits = defineEmits<{
 }>()
 
 const themeVars = useThemeVars()
+const message = useMessage()
+// const dialog = useDialog()
 const crunker = new Crunker()
 const waveEl = useTemplateRef<HTMLElement>('waveEl')
 const scrollerEl = useTemplateRef<HTMLDivElement>('scrollerEl')
@@ -38,6 +40,7 @@ const fragment = props.fragment
 const inputs = reactive(props.fragment.transcript.map(item => item))
 
 const currentTime = ref(0)
+let currentHoverTime = 0
 const isPlaying = ref(false)
 const subs: Subscription[] = []
 
@@ -49,9 +52,8 @@ const secondWidth = waveWidth / fragment.duration
 
 let wavesurfer: WaveSurfer
 let regions: Regions
-let focuRegion: Region | null = null
-let customRegion: Region | null = null
-let isRegionSelected = ref(false)
+// let focuRegion: Region | null = null
+// let isRegionSelected = ref(false)
 onMounted(() => {
   if (!waveEl.value) return
   wavesurfer = WaveSurfer.create({
@@ -66,6 +68,14 @@ onMounted(() => {
     hideScrollbar: false,
     interact: true
   })
+
+  subs.push(
+    fromEvent<MouseEvent>(waveEl.value, 'contextmenu').subscribe(ev => {
+      handleWaveContextmenu(ev)
+    })
+  )
+
+  // Timeline 时间轴
   const timeline = Timeline.create({
     // container: timelineEl.value,
     duration: fragment.duration,
@@ -75,15 +85,21 @@ onMounted(() => {
     primaryLabelSpacing: 10
   })
   wavesurfer.registerPlugin(timeline)
+  // Hover 随鼠标移动的指针
   const hoverPlugin = HoverPlugin.create({
     formatTimeCallback: function (seconds) {
+      currentHoverTime = seconds
       return `${formatTimeToMinutesSecondsMilliseconds(seconds)}`
     }
   })
   wavesurfer.registerPlugin(hoverPlugin)
+  // hoverPlugin.on('hover', second => {
+  //   currentHoverTime = second
+  // })
+  // Region 选区
   regions = Regions.create()
   wavesurfer.registerPlugin(regions)
-  regions.enableDragSelection({})
+
   wavesurfer.on('audioprocess', time => {
     // console.log(currentTime)
     currentTime.value = time
@@ -92,13 +108,6 @@ onMounted(() => {
   wavesurfer.on('seeking', time => {
     currentTime.value = time
   })
-
-  // customRegion = regions.addRegion({
-  //   start: 1,
-  //   end: 2,
-  //   color: 'rgba(255, 0, 0, 0.3)',
-  //   resize: true,
-  // })
 
   // 当用户选择区域后，裁剪音频
   regions.on('region-double-clicked', function (region) {
@@ -131,10 +140,10 @@ onMounted(() => {
     // 加载裁剪后的音频到wavesurfer
     // wavesurfer.loadDecodedBuffer(newBuffer);
   })
+
   regions.on('region-created', region => {
     const contextmenu = fromEvent<MouseEvent>(region.element, 'contextmenu').subscribe(ev => {
-      console.log('region-contextmenu', ev)
-      handleContextmenu(ev, region)
+      handleRegionContextmenu(ev, region)
     })
     subs.push(contextmenu)
     region.on('remove', () => {
@@ -184,24 +193,60 @@ function playRegion(region: any) {
   }
 }
 
+const enableDragSelection = ref<(() => void) | null>(null)
 const methods = {
+  // 拖拽选区功能开关
+  handleOpenClose() {
+    if (enableDragSelection.value) {
+      enableDragSelection.value()
+      enableDragSelection.value = null
+      return
+    }
+    enableDragSelection.value = regions.enableDragSelection({})
+  },
   handlePlayPause() {
     wavesurfer.playPause()
     // customRegion?.play()
     isPlaying.value = wavesurfer.isPlaying()
   },
+  handleInsert() {
+    regions.addRegion({
+      start: currentTime.value,
+      color: 'red',
+      drag: true
+    })
+  },
   async handleCut() {
-    if (currentTime.value === 0) return
-    const buffer = wavesurfer.getDecodedData()
-    if (!buffer) return
+    console.log('handleCut')
+    console.log(regions.getRegions())
+    // if (currentTime.value === 0) return
+    // console.log(currentTime.value)
+    // const buffer = wavesurfer.getDecodedData()
+    // console.log(buffer)
+    // if (!buffer) return
     // console.log(currentTime.value, fragment.duration)
-    const newbuffer = await cropAudio(buffer, currentTime.value, fragment.duration)
-    playCroppedAudio(newbuffer)
+    // const newbuffer = await cropAudio(buffer, currentTime.value, fragment.duration)
+    // playCroppedAudio(newbuffer)
     // const newbuffer = await crunker.fetchAudio(fragment.audio).then(buffers => crunker.sliceAudio(buffers[0], currentTime.value, fragment.duration))
     // const wav = audiobufferToWav(newbuffer)
     // const blob = new Blob([wav], { type: 'audio/wav' })
     // crunker.play(newbuffer)
     // wavesurfer.loadBlob(blob)
+    // const newbuffers = await splitAudio(buffer, [currentTime.value])
+    // 1. 根据timestamp 分割数据（启动子、文字等等）
+    // fragment.timestamps.filter(timestamp => timestamp <= currentTime.value)
+    // playCroppedAudio(buffers[1])
+  },
+  async handleCutMany() {
+    const cutRegions = regions.getRegions().filter(region => region.color === 'red')
+    // console.log(cutRegions)
+    if(cutRegions.length === 0) return message.warning('找不到分割点')
+    const buffer = wavesurfer.getDecodedData()
+    if (!buffer) return
+    const newbuffers = await splitAudio(buffer, [currentTime.value])
+    // 1. 根据timestamp 分割数据（启动子、文字等等）
+    // fragment.timestamps.filter(timestamp => timestamp <= currentTime.value)
+    playCroppedAudio(newbuffers[1])
   },
   handleReplay() {
     wavesurfer.stop()
@@ -210,7 +255,8 @@ const methods = {
   handleStop() {
     wavesurfer.stop()
   },
-  handleCutMany() {
+  // 删除选区内容，生成新的音频
+  handleDeleteMany() {
     const buffer = wavesurfer.getDecodedData()
     if (!buffer) return
     const cutRegions = regions.getRegions()
@@ -224,6 +270,10 @@ const methods = {
     deleteAudioSegments(buffer, segments).then(newbuffer => {
       playCroppedAudio(newbuffer)
     })
+  },
+
+  handleRegionsClear() {
+    regions?.clearRegions()
   }
 }
 
@@ -257,12 +307,12 @@ onUnmounted(() => {
   subs.forEach(sub => sub?.unsubscribe())
 })
 
-const options = computed<DropdownOption[]>(() => {
+const options = () => {
   return [
     {
       label: '播放',
       key: 'play',
-      // show: isRegionSelected.value,
+      show: isRegion.value && targetRegion?.color !== 'red',
       icon: () => h(Icon, { icon: 'material-symbols:play-circle-outline', height: 24 }),
       props: {
         onClick() {
@@ -281,6 +331,7 @@ const options = computed<DropdownOption[]>(() => {
     {
       label: () => (targetRegion?.content ? '取消遮挡' : '遮挡选区'),
       key: 'hide',
+      show: isRegion.value && targetRegion?.color !== 'red',
       icon: () => h(Icon, { icon: targetRegion?.content ? 'ph:selection-slash-duotone' : 'ph:selection-duotone', height: 24 }),
       props: {
         onClick() {
@@ -313,38 +364,69 @@ const options = computed<DropdownOption[]>(() => {
       }
     },
     {
-      label: '取消选区',
+      label: () => (targetRegion?.start === targetRegion?.end && targetRegion?.color === 'red' ? '取消分割点' : '取消选区'),
       key: 'close',
+      show: isRegion.value,
       icon: () => h(Icon, { icon: 'material-symbols:remove-selection-rounded', height: 24 }),
       props: {
         onClick() {
           console.log('delete', targetRegion)
           targetRegion?.remove()
-          targetRegion = null
+          // 等待下一次 DOM 更新刷新，因为 dropdown 有个延迟，等它完全关闭再将 targetRegion 置空 
+          nextTick(() => {
+            targetRegion = null
+          })
         }
       }
     },
     {
-      label: '删除',
-      key: 'delete',
-      icon: () => h(Icon, { icon: 'material-symbols:delete-outline', height: 24 }),
+      label: '插入分割点',
+      key: 'insert',
+      show: targetRegion?.color !== 'red',
+      icon: () => h(Icon, { icon: 'fluent:filmstrip-split-24-regular', height: 24 }),
       props: {
         onClick() {
-          console.log('delete', targetRegion)
-          targetRegion?.remove()
-          targetRegion = null
+          // console.log(recordHoverTime)
+          regions.addRegion({
+            start: recordHoverTime,
+            color: 'red',
+            drag: true
+          })
+          // console.log('delete', targetRegion)
+          // targetRegion?.remove()
+          // targetRegion = null
         }
       }
     }
   ]
-})
+}
 const showDropdownRef = ref(false)
+const isRegion = ref(false)
 let targetRegion: Region | null = null
+let recordHoverTime = 0 // 在右击菜单时记录下当前 hover 指针的位置
 const xRef = ref(0)
 const yRef = ref(0)
-function handleContextmenu(ev: MouseEvent, region: Region) {
+function handleWaveContextmenu(ev: MouseEvent) {
+  console.log('wave')
   ev.preventDefault()
+  ev.stopPropagation()
+  targetRegion = null
+  isRegion.value = false
+  recordHoverTime = currentHoverTime
+  showDropdownRef.value = false
+  nextTick().then(() => {
+    showDropdownRef.value = true
+    xRef.value = ev.clientX
+    yRef.value = ev.clientY
+  })
+}
+function handleRegionContextmenu(ev: MouseEvent, region: Region) {
+  console.log('region')
+  ev.preventDefault()
+  ev.stopPropagation()
   targetRegion = region
+  isRegion.value = true
+  recordHoverTime = currentHoverTime
   showDropdownRef.value = false
   nextTick().then(() => {
     showDropdownRef.value = true
@@ -359,6 +441,8 @@ function handleClickoutside() {
 function handleSelect(ev: MouseEvent) {
   showDropdownRef.value = false
 }
+
+// const splitPoints = computed(() => regions?.getRegions().filter(region => region.color === 'red'))
 </script>
 
 <template>
@@ -369,52 +453,79 @@ function handleSelect(ev: MouseEvent) {
         <span>&nbsp; / &nbsp;</span>
         <span class="total">{{ formatTimeToMinutesSecondsMilliseconds(fragment.duration) }}</span>
       </div>
+      <ControlBtn tip="开启拖拽选区功能">
+        <n-switch :value="!!enableDragSelection" @update:value="methods.handleOpenClose" />
+      </ControlBtn>
     </div>
     <div ref="scrollerEl" class="wave-wrapper">
       <div ref="waveEl" class="wave">
         <div class="keyframe" v-for="(item, index) in fragment.timestamps" :key="index" :style="{ left: item * secondWidth + 'px' }">
           <div class="token">
-            <input
-              v-show="focus === index"
-              class="input"
-              :value="inputs[index]"
-              @input="handleInput($event, index)"
-              @blur="handleBlur"
-            />
+            <input v-show="focus === index" class="input" :value="inputs[index]" @input="handleInput($event, index)" @blur="handleBlur" />
             <div v-show="focus !== index" class="text" @click.stop="handleFocus(index)">{{ inputs[index] }}</div>
           </div>
         </div>
       </div>
     </div>
     <div class="controls">
-      <div class="control-item left">
-        <span>选区操作：</span>
-        <ControlBtn :disabled="!regions?.getRegions().length" @click="methods.handleCutMany" tip="删除所有选区时间段">
-          <Icon icon="mdi:box-cutter" height="24" />
-        </ControlBtn>
-      </div>
       <div class="control-item middle">
         <span>播放操作：</span>
         <div class="btn">
-          <Icon icon="icon-park-solid:replay-music" height="24" @click="methods.handleReplay" />
+          <ControlBtn tip="重播">
+            <Icon icon="icon-park-solid:replay-music" height="24" @click="methods.handleReplay" />
+          </ControlBtn>
         </div>
         <div class="btn" @click="methods.handlePlayPause">
-          <Icon v-if="!isPlaying" icon="material-symbols:play-arrow-rounded" height="24" />
-          <Icon v-if="isPlaying" icon="material-symbols:pause-rounded" height="24" />
+          <ControlBtn tip="重播">
+            <Icon :icon=" isPlaying ? 'material-symbols:pause-rounded' :'material-symbols:play-arrow-rounded'" height="24" />
+          </ControlBtn>
         </div>
         <div class="btn">
           <Icon icon="material-symbols:stop-rounded" height="24" @click="methods.handleStop" />
         </div>
       </div>
+
+      <div class="control-item left">
+        <span>选区操作：</span>
+        <!-- <div class="btn" @click="methods.handleDeleteMany">
+          <ControlBtn :disabled="!regions?.getRegions().length" tip="擦除选区内容">
+            <Icon icon="icon-park-twotone:clear-format" height="24" />
+          </ControlBtn>
+        </div> -->
+        <div class="btn" @click="methods.handleCutMany">
+          <!-- :disabled="regions?.getRegions().filter(region => region.color === 'red').length === 0" -->
+          <ControlBtn tip="根据分割点分割音频">
+            <Icon icon="solar:video-frame-cut-2-line-duotone" height="24" />
+          </ControlBtn>
+        </div>
+
+        <div class="btn" @click="methods.handleRegionsClear">
+          <!-- :disabled="!regions?.getRegions().length" -->
+          <ControlBtn tip="清理所有选区和分割点">
+            <Icon icon="material-symbols:remove-selection-rounded" height="24" />
+          </ControlBtn>
+        </div>
+      </div>
+
       <div class="control-item right">
         <span>指针操作：</span>
-        <div>
-          <ControlBtn tip="从指针位置裁剪" @click="methods.handleCut">
+        <div class="btn" @click="methods.handleCut">
+          <!-- mdi:box-cutter -->
+          <ControlBtn tip="从指针位置裁剪">
             <Icon icon="material-symbols:content-cut-rounded" height="24" />
           </ControlBtn>
         </div>
-        <div :style="{ marginLeft: '8px' }">
-          <ControlBtn tip="擦除首尾静音" @click=";" :disabled="true">
+        <div class="btn" @click="methods.handleInsert">
+          <ControlBtn tip="在指针位置插入分割点">
+            <Icon icon="fluent:filmstrip-split-24-regular" height="24" />
+          </ControlBtn>
+        </div>
+      </div>
+
+      <div class="control-item">
+        <span>其它操作：</span>
+        <div class="btn"  @click="">
+          <ControlBtn tip="擦除首尾静音" :disabled="true">
             <Icon icon="icon-park-outline:clear" height="24" />
           </ControlBtn>
         </div>
@@ -427,7 +538,7 @@ function handleSelect(ev: MouseEvent) {
     trigger="manual"
     :x="xRef"
     :y="yRef"
-    :options="options"
+    :options="options()"
     :show="showDropdownRef"
     :on-clickoutside="handleClickoutside"
     @select="handleSelect"
@@ -459,6 +570,10 @@ $hideColor: #575757c7;
 }
 
 .header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   margin: 6px 0px;
   .duration {
     font-size: 12px;
@@ -471,10 +586,11 @@ $hideColor: #575757c7;
 .controls {
   margin-top: 12px;
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  // align-items: center;
   justify-content: space-between;
   .control-item {
+    margin-top: 12px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -484,6 +600,7 @@ $hideColor: #575757c7;
     align-items: center;
     padding: 6px;
     border: 1px solid #3a3a3a;
+    margin-left: 12px;
     cursor: pointer;
     &:hover {
       background-color: #3a3a3a;
@@ -491,9 +608,6 @@ $hideColor: #575757c7;
     &:active {
       background-color: #1d1d1d;
     }
-  }
-  .btn {
-    margin-left: 12px;
   }
   .disabled {
     opacity: 0.5;

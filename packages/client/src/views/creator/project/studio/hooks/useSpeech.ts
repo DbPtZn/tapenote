@@ -1,7 +1,7 @@
 import { Bridge } from '../../bridge'
 import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
 import { AnimeProvider } from '@/editor'
-import { useMessage } from 'naive-ui'
+import { SelectOption, useMessage } from 'naive-ui'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { Editor, Layout } from '@textbus/editor'
 import useStore from '@/store'
@@ -13,10 +13,12 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
   const subs1: Subscription[] = []
   const subs2: Subscription[] = []
 
+
   let studioEl: HTMLElement
   let editorEl: HTMLElement
   let scrollerEl: HTMLElement
   let containerEl: HTMLElement
+  const mode = ref('speech')
   let animeMap: HTMLElement[] = []
   let actionSequence: Action[] = []
   let animeProvider: AnimeProvider
@@ -34,6 +36,19 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
       animeProvider = editor.get(AnimeProvider)
     })
   })
+  
+  const options: SelectOption[] = [
+    {
+      label: '演讲模式',
+      value: 'speech',
+      txt: '演讲'
+    },
+    {
+      label: '解读模式',
+      value: 'interpretation',
+      txt: '解读'
+    }
+  ]
   
   function start(callback: () => void) {
     const elements = editorEl.querySelectorAll<HTMLElement>(`[data-id]:not([data-id=""])`)
@@ -58,7 +73,7 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
           return
         }
         if (!startpoint) return
-        element.style.visibility = 'hidden'
+        if(mode.value === 'speech') element.style.visibility = 'hidden'
       })
   
       callback()
@@ -92,6 +107,7 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
 
     subs1.push(
       fromEvent<KeyboardEvent>(window, 'keydown').pipe(auditTime(100)).subscribe(e => {
+        if(mode.value === 'interpretation') return
         if (['ArrowDown'].includes(e.code)) {
           if (pointerIndex.value < animeMap.length - 1) pointerIndex.value++
           else message.info(`到底啦!`)
@@ -159,6 +175,8 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
   })
 
   return {
+    mode,
+    options,
     startSpeech: start,
     stopSpeech: stop,
     getActionSequence,

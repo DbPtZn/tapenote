@@ -57,6 +57,10 @@ declare module 'vue' {
     NFloatButtonGroup: typeof import('naive-ui')['NFloatButtonGroup']
     NForm: typeof import('naive-ui')['NForm']
     NFormItem: typeof import('naive-ui')['NFormItem']
+    NH2: typeof import('naive-ui')['NH2']
+    NH3: typeof import('naive-ui')['NH3']
+    NH5: typeof import('naive-ui')['NH5']
+    NH6: typeof import('naive-ui')['NH6']
     NIcon: typeof import('naive-ui')['NIcon']
     NInput: typeof import('naive-ui')['NInput']
     NInputNumber: typeof import('naive-ui')['NInputNumber']
@@ -66,6 +70,7 @@ declare module 'vue' {
     NModalProvider: typeof import('naive-ui')['NModalProvider']
     NNotificationProvider: typeof import('naive-ui')['NNotificationProvider']
     Notebook: typeof import('./../components/icon/Notebook.vue')['default']
+    NP: typeof import('naive-ui')['NP']
     NPopconfirm: typeof import('naive-ui')['NPopconfirm']
     NPopover: typeof import('naive-ui')['NPopover']
     NPopselect: typeof import('naive-ui')['NPopselect']
@@ -96,6 +101,7 @@ declare module 'vue' {
     SubtitlesOff: typeof import('./../components/icon/SubtitlesOff.vue')['default']
     TextSharp: typeof import('./../components/icon/TextSharp.vue')['default']
     TextT24Filled: typeof import('./../components/icon/TextT24Filled.vue')['default']
+    Tip: typeof import('./../components/Tip.vue')['default']
     Voice: typeof import('./../components/icon/Voice.vue')['default']
   }
 }

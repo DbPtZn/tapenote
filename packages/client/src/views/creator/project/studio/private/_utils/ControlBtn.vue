@@ -20,15 +20,15 @@ defineProps<{
 .btn {
   display: flex;
   align-items: center;
-  padding: 6px;
-  border: 1px solid #3a3a3a;
-  cursor: pointer;
-  &:hover {
-    background-color: #3a3a3a;
-  }
-  &:active {
-    background-color: #1d1d1d;
-  }
+  // padding: 6px;
+  // border: 1px solid #3a3a3a;
+  // cursor: pointer;
+  // &:hover {
+  //   background-color: #3a3a3a;
+  // }
+  // &:active {
+  //   background-color: #1d1d1d;
+  // }
 }
 .disabled {
   opacity: 0.5;

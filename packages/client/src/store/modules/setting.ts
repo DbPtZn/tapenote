@@ -8,6 +8,7 @@ interface State {
   isNavbarCollapse: boolean
   isItemListCollapse: boolean
   isCacheListShow: boolean
+  isTipsShow: boolean
 }
 
 export const useSettingStore = defineStore('settingStore', {
@@ -18,6 +19,7 @@ export const useSettingStore = defineStore('settingStore', {
       isNavbarCollapse: import.meta.env.VITE_COLLAPSE_SIDER === 'true',
       isItemListCollapse: false,
       isCacheListShow: false,
+      isTipsShow: true
     }
   },
   actions: {

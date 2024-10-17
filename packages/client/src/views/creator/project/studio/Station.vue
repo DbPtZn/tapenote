@@ -9,6 +9,7 @@ import { TipBtn } from './private'
 import { formatTimeToMinutesSecondsMilliseconds } from './_utils/formatTime'
 import { useRecorder, useSpeech } from './hooks'
 import { Bridge } from '../bridge'
+import { Tip } from '../../_common'
 
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
@@ -57,6 +58,7 @@ const {
   totalDuration,
   isWaveformVisible,
   isStarted,
+  isAutoCut,
   onStateUpdate,
   onRecorderEnd,
   ondataavailable,
@@ -67,7 +69,7 @@ const {
   handleCut,
   handleWaveformVisible
 } = useRecorder()
-const { startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration, handleOperate)
+const { mode, options, startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration, handleOperate)
 
 const isWaitForSelectAnime = ref(false)
 let msg: MessageReactive | undefined = undefined
@@ -96,7 +98,6 @@ const speechMethods = {
   stop: () => {
     handleStopRecord()
     stopSpeech()
-    // isStartedRecorder.value = false
     emits('end')
   }
 }
@@ -140,20 +141,6 @@ const subs = [
   })
 ]
 
-const recMode = ref('speech')
-const options: SelectOption[] = [
-  {
-    label: '演讲模式',
-    value: 'speech',
-    txt: '演讲'
-  },
-  {
-    label: '解读模式',
-    value: 'interpretation',
-    txt: '解读'
-  }
-]
-
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
 })
@@ -171,10 +158,10 @@ onUnmounted(() => {
         <span class="drag-line" />
       </div>
 
-      <n-popselect v-model:value="recMode" :options="options" trigger="click">
+      <n-popselect v-model:value="mode" :options="options" trigger="click">
         <div class="btn">
           <div :style="{ display: 'flex', flexDirection: 'column', alignItems: 'center' }">
-            <span>{{ options.find(item => item.value === recMode)?.txt }}</span>
+            <span>{{ options.find(item => item.value === mode)?.txt }}</span>
             <span>模式</span>
           </div>
         </div>
@@ -196,10 +183,38 @@ onUnmounted(() => {
         分段
         <Icon icon="solar:video-frame-cut-broken" height="24" />
       </div>
+      <div :class="{ btn: 1 }" @click="isAutoCut = !isAutoCut">
+        静音分段
+        <Icon v-if="isAutoCut" icon="material-symbols:check-circle-outline" height="24" />
+        <Icon v-if="!isAutoCut" icon="material-symbols:cancel-outline" height="24" />
+      </div>
       <!-- <div :class="{ btn: 1, disabled: !isStarted }" @click="handleWaveformVisible">
         波形图
         <Icon icon="mage:sound-waves" height="24" />
       </div> -->
+      <Tip :style="{ top: '2px', right: '2px' }">
+        <n-flex vertical style="width: 300px">
+          <section>
+            <h3>该功能为实验性功能</h3>
+          </section>
+          <section>
+            <b>演讲模式</b>
+            <div>模拟演讲过程，从选择的动画块位置开始录制，会隐藏之后的所有动画块，通过键盘 ↓ 方向键控制往后动画块显示，录制过程中显示的动画会自动标记到语音片段上。已经显示的动画不会再标记。</div>
+          </section>
+          <section>
+            <b>讲解模式</b>
+            <div>模拟讲解过程，从选择的动画块位置开始录制，录制过程中通过鼠标点击的动画块会自动标记到语音片段上。</div>
+          </section>
+          <section>
+            <b>分段</b>
+            <div>从当前时间点切割录音并生成片段信息。</div>
+          </section>
+          <section>
+            <b>静音分段开关</b>
+            <div>出现超过2秒的静音且无操作时自动输出已录制的音频并生成片段信息。</div>
+          </section>
+        </n-flex>
+      </Tip>
     </div>
     <!-- <div class="wave-area" v-show="!isStarted">
       <canvas v-show="isWaveformVisible" class="wave" ref="waveEl" />
@@ -212,6 +227,11 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.question {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+}
 .wave-area {
   position: absolute;
   border-radius: 3px;

@@ -18,7 +18,7 @@ export function useRecorder() {
   const isWaveformVisible = ref(false)
   const totalDuration = ref(0)
   let timer
-  // const isPaused = ref(false)
+  const isAutoCut = ref(true)
 
   let mediaRecorder: MediaRecorder | null = null
   let audioCtx: AudioContext | null = null
@@ -118,7 +118,7 @@ export function useRecorder() {
           isNewRecorder = false // 首次检测到非静音之后， isNewRecorder 设置为 false
         }
         // 如果连续静音的帧数达到了要求，停止录音
-        if (silentFrameCount >= requiredSilentFrames && !isNewRecorder) {
+        if (silentFrameCount >= requiredSilentFrames && !isNewRecorder && isAutoCut.value) {
           console.log('Silence detected, create new recorder...')
           mediaRecorder?.stop()
           startRecording() // 新起录音
@@ -242,6 +242,7 @@ export function useRecorder() {
     isWaveformVisible,
     isRecording,
     isStarted,
+    isAutoCut,
     onStateUpdate,
     ondataavailable,
     onRecorderEnd,

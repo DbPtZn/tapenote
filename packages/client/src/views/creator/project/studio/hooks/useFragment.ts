@@ -1,5 +1,5 @@
 import useStore from '@/store'
-import { DropdownOption } from 'naive-ui'
+import { DropdownOption, NDialogProvider, NMessageProvider } from 'naive-ui'
 import { h, onUnmounted, reactive, ref } from 'vue'
 import _ from 'lodash'
 import { useDialog, useMessage } from 'naive-ui'
@@ -10,6 +10,7 @@ import { SortableEvent } from 'vue-draggable-plus'
 import { Bridge } from '../../bridge'
 import { TxtEdit, FragmentEditor } from '../private'
 import { usePromoter } from './usePromoter'
+import { NConfig } from '@/views/creator/_common'
 
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: () => void, checkPromoter: () => void, handleReorder: () => void) {
@@ -34,7 +35,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   })
   const playerState = reactive({
     isPlaying: false,
-    currentTime: 0,
+    currentTime: 0
   })
 
   /** 选择片段 */
@@ -52,10 +53,13 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
 
   function handleExpand(fragment: Fragment) {
     fragment.collapsed = false
-    projectStore.fragment(projectId).updateCollapsed(fragment.id, false).catch(error => {
-      console.error(error)
-      message.warning('服务端更新折叠状态操作失败!')
-    })
+    projectStore
+      .fragment(projectId)
+      .updateCollapsed(fragment.id, false)
+      .catch(error => {
+        console.error(error)
+        message.warning('服务端更新折叠状态操作失败!')
+      })
   }
 
   /** 右键菜单 */
@@ -66,7 +70,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     const sequence = project.sequence
     const fragments = selectedFragments.value.sort((a, b) => {
       return sequence!.indexOf(a.id) - sequence!.indexOf(b.id)
-    }) 
+    })
     e.preventDefault()
     e.stopPropagation()
     dropdownState.x = e.clientX
@@ -75,17 +79,20 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     dropdownState.options = [
       {
         key: 'collapse',
-        label: () => `${ fragment?.collapsed ? '展开' : '折叠' }`,
+        label: () => `${fragment?.collapsed ? '展开' : '折叠'}`,
         icon: () => h(Icon, { icon: 'mdi:collapse-all' }),
-        show: !!fragment && fragment.transcript.length > 16,  // 长度大于 16 才显示折叠按钮
+        show: !!fragment && fragment.transcript.length > 16, // 长度大于 16 才显示折叠按钮
         props: {
           onClick: () => {
-            if(fragment) {
+            if (fragment) {
               fragment.collapsed = !fragment.collapsed
-              projectStore.fragment(projectId).updateCollapsed(fragment.id, fragment.collapsed).catch(error => {
-                console.error(error)
-                message.warning('服务端更新折叠状态操作失败!')
-              })
+              projectStore
+                .fragment(projectId)
+                .updateCollapsed(fragment.id, fragment.collapsed)
+                .catch(error => {
+                  console.error(error)
+                  message.warning('服务端更新折叠状态操作失败!')
+                })
             }
             dropdownState.isShow = false
           }
@@ -93,7 +100,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       },
       {
         key: 'order',
-        label: () => `${ isShowOrder.value ? '隐藏排序' : '显示排序' }`,
+        label: () => `${isShowOrder.value ? '隐藏排序' : '显示排序'}`,
         icon: () => h(Icon, { icon: 'icon-park-solid:recent-views-sort' }),
         show: !!fragment, // 长度大于 16 才显示折叠按钮
         props: {
@@ -182,20 +189,23 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
         show: fragments.length === 1,
         props: {
           onClick: () => {
-            clipboardStore.pasteFragment({
-              fragmentId: fragment!.id,
-              projectId: projectId,
-              position: 'before',
-              account: project.account,
-              hostname: project.hostname
-            }).then(() => {
-              // if (clipboardStore.fragment.length !== 0 && clipboardStore.fragment[0].type === 'cut') {
-              //   checkAnimeState()
-              // }
-              clipboardStore.fragment = []
-            }).catch(err => {
-              message.error(err)
-            })
+            clipboardStore
+              .pasteFragment({
+                fragmentId: fragment!.id,
+                projectId: projectId,
+                position: 'before',
+                account: project.account,
+                hostname: project.hostname
+              })
+              .then(() => {
+                // if (clipboardStore.fragment.length !== 0 && clipboardStore.fragment[0].type === 'cut') {
+                //   checkAnimeState()
+                // }
+                clipboardStore.fragment = []
+              })
+              .catch(err => {
+                message.error(err)
+              })
             dropdownState.isShow = false
           }
         }
@@ -208,20 +218,23 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
         show: fragments.length === 1,
         props: {
           onClick: () => {
-            clipboardStore.pasteFragment({
-              fragmentId: fragment!.id,
-              projectId: projectId,
-              position: 'after',
-              account: project.account,
-              hostname: project.hostname
-            }).then(() => {
-              // if (clipboardStore.fragment.length !== 0 && clipboardStore.fragment[0].type === 'cut') {
-              //   checkAnimeState()
-              // }
-              clipboardStore.fragment = []
-            }).catch(err => {
-              message.error(err)
-            })
+            clipboardStore
+              .pasteFragment({
+                fragmentId: fragment!.id,
+                projectId: projectId,
+                position: 'after',
+                account: project.account,
+                hostname: project.hostname
+              })
+              .then(() => {
+                // if (clipboardStore.fragment.length !== 0 && clipboardStore.fragment[0].type === 'cut') {
+                //   checkAnimeState()
+                // }
+                clipboardStore.fragment = []
+              })
+              .catch(err => {
+                message.error(err)
+              })
             dropdownState.isShow = false
           }
         }
@@ -234,17 +247,20 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
         show: fragments.length === 0,
         props: {
           onClick: () => {
-            clipboardStore.pasteFragment({
-              fragmentId: '',
-              projectId: projectId,
-              position: 'insert',
-              account: project.account,
-              hostname: project.hostname
-            }).then(() => {
-              clipboardStore.fragment = []
-            }).catch(err => {
-              message.error(err)
-            })
+            clipboardStore
+              .pasteFragment({
+                fragmentId: '',
+                projectId: projectId,
+                position: 'insert',
+                account: project.account,
+                hostname: project.hostname
+              })
+              .then(() => {
+                clipboardStore.fragment = []
+              })
+              .catch(err => {
+                message.error(err)
+              })
             dropdownState.isShow = false
           }
         }
@@ -284,10 +300,9 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
             dropdownState.isShow = false
           }
         }
-      },
+      }
     ]
   }
-
 
   function handlePreview() {
     player = bridge.editor?.get(Player) // 获取播放器实例
@@ -407,7 +422,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   // ]
 
   /** 播放音频 */
-  let aud: HTMLAudioElement | null = null 
+  let aud: HTMLAudioElement | null = null
   function handlePlay(fragment: Fragment) {
     if (!aud) {
       try {
@@ -434,32 +449,39 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       style: { width: '800px' },
       title: '片段编辑器',
       maskClosable: false,
-      onMaskClick: (ev) => {
+      onMaskClick: ev => {
         ev.preventDefault()
         // dialog.destroyAll()
       },
       content: () =>
-        h(FragmentEditor, {
-          fragment: fragment,
-          onConfirm: (newTranscript: string[]) => {
-            if (_.isEqual(fragment.transcript, newTranscript)) {
-              message.warning('未进行任何更改')
-              dialog.destroyAll()
-              return
-            }
-            projectStore
-              .fragment(projectId)
-              .updateTranscript({ fragmentId: fragment.id, newTranscript })
-              .then(() => {
-                message.success('更新成功')
-                fragment.transcript = newTranscript
+        h(
+          NConfig,
+          {},
+          {
+            default: () =>
+              h(FragmentEditor, {
+                fragment: fragment,
+                onConfirm: (newTranscript: string[]) => {
+                  if (_.isEqual(fragment.transcript, newTranscript)) {
+                    message.warning('未进行任何更改')
+                    dialog.destroyAll()
+                    return
+                  }
+                  projectStore
+                    .fragment(projectId)
+                    .updateTranscript({ fragmentId: fragment.id, newTranscript })
+                    .then(() => {
+                      message.success('更新成功')
+                      fragment.transcript = newTranscript
+                    })
+                  dialog.destroyAll()
+                },
+                onCancel: () => {
+                  dialog.destroyAll()
+                }
               })
-            dialog.destroyAll()
-          },
-          onCancel: () => {
-            dialog.destroyAll()
           }
-        })
+        )
     })
   }
   /** 移除片段 */
@@ -472,7 +494,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     const oldIndex = event.oldIndex
     const newIndex = event.newIndex
     const fragmentId = event.item.id
-    if(oldIndex === undefined || newIndex === undefined || fragmentId === undefined) return
+    if (oldIndex === undefined || newIndex === undefined || fragmentId === undefined) return
     // const { element, oldIndex, newIndex } = args.moved
     // console.log([fragmentId, oldIndex, newIndex])
     projectStore.fragment(projectId).updateSequence({
@@ -498,9 +520,9 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
 
   /**
    * 应用播放
-   * @param fragments 片段列表 
+   * @param fragments 片段列表
    * @param isHidden 播放前是否隐藏元素（为 true 的时候会在播放前将关联的元素隐藏）
-   * @returns 
+   * @returns
    */
   function applyPlay(fragments: Fragment[], isHidden?: boolean) {
     // 1.生成微课数据
@@ -514,48 +536,51 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     })
     // 2.加载数据
     return new Promise((resolve, reject) => {
-      player!.loadData(data).then((parsedata) => {
-        if (isHidden) {
-          parsedata.forEach(item => {
-            item.animeElementSequence.forEach(elements => {
-              elements.forEach(element => {
-                element.style.opacity = '0'
-              })
-            })
-          })
-        }
-        // 3.加载完成后启动播放
-        player!.start()
-        playerState.isPlaying = true
-        onPlayerStateUpdate.next(true)
-        const timer = setInterval(() => {
-          playerState.currentTime = player!.totalTime
-        }, 300)
-        subs.push(
-          player!.onPlayOver.subscribe(() => {
-            // console.log(parsedata)
-            playerState.isPlaying = false
-            onPlayerStateUpdate.next(false)
-            playerState.currentTime = 0
-            clearInterval(timer)
-            if (isHidden) {
-              parsedata.forEach(item => {
-                item.animeElementSequence.forEach(elements => {
-                  elements.forEach(element => {
-                    element.style.opacity = '1'
-                  })
+      player!
+        .loadData(data)
+        .then(parsedata => {
+          if (isHidden) {
+            parsedata.forEach(item => {
+              item.animeElementSequence.forEach(elements => {
+                elements.forEach(element => {
+                  element.style.opacity = '0'
                 })
               })
-            }
-            resolve('')
-            subs.forEach(sub => sub.unsubscribe())
-          })
-        )
-      }).catch(err => {
-        reject(err)
-        console.error(err)
-        message.error('播放失败！')
-      })
+            })
+          }
+          // 3.加载完成后启动播放
+          player!.start()
+          playerState.isPlaying = true
+          onPlayerStateUpdate.next(true)
+          const timer = setInterval(() => {
+            playerState.currentTime = player!.totalTime
+          }, 300)
+          subs.push(
+            player!.onPlayOver.subscribe(() => {
+              // console.log(parsedata)
+              playerState.isPlaying = false
+              onPlayerStateUpdate.next(false)
+              playerState.currentTime = 0
+              clearInterval(timer)
+              if (isHidden) {
+                parsedata.forEach(item => {
+                  item.animeElementSequence.forEach(elements => {
+                    elements.forEach(element => {
+                      element.style.opacity = '1'
+                    })
+                  })
+                })
+              }
+              resolve('')
+              subs.forEach(sub => sub.unsubscribe())
+            })
+          )
+        })
+        .catch(err => {
+          reject(err)
+          console.error(err)
+          message.error('播放失败！')
+        })
     })
   }
 

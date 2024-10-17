@@ -22,6 +22,8 @@ import Station from './Station.vue'
 
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
+type Option = { key: string, label: string, active: () => boolean, props: { onClick: (MouseEvent, key: string) => void } } & MenuOption
+
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
@@ -142,31 +144,7 @@ const isShowName = ref(false)
 const isStationVisible = ref(false)
 
 const activeBtns = reactive<string[]>([])
-const options = reactive([
-  {
-    key: 'tag-hide',
-    icon: () => h(Icon, { icon: 'material-symbols:hide-source-outline-rounded' }),
-    label: '隐藏动画标记',
-    active: () => activeBtns.includes('tag-hide'),
-    props: {
-      onClick: (ev: MouseEvent, key?: string) => {
-        useSwitchBtn(key)
-        bridge.animeProvider?.hideAnimeBadge()
-      }
-    }
-  },
-  {
-    key: 'anime-hide',
-    icon: () => h(Icon, { icon: 'fluent:slide-hide-24-filled' }),
-    label: '隐藏动画元素',
-    active: () => activeBtns.includes('anime-hide'),
-    props: {
-      onClick: (ev: MouseEvent, key?: string) => {
-        useSwitchBtn(key)
-        bridge.animeProvider?.hideAnimeElement()
-      }
-    }
-  },
+const options = reactive<Option[]>([
   {
     key: 'speech',
     icon: () => h(Icon, { icon: 'carbon:ibm-watson-text-to-speech' }),
@@ -194,8 +172,32 @@ const options = reactive([
     }
   },
   {
+    key: 'tag-hide',
+    icon: () => h(Icon, { icon: 'material-symbols:hide-source-outline-rounded' }),
+    label: '隐藏动画标记',
+    active: () => activeBtns.includes('tag-hide'),
+    props: {
+      onClick: (ev: MouseEvent, key?: string) => {
+        useSwitchBtn(key)
+        bridge.animeProvider?.hideAnimeBadge()
+      }
+    }
+  },
+  {
+    key: 'anime-hide',
+    icon: () => h(Icon, { icon: 'fluent:slide-hide-24-filled' }),
+    label: '隐藏动画元素',
+    active: () => activeBtns.includes('anime-hide'),
+    props: {
+      onClick: (ev: MouseEvent, key?: string) => {
+        useSwitchBtn(key)
+        bridge.animeProvider?.hideAnimeElement()
+      }
+    }
+  },
+  {
     key: 'preview',
-    icon: () => h(Icon, { icon: 'pajamas:live-preview' }),
+    icon: () => h(Icon, { icon: 'majesticons:presentation-play-line' }), // pajamas:live-preview
     label: '播放预览',
     active: () => activeBtns.includes('preview'),
     props: {
@@ -236,17 +238,17 @@ const options = reactive([
       }
     }
   },
-  {
-    key: 'bgm',
-    icon: () => h(Icon, { icon: 'material-symbols:library-music' }),
-    label: '背景音乐',
-    active: () => activeBtns.includes('bgm'),
-    disabled: true,
-    props: {
-      onClick: (ev: MouseEvent, key?: string) => {
-      }
-    }
-  },
+  // {
+  //   key: 'bgm',
+  //   icon: () => h(Icon, { icon: 'material-symbols:library-music' }),
+  //   label: '背景音乐',
+  //   active: () => activeBtns.includes('bgm'),
+  //   disabled: true,
+  //   props: {
+  //     onClick: (ev: MouseEvent, key?: string) => {
+  //     }
+  //   }
+  // },
   {
     key: 'showname',
     icon: () => h(Icon, { icon: 'mingcute:user-visible-fill' }),
@@ -273,17 +275,17 @@ const options = reactive([
       }
     }
   },
-  {
-    key: 'language',
-    icon: () => h(Icon, { icon: 'material-symbols:translate' }),
-    label: '语言',
-    disabled: true,
-    active: () => activeBtns.includes('language'),
-    props: {
-      onClick: (ev: MouseEvent, key?: string) => {
-      }
-    }
-  },
+  // {
+  //   key: 'language',
+  //   icon: () => h(Icon, { icon: 'material-symbols:translate' }),
+  //   label: '语言',
+  //   disabled: true,
+  //   active: () => activeBtns.includes('language'),
+  //   props: {
+  //     onClick: (ev: MouseEvent, key?: string) => {
+  //     }
+  //   }
+  // },
   {
     key: 'reorder',
     icon: () => h(Icon, { icon: 'mdi:sort' }),
@@ -306,7 +308,21 @@ const options = reactive([
         })
       }
     }
-  }
+  },
+  {
+    key: 'setting',
+    icon: () => h(Icon, { icon: 'material-symbols-light:settings' }),
+    label: '设置',
+    active: () => activeBtns.includes('setting'),
+    props: {
+      onClick: (ev: MouseEvent, key?: string) => {
+        dialog.create({
+          title: '设置',
+          content: () => '设置',
+        })
+      }
+    }
+  },
 ])
 const collapseOptions = reactive<DropdownOption[]>([])
 function useSwitchBtn(item: string | undefined) {
@@ -322,7 +338,7 @@ function useSwitchBtn(item: string | undefined) {
 
 const dropdownEl = ref<PopoverInst>()
 function renderOption (props: { node: VNode, option: DropdownOption }) {
-  const { node, option } = props
+  const { option } = props
   return h('div', {
     class: { 'dropdown-option': true, 'dropdown-option-disabled': option.disabled },
     style: {
@@ -336,7 +352,6 @@ function renderOption (props: { node: VNode, option: DropdownOption }) {
     h('span', {}, [option.icon?.()]),
     h('span', { style: { marginLeft: '8px' } }, { default: () => option.label })
   ])
-  // return node
 }
 
 const headerEl = useTemplateRef<HTMLElement>('headerEl')
