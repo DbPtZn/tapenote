@@ -1,3 +1,5 @@
+import useStore from "@/store"
+type Action = Required<Parameters<ReturnType<ReturnType<typeof useStore>['projectStore']['fragment']>['createByAudio']>[0]['actions']>[0]
 export async function cropAudio(
   audioSource: string | AudioBuffer, // 接收 string (URL) 或 AudioBuffer
   startTime: number,
@@ -61,7 +63,10 @@ export function playCroppedAudio(croppedBuffer: AudioBuffer): void {
   source.start()
 }
 
-export async function deleteAudioSegments(audioBuffer: AudioBuffer, segmentsToDelete: { startTime: number; endTime: number }[]): Promise<AudioBuffer> {
+export async function deleteAudioSegments(
+  audioBuffer: AudioBuffer,
+  segmentsToDelete: { startTime: number; endTime: number }[]
+): Promise<AudioBuffer> {
   const sampleRate = audioBuffer.sampleRate
 
   // 排序并合并重叠的时间段，确保删除片段顺序正确且没有重叠
@@ -125,8 +130,9 @@ export async function deleteAudioSegments(audioBuffer: AudioBuffer, segmentsToDe
 
 export async function splitAudio(
   audioSource: string | AudioBuffer, // 接收 string (URL) 或 AudioBuffer
-  splitPoints: number[] // 接收切割点数组，单位是秒
-): Promise<AudioBuffer[]> {
+  splitPoints: number[], // 接收切割点数组，单位是秒
+  actions?: Action[]
+) {
   let audioBuffer: AudioBuffer
   const audioContext = new AudioContext() // 统一复用 AudioContext 实例
 
@@ -147,20 +153,23 @@ export async function splitAudio(
     throw new Error('Invalid audio source. Must be a URL or AudioBuffer.')
   }
 
+  // 获取采样点
+  // const sampleRate = audioBuffer.sampleRate
+
   // 校正切割点，确保不超过音频总长度
   const audioDuration = audioBuffer.duration
   splitPoints = splitPoints.map(point => Math.min(point, audioDuration))
 
   // 确保切割点有效，排除无效切割点（负数、超出音频长度的等）
   splitPoints = splitPoints.filter(point => point >= 0 && point <= audioDuration)
-  
+
   // 添加音频结束时间作为最后一个切割点
   if (splitPoints[splitPoints.length - 1] !== audioDuration) {
     splitPoints.push(audioDuration)
   }
 
   // 初始化结果数组，用于存储每个裁剪后的音频片段
-  const audioChunks: AudioBuffer[] = []
+  const audioChunks: { buffer: AudioBuffer, duration: number, actions: Action[] }[] = []
 
   // 前一个切割点（起点），初始化为0
   let previousPoint = 0
@@ -183,8 +192,23 @@ export async function splitAudio(
       chunkBuffer.copyToChannel(channelData, channel)
     }
 
+    // 重新计算和分配动作关键帧
+    let actionChunk: Action[] = []
+    if (actions && actions.length > 0) {
+      actionChunk = actions.filter(action => {
+        if(previousPoint <= action.keyframe && action.keyframe <= currentPoint) return true
+      }).map(action => {
+        action.keyframe = action.keyframe - previousPoint
+        return action
+      })
+    }
+
+    // 计算当前片段的时长
+    const duration = currentPoint - previousPoint
+    console.log(currentPoint, previousPoint, duration)
+    // console.log(duration, length / sampleRate)
     // 将裁剪后的片段加入数组
-    audioChunks.push(chunkBuffer)
+    audioChunks.push({ buffer: chunkBuffer, duration, actions: actionChunk })
 
     // 更新前一个切割点
     previousPoint = currentPoint
@@ -192,4 +216,76 @@ export async function splitAudio(
 
   // 返回裁剪后的多个 AudioBuffer 片段
   return audioChunks
+}
+
+// 寻找静音点（或低音点）
+// export function findLowPoints(audioData: Float32Array, sampleRate: number, segmentDuration: number, windowSize: number, threshold: number): number[] {
+//   const segmentLength = segmentDuration * sampleRate
+//   const windowLength = windowSize * sampleRate
+//   const lowPoints: number[] = []
+
+//   for (let i = 0; i < audioData.length; i += segmentLength) {
+//     let minVolume = Infinity
+//     let minIndex = i
+
+//     // 在 segment 周围的 window 范围内查找音量最低点
+//     for (let j = i - windowLength; j <= i + windowLength; j++) {
+//       if (j >= 0 && j < audioData.length) {
+//         const volume = Math.abs(audioData[j])
+//         if (volume < minVolume) {
+//           minVolume = volume
+//           minIndex = j
+//         }
+//       }
+//     }
+
+//     // 如果找到的点的音量小于阈值（threshold），则认为是一个低音点
+//     if (minVolume < threshold) {
+//       lowPoints.push(minIndex)
+//     } else {
+//       // 如果没有找到低音点，直接使用预定的分割点
+//       lowPoints.push(i)
+//     }
+//   }
+
+//   return lowPoints
+// }
+
+export function findLowPoints(audioData: Float32Array, sampleRate: number, segmentDuration: number, windowSize: number, threshold: number): number[] {
+  const segmentLength = segmentDuration * sampleRate // 每段预定的长度（样本数）
+  const windowLength = windowSize * sampleRate // 查找窗口的长度（样本数）
+  const lowPoints: number[] = []
+
+  let currentIndex = segmentLength // 初始查找位置，从第一个 60 秒位置开始
+
+  while (currentIndex < audioData.length) {
+    let minVolume = Infinity
+    let minIndex = currentIndex
+
+    // 在当前 segment 周围的 window 范围内查找音量最低点
+    for (let j = currentIndex - windowLength; j <= currentIndex; j++) {
+      // 确保索引不越界
+      if (j >= 0 && j < audioData.length) {
+        const volume = Math.abs(audioData[j]) // 获取音量值
+        // 小于或等于，一般都会出现 0 的情况，如果不加入等于的情况，会结果靠近左侧，反之，结果靠近右侧
+        if (volume <= minVolume) {
+          minVolume = volume
+          minIndex = j // 记录音量最低的索引
+        }
+      }
+    }
+
+    // 如果找到的最低点音量小于阈值，则将其认为是低音点
+    if (minVolume < threshold) {
+      lowPoints.push(minIndex) // 记录分割点
+    } else {
+      // Fallback 方案：没有找到低音点，则使用预定分割点
+      lowPoints.push(currentIndex)
+    }
+
+    // 下一次的查找起始点为上一次分割点
+    currentIndex = minIndex + segmentLength // 从上一次的分割点开始，加上 segment 长度
+  }
+
+  return lowPoints
 }

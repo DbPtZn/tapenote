@@ -6,11 +6,12 @@ import { Icon } from '@iconify/vue'
 import useStore from '@/store'
 import { AudioRecorder } from './_utils/recorder'
 import { TipBtn } from './private'
-import { formatTimeToMinutesSecondsMilliseconds } from './_utils/formatTime'
+import { findLowPoints, formatTimeToMinutesSecondsMilliseconds, splitAudio } from './_utils'
 import { useRecorder, useSpeech } from './hooks'
 import { Bridge } from '../bridge'
 import { Tip } from '../../_common'
-
+import { Subscription, fromEvent } from '@tanbo/stream'
+type Action = Required<Parameters<ReturnType<ReturnType<typeof useStore>['projectStore']['fragment']>['createByAudio']>[0]['actions']>[0]
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
@@ -72,6 +73,7 @@ const {
 const { mode, options, startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration, handleOperate)
 
 const isWaitForSelectAnime = ref(false)
+const shortcut: Subscription[] = []
 let msg: MessageReactive | undefined = undefined
 const speechMethods = {
   start: () => {
@@ -89,6 +91,13 @@ const speechMethods = {
       startSpeech(() => {
         handleStartPause()
         isWaitForSelectAnime.value = false
+        shortcut.push(
+          fromEvent<KeyboardEvent>(window, 'keydown').subscribe(ev => {
+            if(ev.key === 'Enter') {
+              handleCut()
+            }
+          })
+        )
         msg?.destroy()
       })
       return
@@ -98,6 +107,7 @@ const speechMethods = {
   stop: () => {
     handleStopRecord()
     stopSpeech()
+    shortcut.forEach(s => s.unsubscribe())
     emits('end')
   }
 }
@@ -108,16 +118,52 @@ const subs = [
       const actions = getActionSequence()
       const duration = data.duration
       if (!data.isSilence) {
-        const blob = await AudioRecorder.toWAVBlob(data.blob)
-        console.log('duration:', duration, 'actions:', actions)
-        await projectStore.fragment(props.id).createByAudio({
-          audio: blob,
-          duration: duration,
-          speakerId: props.speakerId || '',
-          actions
-        })
-        emits('output')
-        return
+        // 小于 60s 的情况 直接创建片段
+        if (duration <= 60) {
+          const blob = await AudioRecorder.toWAVBlob(data.blob)
+          console.log('duration:', duration, 'actions:', actions)
+          await projectStore.fragment(props.id).createByAudio({
+            audio: blob,
+            duration: duration,
+            speakerId: props.speakerId || '',
+            actions
+          })
+          emits('output')
+          return
+        } else {
+          // 大于 60s 的情况 分段之后再创建片段
+          const audioCtx = new AudioContext()
+          const arrayBuffer = await data.blob.arrayBuffer()
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+
+          const sampleRate = audioBuffer.sampleRate
+          const segmentDuration = 60 // 每60秒一个分割点（分片不宜过短，否则会导致片段语音内容不连贯影响语音转写）
+          const windowSize = 1 // 在±1秒的窗口中查找低音点
+          const threshold = 0.01 // 定义静音/低音的阈值
+          const audioData = audioBuffer.getChannelData(0)
+
+          const lowPoints = findLowPoints(audioData, sampleRate, segmentDuration, windowSize, threshold)
+          const cutPoints = lowPoints.map(point => Number((point / sampleRate).toFixed(3)))
+          const audioChunks = await splitAudio(audioBuffer, cutPoints, actions)
+
+          // TODO 设置最大上传限制
+          const tasks = audioChunks.map(chunk => {
+            const wavData = AudioRecorder.audioBufferToWav(chunk.buffer)
+            const blob = new Blob([wavData], { type: 'audio/wav' })
+            return projectStore.fragment(props.id).createByAudio({
+              audio: blob,
+              duration: chunk.duration,
+              speakerId: props.speakerId || '',
+              actions: chunk.actions
+            })
+          })
+          Promise.all(tasks).then(resp => {
+            console.log('创建片段成功')
+          }).catch(err => {
+            console.log('创建片段失败')
+          })
+          return
+        }
       }
       // TODO 一般可能最后一段音频才需要考虑是否包含说话声音
       if (actions && actions.length > 0) {
@@ -206,7 +252,7 @@ onUnmounted(() => {
             <div>模拟讲解过程，从选择的动画块位置开始录制，录制过程中通过鼠标点击的动画块会自动标记到语音片段上。</div>
           </section>
           <section>
-            <b>分段</b>
+            <b>分段 —— [Enter]</b>
             <div>从当前时间点切割录音并生成片段信息。</div>
           </section>
           <section>

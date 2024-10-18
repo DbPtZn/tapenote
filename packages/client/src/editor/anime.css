@@ -16,13 +16,13 @@
 
 .anime-preset:after {
   border: 2px solid #e03f3f;
-  background: #e03f3f;
+  background: #e03f3f!important;;
   animation: .8s .5s tada infinite;
 }
 
 [data-anime="true"].anime-preset .anime-component-tab:after {
   border: 2px solid #e03f3f;
-  background: #e03f3f;
+  background: #e03f3f!important;
   animation: .8s .5s tada infinite;
 }
 

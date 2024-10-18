@@ -121,6 +121,7 @@ export function useRecorder() {
         if (silentFrameCount >= requiredSilentFrames && !isNewRecorder && isAutoCut.value) {
           console.log('Silence detected, create new recorder...')
           mediaRecorder?.stop()
+          clearInterval(timer) // 必须清理掉当前计时器
           startRecording() // 新起录音
           return
         }
@@ -167,6 +168,7 @@ export function useRecorder() {
   }
 
   function handleOperate() {
+    console.log('操作')
     silentFrameCount = 0
   }
 
@@ -219,6 +221,7 @@ export function useRecorder() {
     audioCtx = null
     onRecorderEnd.next('录制结束')
     onStateUpdate.next(isRecording.value)
+    totalDuration.value = 0
     clearInterval(timer)
   }
 

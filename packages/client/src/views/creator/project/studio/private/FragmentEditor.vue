@@ -12,7 +12,7 @@ import spectrogram from 'wavesurfer.js/dist/plugins/spectrogram'
 import Crunker from 'crunker'
 import ControlBtn from './_utils/ControlBtn.vue'
 import audiobufferToWav from 'audiobuffer-to-wav'
-import { cropAudio, splitAudio, playCroppedAudio, deleteAudioSegments } from './_utils/audio-process'
+import { cropAudio, splitAudio, playCroppedAudio, deleteAudioSegments } from '../_utils/audio-process'
 
 // import Timeline from '@losting/timeline'
 import useStore from '@/store'
@@ -246,7 +246,7 @@ const methods = {
     const newbuffers = await splitAudio(buffer, [currentTime.value])
     // 1. 根据timestamp 分割数据（启动子、文字等等）
     // fragment.timestamps.filter(timestamp => timestamp <= currentTime.value)
-    playCroppedAudio(newbuffers[1])
+    // playCroppedAudio(newbuffers[1])
   },
   handleReplay() {
     wavesurfer.stop()
