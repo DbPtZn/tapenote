@@ -19,6 +19,7 @@ import { Icon } from '@iconify/vue'
 import { formatTimeToMinutesSecondsMilliseconds } from './_utils/formatTime'
 import Delegater from './Delegater.vue'
 import Station from './Station.vue'
+import Setting from './Setting.vue'
 
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
@@ -203,6 +204,7 @@ const options = reactive<Option[]>([
     props: {
       onClick: (ev: MouseEvent, key?: string) => {
         if (playerState.isPlaying) return message.warning('请先停止当前播放任务')
+        if (fragments.value.length === 0) return message.warning('无可播放数据')
         handlePreview()
         if(isStationVisible.value) {
           isStationVisible.value = false
@@ -309,20 +311,21 @@ const options = reactive<Option[]>([
       }
     }
   },
-  {
-    key: 'setting',
-    icon: () => h(Icon, { icon: 'material-symbols-light:settings' }),
-    label: '设置',
-    active: () => activeBtns.includes('setting'),
-    props: {
-      onClick: (ev: MouseEvent, key?: string) => {
-        dialog.create({
-          title: '设置',
-          content: () => '设置',
-        })
-      }
-    }
-  },
+  // {
+  //   key: 'setting',
+  //   icon: () => h(Icon, { icon: 'material-symbols-light:settings' }),
+  //   label: '设置',
+  //   active: () => activeBtns.includes('setting'),
+  //   props: {
+  //     onClick: (ev: MouseEvent, key?: string) => {
+  //       dialog.create({
+  //         title: '设置',
+  //         icon: () => h(Icon, { icon: 'material-symbols-light:settings' }),
+  //         content: () => h(Setting),
+  //       })
+  //     }
+  //   }
+  // },
 ])
 const collapseOptions = reactive<DropdownOption[]>([])
 function useSwitchBtn(item: string | undefined) {
@@ -357,7 +360,7 @@ function renderOption (props: { node: VNode, option: DropdownOption }) {
 const headerEl = useTemplateRef<HTMLElement>('headerEl')
 const boundarySequence = Array.from({ length: options.length }).map((_, i) => (i + 1) * 40)
 // console.log(boundarySequence)
-const calculateThreshold = options.length * 40 + 40 // 开始计算的阈值
+const calculateThreshold = options.length * 40 + 40 // 开始计算的阈值 (+40 是留给返回时的计算)
 // console.log(calculateThreshold)
 useResizeObserver(headerEl, entries => {
   const entry = entries[0]

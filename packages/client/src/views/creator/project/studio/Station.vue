@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { MessageReactive, SelectOption, useMessage, useThemeVars } from 'naive-ui'
+import { MessageReactive, SelectOption, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import { computed, inject, onUnmounted, ref, useTemplateRef } from 'vue'
 import { useDraggable } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
@@ -28,6 +28,7 @@ const emits = defineEmits<{
 
 const themeVars = useThemeVars()
 const message = useMessage()
+const dialog = useDialog()
 const { projectStore } = useStore()
 
 // const isStartedRecorder = ref(false)
@@ -69,12 +70,13 @@ const {
   handleStopRecord,
   handleCut,
   handleWaveformVisible
-} = useRecorder()
+} = useRecorder({ silenceSpace: 3000 })
 const { mode, options, startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration, handleOperate)
 
 const isWaitForSelectAnime = ref(false)
 const shortcut: Subscription[] = []
 let msg: MessageReactive | undefined = undefined
+let isCancel = false
 const speechMethods = {
   start: () => {
     if (!isStarted.value) {
@@ -96,7 +98,12 @@ const speechMethods = {
             if(ev.key === 'Enter') {
               handleCut()
             }
-          })
+          }),
+          fromEvent<KeyboardEvent>(window, 'keydown').subscribe(ev => {
+            if(ev.key === ' ' && ev.code === 'Space') {
+              speechMethods.start()
+            }
+          }),
         )
         msg?.destroy()
       })
@@ -105,16 +112,34 @@ const speechMethods = {
     handleStartPause()
   },
   stop: () => {
+    if(!isStarted.value) return
     handleStopRecord()
     stopSpeech()
     shortcut.forEach(s => s.unsubscribe())
     emits('end')
+  },
+  cancel: () => {
+    // if(!isStarted.value) return
+    dialog.warning({
+      title: '弃用',
+      content: `是否放弃本段录制的结果?(已经生成的片段不会被放弃)`,
+      positiveText: '确定',
+      negativeText: '关闭',
+      onPositiveClick: () => {
+        isCancel = true
+        handleStopRecord()
+        stopSpeech()
+        shortcut.forEach(s => s.unsubscribe())
+        message.info('已取消')
+      }
+    })
   }
 }
 
 const subs = [
   ondataavailable.subscribe(async data => {
     try {
+      if (isCancel) return isCancel = false // 取消
       const actions = getActionSequence()
       const duration = data.duration
       if (!data.isSilence) {
@@ -144,17 +169,29 @@ const subs = [
 
           const lowPoints = findLowPoints(audioData, sampleRate, segmentDuration, windowSize, threshold)
           const cutPoints = lowPoints.map(point => Number((point / sampleRate).toFixed(3)))
-          const audioChunks = await splitAudio(audioBuffer, cutPoints, actions)
+          
+              // 重新计算和分配动作关键帧
+          const actionChunks: Action[][] = []
+          const audioChunks = await splitAudio(audioBuffer, cutPoints, (previousPoint, currentPoint) => {
+            actionChunks.push(
+              actions.filter(action => {
+                if(previousPoint <= action.keyframe && action.keyframe <= currentPoint) return true
+              }).map(action => {
+                action.keyframe = action.keyframe - previousPoint
+                return action
+              })
+            )
+          })
 
           // TODO 设置最大上传限制
-          const tasks = audioChunks.map(chunk => {
+          const tasks = audioChunks.map((chunk, index) => {
             const wavData = AudioRecorder.audioBufferToWav(chunk.buffer)
             const blob = new Blob([wavData], { type: 'audio/wav' })
             return projectStore.fragment(props.id).createByAudio({
               audio: blob,
               duration: chunk.duration,
               speakerId: props.speakerId || '',
-              actions: chunk.actions
+              actions: actionChunks[index]
             })
           })
           Promise.all(tasks).then(resp => {
@@ -234,6 +271,10 @@ onUnmounted(() => {
         <Icon v-if="isAutoCut" icon="material-symbols:check-circle-outline" height="24" />
         <Icon v-if="!isAutoCut" icon="material-symbols:cancel-outline" height="24" />
       </div>
+      <div :class="{ btn: 1 }" @click="speechMethods.cancel">
+        弃用
+        <Icon icon="ic:outline-comments-disabled" height="24" />
+      </div>
       <!-- <div :class="{ btn: 1, disabled: !isStarted }" @click="handleWaveformVisible">
         波形图
         <Icon icon="mage:sound-waves" height="24" />
@@ -252,12 +293,17 @@ onUnmounted(() => {
             <div>模拟讲解过程，从选择的动画块位置开始录制，录制过程中通过鼠标点击的动画块会自动标记到语音片段上。</div>
           </section>
           <section>
-            <b>分段 —— [Enter]</b>
+            <b>分段</b>
             <div>从当前时间点切割录音并生成片段信息。</div>
           </section>
           <section>
             <b>静音分段开关</b>
             <div>出现超过2秒的静音且无操作时自动输出已录制的音频并生成片段信息。</div>
+          </section>
+          <section>
+            <b>快捷键</b>
+            <div>Enter - 分段</div>
+            <div>Space - 停止</div>
           </section>
         </n-flex>
       </Tip>
@@ -393,7 +439,7 @@ onUnmounted(() => {
     }
     .disabled {
       opacity: 0.5;
-      pointer-events: none;
+      // pointer-events: none;
     }
     .collapse-btn {
       z-index: 1;

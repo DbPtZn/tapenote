@@ -1,25 +1,29 @@
-// TODO 由于 js-audio-recorder 插件的有点过时了，后续考虑替换成新的 api 实现音频录制功能
 import { Subject } from '@tanbo/stream'
-import { AudioRecorder } from '../_utils/recorder'
-import { onMounted, ref, useTemplateRef } from 'vue'
-import WaveSurfer from 'wavesurfer.js'
-import { useThemeVars } from 'naive-ui'
+import { ref, useTemplateRef } from 'vue'
+// import WaveSurfer from 'wavesurfer.js'
 
-export function useRecorder() {
+/**
+ * 语音记录器
+ * @param silenceSpace 静音间隔-毫秒
+ * @returns 
+ */
+export function useRecorder(args: {
+  silenceSpace?: number
+}) {
+  const { silenceSpace } = args
+
   const onRecorderEnd = new Subject<string>()
   const onStateUpdate = new Subject<boolean>()
   const ondataavailable = new Subject<{ blob: Blob; duration: number; isSilence?: boolean }>()
 
-  const themeVars = useThemeVars()
   const waveEl = useTemplateRef<HTMLCanvasElement>('waveEl')
 
   const isRecording = ref(false)
   const isStarted = ref(false)
   const isWaveformVisible = ref(false)
   const totalDuration = ref(0)
-  let timer
   const isAutoCut = ref(true)
-
+  
   let mediaRecorder: MediaRecorder | null = null
   let audioCtx: AudioContext | null = null
   let stream: MediaStream | null = null
@@ -30,6 +34,7 @@ export function useRecorder() {
   let startTime = 0
   let pausedTime = 0
   let silentFrameCount = 0
+  let timer
 
   async function startRecording() {
     init()
@@ -43,7 +48,8 @@ export function useRecorder() {
       },
       video: false
     })
-
+    
+    clearInterval(timer) // 必须清理掉当前计时器
     timer = setInterval(() => {
       totalDuration.value += 0.01
     }, 10)
@@ -93,7 +99,7 @@ export function useRecorder() {
     // const waveArray = new Uint8Array(analyser.frequencyBinCount)
     const dataArray = new Uint8Array(analyser.fftSize)
     const threshold = 0.01 // 0.01 表示将频谱数据的阈值设为 255 的 1%，即 2.55
-    const silenceDuration = 2000 // 静音检测长度(ms)
+    const silenceDuration = silenceSpace || 2000 // 静音检测长度(ms)
     const checkInterval = 100 // 检查间隔(ms)
     const endSilentFrames = 15000 / checkInterval // 连续15秒没有操作时结束录音
     const requiredSilentFrames = silenceDuration / checkInterval // 需要的连续静音帧数
@@ -120,9 +126,8 @@ export function useRecorder() {
         // 如果连续静音的帧数达到了要求，停止录音
         if (silentFrameCount >= requiredSilentFrames && !isNewRecorder && isAutoCut.value) {
           console.log('Silence detected, create new recorder...')
-          mediaRecorder?.stop()
-          clearInterval(timer) // 必须清理掉当前计时器
-          startRecording() // 新起录音
+          mediaRecorder?.stop() // 停止当前录音
+          startRecording() // 新起录音器
           return
         }
         // 连续长时间静音的时候直接结束录制状态

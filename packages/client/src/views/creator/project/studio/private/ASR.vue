@@ -42,7 +42,7 @@ const startRecorder = () => {
       // 处理在快速点击启动按钮后，创建在销毁之后，导致录音状态没有停止的问题
       if (!isRecording.value) {
         console.log('录音已停止，无法继续录音')
-        recorder.destroy()
+        recorder.init()
       }
     })
     .catch(err => {
@@ -67,9 +67,9 @@ const stopRecorder = async () => {
     // const audioUrl = URL.createObjectURL(wavBlob!)
     // const audioElement = new Audio(audioUrl)
     // audioElement.play()
-    recorder.destroy()
+    recorder.init()
   }).catch(err => {
-    recorder.destroy()
+    recorder.init()
     console.log('录音失败', err)
   })
 }
@@ -129,6 +129,7 @@ onMounted(() => {
 onUnmounted(() => {
   keyupEvent.forEach(sub => sub.unsubscribe())
   keydownEvent.forEach(sub => sub.unsubscribe())
+  recorder.destroy()
 })
 // function createTimer() {} // TODO 考虑是否在录音时显示录音时长
 </script>

@@ -20,107 +20,6 @@ export class AudioRecorder {
     this.sampleBits = sampleBits || 16
   }
   
-  // longRecording(callback: (arg: { blob: Blob; duration: number }) => void, silenceThreshold: number) {
-  //   const sampleRate = this.sampleRate
-  //   const sampleBits = this.sampleBits
-  //   const onStateUpdate = new Subject<boolean>()
-    
-  //   let isRecording = false
-  //   let mediaRecorder: MediaRecorder | null = null
-  //   async function startRecording() {
-  //     const stream = await navigator.mediaDevices.getUserMedia({
-  //       audio: {
-  //         sampleRate: sampleRate,
-  //         sampleSize: sampleBits,
-  //         channelCount: 1
-  //       },
-  //       video: false
-  //     })
-
-  //     let totalDuration = 0
-  //     let startTime = Date.now()
-      
-  //     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-  //     let audioChunks: Blob[] = [] // 重置音频块
-
-  //     mediaRecorder.ondataavailable = async event => {
-  //       if (event.data.size > 0) {
-  //         // console.log('add chunk', event, '音频数据块的大小（MB）:', event.data.size / (1024 * 1024))
-  //         const endTime = Date.now()
-  //         totalDuration += (endTime - startTime) / 1000
-  //         startTime = Date.now()
-
-  //         audioChunks.push(event.data)
-  //       }
-  //     }
-
-  //     mediaRecorder.start()
-
-  //     const audioCtx = new AudioContext()
-  //     const source = audioCtx.createMediaStreamSource(stream)
-  //     const analyser = audioCtx.createAnalyser()
-  //     source.connect(analyser)
-
-  //     const dataArray = new Uint8Array(analyser.fftSize)
-  //     const threshold = silenceThreshold // 0.01 表示将频谱数据的阈值设为 255 的 1%，即 2.55
-  //     const silenceDuration = 1500 // 静音检测长度(ms)
-  //     const checkInterval = 100 // 检查间隔(ms)
-  //     const requiredSilentFrames = silenceDuration / checkInterval // 需要的连续静音帧数
-
-  //     let silentFrameCount = 0
-      
-  //     isRecording = true
-  //     onStateUpdate.next(isRecording)
-  //     const checkSilence = () => {
-  //       if (!isRecording) return // 停止后退出检测
-
-  //       analyser.getByteTimeDomainData(dataArray)
-  //       const rms = calculateRMS(dataArray)
-  //       const isSilent = rms < threshold
-  //       if (isSilent) {
-  //         silentFrameCount++ // 如果当前检测到静音，计数器加1
-  //       } else {
-  //         silentFrameCount = 0 // 如果检测到非静音，重置计数器
-  //       }
-  //       // 如果连续静音的帧数达到了要求，停止录音
-  //       if (silentFrameCount >= requiredSilentFrames) {
-  //         mediaRecorder?.stop()
-  //         startRecording() // 新起录音
-  //         return
-  //       }
-
-  //       setTimeout(checkSilence, checkInterval)
-  //     }
-
-  //     mediaRecorder.addEventListener('stop', () => {
-  //       const finalBlob = new Blob(audioChunks, { type: 'audio/webm' })
-  //       callback({ blob: finalBlob, duration: totalDuration })
-  //       isRecording = false
-  //       onStateUpdate.next(isRecording)
-  //     })
-
-  //     checkSilence() // 开启静音检测
-  //   }
-
-  //   startRecording()
-
-  //   return {
-  //     start: () => {
-  //       startRecording()
-  //     },
-  //     pause: () => {
-  //       mediaRecorder?.pause()
-  //     },
-  //     resume: () => {
-  //       mediaRecorder?.resume()
-  //     },
-  //     stop: () => {
-  //       mediaRecorder?.stop()
-  //     },
-  //     onStateUpdate
-  //   }
-  // }
-
   public start(isSilenceEnd?: boolean) {
     return navigator.mediaDevices
       .getUserMedia({
@@ -140,6 +39,7 @@ export class AudioRecorder {
 
         this.mediaRecorder.ondataavailable = async event => {
           if (event.data.size > 0) {
+            console.log('recorded chunk', event)
             // console.log('add chunk', event, '音频数据块的大小（MB）:', event.data.size / (1024 * 1024))
             // 计算时长
             const endTime = Date.now()
@@ -175,9 +75,17 @@ export class AudioRecorder {
         this.mediaRecorder.onstop = async () => {
           try {
             const finalBlob = new Blob(this.audioChunks, { type: 'audio/webm' })
-            const trimmedBlob = await this.trimSilence(finalBlob)
-            this.audioBlob = trimmedBlob
-            resolve({ blob: this.audioBlob, duration: this.totalDuration })
+            const trimmedBuffer = await this.trimSilence(finalBlob)
+            const duration = trimmedBuffer.duration
+            
+            const wavData = AudioRecorder.audioBufferToWav(trimmedBuffer)
+            const wavBlob = new Blob([wavData], { type: 'audio/wav' })
+            this.audioBlob = wavBlob
+          
+            console.log('totalDuration', this.totalDuration)
+            console.log('duration:', duration)
+            this.totalDuration = 0
+            resolve({ blob: this.audioBlob, duration: duration })
           } catch (error) {
             reject(new Error('音频数据样本太小，生成音频失败'))
           }
@@ -191,21 +99,29 @@ export class AudioRecorder {
     })
   }
 
+  init() {
+    this.mediaRecorder?.stop()
+    this.mediaStream?.getTracks().forEach(track => track.stop())
+    this.mediaStream = null
+    this.mediaRecorder = null
+  }
+
   destroy() {
     this.mediaRecorder?.stop()
     this.mediaStream?.getTracks().forEach(track => track.stop())
     this.mediaStream = null
-    this.audioContext?.close()
     this.mediaRecorder = null
+    this.audioContext?.close()
   }
 
-  private async trimSilence(audioBlob: Blob): Promise<Blob> {
+  private async trimSilence(audioBlob: Blob) {
     const arrayBuffer = await audioBlob.arrayBuffer()
     const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer)
 
     const trimmedBuffer = this.removeSilence(audioBuffer)
-    const wavData = AudioRecorder.audioBufferToWav(trimmedBuffer)
-    return new Blob([wavData], { type: 'audio/wav' })
+    return trimmedBuffer
+    // const wavData = AudioRecorder.audioBufferToWav(trimmedBuffer)
+    // return new Blob([wavData], { type: 'audio/wav' })
   }
 
   public async getWAVBlob(): Promise<Blob | null> {
@@ -325,7 +241,6 @@ export class AudioRecorder {
     for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
       trimmedBuffer.copyToChannel(buffer.getChannelData(channel).subarray(start, end), channel)
     }
-
     return trimmedBuffer
   }
 

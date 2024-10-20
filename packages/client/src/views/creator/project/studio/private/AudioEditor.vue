@@ -13,25 +13,40 @@ import Crunker from 'crunker'
 import ControlBtn from './_utils/ControlBtn.vue'
 import audiobufferToWav from 'audiobuffer-to-wav'
 import { cropAudio, splitAudio, playCroppedAudio, deleteAudioSegments } from '../_utils/audio-process'
-
+import FragmentPreview from './FragmentPreview.vue'
 // import Timeline from '@losting/timeline'
 import useStore from '@/store'
 import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
 import { formatTimeToMinutesSecondsMilliseconds } from '../_utils/formatTime'
+export type SegmentFragment = {
+  audio: Blob
+  duration: number
+  speaker: {
+    type: 'human' | 'machine'
+    avatar: string
+    name: string
+    role: number
+  }
+  txt: string
+  timestamps: number[]
+  transcript: string[]
+  tags: (string | null)[]
+  promoters: (string | null)[]
+}
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
-
 const props = defineProps<{
   fragment: Fragment
 }>()
 
 const emits = defineEmits<{
-  confirm: [key: string[]]
+  confirm: [fragments: SegmentFragment[]]
   cancel: []
 }>()
 
 const themeVars = useThemeVars()
+// const { projectStore } = useStore()
 const message = useMessage()
-// const dialog = useDialog()
+const dialog = useDialog()
 const crunker = new Crunker()
 const waveEl = useTemplateRef<HTMLElement>('waveEl')
 const scrollerEl = useTemplateRef<HTMLDivElement>('scrollerEl')
@@ -52,8 +67,7 @@ const secondWidth = waveWidth / fragment.duration
 
 let wavesurfer: WaveSurfer
 let regions: Regions
-// let focuRegion: Region | null = null
-// let isRegionSelected = ref(false)
+
 onMounted(() => {
   if (!waveEl.value) return
   wavesurfer = WaveSurfer.create({
@@ -63,7 +77,8 @@ onMounted(() => {
     width: `${waveWidth}px`,
     url: props.fragment.audio,
     autoScroll: true,
-    barAlign: 'bottom',
+    // barAlign: 'bottom',
+    normalize: true,
     dragToSeek: true,
     hideScrollbar: false,
     interact: true
@@ -93,9 +108,7 @@ onMounted(() => {
     }
   })
   wavesurfer.registerPlugin(hoverPlugin)
-  // hoverPlugin.on('hover', second => {
-  //   currentHoverTime = second
-  // })
+
   // Region 选区
   regions = Regions.create()
   wavesurfer.registerPlugin(regions)
@@ -107,38 +120,6 @@ onMounted(() => {
 
   wavesurfer.on('seeking', time => {
     currentTime.value = time
-  })
-
-  // 当用户选择区域后，裁剪音频
-  regions.on('region-double-clicked', function (region) {
-    // 获取选择区域的起始和结束时间
-    var start = region.start
-    var end = region.end
-    console.log(start, end)
-    // playRegion(region)
-    // region.play()
-    // region.remove()
-    // 获取音频的原始缓冲区
-    // var originalBuffer = wavesurfer.backend.buffer;
-    // var newBuffer = wavesurfer.backend.ac.createBuffer(
-    //   originalBuffer.numberOfChannels,
-    //   end * originalBuffer.sampleRate - start * originalBuffer.sampleRate,
-    //   originalBuffer.sampleRate
-    // );
-
-    // // 复制音频数据到新的缓冲区
-    // for (var channel = 0; channel < originalBuffer.numberOfChannels; channel++) {
-    //   var channelData = originalBuffer.getChannelData(channel);
-    //   var newChannelData = newBuffer.getChannelData(channel);
-    //   var startIdx = start * originalBuffer.sampleRate;
-    //   var endIdx = end * originalBuffer.sampleRate;
-    //   for (var i = startIdx, j = 0; i < endIdx; i++, j++) {
-    //     newChannelData[j] = channelData[i];
-    //   }
-    // }
-
-    // 加载裁剪后的音频到wavesurfer
-    // wavesurfer.loadDecodedBuffer(newBuffer);
   })
 
   regions.on('region-created', region => {
@@ -157,20 +138,6 @@ onMounted(() => {
       wavesurfer.skip(region.end - region.start)
     }
   })
-  // regions.on('region-out', region => {
-  //   console.log('region-out', region)
-  //   // wavesurfer.pause()
-  // })
-  // wavesurfer.on('click', () => {
-  //   console.log('wavesurfer click')
-  //   isRegionSelected.value = false
-  //   showDropdownRef.value = false
-  //   if(!focuRegion) return
-  //   const region = focuRegion
-  //   region.element.classList.remove('selected')
-  //   region.element.style.border = 'none'
-  //   region.element.style.boxShadow = 'none'
-  // })
   wavesurfer.on('play', () => {
     isPlaying.value = true
   })
@@ -217,36 +184,46 @@ const methods = {
     })
   },
   async handleCut() {
-    console.log('handleCut')
-    console.log(regions.getRegions())
-    // if (currentTime.value === 0) return
-    // console.log(currentTime.value)
-    // const buffer = wavesurfer.getDecodedData()
-    // console.log(buffer)
-    // if (!buffer) return
-    // console.log(currentTime.value, fragment.duration)
-    // const newbuffer = await cropAudio(buffer, currentTime.value, fragment.duration)
-    // playCroppedAudio(newbuffer)
-    // const newbuffer = await crunker.fetchAudio(fragment.audio).then(buffers => crunker.sliceAudio(buffers[0], currentTime.value, fragment.duration))
-    // const wav = audiobufferToWav(newbuffer)
-    // const blob = new Blob([wav], { type: 'audio/wav' })
-    // crunker.play(newbuffer)
-    // wavesurfer.loadBlob(blob)
-    // const newbuffers = await splitAudio(buffer, [currentTime.value])
-    // 1. 根据timestamp 分割数据（启动子、文字等等）
-    // fragment.timestamps.filter(timestamp => timestamp <= currentTime.value)
-    // playCroppedAudio(buffers[1])
+    const msg = message.loading('正在处理音频，请稍等...', { duration: 0 })
+    if (currentTime.value === 0 || currentTime.value >= fragment.duration) {
+      msg.destroy()
+      message.warning('请选择要裁剪的区域')
+      return
+    }
+
+    const buffer = wavesurfer.getDecodedData()
+    if (!buffer) {
+      msg.destroy()
+      message.warning('载入音频数据失败')
+      return
+    }
+
+    useSplitFragment(props.fragment, buffer, [currentTime.value], () => {
+      msg.destroy()
+    })
   },
   async handleCutMany() {
+    const msg = message.loading('正在处理音频，请稍等...', { duration: 0 })
+
     const cutRegions = regions.getRegions().filter(region => region.color === 'red')
-    // console.log(cutRegions)
-    if(cutRegions.length === 0) return message.warning('找不到分割点')
+    if (cutRegions.length === 0) {
+      msg.destroy()
+      message.warning('找不到分割点')
+      return
+    }
+
     const buffer = wavesurfer.getDecodedData()
-    if (!buffer) return
-    const newbuffers = await splitAudio(buffer, [currentTime.value])
-    // 1. 根据timestamp 分割数据（启动子、文字等等）
-    // fragment.timestamps.filter(timestamp => timestamp <= currentTime.value)
-    // playCroppedAudio(newbuffers[1])
+    if (!buffer) {
+      msg.destroy()
+      message.warning('载入音频数据失败')
+      return
+    }
+
+    const splitPoints = cutRegions.map(region => region.start)
+
+    useSplitFragment(props.fragment, buffer, splitPoints, () => {
+      msg.destroy()
+    })
   },
   handleReplay() {
     wavesurfer.stop()
@@ -277,11 +254,77 @@ const methods = {
   }
 }
 
-const focus = ref(-1)
-function handleConfirm() {
-  // props.onConfirm(inputs)
-  emits('confirm', inputs)
+async function useSplitFragment(fragment: Fragment, buffer: AudioBuffer, splitPoints: number[], callback: () => void) {
+  try {
+    const length = splitPoints.length + 1 // 分片比较于分割点数量多一个，因为最后一个分片包含所有数据
+    const txtChunks: string[] = []
+    const timestampChunks: number[][] = Array(length).fill([])
+    const transcriptChunks: string[][] = Array(length).fill([])
+    const tagChunks: (string | null)[][] = Array(length).fill([])
+    const promoterChunks: (string | null)[][] = Array(length).fill([])
+
+    const chunks = await splitAudio(buffer, splitPoints, (previousPoint, currentPoint, i) => {
+      timestampChunks[i] = []
+      transcriptChunks[i] = []
+      tagChunks[i] = []
+      promoterChunks[i] = []
+
+      fragment.timestamps.forEach((timestamp, index) => {
+        if (previousPoint <= timestamp && timestamp <= currentPoint) {
+          timestampChunks[i].push(timestamp - previousPoint)
+          transcriptChunks[i].push(fragment.transcript[index])
+          tagChunks[i].push(fragment.tags[index])
+          promoterChunks[i].push(fragment.promoters[index])
+        }
+      })
+
+      txtChunks[i] = transcriptChunks[i].join('')
+    })
+
+    const fragments = chunks.map((chunk, index) => {
+      const wav = audiobufferToWav(chunk.buffer)
+      const blob = new Blob([wav], { type: 'audio/wav' })
+
+      return {
+        audio: blob,
+        duration: chunk.duration,
+        speaker: props.fragment.speaker,
+        txt: txtChunks[index],
+        timestamps: timestampChunks[index],
+        transcript: transcriptChunks[index],
+        tags: tagChunks[index],
+        promoters: promoterChunks[index]
+      }
+    })
+    // console.log(fragments)
+    callback()
+
+    dialog.create({
+      showIcon: false,
+      style: { width: '800px' },
+      maskClosable: false,
+      title: '片段裁剪结果',
+      content: () => h(FragmentPreview, { fragments }),
+      positiveText: '确认',
+      negativeText: '放弃',
+      onPositiveClick: async () => {
+        emits('confirm', fragments)
+      },
+      onNegativeClick: () => {
+        message.info('已放弃')
+      }
+    })
+  } catch (error) {
+    callback()
+    message.error('分割片段失败')
+  }
 }
+
+const focus = ref(-1)
+// function handleConfirm() {
+//   // props.onConfirm(inputs)
+//   emits('confirm', inputs)
+// }
 function handleInput(ev: Event, index: number) {
   const target = ev.target as HTMLInputElement
   target.style.width = 24 + target.value.length * 12 + 'px'
@@ -372,7 +415,7 @@ const options = () => {
         onClick() {
           console.log('delete', targetRegion)
           targetRegion?.remove()
-          // 等待下一次 DOM 更新刷新，因为 dropdown 有个延迟，等它完全关闭再将 targetRegion 置空 
+          // 等待下一次 DOM 更新刷新，因为 dropdown 有个延迟，等它完全关闭再将 targetRegion 置空
           nextTick(() => {
             targetRegion = null
           })
@@ -435,7 +478,6 @@ function handleRegionContextmenu(ev: MouseEvent, region: Region) {
   })
 }
 function handleClickoutside() {
-  console.log('clickoutside')
   showDropdownRef.value = false
 }
 function handleSelect(ev: MouseEvent) {
@@ -461,8 +503,8 @@ function handleSelect(ev: MouseEvent) {
       <div ref="waveEl" class="wave">
         <div class="keyframe" v-for="(item, index) in fragment.timestamps" :key="index" :style="{ left: item * secondWidth + 'px' }">
           <div class="token">
-            <input v-show="focus === index" class="input" :value="inputs[index]" @input="handleInput($event, index)" @blur="handleBlur" />
-            <div v-show="focus !== index" class="text" @click.stop="handleFocus(index)">{{ inputs[index] }}</div>
+            <!-- <input v-show="focus === index" class="input" :value="inputs[index]" @input="handleInput($event, index)" @blur="handleBlur" /> -->
+            <div class="text">{{ inputs[index] }}</div>
           </div>
         </div>
       </div>
@@ -477,7 +519,7 @@ function handleSelect(ev: MouseEvent) {
         </div>
         <div class="btn" @click="methods.handlePlayPause">
           <ControlBtn tip="重播">
-            <Icon :icon=" isPlaying ? 'material-symbols:pause-rounded' :'material-symbols:play-arrow-rounded'" height="24" />
+            <Icon :icon="isPlaying ? 'material-symbols:pause-rounded' : 'material-symbols:play-arrow-rounded'" height="24" />
           </ControlBtn>
         </div>
         <div class="btn">
@@ -492,13 +534,6 @@ function handleSelect(ev: MouseEvent) {
             <Icon icon="icon-park-twotone:clear-format" height="24" />
           </ControlBtn>
         </div> -->
-        <div class="btn" @click="methods.handleCutMany">
-          <!-- :disabled="regions?.getRegions().filter(region => region.color === 'red').length === 0" -->
-          <ControlBtn tip="根据分割点分割音频">
-            <Icon icon="solar:video-frame-cut-2-line-duotone" height="24" />
-          </ControlBtn>
-        </div>
-
         <div class="btn" @click="methods.handleRegionsClear">
           <!-- :disabled="!regions?.getRegions().length" -->
           <ControlBtn tip="清理所有选区和分割点">
@@ -523,10 +558,15 @@ function handleSelect(ev: MouseEvent) {
       </div>
 
       <div class="control-item">
-        <span>其它操作：</span>
-        <div class="btn"  @click="">
+        <span>综合操作：</span>
+        <div class="btn" @click="">
           <ControlBtn tip="擦除首尾静音" :disabled="true">
             <Icon icon="icon-park-outline:clear" height="24" />
+          </ControlBtn>
+        </div>
+        <div class="btn" @click="methods.handleCutMany">
+          <ControlBtn tip="根据分割点分割音频">
+            <Icon icon="solar:video-frame-cut-2-line-duotone" height="24" />
           </ControlBtn>
         </div>
       </div>
@@ -637,30 +677,30 @@ $hideColor: #575757c7;
   background-color: $bgcolor;
   // flex-wrap: wrap;
 }
-.token {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1px;
-  margin-right: 1px;
-}
-.input {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  width: 24px;
-  height: 23px;
-  white-space: nowrap;
-  border: none;
-  box-sizing: border-box;
-  outline: 1px solid v-bind('themeVars.borderColor');
-  padding: 0;
-  margin: 0;
-  box-shadow: none;
-  background-color: v-bind('themeVars.inputColor');
-  color: v-bind('themeVars.textColor1');
-}
+// .token {
+//   display: inline-flex;
+//   align-items: center;
+//   justify-content: center;
+//   margin-bottom: 1px;
+//   margin-right: 1px;
+// }
+// .input {
+//   display: inline-flex;
+//   align-items: center;
+//   justify-content: center;
+//   text-align: center;
+//   width: 24px;
+//   height: 23px;
+//   white-space: nowrap;
+//   border: none;
+//   box-sizing: border-box;
+//   outline: 1px solid v-bind('themeVars.borderColor');
+//   padding: 0;
+//   margin: 0;
+//   box-shadow: none;
+//   background-color: v-bind('themeVars.inputColor');
+//   color: v-bind('themeVars.textColor1');
+// }
 .text {
   display: inline-block;
   text-align: center;
@@ -668,15 +708,13 @@ $hideColor: #575757c7;
   width: fit-content;
   height: 24px;
   // line-height: 24px;
-  background-color: v-bind('themeVars.inputColor');
-  cursor: pointer;
+  // background-color: v-bind('themeVars.inputColor');
+  // cursor: pointer;
+  // &:hover {
+  //   background-color: v-bind('themeVars.buttonColor2Hover');
+  // }
 }
-.text:hover {
-  background-color: v-bind('themeVars.buttonColor2Hover');
-}
-.main {
-  display: flex;
-}
+
 .footer {
   display: flex;
   flex-direction: row;

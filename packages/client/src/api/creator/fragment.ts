@@ -21,6 +21,21 @@ interface CreateBlankFragmentDto {
   duration: number
   actions?: Action[]
 }
+interface CreateSegmentFragmentDto {
+  key?: string
+  procedureId?: string
+  removeSourceFragment?: boolean
+  sourceFragmentId: string
+  audio: Blob
+  duration: number
+  speaker: any
+  txt: string
+  timestamps: number[]
+  transcript: string[]
+  tags: (string | null)[]
+  promoters: (string | null)[]
+}
+
 interface UpdateTranscriptDto {
   procedureId?: string
   fragmentId: string
@@ -96,25 +111,31 @@ export const fragment = (axios: AxiosInstance) => {
         }
       })
     },
-    // createChunk<T>(dto: CreateASRChunkDto) {
-    //   const formdata = new FormData()
-    //   formdata.append('procedureId', dto.procedureId!)
-    //   formdata.append('audio', dto.audio, 'audio.wav') // 必须添加文件名和后缀
-    //   formdata.append('duration', dto.duration.toString())
-    //   formdata.append('speakerId', dto.speakerId)
-    //   formdata.append('key', dto.key!)
-    //   formdata.append('actions', JSON.stringify(dto.actions))
-    //   return axios.post<T>('/fragment/write/create/chunk', formdata, {
-    //     headers: {
-    //       'Content-Type':'multipart/form-data'
-    //     }
-    //   })
-    // },
     createByText<T>(dto: CreateTTSFragmentDto) {
       return axios.post<T>('/fragment/write/create/tts', dto)
     },
     createBlank<T>(dto: CreateBlankFragmentDto) {
       return axios.post<T>('/fragment/write/create/blank', dto)
+    },
+    createBySegment<T>(dto: CreateSegmentFragmentDto) {
+      const formdata = new FormData()
+      formdata.append('procedureId', dto.procedureId!)
+      formdata.append('audio', dto.audio, 'audio.wav') // 必须添加文件名和后缀
+      formdata.append('duration', dto.duration.toString())
+      formdata.append('speaker', JSON.stringify(dto.speaker))
+      formdata.append('key', dto.key!)
+      formdata.append('txt', dto.txt)
+      formdata.append('timestamps', JSON.stringify(dto.timestamps))
+      formdata.append('transcript', JSON.stringify(dto.transcript))
+      formdata.append('tags', JSON.stringify(dto.tags))
+      formdata.append('promoters', JSON.stringify(dto.promoters))
+      formdata.append('sourceFragmentId', dto.sourceFragmentId)
+      formdata.append('removeSourceFragment', dto.removeSourceFragment ? 'true' : 'false')
+      return axios.post<T>('/fragment/write/create/segment', formdata, {
+        headers: {
+          'Content-Type':'multipart/form-data'
+        }
+      })
     },
     get<T>(procudureId: string) {
       return axios.get<T>('/fragment/read/' + procudureId)

@@ -3,8 +3,10 @@ import { onUnmounted, ref, reactive } from 'vue'
 import { useThemeVars } from 'naive-ui'
 const props = defineProps<{
   transcript: string[]
-  onConfirm: (key: string[]) => void
-  onCancel: () => void
+}>()
+const emits = defineEmits<{
+  confirm: [key: string[]]
+  cancel: []
 }>()
 const themeVars = useThemeVars()
 const inputs = reactive<string[]>([])
@@ -14,7 +16,7 @@ props.transcript.forEach(item => {
 
 const focus = ref(-1)
 function handleConfirm() {
-  props.onConfirm(inputs)
+  emits('confirm', inputs)
 }
 function handleInput(ev: Event, index: number) {
   const target = ev.target as HTMLInputElement
@@ -48,8 +50,8 @@ onUnmounted(() => {
       </template>
       <template #action>
         <div class="footer">
-        <n-button class="btn" type="primary" @click="handleConfirm()"> 确定 </n-button>
-        <n-button class="btn" type="primary" @click="onCancel"> 取消 </n-button>
+        <n-button class="btn" type="primary" @click="handleConfirm()"> 确认修改 </n-button>
+        <n-button class="btn"  @click="emits('cancel')"> 退出 </n-button>
       </div>
       </template>
     </n-thing>

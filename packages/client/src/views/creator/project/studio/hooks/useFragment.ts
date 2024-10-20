@@ -1,6 +1,6 @@
 import useStore from '@/store'
 import { DropdownOption, NDialogProvider, NMessageProvider } from 'naive-ui'
-import { h, onUnmounted, reactive, ref } from 'vue'
+import { h, nextTick, onUnmounted, reactive, ref } from 'vue'
 import _ from 'lodash'
 import { useDialog, useMessage } from 'naive-ui'
 import { Player } from '@/editor'
@@ -8,7 +8,7 @@ import { Icon } from '@iconify/vue'
 import { Subject, Subscription } from '@tanbo/stream'
 import { SortableEvent } from 'vue-draggable-plus'
 import { Bridge } from '../../bridge'
-import { TxtEdit, FragmentEditor } from '../private'
+import FragmentEditor from '../FragmentEditor.vue'
 import { usePromoter } from './usePromoter'
 import { NConfig } from '@/views/creator/_common'
 
@@ -310,117 +310,6 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     applyPlay(fragments, true)
   }
 
-  // const studioOptions: DropdownOption[] = [
-  //   // {
-  //   //   key: 'auto',
-  //   //   label: () => `${autoMoveAnimePointer ? '关闭' : '开启' }自动切换动画块`,
-  //   //   icon: () => h(Icon, { icon: 'mdi:animation-play-outline' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       autoMoveAnimePointer = !autoMoveAnimePointer
-  //   //       bridge.handleAutoMoveAnimePointer(autoMoveAnimePointer)
-  //   //     }
-  //   //   }
-  //   // },
-  //   // {
-  //   //   key: 'lecture', // 演讲
-  //   //   label: () => `${isShowSpeechModeToolbar.value ? '隐藏' : '显示'}演讲模式控制台`,
-  //   //   icon: () => h(Icon, { icon: 'mdi:speaker' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       isShowSpeechModeToolbar.value = !isShowSpeechModeToolbar.value
-  //   //     }
-  //   //   }
-  //   // },
-  //   // {
-  //   //   key: 'preview',
-  //   //   label: '播放预览',
-  //   //   icon: () => h(Icon, { icon: 'mdi:play' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       message.warning('注意：预览模式与作品成品的播放效果不完全一致')
-  //   //       // player = bridge.editor?.get(Player)
-  //   //       const fragments = projectStore.fragment(projectId).getBySort()
-  //   //       applyPlay(fragments, true)
-  //   //     }
-  //   //   }
-  //   // },
-  //   // {
-  //   //   key: 'refresh',
-  //   //   label: '更新标记',
-  //   //   icon: () => h(Icon, { icon: 'mdi:refresh' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       checkPromoter()
-  //   //     }
-  //   //   }
-  //   // },
-  //   // {
-  //   //   key: 'reorder',
-  //   //   label: '标记重排序',
-  //   //   icon: () => h(Icon, { icon: 'mdi:sort' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       handleReorder()
-  //   //     }
-  //   //   }
-  //   // },
-  //   // {
-  //   //   key: 'bgm',
-  //   //   disabled: true,
-  //   //   label: '背景音乐',
-  //   //   icon: () => h(Icon, { icon: 'mdi:music-note-outline' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       //
-  //   //     }
-  //   //   }
-  //   // },
-  //   // {
-  //   //   key: 'showname',
-  //   //   label: () => `${isShowName.value ? '隐藏' : '显示'}名称`,
-  //   //   icon: () => h(Icon, { icon: 'mdi:account-group-outline' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       isShowName.value = !isShowName.value
-  //   //     }
-  //   //   }
-  //   // },
-  //   // {
-  //   //   key: 'showorder',
-  //   //   label: () => `${ isShowOrder.value ? '隐藏' : '显示' }排序`,
-  //   //   icon: () => h(Icon, { icon: 'mdi:sort' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       isShowOrder.value = !isShowOrder.value
-  //   //       dropdownState.isShow = false
-  //   //     }
-  //   //   }
-  //   // },
-  //   // {
-  //   //   key: 'language',
-  //   //   disabled: true,
-  //   //   label: '语言',
-  //   //   icon: () => h(Icon, { icon: 'mdi:translate' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       //
-  //   //     }
-  //   //   }
-  //   // },
-  //   // {
-  //   //   key: 'settings',
-  //   //   disabled: true,
-  //   //   label: '设置',
-  //   //   icon: () => h(Icon, { icon: 'mdi:cog' }),
-  //   //   props: {
-  //   //     onClick: () => {
-  //   //       //
-  //   //     }
-  //   //   }
-  //   // }
-  // ]
-
   /** 播放音频 */
   let aud: HTMLAudioElement | null = null
   function handlePlay(fragment: Fragment) {
@@ -460,23 +349,9 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
           {
             default: () =>
               h(FragmentEditor, {
+                projectId: projectId,
                 fragment: fragment,
-                onConfirm: (newTranscript: string[]) => {
-                  if (_.isEqual(fragment.transcript, newTranscript)) {
-                    message.warning('未进行任何更改')
-                    dialog.destroyAll()
-                    return
-                  }
-                  projectStore
-                    .fragment(projectId)
-                    .updateTranscript({ fragmentId: fragment.id, newTranscript })
-                    .then(() => {
-                      message.success('更新成功')
-                      fragment.transcript = newTranscript
-                    })
-                  dialog.destroyAll()
-                },
-                onCancel: () => {
+                onClose: () => {
                   dialog.destroyAll()
                 }
               })

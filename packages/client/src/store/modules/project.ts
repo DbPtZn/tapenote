@@ -829,10 +829,83 @@ export const useProjectStore = defineStore('projectStore', {
           sequence?.push(data.id)
         })
       }
+      /** 通过分段创建片段 */
+      const createBySegment = (params: Parameters<typeof CreatorApi.prototype.fragment.createBySegment>[0]) => {
+        const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
+        const key = utils.randomString()
+        params.procedureId = procedureId
+        params.key = key
+        // 立即创建临时文本片段并插入到片段序列中
+        const fragment: Fragment = {
+          key,
+          id: key,
+          audio: '',
+          duration: params.duration,
+          txt: params.txt,
+          transcript: params.transcript,
+          tags: params.tags,
+          promoters: params.promoters,
+          timestamps: params.timestamps,
+          projectId: procedureId,
+          speaker: params.speaker,
+          collapsed: false,
+          removed: 'never'
+        }
+        get()?.push(fragment) // 不完全片段
+        const index = sequence?.findIndex(item => item === params.sourceFragmentId)
+        if(index && index !== -1) sequence?.splice(index + 1, 0, key) // 用 key 占位
+        
+        return this.creatorApi(account!, hostname!).fragment.createBySegment<Fragment>(params).then(res => {
+          const data = res.data
+          data.audio = ResourceDomain + data.audio
+          if (params.speaker)  data.speaker.avatar = ResourceDomain + data.speaker.avatar
+          else data.speaker = fragment.speaker
+          if(data.key) {
+            // 用片段 id 替换排序信息中的占位 key
+            sequence?.some((item, index, arr) => {
+              if(item === data.key) {
+                arr[index] = data.id
+                return true
+              }
+            })
+            // 替换成完整片段
+            get()?.some((item, index, arr) => {
+              if(item.key === data.key) {
+                arr[index] = data
+                delete arr[index].key // 会影响到 data, 所以放序列处理后面
+                return true
+              }
+            })
+          } else {
+            console.error('异常，未读取到合成片段返回的 key 值')
+          }
+        }).catch(err => {
+          // 片段创建失败的时候，应移除前端的临时片段
+          get()?.some((item, index, arr) => {
+            if(item.key === key) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          sequence?.some((item, index, arr) => {
+            if(item === key) {
+              arr.splice(index, 1)
+              return true
+            }
+          })
+          console.error(err)
+        })
+      }
       /** 更新转写文字 */
       const updateTranscript = (params: Parameters<typeof CreatorApi.prototype.fragment.updateTranscript>[0]) => {
         params.procedureId = procedureId
         return this.creatorApi(account!, hostname!).fragment.updateTranscript<{ updateAt: string }>(params).then(res => {
+          get()?.some(fragment => {
+            if(fragment.id === params.fragmentId) {
+              fragment.transcript = params.newTranscript
+              return true
+            }
+          })
           this.setUpdateAt(params.procedureId, res.data.updateAt) // 更新时间
         })
       }
@@ -966,6 +1039,7 @@ export const useProjectStore = defineStore('projectStore', {
         getRemovedBySort,
         createByText,
         createByAudio,
+        createBySegment,
         createBlank,
         updateTranscript,
         remove,

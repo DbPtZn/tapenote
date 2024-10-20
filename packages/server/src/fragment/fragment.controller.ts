@@ -30,6 +30,7 @@ import {
 } from './dto/update-fragment.dto'
 import { CreateBlankFragmentDto } from './dto/create-blank-fragment.dto'
 import { CopyFragmentDto } from './dto/copy-fragment'
+import { CreateSegmentFragmentDto } from './dto'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('fragment')
@@ -40,28 +41,9 @@ export class FragmentController {
   async createByText(@Body() createTTSFragmentDto: CreateTTSFragmentDto, @Req() req, @Res() res) {
     try {
       const fragment = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname)
-      // console.log(fragment.audio)
-      // if (fragment.speaker.avatar) {
-      //   fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
-      // }
-      // const data = {
-      //   key: createTTSFragmentDto.key, // 返回的信息中添加 key 值标识
-      //   id: fragment.id,
-      //   audio: '/public' + fragment.audio.split('public')[1],
-      //   duration: fragment.duration,
-      //   txt: fragment.txt,
-      //   transcript: fragment.transcript,
-      //   tags: fragment.tags,
-      //   promoters: fragment.promoters,
-      //   timestamps: fragment.timestamps,
-      //   speaker: fragment.speaker,
-      //   collapsed: fragment.collapsed,
-      //   removed: fragment.removed
-      // }
       fragment['key'] = createTTSFragmentDto.key
       res.send(fragment)
     } catch (error) {
-      // console.log(error)
       res.status(400).send(error.message)
     }
   }
@@ -81,24 +63,37 @@ export class FragmentController {
         req.user.id,
         req.user.dirname
       )
-      // console.log(formData)
-      // if (fragment.speaker.avatar) {
-      //   fragment.speaker.avatar = '/public' + fragment.speaker.avatar.split('public')[1]
-      // }
-      // const data = {
-      //   key: formData.key, // 返回的信息中添加 key 值标识
-      //   id: fragment.id,
-      //   audio: '/public' + fragment.audio.split('public')[1],
-      //   duration: fragment.duration,
-      //   txt: fragment.txt,
-      //   transcript: fragment.transcript,
-      //   tags: fragment.tags,
-      //   promoters: fragment.promoters,
-      //   timestamps: fragment.timestamps,
-      //   speaker: fragment.speaker,
-      //   collapsed: fragment.collapsed,
-      //   removed: fragment.removed
-      // }
+      fragment['key'] = formData.key
+      res.send(fragment)
+    } catch (error) {
+      console.log(error)
+      res.status(400).send(error.message)
+    }
+  }
+
+  @Post(`${REST.W}/create/segment`)
+  @UseInterceptors(FileInterceptor('audio'))
+  async createBySegment(@UploadedFile() audio, @Body() formData: CreateSegmentFragmentDto, @Req() req, @Res() res) {
+    try {
+      console.log(formData)
+      const fragment = await this.fragmentService.createBySplitFragment(
+        {
+          procedureId: formData.procedureId,
+          audio: audio.path,
+          duration: formData.duration,
+          speaker: JSON.parse(formData.speaker),
+          key: formData.key,
+          sourceFragmentId: formData.sourceFragmentId,
+          removeSourceFragment: JSON.parse(formData.removeSourceFragment) === 'true',
+          txt: formData.txt,
+          timestamps: JSON.parse(formData.timestamps),
+          transcript: JSON.parse(formData.transcript),
+          tags: JSON.parse(formData.tags),
+          promoters: JSON.parse(formData.promoters)
+        },
+        req.user.id,
+        req.user.dirname
+      )
       fragment['key'] = formData.key
       res.send(fragment)
     } catch (error) {
@@ -111,19 +106,6 @@ export class FragmentController {
   async createBlank(@Body() dto: CreateBlankFragmentDto, @Req() req, @Res() res) {
     try {
       const fragment = await this.fragmentService.createBlank(dto, req.user.id, req.user.dirname)
-      // const data = {
-      //   id: fragment.id,
-      //   audio: '/public' + fragment.audio.split('public')[1],
-      //   duration: fragment.duration,
-      //   txt: fragment.txt,
-      //   transcript: fragment.transcript,
-      //   tags: fragment.tags,
-      //   promoters: fragment.promoters,
-      //   timestamps: fragment.timestamps,
-      //   speaker: fragment.speaker,
-      //   collapsed: fragment.collapsed,
-      //   removed: fragment.removed
-      // }
       res.send(fragment)
     } catch (error) {
       console.log(error)
