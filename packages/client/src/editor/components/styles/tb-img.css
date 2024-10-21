@@ -3,3 +3,15 @@
     object-fit: contain!important;
   }
 }
+
+[border="solid"] {
+  border: 2px solid var(--tb-imgBorderColor);
+}
+
+[border="dashed"] {
+  border: 2px dashed var(--tb-imgBorderColor);
+}
+
+[border="dotted"] {
+  border: 2px dotted var(--tb-imgBorderColor);
+}

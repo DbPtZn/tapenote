@@ -281,13 +281,13 @@ async function useSplitFragment(fragment: Fragment, buffer: AudioBuffer, splitPo
       txtChunks[i] = transcriptChunks[i].join('')
     })
 
-    const fragments = chunks.map((chunk, index) => {
-      const wav = audiobufferToWav(chunk.buffer)
+    const fragments = chunks.map((audiobuffer, index) => {
+      const wav = audiobufferToWav(audiobuffer)
       const blob = new Blob([wav], { type: 'audio/wav' })
 
       return {
         audio: blob,
-        duration: chunk.duration,
+        duration: audiobuffer.duration,
         speaker: props.fragment.speaker,
         txt: txtChunks[index],
         timestamps: timestampChunks[index],

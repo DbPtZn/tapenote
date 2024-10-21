@@ -169,7 +169,7 @@ export async function splitAudio(
   }
 
   // 初始化结果数组，用于存储每个裁剪后的音频片段
-  const audioChunks: { buffer: AudioBuffer, duration: number }[] = []
+  const audioChunks: AudioBuffer[] = []
 
   // 前一个切割点（起点），初始化为0
   let previousPoint = 0
@@ -205,11 +205,11 @@ export async function splitAudio(
     cb?.(previousPoint, currentPoint, i)
 
     // 计算当前片段的时长
-    const duration = currentPoint - previousPoint
-    console.log(currentPoint, previousPoint, duration)
+    // const duration = currentPoint - previousPoint
+    // console.log(currentPoint, previousPoint, duration)
     // console.log(duration, length / sampleRate)
     // 将裁剪后的片段加入数组
-    audioChunks.push({ buffer: chunkBuffer, duration })
+    audioChunks.push(chunkBuffer)
 
     // 更新前一个切割点
     previousPoint = currentPoint

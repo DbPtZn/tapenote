@@ -1,5 +1,5 @@
 import { Subject } from '@tanbo/stream'
-import { ref, useTemplateRef } from 'vue'
+import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 // import WaveSurfer from 'wavesurfer.js'
 
 /**
@@ -216,6 +216,7 @@ export function useRecorder(args: {
 
   // 停止录音
   function handleStopRecord() {
+    if(!isStarted.value) return
     mediaRecorder?.stop()
     isRecording.value = false
     isStarted.value = false
@@ -239,6 +240,9 @@ export function useRecorder(args: {
     audioCtx = null
   }
 
+ onUnmounted(() => {
+   handleStopRecord()
+ })
   function handleWaveformVisible() {
     isWaveformVisible.value = !isWaveformVisible.value
   }

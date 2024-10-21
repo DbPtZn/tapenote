@@ -56,12 +56,14 @@ const stopRecorder = async () => {
   emits('inputting', false)
   console.log('停止录音')
   // recorder.stop()
-  recorder.stop().then(async (audio) => {
+  recorder.stop().then(async (audiobuffer) => {
     // console.log('录音结束')
-    const wavBlob = await recorder.getWAVBlob()
-    data.audio = wavBlob!
-    data.duration = audio.duration
-    console.log('Recording stopped.', audio.duration)
+    // const wavBlob = await recorder.getWAVBlob()
+    const wavData = AudioRecorder.audioBufferToWav(audiobuffer)
+    const wavBlob = new Blob([wavData], { type: 'audio/wav' })
+    data.audio = wavBlob
+    data.duration = audiobuffer.duration
+    // console.log('Recording stopped.', audiobuffer.duration)
     emits('output', data)
     // 可以在这里处理音频 Blob，比如上传或播放
     // const audioUrl = URL.createObjectURL(wavBlob!)

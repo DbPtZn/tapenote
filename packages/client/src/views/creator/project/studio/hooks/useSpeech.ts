@@ -18,13 +18,13 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
   let editorEl: HTMLElement
   let scrollerEl: HTMLElement
   let containerEl: HTMLElement
+
   const mode = ref('speech')
+  const pointerIndex = ref(-1)
   let animeMap: HTMLElement[] = []
   let actionSequence: Action[] = []
   let animeProvider: AnimeProvider
   let editor: Editor
-  let startTime = 0
-  const pointerIndex = ref(-1)
 
   onMounted(() => {
     studioEl = bridge.studioRef!
@@ -50,6 +50,7 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
     }
   ]
   
+  /** 开始录制 */
   function start(callback: () => void) {
     const elements = editorEl.querySelectorAll<HTMLElement>(`[data-id]:not([data-id=""])`)
     if (!elements) return
@@ -76,12 +77,11 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
         if(mode.value === 'speech') element.style.visibility = 'hidden'
       })
   
-      callback()
-      bridge.handleBlur()
-      // startTime = Date.now()
+      callback() // 开启录音的回调
+      bridge.handleBlur() // 将焦点从编辑器中移出
       startEvent.unsubscribe()
 
-      // 允许通过点击动画来添加动作
+      // 允许通过点击动画来移动指针、记录动作
       subs2.push(
         fromEvent<PointerEvent>(editorEl, 'click').subscribe(e => {
           const target = e.target as HTMLElement
@@ -95,7 +95,7 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
           const serial = el.dataset.serial
           if(!animeId || !serial) return
           const currentDuration = getCurrentDuration()
-          // console.log(currentDuration)
+
           actionSequence.push({
             animeId,
             serial,
@@ -106,6 +106,7 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
     })
 
     subs1.push(
+      /** 监听键盘 ↑↓ 键控制指针 */
       fromEvent<KeyboardEvent>(window, 'keydown').pipe(auditTime(100)).subscribe(e => {
         if(mode.value === 'interpretation') return
         if (['ArrowDown'].includes(e.code)) {
@@ -121,6 +122,7 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
     )
   }
 
+  /** 停止录制时 */
   function stop() {
     animeMap.forEach(element => {
       element.style.visibility = 'visible'
@@ -136,12 +138,14 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
     subs2.forEach(sub => sub.unsubscribe())
   })
 
+  /** 获取动作序列 */
   function getActionSequence() {
     const sequence = actionSequence
     actionSequence = []
     return sequence
   }
 
+  /** 监听并记录指针变化(记录动作) */
   watch(() => pointerIndex.value, index => {
     handleOperate()
     const el = animeMap[index]
@@ -204,18 +208,6 @@ function applyAnime(
     el.style.display = display
   })
 }
-
-
-// const div = document.createElement('div')
-// div.tabIndex = 0
-// document.body.appendChild(div)
-// /** 将焦点从编辑器上移除 */
-// function blur() {
-//   div.focus()
-// }
-// function clearDiv() {
-//   div.remove()
-// }
 
 let scrollTimer: NodeJS.Timeout
 function applyScroll(args: {

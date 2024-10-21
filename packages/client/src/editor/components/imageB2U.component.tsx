@@ -5,10 +5,10 @@ import {
   defineComponent,
   VElement,
   useRef,
-  useState, onContextMenu, useContext, Injector, onDestroy, Subscription,
+  useState, onContextMenu, useContext, Injector, Subscription,
 } from '@textbus/core'
 import { ComponentLoader, createElement, createTextNode } from '@textbus/platform-browser'
-import { AttrState, Dialog, FileUploader, Form, FormItem, FormRadio, FormTextField, I18n} from '@textbus/editor'
+import { AttrState, Dialog, FileUploader, Form, FormItem, FormSelect, FormRadio, FormTextField, I18n} from '@textbus/editor'
 import { ImgToUrlService } from '..'
 import { useDragResize } from './hooks/drag-resize'
 // import { Form, FormTextField, FormRadio, AttrState, FormItem } from '../uikit/_api'
@@ -24,6 +24,10 @@ export interface ImageComponentLiteral {
   height?: string
   margin?: string
   float?: string
+  // borderRadius?: string
+  // borderColor?: string
+  // borderWidth?: string
+  border?: string | 'none' | 'dashed' | 'dotted' | 'solid' | 'double' | 'groove' | 'inset' | 'outset' | 'ridge'
 }
 
 class MarginSetter implements FormItem<string> {
@@ -261,7 +265,33 @@ export const imageB2UComponent = defineComponent({
                   value: 'right'
                 }]
               }),
-              new MarginSetter(childI18n.get('marginLabel'))
+              new MarginSetter(childI18n.get('marginLabel')),
+              new FormSelect({
+                label: '边框',
+                name: 'border',
+                options: [
+                  {
+                    label: '无', 
+                    value: 'none',
+                    selected: !state.border || state.border === 'none',
+                  },
+                  {
+                    label: '实线', 
+                    value: 'solid',
+                    selected: state.border === 'solid',
+                  },
+                  {
+                    label: '虚线', 
+                    value: 'dashed',
+                    selected: state.border === 'dashed',
+                  },
+                  {
+                    label: '点线', 
+                    value: 'dotted',
+                    selected: state.border === 'dotted',
+                  }
+                ],
+              })
             ]
           })
           form.update({
@@ -275,12 +305,13 @@ export const imageB2UComponent = defineComponent({
             maxSize: {
               width: state.maxWidth,
               height: state.maxHeight
-            }
+            },
           })
           dialog.show(form.elementRef)
 
           const sub = new Subscription()
           sub.add(form.onComplete.subscribe(value => {
+            console.log(value)
             const config = {
               src: value.src,
               margin: value.margin,
@@ -288,7 +319,8 @@ export const imageB2UComponent = defineComponent({
               maxWidth: value.maxSize.width,
               maxHeight: value.maxSize.height,
               width: value.size.width,
-              height: value.size.height
+              height: value.size.height,
+              border: value.border,
             }
             stateController.update(draft => {
               Object.assign(draft, config)
@@ -306,19 +338,10 @@ export const imageB2UComponent = defineComponent({
 
     return {
       render(): VElement {
-        // return (
-        //   <img src={state.src} ref={ref} class="tb-img" style={{
-        //     width: state.width,
-        //     height: state.height,
-        //     maxWidth: state.maxWidth,
-        //     maxHeight: state.maxHeight,
-        //     margin: state.margin,
-        //     float: state.float
-        //   }}/>
-        // )
         return VElement.createElement('img', {
           src: state.src,
-          class: 'tb-img',
+          class: `${'tb-img'}`,
+          border: state.border,
           ref: ref,
           style: {
             width: state.width,
@@ -348,7 +371,8 @@ export const imageB2UComponentLoader: ComponentLoader = {
         margin: style.margin,
         float: style.float,
         maxWidth: style.maxWidth,
-        maxHeight: style.maxHeight
+        maxHeight: style.maxHeight,
+        border: element.getAttribute('border') || 'none'
       }
     })
   },

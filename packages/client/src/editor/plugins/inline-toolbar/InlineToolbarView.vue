@@ -22,6 +22,7 @@ const toolbarData = computed(() => {
 <template>
   <div ref="toolbarRef" class="inline-toolbar">
     <component class="tool-item" v-for="node in toolbarData" :key="node.key" :is="node" />
+    <span class="close icon" />
   </div>
 </template>
 
@@ -44,6 +45,18 @@ const toolbarData = computed(() => {
   align-items: center;
   justify-content: center;
   background-color: v-bind('themeVars.baseColor');
+  .close {
+    display: none;
+    cursor: pointer;
+    position: absolute;
+    top: -2px;
+    right: -5px;
+  }
+  &:hover {
+    .close {
+      display: block;
+    }
+  }
 }
 /** 工具组之间的间距 */
 :deep(.group-wrapper) {
@@ -54,4 +67,37 @@ const toolbarData = computed(() => {
     margin-left: 0px;
   }
 }
+
+.close.icon {
+  color: v-bind('themeVars.iconColor');
+  position: absolute;
+  margin-top: 0;
+  margin-left: 0;
+  width: 10px;
+  height: 10px;
+}
+
+.close.icon:before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  width: 10px;
+  height: 1px;
+  background-color: currentColor;
+  -webkit-transform: rotate(-45deg);
+          transform: rotate(-45deg);
+}
+
+.close.icon:after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  width: 10px;
+  height: 1px;
+  background-color: currentColor;
+  -webkit-transform: rotate(45deg);
+          transform: rotate(45deg);
+}
+
+
 </style>

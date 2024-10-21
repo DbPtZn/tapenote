@@ -69,23 +69,23 @@ export class AudioRecorder {
     }
   }
 
-  public stop(): Promise<{ blob: Blob; duration: number }> {
-    return new Promise((resolve, reject) => {
+  public stop() {
+    return new Promise<AudioBuffer>((resolve, reject) => {
       if (this.mediaRecorder) {
         this.mediaRecorder.onstop = async () => {
           try {
             const finalBlob = new Blob(this.audioChunks, { type: 'audio/webm' })
             const trimmedBuffer = await this.trimSilence(finalBlob)
-            const duration = trimmedBuffer.duration
+            // const duration = trimmedBuffer.duration
             
-            const wavData = AudioRecorder.audioBufferToWav(trimmedBuffer)
-            const wavBlob = new Blob([wavData], { type: 'audio/wav' })
-            this.audioBlob = wavBlob
+            // const wavData = AudioRecorder.audioBufferToWav(trimmedBuffer)
+            // const wavBlob = new Blob([wavData], { type: 'audio/wav' })
+            // this.audioBlob = wavBlob
           
-            console.log('totalDuration', this.totalDuration)
-            console.log('duration:', duration)
+            // console.log('totalDuration', this.totalDuration)
+            // console.log('duration:', duration)
             this.totalDuration = 0
-            resolve({ blob: this.audioBlob, duration: duration })
+            resolve(trimmedBuffer)
           } catch (error) {
             reject(new Error('音频数据样本太小，生成音频失败'))
           }
@@ -120,29 +120,30 @@ export class AudioRecorder {
 
     const trimmedBuffer = this.removeSilence(audioBuffer)
     return trimmedBuffer
-    // const wavData = AudioRecorder.audioBufferToWav(trimmedBuffer)
-    // return new Blob([wavData], { type: 'audio/wav' })
   }
 
-  public async getWAVBlob(): Promise<Blob | null> {
-    if (!this.audioBlob) return null
+  // public async getWAVBlob(): Promise<Blob | null> {
+  //   if (!this.audioBlob) return null
 
-    const arrayBuffer = await this.audioBlob.arrayBuffer()
-    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer)
+  //   const arrayBuffer = await this.audioBlob.arrayBuffer()
+  //   const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer)
 
-    const wavData = AudioRecorder.audioBufferToWav(audioBuffer)
-    return new Blob([wavData], { type: 'audio/wav' })
-  }
+  //   const wavData = AudioRecorder.audioBufferToWav(audioBuffer)
+  //   return new Blob([wavData], { type: 'audio/wav' })
+  // }
 
-  static async toWAVBlob(blob: Blob): Promise<Blob> {
+  static async toWAVBlob(blob: Blob) {
     const audioCtx = new AudioContext()
     try {
       const arrayBuffer = await blob.arrayBuffer()
       const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
 
       const wavData = this.audioBufferToWav(audioBuffer)
-      return new Blob([wavData], { type: 'audio/wav' })
+      return { blob: new Blob([wavData], { type: 'audio/wav' }), duration: audioBuffer.duration }
     } catch (error) {
+      if (audioCtx.state !== 'closed') {
+        await audioCtx.close()
+      }
       throw error // 重新抛出错误，以便调用者可以处理
     } finally {
       if (audioCtx.state !== 'closed') {

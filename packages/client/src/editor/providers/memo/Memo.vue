@@ -83,7 +83,7 @@ const { x, y } = useDraggable(memoEl, {
 const offsetX = computed(() => {
   const middleRect = middleEl.getBoundingClientRect()
   const rootRect = rootEl!.getBoundingClientRect()
-  console.log(middleRect, rootRect)
+  // console.log(middleRect, rootRect)
   return x.value - middleRect.left + rootRect.left
 })
 const offsetY = computed(() => {

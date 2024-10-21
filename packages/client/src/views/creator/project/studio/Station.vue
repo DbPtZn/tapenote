@@ -145,10 +145,10 @@ const subs = [
       if (!data.isSilence) {
         // 小于 60s 的情况 直接创建片段
         if (duration <= 60) {
-          const blob = await AudioRecorder.toWAVBlob(data.blob)
-          console.log('duration:', duration, 'actions:', actions)
+          const result = await AudioRecorder.toWAVBlob(data.blob)
+          console.log('duration:', duration, result.duration, 'actions:', actions)
           await projectStore.fragment(props.id).createByAudio({
-            audio: blob,
+            audio: result.blob,
             duration: duration,
             speakerId: props.speakerId || '',
             actions
@@ -184,12 +184,12 @@ const subs = [
           })
 
           // TODO 设置最大上传限制
-          const tasks = audioChunks.map((chunk, index) => {
-            const wavData = AudioRecorder.audioBufferToWav(chunk.buffer)
+          const tasks = audioChunks.map((audiobuffer, index) => {
+            const wavData = AudioRecorder.audioBufferToWav(audiobuffer)
             const blob = new Blob([wavData], { type: 'audio/wav' })
             return projectStore.fragment(props.id).createByAudio({
               audio: blob,
-              duration: chunk.duration,
+              duration: audiobuffer.duration,
               speakerId: props.speakerId || '',
               actions: actionChunks[index]
             })

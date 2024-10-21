@@ -52,7 +52,8 @@ import {
   preComponent,
   preComponentLoader,
   KeyboardManager,
-  MemoService
+  MemoService,
+  MemoProvider
 } from '@/editor'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {
@@ -104,6 +105,7 @@ export function getNoteConfig(args: {
       Structurer,
       ThemeProvider,
       ImgToUrlService,
+      MemoProvider,
       MemoService
     ],
     plugins: [

@@ -136,8 +136,9 @@ const stationMethods = {
     isStartedRecorder.value = true
   },
   handleEnd() {
+    console.log('handleEnd')
     isStartedRecorder.value = false
-    checkPromoter()
+    // checkPromoter()
   }
 }
 
