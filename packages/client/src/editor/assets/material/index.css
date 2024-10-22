@@ -108,3 +108,12 @@
   padding-top: 4px;
   opacity: 0.8;
 }
+.material-icons-outlined-textsms::before {
+  content: 'textsms';
+  font-size: 18px;
+  line-height: 18px;
+  display: block;
+  padding-top: 4px;
+  opacity: 0.8;
+}
+

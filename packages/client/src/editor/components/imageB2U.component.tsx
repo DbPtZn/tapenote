@@ -5,11 +5,11 @@ import {
   defineComponent,
   VElement,
   useRef,
-  useState, onContextMenu, useContext, Injector, Subscription,
+  useState, onContextMenu, useContext, Injector, Subscription, onSelected, useSelf,
 } from '@textbus/core'
 import { ComponentLoader, createElement, createTextNode } from '@textbus/platform-browser'
 import { AttrState, Dialog, FileUploader, Form, FormItem, FormSelect, FormRadio, FormTextField, I18n} from '@textbus/editor'
-import { ImgToUrlService } from '..'
+import { ImgService, ImgToUrlService } from '..'
 import { useDragResize } from './hooks/drag-resize'
 // import { Form, FormTextField, FormRadio, AttrState, FormItem } from '../uikit/_api'
 // import { FileUploader } from '../file-uploader'
@@ -24,9 +24,6 @@ export interface ImageComponentLiteral {
   height?: string
   margin?: string
   float?: string
-  // borderRadius?: string
-  // borderColor?: string
-  // borderWidth?: string
   border?: string | 'none' | 'dashed' | 'dotted' | 'solid' | 'double' | 'groove' | 'inset' | 'outset' | 'ridge'
 }
 
@@ -178,6 +175,7 @@ export const imageB2UComponent = defineComponent({
   setup(data?: ComponentInitData<ImageComponentLiteral>) {
     const injector = useContext()
     const img2Url = injector.get(ImgToUrlService) 
+    const imgService = injector.get(ImgService)
     // console.log('img component init')
     // 若图片为 base64
     if (data && data.state && ImgToUrlService.isBase64(data.state.src)) {
@@ -221,6 +219,11 @@ export const imageB2UComponent = defineComponent({
     const fileUploader = injector.get(FileUploader)
     const i18n = injector.get(I18n)
     const dialog = injector.get(Dialog)
+
+    const self = useSelf()
+    onSelected(() => {
+      imgService.updateActiveComponent(self)
+    })
 
     const childI18n = i18n.getContext('components.imageComponent.contextMenu')
     onContextMenu(event => {

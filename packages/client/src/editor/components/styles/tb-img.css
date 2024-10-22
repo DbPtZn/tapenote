@@ -4,6 +4,9 @@
   }
 }
 
+[border] {
+  box-sizing: border-box;
+}
 [border="solid"] {
   border: 2px solid var(--tb-imgBorderColor);
 }

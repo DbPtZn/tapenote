@@ -3,11 +3,11 @@ import { Commander, QueryState, FormatValue, Query, QueryStateType, Injector } f
 import { ButtonTool, ButtonToolConfig, PopoverTool, PopoverToolConfig } from '../../toolkit'
 // import { MaterialTypeEnum } from '../../../../enum'
 // import { zh_CN } from '../../../../i18n/_api'
-// import { I18n, imageComponent } from '@/editor'
+import { imageB2UComponent } from '../../../../components'
 import { h } from 'vue'
 // import { ImageForm } from './_utils/_api'
 import ImageForm from './_utils/ImageForm.vue'
-import { I18n, imageComponent } from '@textbus/editor'
+import { I18n } from '@textbus/editor'
 
 export function imageToolConfigFactory(injector: Injector): PopoverToolConfig {
   const i18n = injector.get(I18n)
@@ -65,7 +65,7 @@ export function imageToolConfigFactory(injector: Injector): PopoverToolConfig {
           return
         }
         commander.insert(
-          imageComponent.createInstance(injector, {
+          imageB2UComponent.createInstance(injector, {
             state: {
               src: res.src
             }

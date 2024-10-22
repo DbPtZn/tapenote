@@ -24,7 +24,7 @@ import {
 } from '@textbus/platform-browser'
 import { AnimeService } from '../../services/anime.service'
 import { MaterialTypeEnum } from '../toolbar/toolkit/_utils/MaterialTypeEnum'
-import { MemoService } from '../../services/memo.service'
+import { MemoService, MessageService, StudioService } from '../../services'
 import { Structurer } from '../../providers/structurer.provider'
 // import { I18n } from '../../i18n'
 // import { Message } from '../message'
@@ -47,14 +47,17 @@ export class ContextMenu implements Plugin {
     const commander = injector.get(Commander)
     const rootComponentRef = injector.get(RootComponentRef)
     const message = injector.get(Message)
+    const messageService = injector.get(MessageService)
     const parser = injector.get(Parser)
     const renderer = injector.get(Renderer)
     const memoService = injector.get(MemoService)
     const structurer = injector.get(Structurer)
     const scroller = structurer.scrollerRef
     let animeService: AnimeService | null = null
+    let studioService: StudioService | null = null
     try {
       animeService = injector.get(AnimeService)
+      studioService = injector.get(StudioService)
     } catch (error) {
       // 非动画模式
     }
@@ -105,7 +108,7 @@ export class ContextMenu implements Plugin {
           // disabled: true,
           onClick: () => {
             navigator.permissions.query({ name: 'clipboard-write' } as any).then((result) => {
-              console.log(result)
+              // console.log(result)
               if (result.state === 'granted') {
                 (navigator.clipboard as any).read().then((items: any[]) => {
                   const item = items[0]
@@ -142,6 +145,29 @@ export class ContextMenu implements Plugin {
             selection.selectAll()
           }
         }]
+
+        studioService && defaultMenus.unshift(
+          {
+            iconClasses: [`material-icons-outlined-textsms`],
+            label: i18n.get('editor.tts'),
+            disabled: selection.isCollapsed || selection.getSelectedScopes().length !== 1,
+            onClick: () => {
+              const slotRanges = selection.getSelectedScopes()
+              if (slotRanges.length > 1) return messageService.warning('暂不支持对多段文本进行语音转写')
+              const txtArr: string[] = []
+              slotRanges.forEach(slotRange => {
+                slotRange.slot.sliceContent().forEach(content => {
+                  if (typeof content === 'string') {
+                    txtArr.push(content.substring(slotRange.startIndex, slotRange.endIndex))
+                  }
+                })
+              })
+              if (txtArr.length === 0) return messageService.warning('没有可语音转写的文本')
+              // console.log(txtArr.join(''))
+              studioService?.textToSpeech(txtArr.join(''))
+            }
+          },
+        )
 
         this.menu = this.show([
             ...menus,

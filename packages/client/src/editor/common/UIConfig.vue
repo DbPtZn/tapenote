@@ -1,13 +1,15 @@
 <template>
   <n-config-provider :theme="theme" :style="{ width: '100%' }">
-    <n-message-provider>
-      <slot />
-    </n-message-provider>
+    <n-dialog-provider>
+      <n-message-provider>
+        <slot />
+      </n-message-provider>
+    </n-dialog-provider>
   </n-config-provider>
 </template>
 <script lang="ts" setup>
 import { inject, onUnmounted, ref } from 'vue'
-import { GlobalTheme, darkTheme, NConfigProvider, NMessageProvider } from 'naive-ui'
+import { GlobalTheme, darkTheme, NConfigProvider, NMessageProvider, NDialogProvider } from 'naive-ui'
 import { Injector } from '@textbus/core'
 import { ThemeProvider } from '..'
 const injector = inject<Injector>('injector')

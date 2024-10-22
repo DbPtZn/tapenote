@@ -25,7 +25,7 @@ import {
 import { ComponentLoader, VIEW_DOCUMENT, EDITOR_OPTIONS, SlotParser } from '@textbus/platform-browser'
 import { EditorOptions, paragraphComponent } from '@textbus/editor'
 import { imageB2UComponent } from '.'
-
+import { ImgService } from '../services/img.service'
 // import { paragraphComponent } from './components/paragraph.component'
 // import { EditorOptions } from './types'
 
@@ -39,6 +39,7 @@ export const rootComponent = defineComponent({
     const renderer = injector.get(Renderer)
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
     const docContainer = injector.get(VIEW_DOCUMENT)
+    const imgService = injector.get(ImgService)
 
     const self = useSelf()
 
@@ -185,7 +186,19 @@ export const rootComponent = defineComponent({
             }
             reader.readAsDataURL(file)
           }
-        })
+        }),
+        // fromEvent(rootNode.current!, 'mousemove').subscribe(ev => {
+        //   // console.log(ev)
+        //   let nativeNode = ev.target as HTMLElement
+        //   while (nativeNode) {
+        //     const componentInstance = renderer.getComponentByNativeNode(nativeNode)
+        //     if (componentInstance) {
+        //       imgService.updateActiveComponent(componentInstance === self ? null : componentInstance)
+        //       break
+        //     }
+        //     nativeNode = nativeNode.parentNode as HTMLElement
+        //   }
+        // })
       )
     })
 

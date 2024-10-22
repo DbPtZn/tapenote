@@ -27,8 +27,24 @@ export function useUploadImg(uploadImgUrl: string, account: string, hostname: st
         .catch(err => reject(err))
     })
   }
+  
+  function uploadImgFile(file: File) {
+    return new Promise<string>((resolve, reject) => {
+      const formdata = new FormData()
+      formdata.append('file', file) //图片文件
+      // formdata.append('dirname', this.dirname)
+      axiosInstance
+        .post(uploadImgUrl, formdata)
+        .then(res => {
+          resolve(ResourceDomain + res.data)
+        })
+        .catch(err => reject(err))
+    })
+  }
+  
   return {
-    uploadImgFunction
+    uploadImgFunction,
+    uploadImgFile
   }
 }
 function base64ImgtoFile(baseUrl: any) {

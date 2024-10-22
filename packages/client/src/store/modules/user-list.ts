@@ -408,8 +408,9 @@ export const useUserListStore = defineStore('userListStore', {
         folderStore.getCache(userStore.account, userStore.hostname)
       }
     },
-    getResourceDomain(account: string, hostname: string) {
-      return this.get(account, hostname)?.resourceDomain
+    getResourceDomain(hostname: string) {
+      // 一般情况下同域名登录，那么使用的资源域名也应该是一样的
+      return this.data.find(item => item.hostname === hostname)?.resourceDomain
     },
     checkCaches() {
       Object.keys(localStorage).map(key => {

@@ -46,9 +46,9 @@ export class ImgToUrlService {
   }
 
   /** 独立上传图片 (在图片工具中上传图片时使用) */
-  uploadImg(img: string) {
+  uploadImg(base64Data: string) {
     if (!this.uploadFunction) return Promise.reject(new Error('未设置上传函数'))
-    return this.uploadFunction(img)
+    return this.uploadFunction(base64Data)
   }
 
   /** 添加任务 */

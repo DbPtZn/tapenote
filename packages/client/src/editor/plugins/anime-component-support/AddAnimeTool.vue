@@ -95,7 +95,7 @@ const currentOption = reactive({
 })
 const offsetVal = computed(() => {
   // 计算动画标题的宽度, 修正按钮位置
-  return currentOption.title.length * 14 
+  return currentOption.title.length * 14
 })
 
 /** 应用当前值 */
@@ -154,15 +154,15 @@ onUnmounted(() => {
           opacity: position.show && currentComponent ? 1 : 0,
           scale: position.show && currentComponent ? 1 : 0
         }"
-        @mousemove="handleMouseMove" 
+        @mousemove="handleMouseMove"
         @mouseleave="handleMouseLeave"
       >
-        <n-popover 
-          trigger="click" 
-          placement="right" 
-          :raw="true" 
-          :to="scrollerRef || false" 
-          :show-arrow="false" 
+        <n-popover
+          trigger="click"
+          placement="right"
+          :raw="true"
+          :to="scrollerRef || false"
+          :show-arrow="false"
           :show="isPopoverShow"
           :style="{
             marginLeft: '0!important',
@@ -182,11 +182,7 @@ onUnmounted(() => {
             </div>
           </template>
           <!-- 内容 -->
-          <div 
-            class="content"
-            @mousemove="handleMouseMove" 
-            @mouseleave="handleMouseLeave"
-          >
+          <div class="content" @mousemove="handleMouseMove" @mouseleave="handleMouseLeave">
             <div
               v-for="option in animeOptions"
               :key="option.value"
@@ -212,22 +208,22 @@ onUnmounted(() => {
   border-radius: 6px;
   // background-color: #0000002f;
   .option {
-  display: inline-block;
-  margin: 3px;
-  padding: 3px;
-  border-radius: 3px 3px;
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e8e8e8ad;
-  cursor: pointer;
-  transition: transform 0.1s;
-  &:hover {
-    transform: scale(1.1);
+    display: inline-block;
+    margin: 3px;
+    padding: 3px;
+    border-radius: 3px 3px;
+    box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e8e8e8ad;
+    cursor: pointer;
+    transition: transform 0.1s;
+    &:hover {
+      transform: scale(1.1);
+    }
+    .option-label {
+      color: var(--tb-textColor1);
+      // color: #fff;
+    }
   }
-  .option-label {
-    color: var(--tb-textColor1);
-    // color: #fff;
-  }
-}
 }
 .tool {
   position: absolute;

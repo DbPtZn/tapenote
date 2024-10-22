@@ -1,5 +1,6 @@
 export * from './outline'
 export * from './inline-toolbar'
+export * from './img-toolbar/_api'
 export * from './toolbar'
 export * from './clipboard'
 export * from './contextmenu'

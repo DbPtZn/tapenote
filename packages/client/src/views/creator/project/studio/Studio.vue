@@ -12,7 +12,7 @@ import { auditTime } from '@tanbo/stream'
 import { LibraryEnum } from '@/enums'
 import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
 import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp, KeyboardOutlined } from '@vicons/material'
-import { splitText, collapseText } from './_utils'
+import { splitText, collapseText, containsEnglish } from './_utils'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
@@ -20,6 +20,7 @@ import { formatTimeToMinutesSecondsMilliseconds } from './_utils/formatTime'
 import Delegater from './Delegater.vue'
 import Station from './Station.vue'
 import Setting from './Setting.vue'
+import { StudioService } from '@/editor'
 
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
@@ -117,6 +118,14 @@ const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe(editor 
   //   // 在用户初始化项目后，应该同时进行启动子校验和动画标记校验。
   //   // 这样大致可以确保启动子和动画的一致性，且较大程度保持同步的时间紧密性。
   // })
+  const studioService = editor.get(StudioService)
+  studioService.onTextToSpeech.subscribe(txt => {
+    if (containsEnglish(txt)) {
+      message.warning('目前语音合成模型暂不支持英文！')
+      return
+    }
+    handleTextOutput(txt)
+  })
 })
 
 // 总时长

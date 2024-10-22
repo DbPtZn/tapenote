@@ -95,7 +95,8 @@ export const jumbotronComponent = defineComponent({
               }
               return false
             }
-          })
+          }),
+          
         ]
       })
       dialog.show(form.elementRef)

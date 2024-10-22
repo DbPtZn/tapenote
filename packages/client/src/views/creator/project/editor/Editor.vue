@@ -12,7 +12,7 @@ import Memo from './Memo.vue'
 import { Editor, Layout } from '@textbus/editor'
 import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
-import { MemoProvider, Player } from '@/editor'
+import { MemoProvider, MessageService, Player } from '@/editor'
 import { Subscription, debounceTime } from '@textbus/core'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
@@ -82,6 +82,7 @@ useEditor({
   editor = edi
   const memoProvider = editor.get(MemoProvider)
   memoProvider.setup(editor, data.value!.memos)
+  const messageService = editor.get(MessageService)
   lastContent = content
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
@@ -121,6 +122,12 @@ useEditor({
         handleContentSave(content, props.id, props.account, props.hostname)
         lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
         // 标题就不管 onSave 了，因为标题没有保存影响也比较小
+      })
+    )
+    subs.push(
+      messageService.onMessage.subscribe(msg => {
+        const { txt, type } = msg
+        message[type]?.(txt)
       })
     )
   }

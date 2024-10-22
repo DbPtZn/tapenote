@@ -54,7 +54,7 @@ export class Img2base64Service {
   addProcess(url: string, callback: (base64: string) => void) {
     this.addTask()
     this.promiseSequence.push(
-      this.imgUrlToBase64(url).then((base64) => {
+      Img2base64Service.imgUrlToBase64(url).then((base64) => {
         callback(base64)
         this.removeTask()
       }).catch((err) => {
@@ -68,7 +68,7 @@ export class Img2base64Service {
    * @param {String} url 图片链接
    * @returns 转base64后的值或者报错信息
    */
-  imgUrlToBase64 = (url: string) => {
+  static imgUrlToBase64 = (url: string) => {
     return new Promise<string>((resolve, reject) => {
       if (!url) {
         reject('请传入url内容')
@@ -110,6 +110,24 @@ export class Img2base64Service {
         reject('图片加载失败！')
       }
     })
+  }
+
+  static imgElementToBase64 = (img: HTMLImageElement) => {
+    const validImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    canvas.width = img.width
+    canvas.height = img.height
+    ctx && ctx.drawImage(img, 0, 0, img.width, img.height)
+    // 获取图片后缀 
+    const src = img.src
+    const parts = src.split('.')
+    let extension = parts[parts.length - 1]
+    // 验证后缀 确保图片后缀合法
+    extension = validImageExtensions.includes(extension) ? extension : 'jpg'
+    // 转base64
+    const dataUrl = canvas.toDataURL(`image/${extension}`)
+    return dataUrl
   }
 
   destory() {

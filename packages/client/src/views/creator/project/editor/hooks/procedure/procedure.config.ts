@@ -23,7 +23,9 @@ import {
   preComponentLoader,
   ContextMenu,
   MemoService,
-  MemoProvider
+  MemoProvider,
+  MessageService,
+  StudioService
 } from '@/editor'
 import { 
   animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
@@ -137,7 +139,7 @@ export function getProcedureConfig(args: {
       AnimeProvider, AddAnimeService, DialogProvider, 
       OutlineService, ColorProvider, AnimeService,
       Structurer, ThemeProvider, Player, ImgToUrlService,
-      MemoService, MemoProvider
+      MemoService, MemoProvider, MessageService, StudioService
     ],
     plugins: [
       () => new Toolbar([
@@ -155,7 +157,7 @@ export function getProcedureConfig(args: {
         [linkTool, unlinkTool],
         [imageTool],
         [tableAddTool, tableRemoveTool],
-        [formatPainterTool],
+        // [formatPainterTool],
         [cleanTool],
         // [outlineTool],
         // [animeBadgeVisibleTool, animeElementVisibleTool]
@@ -172,7 +174,7 @@ export function getProcedureConfig(args: {
           [cleanTool]
         ], scrollerRef),
       () => new OutlinePlugin(),
-      // () => new ContextMenu(),
+      () => new ContextMenu(),
       () => new LinkJumpTipPlugin(),
       () => new AnimeContextmenuPlugin(),
       () => new AnimeComponentSupport(),
