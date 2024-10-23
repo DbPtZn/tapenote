@@ -79,9 +79,9 @@ const subscriptionConfig = useSubscriptionConfig()
             </n-tabs>
           </n-tab-pane>
           <!-- 快捷键 -->
-          <n-tab-pane name="shortcut" tab="快捷键">
+          <!-- <n-tab-pane name="shortcut" tab="快捷键">
             <ShortcutConfig />
-          </n-tab-pane>
+          </n-tab-pane> -->
           <!-- 关联账号 -->
           <n-tab-pane name="association" tab="关联账号" disabled>
             <!-- 添加关联账号，实现关联账号快速登陆功能 -->

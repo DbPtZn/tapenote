@@ -8,6 +8,11 @@ $colors:(
 '#00CED1': #00FFFF,
 '#007FFF': #0000FF,
 '#8A2BE2': #8B008B,
+'#333333': #f0f0f0,
+'#1f1f1f': #ffffff,
+'#292929': #f9f9f9,
+'#3d3d5c': #e0e7ff,
+'#264653': #d1e7dd
 );
 
 @each $source, $target in $colors {

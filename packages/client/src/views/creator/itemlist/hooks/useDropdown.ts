@@ -15,6 +15,7 @@ import { CreatorShell } from '../..'
 import { CreateNewFolderFilled, DriveFileMoveRtlFilled, DriveFileRenameOutlineFilled, ShareFilled } from '@vicons/material'
 import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
+import { Icon } from '@iconify/vue'
 
 // type Target<T extends Subfolder | Subfile> = T
 
@@ -57,16 +58,22 @@ export function useItemListDropDown() {
     if (folderStore.id === 'recently' && lib) {
       folderId = userStore.dir[lib]
     }
+    
+    function renderIcon(icon: string) {
+      return h(Icon, { icon, height: 24 })
+    }
 
     return [
       // 新建
       {
         label: t('new'),
         key: 'new-project',
+        icon: () => renderIcon('material-symbols:add'),
         children: [
           {
             label: t('file'),
             key: 'new-file',
+            icon: () => renderIcon('material-symbols:note-add'),
             show: dropdownState.lib !== LibraryEnum.COURSE,
             props: {
               onClick: () => {
@@ -79,6 +86,7 @@ export function useItemListDropDown() {
           {
             label: t('folder'),
             key: 'new-folder',
+            icon: () => renderIcon('material-symbols:create-new-folder'),
             show: folderStore.id !== 'recently',
             props: {
               onClick: () => {
@@ -94,6 +102,7 @@ export function useItemListDropDown() {
       {
         label: t('move'),
         key: 'move',
+        icon: () => renderIcon('material-symbols:drive-file-move-rtl'),
         show: dropdownState.type && dropdownState.type !== 'list',
         props: {
           onClick: () => {
@@ -106,6 +115,7 @@ export function useItemListDropDown() {
       {
         label: t('copy'),
         key: 'copy',
+        icon: () => renderIcon('material-symbols:content-copy'),
         show: dropdownState.type === 'file',
         props: {
           onClick: () => {
@@ -133,6 +143,7 @@ export function useItemListDropDown() {
       {
         label: t('paste'),
         key: 'paste',
+        icon: () => renderIcon('material-symbols:content-paste'),
         disabled: !pastable,
         props: {
           onClick: () => {
@@ -146,6 +157,7 @@ export function useItemListDropDown() {
       {
         label: t('rename'),
         key: 'rename',
+        icon: () => renderIcon('material-symbols:drive-file-rename-outline'),
         show: dropdownState.type && dropdownState.type === 'folder',
         props: {
           onClick: () => {
@@ -169,6 +181,7 @@ export function useItemListDropDown() {
       {
         label: '创建工程项目',
         key: 'create-procedure',
+        icon: () => renderIcon('material-symbols:coffee-maker'),
         show: dropdownState.lib && dropdownState.lib === LibraryEnum.NOTE && dropdownState.type === 'file',
         props: {
           onClick: () => {
@@ -180,6 +193,7 @@ export function useItemListDropDown() {
       {
         label: '创建版本快照',
         key: 'create-snapshot',
+        icon: () => renderIcon('material-symbols:android-camera'),
         show: dropdownState.lib && dropdownState.lib !== LibraryEnum.COURSE  && dropdownState.type === 'file',
         props: {
           onClick: () => {
@@ -192,6 +206,7 @@ export function useItemListDropDown() {
       {
         label: '移除',
         key: 'remove',
+        icon: () => renderIcon('material-symbols:delete'),
         show: dropdownState.type && dropdownState.type !== 'list',
         props: {
           onClick: () => {

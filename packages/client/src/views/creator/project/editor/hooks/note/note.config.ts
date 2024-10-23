@@ -56,7 +56,9 @@ import {
   MemoProvider,
   ImgToolbarPlugin,
   ImgService,
-  MessageService
+  MessageService,
+  tableComponent,
+  tableComponentLoader
 } from '@/editor'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {
@@ -73,6 +75,7 @@ import { useUploadImg } from '../../../../_utils'
 import { i18n } from '../i18n'
 import { getResourceDomain } from '../../../../_hooks'
 import { resolve } from 'path'
+import { uploader } from '../uploader'
 export function getNoteConfig(args: {
   account: string
   hostname: string
@@ -96,8 +99,8 @@ export function getNoteConfig(args: {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: content || '',
-    components: [imageB2UComponent, preComponent, listComponent, ...defaultComponents.filter(i => !(i.name === 'ListComponent'))], // 组件虽然可以覆盖,但快捷键仍然会被注册, 所以得过滤掉
-    componentLoaders: [imageB2UComponentLoader, preComponentLoader, listComponentLoader, ...defaultComponentLoaders],
+    components: [imageB2UComponent, preComponent, listComponent, tableComponent, ...defaultComponents.filter(i => !(['ListComponent', 'TableComponent'].includes(i.name)))], // 组件虽然可以覆盖,但快捷键仍然会被注册, 所以得过滤掉
+    componentLoaders: [imageB2UComponentLoader, preComponentLoader, listComponentLoader, tableComponentLoader, ...defaultComponentLoaders],
     formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     i18n: i18n,
@@ -159,29 +162,7 @@ export function getNoteConfig(args: {
       // () => new ContextMenu()
     ],
     uploader(config) {
-      return new Promise((resolve, reject) => {
-        if (config.uploadType === 'image') {
-          var fileInput = document.createElement('input')
-          fileInput.setAttribute('type', 'file')
-          fileInput.setAttribute('accept', 'image/png, image/gif, image/jpeg, image/bmp, image/x-icon')
-          fileInput.multiple = config.multiple
-          fileInput.style.cssText = 'position: absolute; left: -9999px; top:-9999px; opacity: 0'
-
-          fileInput.addEventListener('change', function (event) {
-            const target = event.target as HTMLInputElement
-            const files = target.files
-            if(files && files.length > 0) {
-              const { uploadImgFile } = useUploadImg('/upload/img', account, hostname)
-              uploadImgFile(files[0]).then(url => {
-                resolve(url)
-              }).catch(err => reject(err))
-              document.body.removeChild(fileInput)
-            }
-          })
-          document.body.appendChild(fileInput)
-          fileInput.click()
-        }
-      })
+      return uploader(config, account, hostname)
     },
     setup(injector: Injector) {
       const input = injector.get(Input)

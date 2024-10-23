@@ -4,7 +4,9 @@ import { PopoverTool, PopoverToolConfig } from "../.."
 import { h } from "vue"
 // import { I18n, createCell, tableComponent } from "@/editor"
 import TableForm from './_utils/TableForm.vue'
-import { I18n, createCell, tableComponent } from "@textbus/editor"
+import { I18n } from "@textbus/editor"
+import { createCell } from "../../../../components/hooks/table-multiple-range"
+import { tableComponent } from "../../../../components/table.component"
 
 export function tableAddToolConfigFactory(injector: Injector): PopoverToolConfig {
   const i18n = injector.get(I18n)

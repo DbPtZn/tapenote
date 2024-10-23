@@ -4,5 +4,9 @@ export const i18n = {
     tts: '文本转语音'
   },
   plugins: {},
-  components: {}
+  components: {
+    tableComponent: {
+      fillColor: '填充背景颜色'
+    }
+  }
 }

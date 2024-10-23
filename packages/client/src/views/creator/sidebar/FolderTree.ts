@@ -12,6 +12,7 @@ import { useShell } from '@/renderer'
 import { CreatorShell } from '../shell'
 import { CreateNewFolderFilled, DriveFileRenameOutlineFilled, MoreHorizFilled } from '@vicons/material'
 import router from '@/router'
+import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 interface CustomTreeDropInfo extends TreeDropInfo {
   node: TreeNode
@@ -226,6 +227,7 @@ export class FolderTree {
       {
         label: '新建文档',
         key: 'create-new-file',
+        icon: () => h(Icon, { icon: 'material-symbols:note-add', height: 24 }),
         show: lib !== LibraryEnum.COURSE,
         props: {
           onClick: () => {
@@ -239,6 +241,7 @@ export class FolderTree {
       {
         label: '新建文件夹',
         key: 'create-new-folder',
+        icon: () => h(Icon, { icon: 'material-symbols:create-new-folder', height: 24 }),
         props: {
           onClick: () => {
             dialog.create({
@@ -265,6 +268,7 @@ export class FolderTree {
       {
         label: '移动',
         key: 'move',
+        icon: () => h(Icon, { icon: 'material-symbols:drive-file-move-rtl', height: 24 }),
         show: false,
         props: {
           onClick: () => {
@@ -275,6 +279,7 @@ export class FolderTree {
       {
         label: '重命名',
         key: 'rename',
+        icon: () => h(Icon, { icon: 'material-symbols:drive-file-rename-outline', height: 24 }),
         props: {
           onClick: () => {
             const folderNameVal = ref(node.label)
@@ -316,6 +321,7 @@ export class FolderTree {
       {
         label: '移除',
         key: 'remove',
+        icon: () => h(Icon, { icon: 'material-symbols:delete', height: 24 }),
         props: {
           onClick: () => {
             this.removeNode(node, lib)

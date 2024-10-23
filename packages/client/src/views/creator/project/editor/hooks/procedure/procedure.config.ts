@@ -25,7 +25,8 @@ import {
   MemoService,
   MemoProvider,
   MessageService,
-  StudioService
+  StudioService,
+  ImgService
 } from '@/editor'
 import { 
   animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
@@ -69,6 +70,7 @@ import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
 import '@/editor/anime.css'
 import { i18n } from '../i18n'
+import { uploader } from '../uploader'
 
 export function getProcedureConfig(args: {
   account: string,
@@ -139,7 +141,8 @@ export function getProcedureConfig(args: {
       AnimeProvider, AddAnimeService, DialogProvider, 
       OutlineService, ColorProvider, AnimeService,
       Structurer, ThemeProvider, Player, ImgToUrlService,
-      MemoService, MemoProvider, MessageService, StudioService
+      MemoService, MemoProvider, MessageService, StudioService,
+      ImgService
     ],
     plugins: [
       () => new Toolbar([
@@ -183,6 +186,9 @@ export function getProcedureConfig(args: {
         preview_stopTool
       ],controllerRef!)
     ],
+    uploader(config) {
+      return uploader(config, account, hostname)
+    },
     setup(injector: Injector) {
       const input = injector.get(Input)
       input.caret.correctScrollTop({

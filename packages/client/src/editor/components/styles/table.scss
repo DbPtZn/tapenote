@@ -1,0 +1,89 @@
+.textbus-table-tool-button {
+  // height: 100%;
+  // width: 100%;
+  display: inline-flex;
+  // flex: 1;
+  font-size: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0px;
+  height: 28px;
+  // align-items: center;
+  border-radius: inherit;
+  line-height: 1;
+  margin-right: 2px;
+  // flex-direction: row;
+  &:hover {
+    background-color: rgba(0, 0, 0, .05);
+  }
+}
+
+.textbus-table-toolbar-left-button {
+  height: 100%;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom-left-radius: 3px;
+  border-top-left-radius: 3px;
+  padding-left: 4px;
+  padding-right: 3px;
+  outline: none;
+  border: none;
+  &:hover {
+    background-color: rgba(0, 0, 0, .05);
+  }
+}
+.textbus-table-toolbar-right-button {
+  height: 100%;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom-right-radius: 3px;
+  border-top-right-radius: 3px;
+  padding-left: 3px;
+  padding-right: 4px;
+  outline: none;
+  border: none;
+  &:hover {
+    background-color: rgba(0, 0, 0, .05);
+  }
+  
+  .textbus-dropdown-caret {
+    font-size: 14px;
+  }
+}
+
+.textbus-table-color-popover {
+  visibility: hidden;
+  display: flex;
+  z-index: 1;
+  position: absolute;
+  top: 28px;
+  flex-direction: row;
+  align-items: center;
+  border-radius:3px;
+  padding: 6px 6px;
+  height: 28px;
+  background-color: aliceblue;
+  .textbus-table-color-option {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    background-color: aqua;
+    margin-left: 3px;
+    outline: none;
+    border: none;
+    &:first-child {
+      margin-left: 0;
+    }
+    &:hover {
+      filter: brightness(0.9);
+    }
+  }
+}
