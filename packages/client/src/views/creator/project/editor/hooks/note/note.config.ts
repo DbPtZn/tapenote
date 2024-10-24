@@ -58,7 +58,11 @@ import {
   ImgService,
   MessageService,
   tableComponent,
-  tableComponentLoader
+  tableComponentLoader,
+  dividerComponent,
+  dividerComponentLoader,
+  i18n,
+  dividerTool
 } from '@/editor'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {
@@ -67,12 +71,10 @@ import {
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
-  I18n,
   LinkJumpTipPlugin
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
-import { i18n } from '../i18n'
 import { getResourceDomain } from '../../../../_hooks'
 import { resolve } from 'path'
 import { uploader } from '../uploader'
@@ -99,8 +101,8 @@ export function getNoteConfig(args: {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: content || '',
-    components: [imageB2UComponent, preComponent, listComponent, tableComponent, ...defaultComponents.filter(i => !(['ListComponent', 'TableComponent'].includes(i.name)))], // 组件虽然可以覆盖,但快捷键仍然会被注册, 所以得过滤掉
-    componentLoaders: [imageB2UComponentLoader, preComponentLoader, listComponentLoader, tableComponentLoader, ...defaultComponentLoaders],
+    components: [imageB2UComponent, preComponent, listComponent, tableComponent, dividerComponent, ...defaultComponents.filter(i => !(['ListComponent', 'TableComponent'].includes(i.name)))], // 组件虽然可以覆盖,但快捷键仍然会被注册, 所以得过滤掉
+    componentLoaders: [imageB2UComponentLoader, preComponentLoader, listComponentLoader, tableComponentLoader, dividerComponentLoader, ...defaultComponentLoaders],
     formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     i18n: i18n,
@@ -137,6 +139,7 @@ export function getNoteConfig(args: {
             [textAlignTool],
             [tableAddTool, tableRemoveTool],
             // [formatPainterTool],
+            [dividerTool],
             [cleanTool]
             // [outlineTool]
           ],

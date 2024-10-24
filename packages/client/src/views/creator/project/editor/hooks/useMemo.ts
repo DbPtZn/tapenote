@@ -10,24 +10,24 @@ type Memo = ReturnType<typeof useStore>['projectStore']['data'][0]['memos'][0]
 export function useMemo(projectId: string, account: string, hostname: string, container: Ref<HTMLElement>, bridge: Bridge) {
   const { projectStore } = useStore()
   const message = useMessage()
-  const showDropdownRef = ref(false)
-  const xRef = ref(0)
-  const yRef = ref(0)
-  const options: DropdownOption[] = [
-    {
-      key: 'newMemo',
-      label: '新建便笺',
-      icon: () => h(Icon, { icon: 'ic:baseline-note-add', height: 24 }),
-      props: {
-        onClick: () => {
-          if(!container.value) return
-          const x = xRef.value - container.value.offsetLeft
-          const y = yRef.value - container.value.offsetTop + container.value.scrollTop
-          add(x, y)
-        }
-      }
-    }
-  ]
+  // const showDropdownRef = ref(false)
+  // const xRef = ref(0)
+  // const yRef = ref(0)
+  // const options: DropdownOption[] = [
+  //   {
+  //     key: 'newMemo',
+  //     label: '新建便笺',
+  //     icon: () => h(Icon, { icon: 'ic:baseline-note-add', height: 24 }),
+  //     props: {
+  //       onClick: () => {
+  //         if(!container.value) return
+  //         const x = xRef.value - container.value.offsetLeft
+  //         const y = yRef.value - container.value.offsetTop + container.value.scrollTop
+  //         add(x, y)
+  //       }
+  //     }
+  //   }
+  // ]
   
   bridge.onEditorReady.subscribe(editor => {
     const memoService = editor.get(MemoService)
@@ -38,26 +38,26 @@ export function useMemo(projectId: string, account: string, hostname: string, co
     })
   })
   
-  const handleContextmenu = (e: MouseEvent) => {
-    e.preventDefault()
-    const target = e.target as HTMLElement
-    if(target.closest('.textbus-ui-workbench')) return
-    showDropdownRef.value = false
-    nextTick().then(() => {
-      showDropdownRef.value = true
-      xRef.value = e.clientX
-      yRef.value = e.clientY
-      // console.log(xRef.value, yRef.value)
-    })
-  }
+  // const handleContextmenu = (e: MouseEvent) => {
+  //   e.preventDefault()
+  //   const target = e.target as HTMLElement
+  //   if(target.closest('.textbus-ui-workbench')) return
+  //   showDropdownRef.value = false
+  //   nextTick().then(() => {
+  //     showDropdownRef.value = true
+  //     xRef.value = e.clientX
+  //     yRef.value = e.clientY
+  //     // console.log(xRef.value, yRef.value)
+  //   })
+  // }
 
-  const onClickoutside = () => {
-    showDropdownRef.value = false
-  }
+  // const onClickoutside = () => {
+  //   showDropdownRef.value = false
+  // }
 
-  const handleSelect = () => {
-    showDropdownRef.value = false
-  }
+  // const handleSelect = () => {
+  //   showDropdownRef.value = false
+  // }
 
   const add = async (x: number, y: number) => {
     try {

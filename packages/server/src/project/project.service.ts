@@ -587,10 +587,11 @@ export class ProjectService {
   }
 
   async updateContent(updateprojectContentDto: UpdateContentDto, userId: string) {
-    const { id, content } = updateprojectContentDto
+    const { id, content, cover } = updateprojectContentDto
     try {
       const project = await this.findOneById(id, userId)
       project.content = content
+      cover && (project.cover = cover)
       const txt = content.replace(/<[^>]+>/g, '')
       project.abbrev = txt ? txt.slice(0, 100) : ''
       project.detail.wordage = txt.length
@@ -605,6 +606,19 @@ export class ProjectService {
     } catch (error) {
       this.userlogger.error(`更新笔记内容失败,项目id:${id}`)
       throw new Error(`内容更新失败,项目于id:${id}`)
+    }
+  }
+
+  async updateScreenshot(img: string, projectId: string, userId: string) {
+    try {
+      const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
+      project.screenShot = img
+      const newProject = await this.projectsRepository.save(project)
+      return {
+        updateAt: newProject.updateAt
+      }
+    } catch (error) {
+      throw error
     }
   }
 

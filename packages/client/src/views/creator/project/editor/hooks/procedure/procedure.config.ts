@@ -26,7 +26,8 @@ import {
   MemoProvider,
   MessageService,
   StudioService,
-  ImgService
+  ImgService,
+  i18n
 } from '@/editor'
 import { 
   animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
@@ -69,7 +70,6 @@ import {
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
 import '@/editor/anime.css'
-import { i18n } from '../i18n'
 import { uploader } from '../uploader'
 
 export function getProcedureConfig(args: {

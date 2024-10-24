@@ -11,6 +11,7 @@ export class Bridge {
   habit: Habit | null = null
   editor: Editor | null = null
   scrollerEl = ref<HTMLElement>()
+  titleEl: HTMLElement | null = null
   editorRef: HTMLElement | null = null
   studioRef: HTMLElement | null = null
   scrollerRef: HTMLElement | null = null

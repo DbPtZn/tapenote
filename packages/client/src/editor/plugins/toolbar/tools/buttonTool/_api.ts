@@ -18,7 +18,4 @@ export * from './left-to-right.tool'
 export * from './right-to-left.tool'
 export * from './blockquote.tool'
 export * from './code.tool'
-// const files = import.meta.glob('./**.ts')
-// for (const item in files) {
-//   export * from item
-// }
+export * from './divider.tool'

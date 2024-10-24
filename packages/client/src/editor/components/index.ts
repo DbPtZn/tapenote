@@ -7,6 +7,7 @@ export * from './root.component'
 export * from './pre.component'
 export * from './list.component'
 export * from './table.component'
+export * from './divider.component'
 
 // player
 export * from './root-player.component'

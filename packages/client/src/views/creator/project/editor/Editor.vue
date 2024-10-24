@@ -1,19 +1,18 @@
 <script lang="ts" setup>
 import '@textbus/editor/bundles/textbus.min.css'
-import { useThemeVars, useMessage } from 'naive-ui'
+import { useThemeVars, useMessage, useDialog } from 'naive-ui'
 import { TitleInput } from './private'
 import { useToolbarResize } from '../../_hooks'
-import { computed, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { useEditor, useMemo } from './hooks/_index'
+import { computed, h, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { useEditor, useMemo, useScreenshot } from './hooks/_index'
 import _ from 'lodash'
 import useStore from '@/store'
-import Memo from './Memo.vue'
-// import { debounceTime, Subscription } from '@tanbo/stream'
 import { Editor, Layout } from '@textbus/editor'
 import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
 import { MemoProvider, MessageService, Player } from '@/editor'
 import { Subscription, debounceTime } from '@textbus/core'
+import { VIEW_CONTAINER } from '@textbus/platform-browser'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string,
@@ -25,7 +24,9 @@ const props = defineProps<{
 const { projectStore, folderStore, userStore } = useStore()
 const themeVars = useThemeVars()
 // const loadingBar = useLoadingBar()
+const screenshot = useScreenshot()
 const message = useMessage()
+const dialog = useDialog()
 const rootRef = ref()
 const toolbarRef = ref()
 const controllerRef = ref()
@@ -95,7 +96,14 @@ useEditor({
         data.value!.isContentUpdating = true
         if(props.readonly()) return
         const content = editor.getHTML()
-        console.log(content)
+        // const layout = editor.get(Layout)
+        // screenshot(layout.middle).then(img => {
+        //   dialog.create({
+        //     title: '保存项目',
+        //     content: () => h('img', { src: img, style: { width: '100%', objectFit: 'contain' } }),
+        //   })
+        // })
+        // console.log(content)
         if(lastContent === content) {
           data.value!.isContentUpdating = false
           return
@@ -204,7 +212,10 @@ const methods = {
   },
   handleContentSave(value: string, id: string, account: string, hostname: string) {
     // console.log('保存内容')
-    return projectStore.updateContent({ content: value, id: id }, handleSavingStart, account, hostname).then(res => {
+    const viewContainer = editor.get(VIEW_CONTAINER)
+    const img = viewContainer.querySelector('img')
+    const firstImg = img?.src // 记录第一张图片
+    return projectStore.updateContent({ content: value, cover: firstImg, id: id }, handleSavingStart, account, hostname).then(res => {
       data.value!.isContentUpdating = false
       if (res) {
         handleSavingEnd()

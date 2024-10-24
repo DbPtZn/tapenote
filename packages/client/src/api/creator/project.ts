@@ -14,6 +14,7 @@ interface CreateProjectDto {
 
 interface UpdateContentDto {
   id: string
+  cover?: string
   content: string
 }
 

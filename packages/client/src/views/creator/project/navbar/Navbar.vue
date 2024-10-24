@@ -3,6 +3,7 @@ import { LibraryEnum } from '@/enums'
 import useStore from '@/store'
 import { useThemeVars, useDialog, useMessage, NIcon, useNotification, NButton } from 'naive-ui'
 import { computed, h, inject, onUnmounted, reactive, ref } from 'vue'
+import { Icon } from '@iconify/vue'
 import { Bridge } from '../bridge'
 import { Subscription } from '@tanbo/stream'
 import { FolderTreeSelect, UnallowUserTip } from '../../_common'
@@ -19,6 +20,7 @@ import SnapshotCard from './private/SnapshotCard.vue'
 import HistoryCourseCard from './private/HistoryCourseCard.vue'
 import CollapseButton from './private/CollapseButton.vue'
 import { watch } from 'vue'
+import { useScreenshot } from './hooks/useScreenshot'
 type Snapshot = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['snapshots']>[0]
 type HistoryCourse = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['historyCourses']>[0]
 const bridge = inject('bridge') as Bridge
@@ -164,6 +166,7 @@ const { handleCreate, handleDirSelected, handleAutoAnime, handleJumpToFolder } =
 
 const { handleExpandShareDialog  } = useSubmissionDialog() // 投稿对话框
 const { handleDownloadDialog } = useDownloadDialog()  // 下载对话框
+const handleScreenshot = useScreenshot(bridge)
 
 function handleTabsUpdate(value: string) {
   if(value === 'snapshot') {
@@ -275,6 +278,10 @@ onUnmounted(() => {
       <n-button v-if="lib !== LibraryEnum.PROCEDURE" class="top-nav-btn" size="small" :disabled="state.isReadonly" @click="handleExpandShareDialog(props.id)">
         投稿
       </n-button>
+      <!-- 快照截图 -->
+      <n-button v-if="lib !== LibraryEnum.PROCEDURE" class="top-nav-btn" size="small" text :disabled="state.isReadonly" @click="handleScreenshot">
+        <Icon icon="icon-park-outline:screenshot-one" height="22px"/>
+      </n-button>
       <!-- 下载 -->
       <n-button v-if="lib !== LibraryEnum.PROCEDURE" class="top-nav-btn" size="small" text :disabled="state.isReadonly" @click="handleDownloadDialog(props.id)">
         <n-icon :component="DownloadRound" :size="22" />
@@ -347,7 +354,7 @@ onUnmounted(() => {
           <n-divider />
         </n-tab-pane>
         <!-- 创建工程/课程 -->
-        <n-tab-pane v-if="lib !== LibraryEnum.COURSE" class="create-pane" name="create" :tab="lib === LibraryEnum.PROCEDURE ? '创建课程' : '创建工程'">
+        <n-tab-pane v-if="lib !== LibraryEnum.COURSE" class="create-pane" name="create" :tab="lib === LibraryEnum.PROCEDURE ? '动画' : '制作'">
           <n-space vertical>
             <div class="create-pane-header">请选择项目要保存的文件夹</div>
             <FolderTreeSelect :lib="lib === LibraryEnum.PROCEDURE ? LibraryEnum.COURSE : LibraryEnum.PROCEDURE" @on-update-value="handleDirSelected" />
@@ -355,7 +362,7 @@ onUnmounted(() => {
           </n-space>
           <div v-if="lib === LibraryEnum.PROCEDURE">
             <n-divider />
-            <p>检测到此项目创建过相关课程：</p>
+            <p>检测到此项目创建过相关动画：</p>
             <div>
               <HistoryCourseCard
                 v-for="item in data?.historyCourses || []"

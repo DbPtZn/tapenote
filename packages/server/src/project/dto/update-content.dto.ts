@@ -1,4 +1,4 @@
-import { IsMongoId, IsString } from 'class-validator'
+import { IsMongoId, IsOptional, IsString } from 'class-validator'
 
 export class UpdateContentDto {
   @IsString()
@@ -6,4 +6,8 @@ export class UpdateContentDto {
 
   @IsString()
   content: string
+
+  @IsOptional()
+  @IsString()
+  cover: string
 }

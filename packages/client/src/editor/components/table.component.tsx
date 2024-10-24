@@ -112,6 +112,7 @@ export const tableComponent = defineComponent({
     const selection = injector.get(Selection)
     const commander = injector.get(Commander)
     const popoverEl = useRef<HTMLElement>()
+    const caretEl = useRef<HTMLElement>()
     let currentColor = '#333333'
 
     let tableInfo: TableConfig = {
@@ -214,10 +215,17 @@ export const tableComponent = defineComponent({
     // ['#f0f0f0', '#ffffff', '#f9f9f9', '#e0e7ff', '#d1e7dd']
     
     function handlePopover() {
+      if (popoverEl.current!.style.visibility === 'visible') {
+        popoverEl.current!.style.visibility = 'hidden'
+        caretEl.current!.style.rotate = '0deg'
+        return
+      }
       popoverEl.current!.style.visibility = 'visible'
+      caretEl.current!.style.rotate = '180deg'
       const sub = fromEvent(document, 'mousedown').subscribe(event => {
-        if (!popoverEl.current!.contains(event.target as Node)) {
+        if (!popoverEl.current!.contains(event.target as Node) && !caretEl.current!.parentElement!.contains(event.target as Node)) {
           popoverEl.current!.style.visibility = 'hidden'
+          caretEl.current!.style.rotate = '0deg'
           sub.unsubscribe()
         }
       })
@@ -637,7 +645,7 @@ export const tableComponent = defineComponent({
                         <span class="material-icons-outlined-format_color_fill" style={{ color: currentColor }}/>
                       </button>
                       <button class="textbus-table-toolbar-right-button" onClick={handlePopover}>
-                        <span class="textbus-dropdown-caret"/>
+                        <span ref={caretEl} class="textbus-dropdown-caret"/>
                       </button>
                       <div ref={popoverEl} class="textbus-table-color-popover">
                         {

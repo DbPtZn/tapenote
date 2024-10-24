@@ -1,6 +1,6 @@
 <template>
   <div :class="['title', isSticky && 'title-Sticky']">
-    <div class="title-wrapper">
+    <div class="title-wrapper" ref="titleEl">
       <div
         ref="textarea"
         class="title-input"
@@ -21,11 +21,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, Ref, ref } from 'vue'
+import { computed, inject, onMounted, Ref, ref, useTemplateRef } from 'vue'
 import { watchOnce } from '@vueuse/core'
 import { useMessage, useThemeVars } from 'naive-ui'
 import { LockRound, LockOpenRound } from '@vicons/material'
 import { watch } from 'vue'
+import { Bridge } from '../../bridge'
+
+const bridge = inject('bridge') as Bridge
 const themeVars = useThemeVars()
 const message = useMessage()
 const emits = defineEmits<{
@@ -60,7 +63,12 @@ const maxWidthVal = computed<string>(() => {
   return props.maxWidth
 })
 const textarea = ref()
+const titleEl = useTemplateRef<HTMLElement>('titleEl')
 const titleInput = ref<string>(props.value)
+
+onMounted(() => {
+  bridge.titleEl = titleEl.value
+})
 
 // 应用历史快照时监听变化
 watch(

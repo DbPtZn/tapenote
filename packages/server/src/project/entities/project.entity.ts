@@ -113,6 +113,13 @@ export class Project {
     length: 255,
     default: ''
   })
+  screenShot: string // 截图
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    default: ''
+  })
   title: string // 标题
 
   @Column({

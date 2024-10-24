@@ -1,0 +1,35 @@
+.separator {
+  display: flex;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.tb-divider {
+  height: 1px;
+  width: 100%;
+  background-color: var(--tb-dividerColor);
+}
+
+.tb-divider-title {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  // margin: 0 12px;
+}
+.tb-divider-title-fill {
+  margin: 0 12px;
+}
+
+.separator-left {
+  .tb-divider-left {
+    width: 28px;
+  }
+}
+
+.separator-right {
+  .tb-divider-right {
+    width: 28px;
+  }
+}
+
+
