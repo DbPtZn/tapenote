@@ -8,16 +8,16 @@ import { InlineToolbarPlugin,
   formatPainterTool, tableAddTool, cleanTool,
   colorFormatLoader, colorFormatter, textBackgroundColorFormatter, 
   textBackgroundColorFormatLoader, animeFormatter, animeFormatLoader, 
-  animeRootComponentLoader, animeRootComponent, AddAnimeService, AnimeComponentSupport, 
+  AddAnimeService, AnimeComponentSupport, 
   defaultGroupTool, DialogProvider, componentsTool, 
-  animeComponent, animeComponentLoader, AnimeContextmenuPlugin, 
+  AnimeContextmenuPlugin, 
   OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
-  preview_startTool, preview_stopTool, imageB2UComponent, imageB2UComponentLoader, paragraphComponent, paragraphComponentLoader, 
-  animeIgnoreComponent, animeIgnoreComponentLoader, CustomCommander, ColorProvider,
+  preview_startTool, preview_stopTool, imageB2UComponent, imageB2UComponentLoader,
+  CustomCommander, ColorProvider,
   Structurer, ThemeProvider, Player, ImgToUrlService
 } from '@/editor'
 import { 
-  animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
+  animeTool, animeBadgeVisibleTool, rootComponentLoader, rootComponent, animeComponent, animeComponentLoader, animeIgnoreComponent, animeIgnoreComponentLoader, paragraphComponent, paragraphComponentLoader,  animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
   listComponent, listComponentLoader, headingComponent, headingComponentLoader
 } from '@/editor/anime'
 import { Commander, fromEvent, Injector } from '@textbus/core'
@@ -51,8 +51,8 @@ export function getProcedureConfig(args: {
     historyStackSize: 30,
     placeholder: '在此输入正文',
     content: content || '',
-    rootComponent: animeRootComponent,
-    rootComponentLoader: animeRootComponentLoader,
+    rootComponent: rootComponent,
+    rootComponentLoader: rootComponentLoader,
     components: [animeComponent, paragraphComponent, imageB2UComponent, animeIgnoreComponent, ...defaultComponents],
     componentLoaders: [animeComponentLoader, paragraphComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, ...defaultComponentLoaders],
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter,...defaultFormatters],

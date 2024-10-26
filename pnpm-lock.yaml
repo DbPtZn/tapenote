@@ -180,14 +180,14 @@ importers:
         specifier: ^1.2.5
         version: 1.2.5
       '@textbus/core':
-        specifier: 3.7.8
-        version: 3.7.8
+        specifier: 3.8.0
+        version: 3.8.0
       '@textbus/editor':
-        specifier: 3.7.10
-        version: 3.7.10
+        specifier: 3.8.0
+        version: 3.8.0
       '@textbus/platform-browser':
-        specifier: 3.7.10
-        version: 3.7.10
+        specifier: 3.8.0
+        version: 3.8.0
       '@vueuse/core':
         specifier: ^11.1.0
         version: 11.1.0(vue@3.5.10(typescript@5.6.2))
@@ -3347,17 +3347,20 @@ packages:
   '@textbus/core@3.7.8':
     resolution: {integrity: sha512-sw4m98zBCjNvXvpQPuO9D6YyqYd0ZDC4E0grrEg9D7hZiN+51qdLTYSKWxa8c8rkjBAlHYKp6k5PXWIE40DiMA==}
 
+  '@textbus/core@3.8.0':
+    resolution: {integrity: sha512-AXv51bpKVT4FsyTKWsvEextEUn2TMAiWtoRNyfCzC4UxvLVRZpq8P3w7Vfb5fLMEea/NCwFviNXqFncDxtttmQ==}
+
   '@textbus/core@4.0.0-alpha.66':
     resolution: {integrity: sha512-z8ecD1DuLu30tkDCT1DFXukXDrxsO7lfLE1JaqXpeZZ4XlQL00scFEyQG9WjHgvNSEdTrpfVkEoxTFbRHd8Q9Q==}
 
   '@textbus/core@4.0.0-alpha.71':
     resolution: {integrity: sha512-LzF752Nis06Qqn8qTB0sXxQsYENPfIZkSA2JFKBTGi1j7cwueJ53RUpR3mR8/fiEqVlLNUxmD017C70jUsHPWw==}
 
-  '@textbus/editor@3.7.10':
-    resolution: {integrity: sha512-NxqtfoICKBCgfiMD9wKNgN+WIKMKyvTA629PckBVjkpXHhIG5V+T0D14vz12jDdc/Rggh7xpEuOsevsffzL7fA==}
-
   '@textbus/editor@3.7.8':
     resolution: {integrity: sha512-QwLfqfzR0IaKEfVLxzNvYoIHGzEzYlte33BHTH2BRZmZCaEfPFIuotawwK4cTO7vE33h3UKYS3t91h6LPtP88Q==}
+
+  '@textbus/editor@3.8.0':
+    resolution: {integrity: sha512-lqZ6Xg2OcczUHl+DQDcFPLpYqraf5W6eMZRngYgdPlJPfVHMe2JxVsJLettiWUe9/EFix9p5uOPJ92gDI9yIBw==}
 
   '@textbus/platform-browser@3.7.10':
     resolution: {integrity: sha512-izyvyfp4qZdCN7Ah82yLZJrKrWjnqhLIM/siSKl/N3Cmy2p2bLwkyIRNQ3OBMsNPGoKcrEUnuFfCxS0Fb+y08A==}
@@ -3365,8 +3368,8 @@ packages:
   '@textbus/platform-browser@3.7.8':
     resolution: {integrity: sha512-Up1zBnVWGU7/kT/jI74vDC8iRIFmDDN7pXNicIjxkH9SvcBlywtF049plIp0LE0nxl/lylUrN1TwadkOjQxxNw==}
 
-  '@textbus/platform-browser@3.7.9':
-    resolution: {integrity: sha512-fBwjfSw1rzSjksEwvmOktzmNLQpgQv1wdH/bEMqMGB6vkYJyuGiZ7sd5I7lOCbmKIW9x7Qtis/DP/5ACWISDnQ==}
+  '@textbus/platform-browser@3.8.0':
+    resolution: {integrity: sha512-b4MxBfKyzqqPBcq9MWLjqamTp2skgT2SmW5LtSCSiTs5Y3DnfBHY0X+pSlv42TXz9jyVcCKucKWid8fa97veUQ==}
 
   '@textbus/platform-browser@4.0.0-alpha.66':
     resolution: {integrity: sha512-lefSBAvmybX2AyRgkj5dVMCwbGZYsAeUHYiadACaYg5GrBryPPDSEelrEHnIwxwMOBytKcQMgqbCaABX7tp0Qw==}
@@ -14884,7 +14887,7 @@ snapshots:
   '@textbus/adapter-viewfly@4.0.0-alpha.67':
     dependencies:
       '@tanbo/stream': 1.2.5
-      '@textbus/core': 4.0.0-alpha.66
+      '@textbus/core': 4.0.0-alpha.71
       '@textbus/platform-browser': 4.0.0-alpha.71
       '@textbus/platform-node': 4.0.0-alpha.67
       '@viewfly/core': 1.0.0-alpha.17
@@ -14908,7 +14911,7 @@ snapshots:
   '@textbus/collaborate@4.0.0-alpha.66':
     dependencies:
       '@tanbo/stream': 1.2.5
-      '@textbus/core': 4.0.0-alpha.66
+      '@textbus/core': 4.0.0-alpha.71
       '@viewfly/core': 1.0.0-alpha.17
       y-websocket: 1.5.4(yjs@13.6.19)
       yjs: 13.6.19
@@ -14933,6 +14936,12 @@ snapshots:
       '@tanbo/stream': 1.2.5
       immer: 9.0.21
 
+  '@textbus/core@3.8.0':
+    dependencies:
+      '@tanbo/di': 1.1.8
+      '@tanbo/stream': 1.2.5
+      immer: 9.0.21
+
   '@textbus/core@4.0.0-alpha.66':
     dependencies:
       '@tanbo/stream': 1.2.5
@@ -14943,7 +14952,7 @@ snapshots:
       '@tanbo/stream': 1.2.5
       '@viewfly/core': 1.0.0-alpha.17
 
-  '@textbus/editor@3.7.10':
+  '@textbus/editor@3.7.8':
     dependencies:
       '@tanbo/bezier': 1.0.1
       '@tanbo/color': 0.1.1
@@ -14957,7 +14966,7 @@ snapshots:
       katex: 0.16.11
       prismjs: 1.29.0
 
-  '@textbus/editor@3.7.8':
+  '@textbus/editor@3.8.0':
     dependencies:
       '@tanbo/bezier': 1.0.1
       '@tanbo/color': 0.1.1
@@ -14965,8 +14974,8 @@ snapshots:
       '@tanbo/css-themes': 0.0.1
       '@tanbo/di': 1.1.8
       '@tanbo/stream': 1.2.5
-      '@textbus/core': 3.7.8
-      '@textbus/platform-browser': 3.7.9
+      '@textbus/core': 3.8.0
+      '@textbus/platform-browser': 3.8.0
       classnames: 2.5.1
       katex: 0.16.11
       prismjs: 1.29.0
@@ -14985,18 +14994,18 @@ snapshots:
       '@textbus/core': 3.7.8
       reflect-metadata: 0.1.14
 
-  '@textbus/platform-browser@3.7.9':
+  '@textbus/platform-browser@3.8.0':
     dependencies:
       '@tanbo/di': 1.1.8
       '@tanbo/stream': 1.2.5
-      '@textbus/core': 3.7.8
+      '@textbus/core': 3.8.0
       reflect-metadata: 0.1.14
 
   '@textbus/platform-browser@4.0.0-alpha.66':
     dependencies:
       '@tanbo/stream': 1.2.5
       '@textbus/collaborate': 4.0.0-alpha.66
-      '@textbus/core': 4.0.0-alpha.66
+      '@textbus/core': 4.0.0-alpha.71
       '@viewfly/core': 1.0.0-alpha.17
     transitivePeerDependencies:
       - bufferutil

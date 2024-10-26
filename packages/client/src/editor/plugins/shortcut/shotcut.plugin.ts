@@ -18,7 +18,7 @@ import { UIConfig } from '../../common'
 import ShotcutMenu from './ShotcutMenu.vue'
 
 
-export class SuotcutPlugin implements Plugin {
+export class ShotcutPlugin implements Plugin {
   private app: App | null = null
   private host: HTMLElement | null = null
   private viewContainer: HTMLElement | null = null

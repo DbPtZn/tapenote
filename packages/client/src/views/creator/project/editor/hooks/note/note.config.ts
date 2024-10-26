@@ -62,7 +62,8 @@ import {
   dividerComponent,
   dividerComponentLoader,
   i18n,
-  dividerTool
+  dividerTool,
+  ShotcutPlugin
 } from '@/editor'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {
@@ -160,7 +161,8 @@ export function getNoteConfig(args: {
         ),
       () => new ImgToolbarPlugin([`${ResourceDomain}`]),
       () => new LinkJumpTipPlugin(),
-      () => new OutlinePlugin()
+      () => new OutlinePlugin(),
+      () => new ShotcutPlugin()
       // () => new Clipboard(),
       // () => new ContextMenu()
     ],

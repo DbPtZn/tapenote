@@ -7,6 +7,7 @@ export * from './contextmenu'
 export * from './anime-component-support'
 export * from './preview-player-controller'
 export * from './anime-contextmenu'
+export * from './shortcut/_api'
 
 export * from './player-contextmenu'
 export * from './player-controller'
