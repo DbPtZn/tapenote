@@ -1,5 +1,5 @@
 @import './color.scss';
-.textbus-container[data-theme='light-theme'] {
+[data-theme='light-theme'] {
   --tb-fontFamilyMono: v-mono, SFMono-Regular, Menlo, Consolas, Courier, monospace;
   --tb-fontWeight: 400;
   --tb-fontWeightStrong: 500;

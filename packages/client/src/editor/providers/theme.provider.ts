@@ -6,6 +6,7 @@ import { Layout } from '@textbus/editor'
 import '../index.scss'
 import '../assets/index.css'
 import 'material-icons/iconfont/material-icons.css'
+import { VIEW_CONTAINER } from '@textbus/platform-browser'
 type ThemeState = 'light' | 'dark'
 /**
  * 主题控制器
@@ -25,6 +26,7 @@ export class ThemeProvider {
   }
   setup(injector: Injector, fontSize='16px'): void {
     this.layout = injector.get(Layout)
+    // this.viewContainer = injector.get(VIEW_CONTAINER)
     this.editorHost = this.layout.container
     this.layout.middle.setAttribute('data-color', '#000000')
     this.layout.middle.style.fontSize = fontSize
