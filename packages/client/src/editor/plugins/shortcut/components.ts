@@ -1,9 +1,10 @@
 import { ContentType, Injector, Slot } from '@textbus/core'
 import { ComponentCreator, I18n, TodoListSlotState, alertComponent, boldFormatter, imageCardComponent, jumbotronComponent, katexComponent, stepComponent, textAlignFormatter, timelineComponent, todolistComponent, wordExplainComponent } from '@textbus/editor'
 
+type MyComponentCreator = { key: string } & ComponentCreator
 export const getComponents = (injector: Injector) => {
   const i18n = injector.get(I18n)
-  const configs: any[] = [
+  const configs: MyComponentCreator[] = [
     {
       key: 'imageCard',
       name: i18n.get('components.imageCardComponent.creator.name'),

@@ -2,7 +2,7 @@
 import { h, inject, nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef } from 'vue'
 import { DropdownOption, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import { Layout, textAlignFormatter } from '@textbus/editor'
-import { ComponentInstance, Selection, Injector, Renderer, fromEvent, Commander, Keyboard } from '@textbus/core'
+import { ComponentInstance, Selection, Injector, Renderer, fromEvent, Commander, Keyboard, Subscription } from '@textbus/core'
 import _ from 'lodash'
 import { Input, VIEW_CONTAINER, VIEW_DOCUMENT } from '@textbus/platform-browser'
 import { ColorProvider, Structurer } from '../../providers'
@@ -10,8 +10,9 @@ import { stat } from 'fs'
 import { Icon } from '@iconify/vue'
 import TipBtn from './TipBtn.vue'
 import { isTargetKey } from './key'
-import { emojis, createEmoji } from './emoji'
-import { getComponents } from './components'
+import { useCommonOptions } from './commonOptions'
+import { useBaseOptions } from './baseOptions'
+import { watch } from 'vue'
 
 const injector = inject('injector') as Injector
 const themeVars = useThemeVars()
@@ -20,34 +21,37 @@ const message = useMessage()
 
 const structurer = injector.get(Structurer)
 const colorProvider = injector.get(ColorProvider)
+const renderer = injector.get(Renderer)
+const viewContainer = injector.get(VIEW_DOCUMENT)
 const input = injector.get(Input)
 const layout = injector.get(Layout)
-const renderer = injector.get(Renderer)
 const commander = injector.get(Commander)
 const selection = injector.get(Selection)
 const keyboard = injector.get(Keyboard)
-const viewContainer = injector.get(VIEW_DOCUMENT)
+const scrollerEl = structurer.scrollerRef!
 
+// const containerRect = viewContainer.getBoundingClientRect()
+// const scrollerRect = scrollerEl.getBoundingClientRect() // 滚动容器状态是固定的
 const menuEl = useTemplateRef<HTMLElement>('menuEl')
 const dropdownEl = useTemplateRef<HTMLElement>('dropdownEl')
-const colorOptions = colorProvider.getColorOptions()
+const popoverEl = useTemplateRef<HTMLElement>('popoverEl')
 
 const state = reactive({
+  height: 500,
   left: 0,
   top: 0,
-  show: true
+  show: false
 })
 
 const pointer = ref(1)
-const secondaryPointer = ref(1)
-const popoverPointer = ref(1)
+
+let subs: Subscription[] = []
 
 onMounted(() => {
   console.log('shotcut menu mounted')
-  openArrowKey()
+  // openArrowKey()
   keyboard.addZenCodingInterceptor({
     match: function (content: string): boolean {
-      // console.log(content)
       return content === ''
     },
     try: function (key, agent): boolean {
@@ -57,25 +61,56 @@ onMounted(() => {
     action: function (content: string): boolean {
       // console.log('zen coding', content)
       if (selection.isCollapsed) {
-        const rect = input.caret.rect
-        // console.log(structurer.scrollerRef!.offsetTop)
-        const editorRect = layout.middle.getBoundingClientRect()
-        // console.log(rect)
-        // const scrollTop = structurer.scrollerRef!.scrollTop
-        state.left = rect.left - editorRect.left - rect.width
-        state.top = rect.top - editorRect.top + rect.height
+        state.height = 500
         state.show = true
+        const caretRect = input.caret.rect
+        const middleRect = layout.middle.getBoundingClientRect()
+        const scrollerRect = scrollerEl.getBoundingClientRect() // 滚动容器状态是固定的
+        // 获取视口的高度
+        // const windowHeight = window.innerHeight
+        // 到（编辑器）底部的距离 (菜单顶部到滚动区域底部)
+        const distanceToBottom = scrollerRect.bottom - (caretRect.top + caretRect.height)
+        // 到(编辑器)顶部的距离 （光标顶部到滚动区域顶部）
+        const distanceToTop = caretRect.top - scrollerRect.top
+        // 菜单高度
+        // const menuHeight = state.height
 
+        state.left = caretRect.left - middleRect.left - caretRect.width
+        state.top = caretRect.top - middleRect.top + caretRect.height
+        console.log('distanceToTop', distanceToTop, 'distanceToBottom', distanceToBottom, state.height)
+        if (distanceToBottom < state.height) {
+          console.log('distanceToBottom < 0', distanceToBottom)
+          console.log('distanceToTop > state.height', distanceToTop, state.height)
+          if (distanceToTop > state.height) {
+            state.top = caretRect.top - middleRect.top - state.height
+          } else {
+            if (distanceToTop > distanceToBottom) {
+              state.height = distanceToTop - 20
+              state.top = caretRect.top - middleRect.top - state.height
+            } else {
+              state.height = distanceToBottom - 20
+            }
+          }
+        }
+
+        // console.log(caretRect)
+        // console.log(menuEl.value?.getBoundingClientRect())
+        // const scrollTop = structurer.scrollerRef!.scrollTop
         const arrowEvents = openArrowKey()
 
-        const subs = [
+        subs = [
           fromEvent(document, 'click', true).subscribe(ev => {
             console.log('mousedown', ev, ev.target instanceof HTMLElement)
             // TODO bug 不能使用 .contains(menuEl.value) ,因为所有包含 menuEl 的元素都算
-            if (ev.target instanceof HTMLElement && !ev.target.contains(menuEl.value)) {
+            if (ev.target instanceof HTMLElement && !menuEl.value!.contains(ev.target)) {
               state.show = false
               subs.forEach(s => s.unsubscribe())
               arrowEvents.forEach(event => event.remove())
+              pointer.value = 1
+              menuEl.value!.scrollTop = 0
+              secondaryPointer.value = 1
+              dropdownState.show = false
+              popoverState.show = false
             }
           })
         ]
@@ -84,6 +119,29 @@ onMounted(() => {
     }
   })
 })
+
+/** 滚动计算 */
+function scrollerCalculate() {
+  if (!menuEl.value) return
+  const selectEl = menuEl.value.querySelector('.selected')
+  if (!selectEl) return
+  const menuRect = menuEl.value.getBoundingClientRect()
+  const selectRect = selectEl.getBoundingClientRect()
+  if (selectRect.bottom > menuRect.bottom - 50) {
+    menuEl.value.scrollTo({ top: menuEl.value.scrollTop + 50, behavior: 'smooth' })
+    return
+  }
+  if (selectRect.top < menuRect.top + 50) {
+    menuEl.value.scrollTo({ top: menuEl.value.scrollTop - 50, behavior: 'smooth' })
+    return
+  }
+}
+watch(
+  () => pointer.value,
+  () => {
+    scrollerCalculate()
+  }
+)
 
 function openArrowKey() {
   const max = commonOptions.length + baseOptions.length
@@ -161,7 +219,7 @@ function openArrowKey() {
             secondaryPointer.value = 1
             return true
           }
-          secondaryPointer.value = secondaryPointer.value > 1 ? secondaryPointer.value - 1 : popoverOptions.length
+          secondaryPointer.value = secondaryPointer.value > 1 ? secondaryPointer.value - 1 : popoverState.optionCount
           return true
         }
         pointer.value = _.clamp(pointer.value - 1, 1, max)
@@ -199,413 +257,80 @@ function openArrowKey() {
     keyboard.addShortcut({
       keymap: { key: 'Enter' },
       action: function (): boolean {
-        if (pointer.value < 12) {
+        // commander.delete(true) // 向后删除一位，把 / 删除
+        // console.log('pointer', pointer.value)
+        if (pointer.value <= 12) {
           commonOptions[pointer.value - 1].onClick()
+          close()
+          return true
         }
-        // else {
-        //   baseOptions[pointer.value - 13].onClick()
-        // }
+        // Dropdown 的情况
+        if ([14].includes(pointer.value)) {
+          if (dropdownState.show) {
+            dropdownOptions.value[secondaryPointer.value - 1].props.onClick()
+            close()
+            return true
+          }
+        }
+        // Popover 的情况
+        if ([15, 16, 17, 20].includes(pointer.value)) {
+          if (popoverState.show) {
+            popoverOptions.value[secondaryPointer.value - 1].props.onClick()
+            close()
+            return true
+          }
+        }
+        close()
+        return false
+      }
+    }),
+    // 继续输入时退出快捷菜单
+    keyboard.addZenCodingInterceptor({
+      match(content) {
+        return true
+      },
+      try(key, agent) {
+        console.log(!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(key))
+        return !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(key)
+      },
+      action(content) {
+        close()
         return false
       }
     })
   ]
+  function close() {
+    state.show = false
+    keyEvents.forEach(s => s.remove())
+    subs.forEach(s => s.unsubscribe())
+    pointer.value = 1
+    secondaryPointer.value = 1
+    dropdownState.show = false
+    popoverState.show = false
+    menuEl.value!.scrollTop = 0
+  }
   return keyEvents
 }
 
-const commonOptions = [
-  {
-    key: 'title-1',
-    label: '标题1',
-    icon: 'ci:heading-h1',
-    onClick: () => {}
-  },
-  {
-    key: 'title-2',
-    label: '标题2',
-    icon: 'ci:heading-h2',
-    onClick: () => {}
-  },
-  {
-    key: 'title-3',
-    label: '标题3',
-    icon: 'ci:heading-h3',
-    onClick: () => {}
-  },
-  {
-    key: 'title-4',
-    label: '标题4',
-    icon: 'ci:heading-h4',
-    onClick: () => {}
-  },
-  {
-    key: 'title-5',
-    label: '标题5',
-    icon: 'ci:heading-h5',
-    onClick: () => {}
-  },
-  {
-    key: 'quote',
-    label: '引用',
-    icon: 'ic:round-format-quote',
-    onClick: () => {}
-  },
-  {
-    key: 'bold',
-    label: '加粗',
-    icon: 'ic:round-format-bold',
-    onClick: () => {}
-  },
-  {
-    key: 'italic',
-    label: '斜体',
-    icon: 'ic:round-format-italic',
-    onClick: () => {}
-  },
-  {
-    key: 'strikethrough',
-    label: '删除线',
-    icon: 'ic:round-format-strikethrough',
-    onClick: () => {}
-  },
-  {
-    key: 'underline',
-    label: '下划线',
-    icon: 'ic:round-format-underlined',
-    onClick: () => {}
-  },
-  {
-    key: 'code',
-    label: '行内代码块',
-    icon: 'ic:round-code',
-    onClick: () => {}
-  },
-  {
-    key: 'divider',
-    label: '分割线',
-    icon: 'radix-icons:divider-horizontal',
-    onClick: () => {}
-  }
-]
+const commonOptions = useCommonOptions(injector)
 
-const baseOptions = [
-  {
-    key: 'algin-center',
-    label: '居中对齐',
-    icon: 'material-symbols:align-horizontal-center-rounded',
-    keymap: '',
-    onClick: () => {
-      
-    }
-  },
-  {
-    key: 'fontsize',
-    label: '字体大小',
-    icon: 'ant-design:font-size-outlined',
-    deployable: true,
-    keymap: '',
-    onClick: (ev?: MouseEvent) => {
-      const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
-      if (!target) return
-
-      dropdownOptions = [12, 13, 14, 15, 16, 18, 20, 24, 36, 48].map(size => {
-        return {
-          key: `${size}px`,
-          label: `${size}px`,
-          icon: '',
-          props: {
-            style: { fontSize: `${size}px` },
-            onClick: () => {
-              console.log(`${size}px`)
-            }
-          }
-        }
-      })
-
-      const rect = target.getBoundingClientRect()
-      console.log(rect)
-      nextTick().then(() => {
-        dropdownState.show = true
-        dropdownState.xRef = rect.x + menuEl.value!.offsetWidth - 24
-        dropdownState.yRef = rect.y
-        dropdownState.optionCount = dropdownOptions.length
-        onClickoutside()
-      })
-    }
-  },
-  {
-    key: 'color',
-    label: '文字颜色',
-    icon: 'ic:round-format-color-text',
-    deployable: true,
-    keymap: '',
-    onClick: (ev?: MouseEvent) => {
-      const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
-      if (!target) return
-      const rect = target.getBoundingClientRect()
-
-      popoverOptions = colorOptions.map(color => {
-        return {
-          key: color,
-          label: color,
-          icon: '',
-          props: {
-            'data-bgcolor': color,
-            style: {
-              backgroundColor: color,
-              height: '24px',
-              width: '24px'
-            },
-            onClick: () => {
-              console.log(color)
-            }
-          }
-        }
-      })
-
-      renderOption = () => {
-        return h(
-          'div',
-          { class: 'color-options' },
-          popoverOptions.map((item, index) => {
-            return h('div', { class: { 'color-option': 1, 'color-option-selected': index + 1 === secondaryPointer.value }, ...item.props })
-          })
-        )
-      }
-
-      nextTick().then(() => {
-        popoverState.show = true
-        popoverState.xRef = rect.x + menuEl.value!.offsetWidth - 24
-        popoverState.yRef = rect.y
-        popoverState.optionCount = popoverOptions.length
-        popoverState.row = 4
-        popoverState.edge = []
-        for (let i = popoverOptions.length + 1 - popoverState.row; i > 0; i = i - popoverState.row) {
-          popoverState.edge.push(i)
-        }
-        console.log(popoverState.edge)
-        onClickoutside()
-      })
-    }
-  },
-  {
-    key: 'bgcolor',
-    label: '文字背景颜色',
-    icon: 'proicons:text-highlight-color-accent',
-    deployable: true,
-    keymap: '',
-    onClick: (ev?: MouseEvent) => {
-      const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
-      if (!target) return
-      const rect = target.getBoundingClientRect()
-
-      popoverOptions = colorOptions.map(color => {
-        return {
-          key: color,
-          label: color,
-          icon: '',
-          props: {
-            'data-bgcolor': color,
-            style: {
-              backgroundColor: color,
-              height: '24px',
-              width: '24px'
-            },
-            onClick: () => {
-              console.log(color)
-            }
-          }
-        }
-      })
-
-      renderOption = () => {
-        return h(
-          'div',
-          { class: 'color-options' },
-          popoverOptions.map((item, index) => {
-            return h('div', { class: { 'color-option': 1, 'color-option-selected': index + 1 === secondaryPointer.value }, ...item.props })
-          })
-        )
-      }
-
-      nextTick().then(() => {
-        popoverState.show = true
-        popoverState.xRef = rect.x + menuEl.value!.offsetWidth - 24
-        popoverState.yRef = rect.y
-        popoverState.optionCount = popoverOptions.length
-        popoverState.row = 4
-        popoverState.edge = []
-        for (let i = popoverOptions.length + 1 - popoverState.row; i > 0; i = i - popoverState.row) {
-          popoverState.edge.push(i)
-        }
-        console.log(popoverState.edge)
-        onClickoutside()
-      })
-    }
-  },
-  {
-    key: 'emoji',
-    label: '表情',
-    icon: 'ic:round-emoji-emotions',
-    keymap: '',
-    deployable: true,
-    onClick: (ev?: MouseEvent) => {
-      const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
-      if (!target) return
-      const rect = target.getBoundingClientRect()
-
-      popoverOptions = emojis.map(emoji => {
-        return {
-          key: emoji,
-          label: emoji,
-          icon: '',
-
-          props: {
-            innerHTML: createEmoji(emoji),
-            style: {
-              height: '24px',
-              width: '24px'
-            },
-            onClick: () => {
-              console.log(emoji)
-            }
-          }
-        }
-      })
-
-      renderOption = () => {
-        return h(
-          'div',
-          { class: 'emoji-options' },
-          popoverOptions.map((item, index) => {
-            return h('div', { class: { 'emoji-option': 1, 'emoji-option-selected': index + 1 === secondaryPointer.value }, ...item.props })
-          })
-        )
-      }
-
-      nextTick().then(() => {
-        popoverState.show = true
-        popoverState.xRef = rect.x + menuEl.value!.offsetWidth - 24
-        popoverState.yRef = rect.y
-        popoverState.optionCount = popoverOptions.length
-        popoverState.row = 10
-        popoverState.edge = []
-        for (let i = popoverOptions.length + 1 - popoverState.row; i > 0; i = i - popoverState.row) {
-          popoverState.edge.push(i)
-        }
-        onClickoutside()
-      })
-    }
-  },
-  {
-    key: 'olist',
-    label: '有序列表',
-    icon: 'material-symbols:format-list-numbered',
-    keymap: '',
-    onClick: () => {}
-  },
-  {
-    key: 'ulist',
-    label: '无序列表',
-    icon: 'material-symbols:format-list-bulleted',
-    keymap: '',
-    onClick: () => {}
-  },
-  {
-    key: 'components',
-    label: '组件',
-    icon: 'icon-park-twotone:components',
-    deployable: true,
-    keymap: '',
-    onClick: (ev?: MouseEvent) => {
-      const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
-      if (!target) return
-      const rect = target.getBoundingClientRect()
-
-      popoverOptions = getComponents(injector).map(component => {
-        return {
-          key: component.key,
-          label: component.name,
-          icon: '',
-
-          props: {
-            innerHTML: component.example,
-            style: {
-              // height: '24px',
-              // width: '24px'
-            },
-            onClick: () => {
-              //
-            }
-          }
-        }
-      })
-
-      renderOption = () => {
-        return h(
-          'div',
-          { class: 'component-options' },
-          popoverOptions.map((item, index) => {
-            return h('div', { class: { 'component-option': 1, 'component-option-selected': index + 1 === secondaryPointer.value }, ...item.props })
-          })
-        )
-      }
-
-      nextTick().then(() => {
-        popoverState.show = true
-        popoverState.xRef = rect.x + menuEl.value!.offsetWidth - 24
-        popoverState.yRef = rect.y
-        popoverState.optionCount = popoverOptions.length
-        popoverState.row = 4
-        popoverState.edge = []
-        for (let i = popoverOptions.length + 1 - popoverState.row; i > 0; i = i - popoverState.row) {
-          popoverState.edge.push(i)
-        }
-        onClickoutside()
-      })
-    }
-  }
-]
-
-const dropdownState = reactive({
-  xRef: 0,
-  yRef: 0,
-  show: false,
-  optionCount: 0 // 选项个数
-})
-let dropdownOptions: any[] = []
-
-function onClickoutside() {
-  const s = fromEvent(document, 'click', true).subscribe(ev => {
-    dropdownState.show = false
-    popoverState.show = false
-    s.unsubscribe()
-  })
-}
-function handleSelect() {}
-
-const popoverState = reactive({
-  xRef: 0,
-  yRef: 0,
-  show: false,
-  optionCount: 0,
-  row: 0, // 每列选项数量
-  edge: [] as number[] // 边缘元素下标
-})
-let popoverOptions: any[] = []
-
-let renderOption: any
+const { secondaryPointer, baseOptions, renderOption, dropdownOptions, popoverOptions, dropdownState, popoverState } = useBaseOptions(injector, menuEl, dropdownEl, popoverEl)
 
 onMounted(() => {})
 </script>
 
 <template>
-  <div ref="menuEl" v-show="state.show" class="shotcut-menu" :style="{ left: `${state.left}px`, top: `${state.top}px` }">
+  <div
+    ref="menuEl"
+    class="shotcut-menu"
+    :style="{ left: `${state.left}px`, top: `${state.top}px`, height: `${state.height}px`, visibility: state.show ? 'visible' : 'collapse' }"
+  >
     <n-flex>
       <n-flex class="zone">
         <span class="title">常用</span>
         <div class="btns">
-          <div v-for="(item, index) in commonOptions" :class="{ btn: 1, active: index + 1 === pointer }" :key="item.key">
-            <TipBtn :tip="item.label" @click="item.onClick">
+          <div v-for="(item, index) in commonOptions" :class="{ btn: 1, selected: index + 1 === pointer }" :key="item.key" @click="item.onClick">
+            <TipBtn :tip="item.label">
               <Icon :icon="item.icon" height="24" />
             </TipBtn>
           </div>
@@ -634,40 +359,40 @@ onMounted(() => {})
         </div>
       </div>
     </n-flex>
-    <div ref="dropdownEl" class="dropdown" v-show="dropdownState.show" :style="{ left: `${dropdownState.xRef}px`, top: `${dropdownState.yRef}px` }">
-      <div class="dropdown-options">
-        <div
-          :class="{ 'dropdown-option': 1, 'dropdown-option-selected': index + 1 === secondaryPointer }"
-          v-for="(item, index) in dropdownOptions"
-          :key="item.key"
-          v-bind="item.props"
-        >
-          <div class="prefix" v-if="!!item.icon">
-            <Icon class="icon" :icon="item.icon" height="24" />
-          </div>
-          <div class="label">
-            <span>{{ item.label }}</span>
-          </div>
-          <div class="suffix">
-            {{ item.keymap }}
-          </div>
+  </div>
+  <div ref="dropdownEl" class="dropdown" v-show="dropdownState.show" :style="{ left: `${dropdownState.xRef}px`, top: `${dropdownState.yRef}px` }">
+    <div class="dropdown-options">
+      <div
+        :class="{ 'dropdown-option': 1, 'dropdown-option-selected': index + 1 === secondaryPointer }"
+        v-for="(item, index) in dropdownOptions"
+        :key="item.key"
+        v-bind="item.props"
+      >
+        <div class="prefix" v-if="!!item.icon">
+          <Icon class="icon" :icon="item.icon" height="24" />
+        </div>
+        <div class="label">
+          <span>{{ item.label }}</span>
+        </div>
+        <div class="suffix">
+          {{ item.keymap }}
         </div>
       </div>
     </div>
-    <div ref="popoverEl" class="popover" v-show="popoverState.show" :style="{ left: `${popoverState.xRef}px`, top: `${popoverState.yRef}px` }">
-      <component :is="renderOption" />
-      <!-- <div class="popover-content">
+  </div>
+  <div ref="popoverEl" class="popover" v-show="popoverState.show" :style="{ left: `${popoverState.xRef}px`, top: `${popoverState.yRef}px` }">
+    <component :is="renderOption" />
+    <!-- <div class="popover-content">
         <component :is="renderOption" v-for="(item, index) in popoverOptions" :key="item.key" v-bind="item.props" @click="item.onClick" />
       </div> -->
-    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
 .shotcut-menu {
+  z-index: 1;
   position: absolute;
   width: 300px;
-  height: 500px;
   background-color: var(--tb-cardColor);
   box-shadow: v-bind('themeVars.boxShadow1');
   border-radius: 4px;
@@ -675,6 +400,7 @@ onMounted(() => {})
   padding: 24px 24px;
   overflow: hidden;
   overflow-y: auto;
+  // cursor: pointer;
   // overflow: overlay;
 }
 .zone {
@@ -702,7 +428,7 @@ onMounted(() => {})
         background-color: v-bind('themeVars.buttonColor2Hover');
       }
     }
-    .active {
+    .selected {
       background-color: v-bind('themeVars.buttonColor2Pressed');
     }
   }
@@ -774,8 +500,9 @@ onMounted(() => {})
 }
 
 .dropdown {
-  position: fixed;
-  margin-left: 2px;
+  z-index: 1;
+  position: absolute;
+  // margin-left: 2px;
   min-width: 240px;
   border-radius: 4px;
   padding: 6px;
@@ -821,8 +548,9 @@ onMounted(() => {})
 }
 
 .popover {
-  position: fixed;
-  margin-left: 2px;
+  z-index: 1;
+  position: absolute;
+  // margin-left: 2px;
   border-radius: 4px;
   padding: 6px;
   background-color: var(--tb-cardColor);
@@ -840,7 +568,7 @@ onMounted(() => {})
   flex-wrap: wrap;
   justify-content: flex-start;
   padding: 6px;
-  max-width: 130px;
+  width: 130px;
   .color-option {
     width: 24px;
     height: 24px;
@@ -864,7 +592,7 @@ onMounted(() => {})
   flex-wrap: wrap;
   justify-content: flex-start;
   padding: 6px;
-  max-width: 320px;
+  width: 320px;
   .emoji-option {
     display: flex;
     align-items: center;
@@ -891,7 +619,7 @@ onMounted(() => {})
   flex-wrap: wrap;
   justify-content: flex-start;
   padding: 6px;
-  max-width: 500px;
+  width: 500px;
   .component-option {
     display: flex;
     align-items: center;

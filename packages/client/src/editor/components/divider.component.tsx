@@ -56,7 +56,7 @@ export const dividerComponentLoader: ComponentLoader = {
   },
   read(element: HTMLElement, injector: Injector, slotParser: SlotParser): ComponentInstance {
     // console.log(element)
-    const slot = slotParser(new Slot([ContentType.Text, ContentType.InlineComponent]), element.children[1] as HTMLElement || document.createElement('span'))
+    const slot = slotParser(new Slot([ContentType.Text]), element.children[1] as HTMLElement || document.createElement('span'))
     const state = {
       placement: element.classList.contains('separator-left') ? 'left' : element.classList.contains('separator-right') ? 'right' : 'center' as 'left' | 'right' | 'center'
     }
