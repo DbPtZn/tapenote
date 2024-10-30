@@ -23,19 +23,21 @@ import {
   preComponentLoader,
   ContextMenu,
   MemoService,
-  MemoProvider,
+  MemoPlugin,
   MessageService,
   StudioService,
   ImgService,
-  i18n
-} from '@/editor'
-import { 
+  i18n,
+  rootAnimeComponent,
+  rootAnimeComponentLoader,
   animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
   listComponent, listComponentLoader, headingComponent, headingComponentLoader,
-  rootComponent, rootComponentLoader, paragraphComponent, paragraphComponentLoader,
+  paragraphComponent, paragraphComponentLoader,
   animeComponent, animeComponentLoader, animeIgnoreComponent, animeIgnoreComponentLoader,
-  headingTool, olTool, ulTool, insertParagraphAfterTool, insertParagraphBeforeTool
-} from '@/editor/anime'
+  headingTool, olTool, ulTool, insertParagraphAfterTool, insertParagraphBeforeTool, 
+  tableComponent, tableComponentLoader,
+  dividerTool, dividerComponent, dividerComponentLoader, Memo, ImgToolbarPlugin, ShotcutPlugin, MemoProvider,
+} from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
   alertComponent,
@@ -56,8 +58,6 @@ import {
   LinkJumpTipPlugin,
   stepComponent,
   stepComponentLoader,
-  tableComponent,
-  tableComponentLoader,
   timelineComponent,
   timelineComponentLoader,
   todolistComponent,
@@ -71,6 +71,7 @@ import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
 import '@/editor/anime.css'
 import { uploader } from '../uploader'
+import { getResourceDomain } from '@/views/creator/_hooks'
 
 export function getProcedureConfig(args: {
   account: string,
@@ -78,12 +79,14 @@ export function getProcedureConfig(args: {
   dirname: string,
   rootRef: HTMLElement,
   editorRef: HTMLElement,
-  scrollerRef: HTMLElement, 
+  scrollerRef: HTMLElement,
+  memos: Memo[],
   toolbarRef?: HTMLElement,
   controllerRef?: HTMLElement,
   content?: string
 }) {
-  const { account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  const { account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, memos, content } = args
+  const ResourceDomain = getResourceDomain(hostname)
   const config: EditorOptions = {
     theme: 'darkline',
     autoFocus: true,
@@ -93,8 +96,8 @@ export function getProcedureConfig(args: {
     placeholder: '在此输入正文',
     content: content || '',
     i18n: i18n,
-    rootComponent: rootComponent,
-    rootComponentLoader: rootComponentLoader,
+    rootComponent: rootAnimeComponent,
+    rootComponentLoader: rootAnimeComponentLoader,
     components: [
       paragraphComponent, animeComponent, imageB2UComponent, animeIgnoreComponent, listComponent, headingComponent,
       audioComponent,
@@ -112,7 +115,8 @@ export function getProcedureConfig(args: {
       timelineComponent,
       stepComponent,
       alertComponent,
-      jumbotronComponent
+      jumbotronComponent,
+      dividerComponent,
     ],
     componentLoaders: [
       paragraphComponentLoader, animeComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, listComponentLoader, headingComponentLoader,
@@ -133,16 +137,17 @@ export function getProcedureConfig(args: {
       preComponentLoader,
       tableComponentLoader,
       videoComponentLoader,
+      dividerComponentLoader,
     ],
-    formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter,...defaultFormatters],
+    formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     providers: [
       { provide: Commander, useClass: CustomCommander },
       AnimeProvider, AddAnimeService, DialogProvider, 
       OutlineService, ColorProvider, AnimeService,
       Structurer, ThemeProvider, Player, ImgToUrlService,
-      MemoService, MemoProvider, MessageService, StudioService,
-      ImgService
+      MemoService, MessageService, StudioService,
+      ImgService, MemoProvider
     ],
     plugins: [
       () => new Toolbar([
@@ -161,9 +166,8 @@ export function getProcedureConfig(args: {
         [imageTool],
         [tableAddTool, tableRemoveTool],
         // [formatPainterTool],
+        [dividerTool],
         [cleanTool],
-        // [outlineTool],
-        // [animeBadgeVisibleTool, animeElementVisibleTool]
       ], toolbarRef!),
       () =>
         new InlineToolbarPlugin([
@@ -177,14 +181,17 @@ export function getProcedureConfig(args: {
           [cleanTool]
         ], scrollerRef),
       () => new OutlinePlugin(),
-      () => new ContextMenu(),
+      // () => new ContextMenu(),
       () => new LinkJumpTipPlugin(),
-      () => new AnimeContextmenuPlugin(),
+      // () => new AnimeContextmenuPlugin(),
+      () => new ImgToolbarPlugin([`${ResourceDomain}`]),
       () => new AnimeComponentSupport(),
+      () => new ShotcutPlugin(),
       () => new PreviewPlayerController([
         preview_startTool,
         preview_stopTool
-      ],controllerRef!)
+      ],controllerRef!),
+      // () => new MemoPlugin(memos),
     ],
     uploader(config) {
       return uploader(config, account, hostname)
@@ -225,7 +232,7 @@ export function getProcedureConfig(args: {
       player.setup(injector, scrollerRef)
       // 图片工具
       const imgToUrlService = injector.get(ImgToUrlService)
-      const { uploadImgFunction } = useUploadImg('/upload/img', account, hostname)
+      const { uploadImgFunction } = useUploadImg(account, hostname)
       imgToUrlService.setup(uploadImgFunction)
     }
   }

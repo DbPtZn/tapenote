@@ -88,7 +88,7 @@ export const headingComponent = defineComponent({
       type: state.tag || 'h1',
       render(slotRender: SlotRender): VElement {
         const Tag = state.tag || 'h1'
-         const { dataAnime, dataId, dataEffect, dataSerial, dataActive, dataTitle, dataRange } = state
+        const { dataAnime, dataId, dataEffect, dataSerial, dataActive, dataTitle, dataRange } = state
         return (
           <Tag
             data-anime={`${dataAnime}` || 'false'}

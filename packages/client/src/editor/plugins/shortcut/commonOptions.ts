@@ -41,7 +41,7 @@ export function useCommonOptions(injector: Injector) {
       label: '标题1',
       icon: 'ci:heading-h1',
       onClick: () => {
-        console.log('setHeading')
+        // console.log('setHeading')
         setHeading('h1')
       }
     },

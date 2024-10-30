@@ -1,47 +1,66 @@
-import { getServerToken } from '@/api'
-import axios from 'axios'
-export function useUploadImg(uploadImgUrl: string, account: string, hostname: string) {
-  const accessToken = getServerToken(account, hostname)
+// import { getServerToken } from '@/api'
+// import axios from 'axios'
+import { creator } from '@/api'
+
+// uploadImgUrl?: string
+export function useUploadImg(account: string, hostname: string) {
+  // const accessToken = getServerToken(account, hostname)
   const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
-  const axiosInstance = axios.create({
-    method: 'post',
-    baseURL: hostname,
-    headers: {
-      Authorization: `Bearer ${accessToken}`
-    }
-  })
+
+  // const axiosInstance = axios.create({
+  //   method: 'post',
+  //   baseURL: hostname,
+  //   headers: {
+  //     Authorization: `Bearer ${accessToken}`
+  //   }
+  // })
+  const creatorApi = creator.getCreatorApi(account, hostname)
+
   function uploadImgFunction(img: string) {
     return new Promise<string>((resolve, reject) => {
       const formdata = new FormData()
       const file = base64ImgtoFile(img)
       formdata.append('file', file) //图片文件
       // formdata.append('dirname', this.dirname)
-      axiosInstance
-        .post(uploadImgUrl, formdata)
+      // axiosInstance
+      //   .post(uploadImgUrl, formdata)
+      //   .then(res => {
+      //     // console.log('res.config.baseURL:', res.config.baseURL)
+      //     // console.log('ResourceDomain:', ResourceDomain)
+      //     const url = ResourceDomain + res.data
+      //     resolve(url)
+      //   })
+      //   .catch(err => reject(err))
+      creatorApi?.upload
+        .uploadImg(formdata)
         .then(res => {
-          // console.log('res.config.baseURL:', res.config.baseURL)
-          // console.log('ResourceDomain:', ResourceDomain)
           const url = ResourceDomain + res.data
           resolve(url)
         })
         .catch(err => reject(err))
     })
   }
-  
+
   function uploadImgFile(file: File) {
     return new Promise<string>((resolve, reject) => {
       const formdata = new FormData()
       formdata.append('file', file) //图片文件
       // formdata.append('dirname', this.dirname)
-      axiosInstance
-        .post(uploadImgUrl, formdata)
+      // axiosInstance
+      //   .post(uploadImgUrl, formdata)
+      //   .then(res => {
+      //     resolve(ResourceDomain + res.data)
+      //   })
+      //   .catch(err => reject(err))
+      creatorApi?.upload
+        .uploadImg(formdata)
         .then(res => {
           resolve(ResourceDomain + res.data)
         })
         .catch(err => reject(err))
     })
   }
-  
+
   return {
     uploadImgFunction,
     uploadImgFile

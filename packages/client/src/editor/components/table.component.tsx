@@ -36,9 +36,9 @@ import {
   TableConfig,
   TableSlotState,
   useTableMultipleRange
-} from './hooks/table-multiple-range'
+} from './_hooks/table-multiple-range'
 
-import { useComponentToolbar } from './templates/component-toolbar'
+import { useComponentToolbar } from './_templates/component-toolbar'
 import { blockBackgroundColorFormatter, BlockStyleFormatter, I18n } from '@textbus/editor'
 
 export {
@@ -94,6 +94,8 @@ export class TableComponentSelectionAwarenessDelegate extends CollaborateSelecti
   }
 }
 
+//TODO 优化：聚焦表格的时候会触发编辑器 onChange
+
 export const tableComponent = defineComponent({
   type: ContentType.BlockComponent,
   name: 'TableComponent',
@@ -103,7 +105,15 @@ export const tableComponent = defineComponent({
     state: {
       columnCount: 3,
       rowCount: 3,
-      useTextbusStyle: false
+      useTextbusStyle: false,
+      // ANIME
+      dataAnime: false,
+      dataId: '',
+      dataEffect: '',
+      dataSerial: '',
+      dataActive: false,
+      dataTitle: '',
+      dataRange: false
     }
   }) {
     let tableCells = slotsToTable(data.slots || [], data.state!.columnCount)
@@ -118,7 +128,15 @@ export const tableComponent = defineComponent({
     let tableInfo: TableConfig = {
       columnCount: tableCells[0].map(i => i.state!.colspan).reduce((v, n) => v + n, 0),
       useTextbusStyle: data.state?.useTextbusStyle || false,
-      rowCount: tableCells.length
+      rowCount: tableCells.length,
+      // ANIME
+      dataAnime: data.state?.dataAnime || false,
+      dataId: data.state?.dataId || '',
+      dataEffect: data.state?.dataEffect || '',
+      dataSerial: data.state?.dataSerial || '',
+      dataActive: data.state?.dataActive || false,
+      dataTitle: data.state?.dataTitle || '',
+      dataRange: data.state?.dataRange || false
     }
 
     const stateController = useState(tableInfo)
@@ -554,10 +572,20 @@ export const tableComponent = defineComponent({
       },
       render(slotRender: SlotRender, renderMode: RenderMode): VElement {
         tableCells = slotsToTable(slots.toArray(), tableInfo.columnCount)
+        const { dataAnime, dataId, dataEffect, dataSerial, dataActive, dataTitle, dataRange } = tableInfo
         const table = (
           <table class={'tb-table' +
             (data.state!.useTextbusStyle ? ' tb-table-textbus' : '') +
-            (hasMultipleCell ? ' td-table-multiple-select' : '')}>
+            (hasMultipleCell ? ' td-table-multiple-select' : '')}
+            data-anime={`${dataAnime}` || 'false'}
+            data-id={dataId || ''}
+            data-effect={dataEffect || ''}
+            data-serial={dataSerial || ''}
+            data-active={`${dataActive}` || 'false'}
+            data-title={dataTitle || ''}
+            data-range={`${dataRange}` || 'false'}
+          >
+            <span class='anime-component-tab' data-serial={dataSerial} title={dataTitle} />
             <tbody>
             {
               tableCells.map(row => {
@@ -577,8 +605,11 @@ export const tableComponent = defineComponent({
             </tbody>
           </table>
         )
+        
         return (
-          <div data-component={tableComponent.name}>
+          <div 
+            data-component={tableComponent.name}
+          >
             {
               renderMode === RenderMode.Editing ?
                 <ComponentToolbar>
@@ -680,8 +711,12 @@ export const tableComponentLoader: ComponentLoader = {
     return element.tagName === 'TABLE' || element.tagName === 'DIV' && element.dataset.component === tableComponent.name
   },
   read(element: HTMLTableElement, injector: Injector, slotParser: SlotParser): ComponentInstance {
+    console.log(element)
+    console.log(element.children)
     if (element.tagName === 'DIV') {
-      element = element.children[0] as HTMLTableElement
+      // element = element.children[0] as HTMLTableElement
+      element = element.querySelector('table') as HTMLTableElement
+      console.log(element)
     }
     const { tHead, tBodies, tFoot } = element
     const headers: Slot[][] = []
@@ -713,12 +748,21 @@ export const tableComponentLoader: ComponentLoader = {
     }
     bodies.unshift(...headers)
     const cells = autoComplete(bodies)
+    // console.log(cells)
     return tableComponent.createInstance(injector, {
       slots: bodies.flat(),
       state: {
         useTextbusStyle: element.classList.contains('tb-table-textbus'),
         columnCount: cells[0].map(i => i.state!.colspan).reduce((v, n) => v + n, 0),
-        rowCount: cells.length
+        rowCount: cells.length,
+        
+        dataAnime: element.dataset.anime === 'true',
+        dataId: element.dataset.id || '',
+        dataEffect: element.dataset.effect || '',
+        dataSerial: element.dataset.serial || '',
+        dataActive: element.dataset.active === 'true',
+        dataTitle: element.dataset.title || '',
+        dataRange: element.dataset.range === 'true'
       }
     })
   },

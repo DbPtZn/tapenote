@@ -89,6 +89,7 @@ declare module 'vue' {
     NTree: typeof import('naive-ui')['NTree']
     NTreeSelect: typeof import('naive-ui')['NTreeSelect']
     NUpload: typeof import('naive-ui')['NUpload']
+    NUploadDragger: typeof import('naive-ui')['NUploadDragger']
     PlayLesson: typeof import('./../components/icon/PlayLesson.vue')['default']
     RestoreFromTrash: typeof import('./../components/icon/RestoreFromTrash.vue')['default']
     RightSide: typeof import('./../components/container/row/RightSide.vue')['default']

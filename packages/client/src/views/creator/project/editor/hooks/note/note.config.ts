@@ -53,7 +53,7 @@ import {
   preComponentLoader,
   KeyboardManager,
   MemoService,
-  MemoProvider,
+  MemoPlugin,
   ImgToolbarPlugin,
   ImgService,
   MessageService,
@@ -63,16 +63,46 @@ import {
   dividerComponentLoader,
   i18n,
   dividerTool,
-  ShotcutPlugin
+  ShotcutPlugin,
+  Memo,
+  jumbotronComponent,
+  imageCardComponent,
+  paragraphComponent,
+  headingComponent,
+  imageCardComponentLoader,
+  jumbotronComponentLoader,
+  headingComponentLoader,
+  paragraphComponentLoader,
+  MemoProvider
 } from '@/editor'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {
+  alertComponent,
+  alertComponentLoader,
+  audioComponent,
+  audioComponentLoader,
+  blockComponent,
+  blockComponentLoader,
+  blockquoteComponent,
+  blockquoteComponentLoader,
   defaultComponentLoaders,
   defaultComponents,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
-  LinkJumpTipPlugin
+  katexComponent,
+  katexComponentLoader,
+  LinkJumpTipPlugin,
+  stepComponent,
+  stepComponentLoader,
+  timelineComponent,
+  timelineComponentLoader,
+  todolistComponent,
+  todolistComponentLoader,
+  videoComponent,
+  videoComponentLoader,
+  wordExplainComponent,
+  wordExplainComponentLoader
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
@@ -86,11 +116,13 @@ export function getNoteConfig(args: {
   rootRef: HTMLElement
   editorRef: HTMLElement
   scrollerRef: HTMLElement
+  memos: Memo[],
   toolbarRef?: HTMLElement
   controllerRef?: HTMLElement
   content?: string
 }) {
-  const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, memos, content } = args
+  // console.log(content)
   const ResourceDomain = getResourceDomain(hostname)
   const config: EditorOptions = {
     theme: 'darkline',
@@ -102,8 +134,47 @@ export function getNoteConfig(args: {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: content || '',
-    components: [imageB2UComponent, preComponent, listComponent, tableComponent, dividerComponent, ...defaultComponents.filter(i => !(['ListComponent', 'TableComponent'].includes(i.name)))], // 组件虽然可以覆盖,但快捷键仍然会被注册, 所以得过滤掉
-    componentLoaders: [imageB2UComponentLoader, preComponentLoader, listComponentLoader, tableComponentLoader, dividerComponentLoader, ...defaultComponentLoaders],
+    components: [
+      imageB2UComponent, listComponent, headingComponent,
+      audioComponent,
+      blockComponent,
+      blockquoteComponent,
+      headingComponent,
+      paragraphComponent,
+      preComponent,
+      videoComponent,
+      imageCardComponent,
+      todolistComponent,
+      katexComponent,
+      wordExplainComponent,
+      timelineComponent,
+      stepComponent,
+      alertComponent,
+      jumbotronComponent,
+      dividerComponent,
+      tableComponent
+    ],
+    componentLoaders: [
+      imageB2UComponentLoader, listComponentLoader, headingComponentLoader,
+      imageCardComponentLoader,
+      todolistComponentLoader,
+      katexComponentLoader,
+      wordExplainComponentLoader,
+      timelineComponentLoader,
+      stepComponentLoader,
+      alertComponentLoader,
+      jumbotronComponentLoader,
+      audioComponentLoader,
+      blockquoteComponentLoader,
+      blockComponentLoader,
+      headingComponentLoader,
+      listComponentLoader,
+      paragraphComponentLoader,
+      preComponentLoader,
+      videoComponentLoader,
+      dividerComponentLoader,
+      tableComponentLoader
+    ],
     formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     i18n: i18n,
@@ -162,9 +233,10 @@ export function getNoteConfig(args: {
       () => new ImgToolbarPlugin([`${ResourceDomain}`]),
       () => new LinkJumpTipPlugin(),
       () => new OutlinePlugin(),
-      () => new ShotcutPlugin()
+      () => new ShotcutPlugin(),
+      // () => new MemoPlugin(memos),
       // () => new Clipboard(),
-      // () => new ContextMenu()
+      () => new ContextMenu()
     ],
     uploader(config) {
       return uploader(config, account, hostname)
@@ -202,7 +274,7 @@ export function getNoteConfig(args: {
       })
       // 上传图片
       const imgToUrlService = injector.get(ImgToUrlService)
-      const { uploadImgFunction } = useUploadImg('/upload/img', account, hostname)
+      const { uploadImgFunction } = useUploadImg(account, hostname)
       imgToUrlService.setup(uploadImgFunction)
       // imgToUrlService.onFinish.subscribe((value) => {
       //   console.log('上传成功:')

@@ -13,6 +13,7 @@ import { timbre } from './timbre'
 import { bgm } from './bgm'
 import useStore from '@/store'
 import { speaker } from './speaker'
+import { upload } from './upload'
 
 export function getSsoToken(account: string, hostname: string) {
   return sessionStorage.getItem(`SSO:${account}&${hostname}`)
@@ -33,6 +34,7 @@ export class CreatorApi {
   timbre: ReturnType<typeof timbre>
   speaker: ReturnType<typeof speaker>
   bgm: ReturnType<typeof bgm>
+  upload: ReturnType<typeof upload>
 
 
   private promise: Promise<any> | null = null // 确保当多次请求刷新 token 时，只发起一次请求
@@ -117,6 +119,7 @@ export class CreatorApi {
     this.speaker = speaker(this.caxios)
     this.bgm = bgm(this.caxios)
     this.snapshot = snapshot(this.caxios)
+    this.upload = upload(this.caxios)
   }
 
   /** sso 模式下：请求 server 失败返回 401 （server-token 无效）时调用，通过 sso-token 重新更新 server-token */

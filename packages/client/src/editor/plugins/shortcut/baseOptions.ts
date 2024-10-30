@@ -19,7 +19,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
   const colorOptions = colorProvider.getColorOptions()
   const scrollerEl = structurer.scrollerRef!
   // const scrollerRect = scrollerEl.getBoundingClientRect()
-  const middleRect = layout.middle.getBoundingClientRect()
+  // const middleRect = layout.middle.getBoundingClientRect()
   const secondaryPointer = ref(1)
   
   const dropdownState = reactive({
@@ -92,10 +92,13 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
         })
   
         const rect = target.getBoundingClientRect()
-        console.log(rect)
+        // console.log(rect)
         nextTick().then(() => {
           dropdownState.show = true
-          dropdownState.xRef = menuEl.value!.offsetWidth + 12
+          const menuRect = menuEl.value!.getBoundingClientRect()
+          const caretRect = input.caret.rect
+          const middleRect = layout.middle.getBoundingClientRect()
+          dropdownState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
           dropdownState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
           dropdownState.optionCount = dropdownOptions.value.length
           onClickoutside()
@@ -152,7 +155,10 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
   
         nextTick().then(() => {
           popoverState.show = true
-          popoverState.xRef = menuEl.value!.offsetWidth + 12
+          const menuRect = menuEl.value!.getBoundingClientRect()
+          const caretRect = input.caret.rect
+          const middleRect = layout.middle.getBoundingClientRect()
+          popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
           popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 4
@@ -214,7 +220,10 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
   
         nextTick().then(() => {
           popoverState.show = true
-          popoverState.xRef = menuEl.value!.offsetWidth + 12
+          const menuRect = menuEl.value!.getBoundingClientRect()
+          const caretRect = input.caret.rect
+          const middleRect = layout.middle.getBoundingClientRect()
+          popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
           popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 4
@@ -280,7 +289,10 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
   
         nextTick().then(() => {
           popoverState.show = true
-          popoverState.xRef = menuEl.value!.offsetWidth + 12
+          const menuRect = menuEl.value!.getBoundingClientRect()
+          const caretRect = input.caret.rect
+          const middleRect = layout.middle.getBoundingClientRect()
+          popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
           popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 10
@@ -387,7 +399,10 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
   
         nextTick().then(() => {
           popoverState.show = true
-          popoverState.xRef = menuEl.value!.offsetWidth + 12
+          const menuRect = menuEl.value!.getBoundingClientRect()
+          const caretRect = input.caret.rect
+          const middleRect = layout.middle.getBoundingClientRect()
+          popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
           popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 4

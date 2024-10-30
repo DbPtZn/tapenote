@@ -51,6 +51,20 @@ interface InheritDto {
   annotations?: Annotation[]
 }
 
+interface ProjectCard {
+  id: string
+  lib: string
+  firstPicture: string
+  title: string
+  abbrev: string
+  duration: number
+  createAt: Date
+  folder: {
+    id: string
+    name: string
+  }
+}
+
 const __rootdirname = process.cwd()
 @Injectable()
 export class ProjectService {
@@ -162,12 +176,12 @@ export class ProjectService {
           project.speakerHistory = { human: '', machine: '' }
           break
         case LibraryEnum.COURSE:
-          noteId && (project.fromNoteId = noteId)
-          procedureId && (project.fromProcedureId = procedureId)
           project.sidenote = data.sidenote || ''
           project.annotations = data.annotations || []
-          const { audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } =
-            await this.generateCourse(project.id, project.fromProcedureId, dirname, userId)
+          const { fromNoteId, audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } =
+            await this.generateCourse(project.id, procedureId, dirname, userId)
+          project.fromNoteId = fromNoteId
+          procedureId && (project.fromProcedureId = procedureId)
           project.audio = basename(audio) || ''
           project.duration = duration || 0
           project.promoterSequence = promoterSequence || []
@@ -192,7 +206,7 @@ export class ProjectService {
     }
   }
 
-  /** 生成微课数据 */
+  /** 生成动画数据 */
   async generateCourse(
     courseId: string,
     procedureId: string,
@@ -200,9 +214,9 @@ export class ProjectService {
     userId: string
   ) {
     try {
-      const procedure = await this.projectsRepository.findOne({ where: { id: procedureId }, relations: ['fragments'] })
+      const procedure = await this.projectsRepository.findOne({ where: { id: procedureId, userId }, relations: ['fragments'] })
       // 片段排序
-      // console.log('procedure.sequence', procedure.sequence)
+      // console.log('procedure', procedure)
       const order = procedure.sequence.map(item => item) // string 类型 不支持直接使用 sort 进行排序
       // console.log('order', order)
       // throw '测试'
@@ -305,6 +319,7 @@ export class ProjectService {
         }, userId, dirname)
 
       return {
+        fromNoteId: procedure.fromNoteId,
         title: procedure.title,
         content: procedure.content,
         abbrev: procedure.abbrev,
@@ -313,7 +328,7 @@ export class ProjectService {
         promoterSequence,
         keyframeSequence,
         subtitleSequence,
-        subtitleKeyframeSequence
+        subtitleKeyframeSequence,
       }
     } catch (error) {
       throw error
@@ -365,7 +380,7 @@ export class ProjectService {
   /** 导入项目（目前仅实现笔记导入） */
   async input(dto: InputProjectDto, userId: string, dirname: string) {
     try {
-      const { lib, title, content, cover, penname, email, homepage } = dto
+      const { lib, firstPictrue, title, content, cover, penname, email, homepage } = dto
       checkTitle(title)
       const user = await this.usersRepository.findOneBy({ id: userId })
       // console.log(dto.folderId)
@@ -382,7 +397,8 @@ export class ProjectService {
       project.title = title
       project.content = content
       project.abbrev = txt ? txt.slice(0, 100) : ''
-      project.cover = cover
+      project.firstPicture = firstPictrue || ''
+      project.cover = cover || ''
       project.removed = RemovedEnum.NEVER
       project.memos = []
 
@@ -536,19 +552,20 @@ export class ProjectService {
     }
   }
 
-  async findCourseByProcedureId(id: string, userId: string) {
+  async findRelevantProjectsById(id: string, userId: string) {
     try {
       // const courses = await this.projectsRepository.find({
       //   where: { fromProcedureId: id, lib: LibraryEnum.COURSE, userId },
       //   relations: ['folder'],
       //   select: {}
       // })
-      const courses = await this.projectsRepository
+      const projects = await this.projectsRepository
         .createQueryBuilder('project')
         .leftJoinAndSelect('project.folder', 'folder')
         .select([
           'project.id',
-          'project.cover',
+          'project.lib',
+          'project.firstPicture',
           'project.title',
           'project.abbrev',
           'project.duration',
@@ -558,12 +575,64 @@ export class ProjectService {
           'folder.name'
         ])
         .where('project.fromProcedureId = :id', { id })
-        .andWhere('project.lib = :lib', { lib: LibraryEnum.COURSE })
+        .orWhere('project.fromNoteId = :id', { id })
         .andWhere('project.userId = :userId', { userId })
         .getMany()
 
-      console.log(courses)
-      return courses
+      // console.log(projects)
+      return projects
+    } catch (error) {
+      console.log(error)
+      throw error
+    }
+  }
+
+  async findParentProjectsById(id: string, userId: string) {
+    try {
+      const project = await this.projectsRepository.findOneBy({ id, userId })
+      
+      const parentProjects: ProjectCard[] = []
+      if(project.fromNoteId) {
+        const note = await this.projectsRepository.findOne({
+          where: { id: project.fromNoteId, userId },
+          relations: ['folder']
+        })
+        parentProjects.push({
+          id: note.id,
+          lib: note.lib,
+          firstPicture: note.firstPicture,
+          title: note.title,
+          abbrev: note.abbrev,
+          duration: note.duration,
+          createAt: note.createAt,
+          folder: {
+            id: note.folder.id,
+            name: note.folder.name
+          }
+        })
+      }
+      
+      if(project.fromProcedureId) {
+        const procedure = await this.projectsRepository.findOne({
+          where: { id: project.fromProcedureId, userId },
+          relations: ['folder']
+        })
+        parentProjects.push({
+          id: procedure.id,
+          lib: procedure.lib,
+          firstPicture: procedure.firstPicture,
+          title: procedure.title,
+          abbrev: procedure.abbrev,
+          duration: procedure.duration,
+          createAt: procedure.createAt,
+          folder: {
+            id: procedure.folder.id,
+            name: procedure.folder.name
+          }
+        })
+      }
+      // console.log(parentProjects)
+      return parentProjects
     } catch (error) {
       throw error
     }
@@ -587,11 +656,11 @@ export class ProjectService {
   }
 
   async updateContent(updateprojectContentDto: UpdateContentDto, userId: string) {
-    const { id, content, cover } = updateprojectContentDto
+    const { id, content, firstPicture } = updateprojectContentDto
     try {
       const project = await this.findOneById(id, userId)
       project.content = content
-      cover && (project.cover = cover)
+      firstPicture && (project.firstPicture = firstPicture)
       const txt = content.replace(/<[^>]+>/g, '')
       project.abbrev = txt ? txt.slice(0, 100) : ''
       project.detail.wordage = txt.length
@@ -606,6 +675,32 @@ export class ProjectService {
     } catch (error) {
       this.userlogger.error(`更新笔记内容失败,项目id:${id}`)
       throw new Error(`内容更新失败,项目于id:${id}`)
+    }
+  }
+
+  async updateCover(id: string, url: string, userId: string) {
+    try {
+      const project = await this.projectsRepository.findOneBy({ id, userId })
+      project.cover = url
+      const newProject = await this.projectsRepository.save(project)
+      return {
+        updateAt: newProject.updateAt
+      }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async updateCoverPosition(id: string, position: number, userId: string) {
+    try {
+      const project = await this.projectsRepository.findOneBy({ id, userId })
+      project.coverPosition = position
+      const newProject = await this.projectsRepository.save(project)
+      return {
+        updateAt: newProject.updateAt
+      }
+    } catch (error) {
+      throw error
     }
   }
 

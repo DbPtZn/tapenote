@@ -2,7 +2,7 @@ import { VIEW_CONTAINER } from '@textbus/platform-browser'
 import { Commander, ComponentInstance, ContentType, Injectable, Injector, Renderer, RootComponentRef, Selection, Slot } from '@textbus/core'
 import anime from 'animejs'
 import { animeFormatter } from '../formatters'
-import { animeComponent } from '../components/anime/_api'
+import { animeComponent } from '../components'
 
 type AnimeMap = Map<string, { name: string; play: (target: Element) => anime.AnimeInstance }>
 
@@ -153,13 +153,13 @@ export class AnimeProvider {
   /** 更新动画的状态 */
   updateAnimeState(aniId: string, state: AnimeState) {
     const elements = this.viewContainer?.querySelectorAll<HTMLElement>(`[data-id="${aniId}"]`)
+    // console.log(elements)
     if (elements) {
       elements.forEach(element => {
         if (element.tagName.toLowerCase() === 'anime') {
           this.updateFormatterState(element, state)
         }
         if (element.dataset.anime === 'true' || element.tagName.toLocaleLowerCase() === 'anime-component') {
-          // console.log(element)
           this.updateComponentState(element, state)
         }
       })
@@ -195,10 +195,19 @@ export class AnimeProvider {
 
   // 通过 element 查询 component，通过 compoent 实例直接更新其状态
   private updateComponentState(element: HTMLElement, state: AnimeState) {
-    const component = this.renderer.getComponentByNativeNode(element)
+    let component = this.renderer.getComponentByNativeNode(element)
+    if (!component) {
+      // 表格组件需要特别处理
+      if(['table'].includes(element.tagName.toLocaleLowerCase())) {
+        component = this.renderer.getComponentByNativeNode(element.parentElement)
+      }
+    }
     // console.log(component)
     if (!component) return
     if (component.state.dataAnime || component.name === 'AnimeComponent') {
+      // console.log(component)
+      // console.log(state)
+      // console.log(component.state)
       component.updateState(draft => {
         if (state.id !== undefined) draft.dataId = state.id
         if (state.effect !== undefined) draft.dataEffect = state.effect
@@ -215,6 +224,7 @@ export class AnimeProvider {
     if (!componentInstance) return
     const id = this.generateAnimeId()
     const serial = customSerial || this.generateAnimeSerial().toString()
+    console.log(componentInstance.state)
     if (componentInstance.state.dataAnime === false) {
       // 将光标聚焦到目标组件内（当组件状态更新的时候会将页面滚动到光标所在的位置）
       this.selection.selectFirstPosition(componentInstance)

@@ -61,14 +61,15 @@ export function createAnimeEditor(args: {
               scrollerRef: scrollerRef.value,
               toolbarRef: toolbarRef.value,
               controllerRef: controllerRef.value,
+              memos: project.memos,
               content: project.content,
               dirname: project.dirname
             }))
             editor.mount(editorRef.value).then(() => {
               const themeProvider = editor?.get(ThemeProvider)
               themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
+              resolve({ editor, content: editor.getHTML() })
             })
-            resolve({ editor, content: project.content })
           } catch (error) {
             console.log(error)
             reject(error)

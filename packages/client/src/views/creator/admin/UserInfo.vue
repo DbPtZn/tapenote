@@ -69,7 +69,7 @@ function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
     model.value.avatar = path
   }
 }
-const accessToken = computed(() => getServerToken(userStore.account,userStore.hostname))
+const accessToken = computed(() => getServerToken(userStore.account, userStore.hostname))
 /** 提交 */
 function handleSubmit(e: MouseEvent) {
   e.preventDefault()

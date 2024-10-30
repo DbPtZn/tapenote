@@ -10,7 +10,7 @@ import {
 import { ComponentLoader, createElement, createTextNode } from '@textbus/platform-browser'
 import { AttrState, Dialog, FileUploader, Form, FormItem, FormSelect, FormRadio, FormTextField, I18n} from '@textbus/editor'
 import { ImgService, ImgToUrlService } from '..'
-import { useDragResize } from './hooks/drag-resize'
+import { useDragResize } from './_hooks/drag-resize'
 // import { Form, FormTextField, FormRadio, AttrState, FormItem } from '../uikit/_api'
 // import { FileUploader } from '../file-uploader'
 // import { I18n } from '../i18n'
@@ -179,6 +179,7 @@ export const imageB2UComponent = defineComponent({
     // console.log('img component init')
     // 若图片为 base64
     if (data && data.state && ImgToUrlService.isBase64(data.state.src)) {
+      console.log('图片为 base64')
       img2Url.addUploadProcess(
         data.state.src, 
         (url) => {
@@ -314,7 +315,7 @@ export const imageB2UComponent = defineComponent({
 
           const sub = new Subscription()
           sub.add(form.onComplete.subscribe(value => {
-            console.log(value)
+            // console.log(value)
             const config = {
               src: value.src,
               margin: value.margin,

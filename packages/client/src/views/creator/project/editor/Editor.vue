@@ -4,10 +4,11 @@ import { useThemeVars, useMessage, useDialog } from 'naive-ui'
 import { TitleInput } from './private'
 import { useToolbarResize } from '../../_hooks'
 import { computed, h, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { useEditor, useMemo, useScreenshot } from './hooks/_index'
+import { useCover, useEditor, useMemo, useScreenshot } from './hooks/_index'
 import _ from 'lodash'
 import useStore from '@/store'
 import { Editor, Layout } from '@textbus/editor'
+import { Icon } from '@iconify/vue'
 import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
 import { MemoProvider, MessageService, Player } from '@/editor'
@@ -81,15 +82,15 @@ useEditor({
 }).then(({ editor: edi, content }) => {
   // loadingBar.finish() // 加载条完成
   editor = edi
-  const memoProvider = editor.get(MemoProvider)
-  memoProvider.setup(editor, data.value!.memos)
   const messageService = editor.get(MessageService)
+  const memoProvider = editor.get(MemoProvider)
+  memoProvider.setup(editor, data.value!.memos) // 传入的数组可以获得响应性更新
   lastContent = content
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
       editor.onChange.subscribe(() => {
         if(state.isChangeByReadonly1) return state.isChangeByReadonly1 = false
-        // console.log('content change')
+        console.log('content change')
         data.value!.isContentUpdating = true
       }),
       editor.onSave.subscribe(() => {
@@ -103,7 +104,7 @@ useEditor({
         //     content: () => h('img', { src: img, style: { width: '100%', objectFit: 'contain' } }),
         //   })
         // })
-        // console.log(content)
+        console.log(content)
         if(lastContent === content) {
           data.value!.isContentUpdating = false
           return
@@ -214,8 +215,8 @@ const methods = {
     // console.log('保存内容')
     const viewContainer = editor.get(VIEW_CONTAINER)
     const img = viewContainer.querySelector('img')
-    const firstImg = img?.src // 记录第一张图片
-    return projectStore.updateContent({ content: value, cover: firstImg, id: id }, handleSavingStart, account, hostname).then(res => {
+    const firstPicture = img?.src // 记录第一张图片
+    return projectStore.updateContent({ content: value, firstPicture, id: id }, handleSavingStart, account, hostname).then(res => {
       data.value!.isContentUpdating = false
       if (res) {
         handleSavingEnd()
@@ -237,7 +238,7 @@ const methods = {
 }
 
 const { handleContentSave, handleSavingEnd, handleTitleSave, handleSavingStart, handleTitleEnter, handleTitleInput } = methods
-
+const { isAllowAdjust, handleUpdateCover, handleRemoveCover, handleCoverMousedown, handleUpdateCoverPosition } = useCover(props.id, props.account, props.hostname)
 useMemo(props.id, props.account, props.hostname, scrollerRef, bridge)
 
 /** 离开页面前 */
@@ -254,8 +255,9 @@ onBeforeUnmount(() => {
     const hostname = props.hostname
     debounceB(() => {
       if(props.readonly()) return
+      // tb 中的嵌套样式在重载时顺序会发生改变，比较字符串时会认为数据发生变化，因此需要先判断 isContentUpdating
+      if(!data.value?.isContentUpdating) return
       if(lastContent === content) return
-      // console.log('离开前更新')
       handleContentSave(content, id, account, hostname)
       lastContent = content
     })
@@ -297,8 +299,38 @@ onUnmounted(() => {
       </div>
       <!-- 滚动区 -->
       <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
+        <div class="cover">
+          <img
+            v-if="data?.cover"
+            :class="{ 'cover-adjust': isAllowAdjust }"
+            :src="data?.cover"
+            draggable="false"
+            alt="图片加载失败"
+            :style="{ objectPosition: `center ${data.coverPosition}%` }"
+            @mousedown="handleCoverMousedown"
+          >
+          <div v-if="data?.cover" class="action">
+
+            <div v-if="isAllowAdjust" class="btn txt-btn" @click="handleUpdateCoverPosition">
+              确定
+            </div>
+            <div v-if="isAllowAdjust" class="btn txt-btn" @click="isAllowAdjust = false">
+              取消
+            </div>
+            
+            <div v-if="!isAllowAdjust" class="btn" @click="handleUpdateCover">
+              <Icon icon="mdi:image-refresh-outline" height="18" />
+            </div>
+            <div v-if="!isAllowAdjust" class="btn" @click="isAllowAdjust = true">
+              <Icon icon="material-symbols:discover-tune" height="18" />
+            </div>
+            <div v-if="!isAllowAdjust" class="btn" @click="handleRemoveCover">
+              <Icon icon="mdi:image-remove-outline" height="18" />
+            </div>
+          </div>
+        </div>
         <!-- v-if="data" 保证在数据获取之前不会渲染标题栏 -->
-        <TitleInput v-if="data" class="title-input" @input="handleTitleInput($event)" @enter="handleTitleEnter" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
+        <TitleInput v-if="data" class="title-input" :allow-add-cover="!!data.cover" @input="handleTitleInput($event)" @enter="handleTitleEnter" @add-cover="handleUpdateCover" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
         <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
       </div>
     </div>
@@ -423,6 +455,61 @@ onUnmounted(() => {
     background-color:  v-bind('themeVars.bodyColor');
     // background-color: var(--dpz-editor-bgColor);
     // background-color: var(--dpz-editor-pgColor);
+  }
+  .cover {
+    position: relative;
+    max-height: 276px;
+    height: 100%;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 36px;
+    img {
+      height: 100%;
+      width: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    .cover-adjust {
+      pointer-events: all;
+      cursor: move;
+    }
+    .action {
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      position: absolute;
+      right: 25%;
+      bottom: 42px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      .btn {
+        opacity: 0.95;
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        margin-left: 1px;
+        padding: 1px 3px;
+        background-color: #9b9b9b54;
+        cursor: pointer;
+        &:first-child {
+          border-top-left-radius: 3px;
+          border-bottom-left-radius: 3px;
+        }
+        &:last-child {
+          border-top-right-radius: 3px;
+          border-bottom-right-radius: 3px;
+        }
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+
+    &:hover {
+      .action {
+        opacity: 1;
+      }
+    }
   }
   .editor {
     height: 100%;

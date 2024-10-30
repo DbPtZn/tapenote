@@ -7,7 +7,7 @@ import { useDraggable } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
 import { Subscription, filter, fromEvent } from '@tanbo/stream'
 import { MemoService, Structurer } from '../..'
-import { Memo } from './memo.provider'
+import { Memo } from './memo.plugin'
 type BgColor = Memo['bgColor']
 const injector = inject('injector') as Injector
 const layout = injector.get(Layout)
@@ -83,9 +83,8 @@ const { x, y } = useDraggable(memoEl, {
 const offsetX = computed(() => {
   const middleRect = middleEl.getBoundingClientRect()
   const rootRect = rootEl!.getBoundingClientRect()
-  const scrollerRect = scrollerEl!.getBoundingClientRect() 
   // console.log(middleRect, rootRect)
-  return x.value - middleRect.left + rootRect.left - scrollerRect.left
+  return x.value - middleRect.left + rootRect.left
 })
 const offsetY = computed(() => {
   const middleRect = middleEl.getBoundingClientRect()

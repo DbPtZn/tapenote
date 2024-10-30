@@ -1,6 +1,6 @@
 
 import { Commander, FormatValue, Injector, Query, QueryState, QueryStateType, Selection } from '@textbus/core'
-import { animeIgnoreComponent } from '../../../../components/anime/_api'
+import { animeIgnoreComponent } from '../../../../components'
 import { ButtonTool, ButtonToolConfig } from '../..'
 import { MaterialTypeEnum } from '../../toolkit/_utils/MaterialTypeEnum'
 export function animeIgnoreToolConfigFactory(injector: Injector): ButtonToolConfig {

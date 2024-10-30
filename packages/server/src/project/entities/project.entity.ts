@@ -109,6 +109,19 @@ export class Project {
   cover: string // 封面
 
   @Column({
+    type: 'int',
+    default: 50
+  })
+  coverPosition: number // 封面位置
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    default: ''
+  })
+  firstPicture: string // 首图
+
+  @Column({
     type: 'varchar',
     length: 255,
     default: ''

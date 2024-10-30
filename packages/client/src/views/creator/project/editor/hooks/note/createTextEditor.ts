@@ -53,14 +53,16 @@ export function createTextEditor(args: {
             editorRef: editorRef.value,
             scrollerRef: scrollerRef.value, 
             toolbarRef: toolbarRef.value, 
+            memos: project.memos,
             content: project.content,
             dirname: project.dirname
           }))
           editor.mount(editorRef.value).then(() => {
             const themeProvider = editor?.get(ThemeProvider)
-            themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme()) 
+            themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
+            // ⚠ 由于 tb 中解析嵌套 formatter 时，标签顺序可能会发生变化，所以应该在加载之后再获取 html 作为脏值检测依据
+            resolve({ editor, content: editor.getHTML() })
           })
-          resolve({ editor, content: project.content })
         } catch (error) {
           console.log(error)
           reject(error)

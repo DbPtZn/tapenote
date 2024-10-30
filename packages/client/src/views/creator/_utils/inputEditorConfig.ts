@@ -22,14 +22,13 @@ import {
   preComponent,
   preComponentLoader,
   animeFormatter,
-  animeFormatLoader
-} from '@/editor'
-import {   
+  animeFormatLoader,
   animeIgnoreComponent,
   animeIgnoreComponentLoader,
   animeComponent,
   animeComponentLoader
-} from '@/editor/anime'
+} from '@/editor'
+
 export function getInputEditorConfig(account: string, hostname: string) {
   const config = {
     rootComponent: rootComponent,
@@ -43,7 +42,7 @@ export function getInputEditorConfig(account: string, hostname: string) {
     providers: [ImgToUrlService],
     setup(injector: Injector) {
       const imgToUrlService = injector.get(ImgToUrlService)
-      const { uploadImgFunction } = useUploadImg('/upload/img', account, hostname)
+      const { uploadImgFunction } = useUploadImg(account, hostname)
       imgToUrlService.setup(uploadImgFunction)
     }
   }

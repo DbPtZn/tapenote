@@ -26,12 +26,10 @@ import {
   Structurer,
   ThemeProvider,
   animeFormatter,
-  animeFormatLoader
-} from '@/editor'
-import {   
+  animeFormatLoader,
   animeIgnoreComponent, animeIgnoreComponentLoader,
-  animeComponent, animeComponentLoader
-} from '@/editor/anime'
+  animeComponent, animeComponentLoader, MemoProvider, MessageService, MemoService
+} from '@/editor'
 import { fromEvent, Injector } from '@textbus/core'
 import {
   defaultComponentLoaders,
@@ -74,7 +72,10 @@ export function getCourseConfig(args: {
       AnimeProvider,
       RootEventService,
       Structurer,
-      ThemeProvider
+      ThemeProvider,
+      MemoProvider,
+      MessageService,
+      MemoService
     ],
     plugins: [
       () =>

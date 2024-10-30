@@ -9,5 +9,5 @@ export class UpdateContentDto {
 
   @IsOptional()
   @IsString()
-  cover: string
+  firstPicture: string
 }

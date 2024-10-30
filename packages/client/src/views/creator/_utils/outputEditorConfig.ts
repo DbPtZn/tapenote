@@ -13,12 +13,10 @@ import {
   Img2base64Service,
   RootEventService,
   animeFormatter,
-  animeFormatLoader
-} from '@/editor'
-import { 
+  animeFormatLoader,
   animeIgnoreComponent, animeIgnoreComponentLoader, animeComponent, animeComponentLoader,
   listComponent, listComponentLoader, headingComponent, headingComponentLoader
- } from '@/editor/anime'
+} from '@/editor'
 import { Injector } from '@textbus/core'
 import { defaultComponentLoaders, defaultComponents, defaultFormatLoaders, defaultFormatters, EditorOptions } from '@textbus/editor'
 export function getEditorConfig(content?: string) {

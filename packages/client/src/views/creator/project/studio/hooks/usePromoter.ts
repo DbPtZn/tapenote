@@ -57,6 +57,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
           id = animeElement.dataset.id
           serial = animeElement.dataset.serial
           bridge.handleAddPromoter(animeElement)
+          bridge.handleBlur()
         }
         if(!serial || !id) return
         addPromoter(fragmentId, subscript, serial, id)

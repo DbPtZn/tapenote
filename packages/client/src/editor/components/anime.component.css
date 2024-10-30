@@ -34,6 +34,11 @@
   display: block;
   outline: 1px dashed #aaaaaa30!important;
 }
+/* table 特别处理 */
+table[data-anime="true"]:hover {
+  display: table;
+  outline: 1px dashed #aaaaaa30!important;
+}
 
 [data-anime="true"][data-active="true"] .anime-component-tab:after { 
   background-color: pink; 

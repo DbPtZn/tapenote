@@ -78,6 +78,26 @@ export class ProjectController {
     }
   }
 
+  @Patch(`${REST.U}/cover`)
+  async updateCover(@Body() dto: { id: string, url: string }, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.updateCover(dto.id, dto.url, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error)
+    }
+  }
+
+  @Patch(`${REST.U}/cover/position`)
+  async updateCoverPosition(@Body() dto: { id: string, position: number }, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.updateCoverPosition(dto.id, dto.position, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error)
+    }
+  }
+
   @Patch(`${REST.U}/remove/:id`)
   async remove(@Param('id') id: string, @Req() req, @Res() res) {
     try {
@@ -132,15 +152,15 @@ export class ProjectController {
     }
   }
 
-  @Patch(`${REST.U}/sidenote/content`)
-  async updateSidenoteContent(@Body() updateSidenoteContentDto: UpdateSidenoteContentDto, @Req() req, @Res() res) {
-    try {
-      const result = await this.projectService.updateSidenoteContent(updateSidenoteContentDto, req.user.id)
-      res.status(200).send(result)
-    } catch (error) {
-      res.status(400).send(error)
-    }
-  }
+  // @Patch(`${REST.U}/sidenote/content`)
+  // async updateSidenoteContent(@Body() updateSidenoteContentDto: UpdateSidenoteContentDto, @Req() req, @Res() res) {
+  //   try {
+  //     const result = await this.projectService.updateSidenoteContent(updateSidenoteContentDto, req.user.id)
+  //     res.status(200).send(result)
+  //   } catch (error) {
+  //     res.status(400).send(error)
+  //   }
+  // }
 
   @Patch(`${REST.U}/memo/add`)
   async addMemo(@Body() dto: AddMemoDto, @Req() req, @Res() res) {
@@ -213,10 +233,20 @@ export class ProjectController {
     }
   }
 
-  @Get(`${REST.R}/historyCourses/:id`)
-  async getHistoryCourses(@Param('id') id: string, @Req() req, @Res() res) {
+  @Get(`${REST.R}/relevant/:id`)
+  async getRelevantProjects(@Param('id') id: string, @Req() req, @Res() res) {
     try {
-      const result = await this.projectService.findCourseByProcedureId(id, req.user.id)
+      const result = await this.projectService.findRelevantProjectsById(id, req.user.id)
+      res.status(200).send(result)
+    } catch (error) {
+      res.status(400).send(error)
+    }
+  }
+
+  @Get(`${REST.R}/parent/:id`)
+  async getParentProjects(@Param('id') id: string, @Req() req, @Res() res) {
+    try {
+      const result = await this.projectService.findParentProjectsById(id, req.user.id)
       res.status(200).send(result)
     } catch (error) {
       res.status(400).send(error)

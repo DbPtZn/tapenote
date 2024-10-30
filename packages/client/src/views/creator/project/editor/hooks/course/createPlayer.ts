@@ -72,9 +72,8 @@ export function createPlayer(args: {
               /** 载入微课数据 */
               const player = editor?.get(Player)
               player.loadData([courseData])
+              resolve({ editor, content: editor.getHTML() })
             })
-
-            resolve({ editor, content: project.content })
           } catch (error) {
             console.log(error)
             reject(error)

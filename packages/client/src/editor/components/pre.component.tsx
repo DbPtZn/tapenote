@@ -40,7 +40,7 @@ import 'prismjs/components/prism-csharp'
 import 'prismjs/components/prism-go'
 import 'prismjs/components/prism-jsx'
 import 'prismjs/components/prism-tsx'
-import { useComponentToolbar, useSelector } from './templates'
+import { useComponentToolbar, useSelector } from './_templates'
 import { I18n, paragraphComponent } from '@textbus/editor'
 
 export const codeStyles = {

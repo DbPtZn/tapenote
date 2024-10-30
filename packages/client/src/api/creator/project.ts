@@ -14,7 +14,7 @@ interface CreateProjectDto {
 
 interface UpdateContentDto {
   id: string
-  cover?: string
+  firstPicture?: string
   content: string
 }
 
@@ -118,6 +118,12 @@ export const project = (axios: AxiosInstance) => {
     copy<T>(id: string, folderId: string) {
       return axios.post<T>('/project/write/copy', { sourceId: id, folderId })
     },
+    updateCover<T>(id: string, url: string) {
+      return axios.patch<T>('/project/update/cover', { id, url })
+    },
+    updateCoverPosition<T>(id: string, position: number) {
+      return axios.patch<T>('/project/update/cover/position', { id, position })
+    },
     updateTitle<T>(dto: UpdateTitleDto) {
       return axios.patch<T>('/project/update/title', dto)
     },
@@ -152,8 +158,11 @@ export const project = (axios: AxiosInstance) => {
       return axios.delete<T>('/project/update/submission/remove' + id + '&' + key)
     },
 
-    getHistoryCourses<T>(id: string) {
-      return axios.get<T>('/project/read/historyCourses/' + id)
+    getRelevantProjects<T>(id: string) {
+      return axios.get<T>('/project/read/relevant/' + id)
+    },
+    getParentProjects<T>(id: string) {
+      return axios.get<T>('/project/read/parent/' + id)
     },
     coverCourse<T>(courseId: string, procedureId: string) {
       return axios.post<T>(`/project/write/coverCourse?courseId=${courseId}&procedureId=${procedureId}`)

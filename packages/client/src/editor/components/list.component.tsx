@@ -4,18 +4,23 @@ import {
   ContentType,
   defineComponent,
   onBreak,
+  onContentInsert,
+  onContentInserted,
+  onCompositionStart,
+  onCompositionEnd,
   Slot,
   SlotRender,
   Selection,
   useContext,
   useSlots,
   VElement,
-  ComponentInitData, useState, onDestroy, Injector
+  ComponentInitData, useState, onDestroy, Injector, Keyboard, useSelf, Renderer,
 } from '@textbus/core'
-import { paragraphComponent } from '@textbus/editor'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 
-export interface SegmentedSlots<T extends Slot = Slot> {
+import { paragraphComponent } from './paragraph.component'
+
+interface SegmentedSlots<T extends Slot = Slot> {
   before: T[]
   middle: T[]
   after: T[]
@@ -23,8 +28,19 @@ export interface SegmentedSlots<T extends Slot = Slot> {
 
 export interface ListComponentExtends extends ComponentExtends {
   type: 'ul' | 'ol',
-
   split?(startIndex: number, endIndex: number): SegmentedSlots
+}
+
+interface ListComponentState {
+  type: 'ul' | 'ol',
+
+  dataAnime: boolean
+  dataId: string
+  dataEffect: string
+  dataSerial: string
+  dataActive: boolean
+  dataTitle: string
+  dataRange: boolean
 }
 
 export const listComponent = defineComponent({
@@ -33,18 +49,27 @@ export const listComponent = defineComponent({
   separable: true,
   // zenCoding: {
   //   key: ' ',
-  //   match: /^(a\.|[+*])$/,
+  //   match: /^(1\.|[+*])$/,
   //   generateInitData(content: string) {
-  //     console.log('coding')
   //     return {
   //       state: /[-+*]/.test(content) ? 'ul' : 'ol'
   //     }
   //   }
   // },
-  setup(data?: ComponentInitData<'ul' | 'ol'>): ListComponentExtends {
+  setup(data?: ComponentInitData<ListComponentState>): ListComponentExtends {
     const injector = useContext()
     const selection = injector.get(Selection)
-    let state = data?.state || 'ul'
+
+    let state = data?.state || { 
+      type: 'ul',
+      dataAnime: false,
+      dataId: '',
+      dataEffect: '',
+      dataSerial: '',
+      dataActive: false,
+      dataTitle: '',
+      dataRange: false
+    }
     const stateController = useState(state)
     const sub = stateController.onChange.subscribe(v => {
       state = v
@@ -58,7 +83,6 @@ export const listComponent = defineComponent({
       ContentType.Text,
       ContentType.InlineComponent,
     ])])
-
 
     onBreak(ev => {
       if (ev.target.isEmpty && ev.target === slots.last) {
@@ -82,11 +106,21 @@ export const listComponent = defineComponent({
     })
 
     return {
-      type: state,
+      type: state.type,
       render(slotRender: SlotRender): VElement {
-        const Tag = state
+        const { type, dataAnime, dataId, dataEffect, dataSerial, dataActive, dataTitle, dataRange } = state
+        const Tag = type
         return (
-          <Tag>
+          <Tag
+            data-anime={`${dataAnime}` || 'false'}
+            data-id={dataId || ''}
+            data-effect={dataEffect || ''}
+            data-serial={dataSerial || ''}
+            data-active={`${dataActive}` || 'false'}
+            data-title={dataTitle || ''}
+            data-range={`${dataRange}` || 'false'}
+          >
+            <span class='anime-component-tab' data-serial={dataSerial || ''} title={dataTitle || ''} />
             {
               slots.toArray().map(i => {
                 return slotRender(i, children => {
@@ -146,7 +180,17 @@ export const listComponentLoader: ComponentLoader = {
     }
     return listComponent.createInstance(injector, {
       slots,
-      state: element.tagName.toLowerCase() as any
+      state: {
+        type: element.tagName.toLowerCase() as any,
+
+        dataAnime: element.dataset.anime === 'true',
+        dataId: element.dataset.id || '',
+        dataEffect: element.dataset.effect || '',
+        dataSerial: element.dataset.serial || '',
+        dataActive: element.dataset.active === 'true',
+        dataTitle: element.dataset.title || '',
+        dataRange: element.dataset.range === 'true'
+      }
     })
   },
 }

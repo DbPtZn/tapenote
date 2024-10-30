@@ -28,10 +28,8 @@ const layout = injector.get(Layout)
 const commander = injector.get(Commander)
 const selection = injector.get(Selection)
 const keyboard = injector.get(Keyboard)
-const scrollerEl = structurer.scrollerRef!
 
-// const containerRect = viewContainer.getBoundingClientRect()
-// const scrollerRect = scrollerEl.getBoundingClientRect() // 滚动容器状态是固定的
+const scrollerEl = structurer.scrollerRef!
 const menuEl = useTemplateRef<HTMLElement>('menuEl')
 const dropdownEl = useTemplateRef<HTMLElement>('dropdownEl')
 const popoverEl = useTemplateRef<HTMLElement>('popoverEl')
@@ -48,14 +46,14 @@ const pointer = ref(1)
 let subs: Subscription[] = []
 
 onMounted(() => {
-  console.log('shotcut menu mounted')
+  // console.log('shotcut menu mounted')
   // openArrowKey()
   keyboard.addZenCodingInterceptor({
     match: function (content: string): boolean {
       return content === ''
     },
     try: function (key, agent): boolean {
-      console.log(key, agent)
+      // console.log(key, agent)
       return key === '/' || isTargetKey(agent)
     },
     action: function (content: string): boolean {
@@ -65,7 +63,7 @@ onMounted(() => {
         state.show = true
         const caretRect = input.caret.rect
         const middleRect = layout.middle.getBoundingClientRect()
-        const scrollerRect = scrollerEl.getBoundingClientRect() // 滚动容器状态是固定的
+        const scrollerRect = scrollerEl.getBoundingClientRect() // 滚动容器高度是固定的，只受窗口高度影响
         // 获取视口的高度
         // const windowHeight = window.innerHeight
         // 到（编辑器）底部的距离 (菜单顶部到滚动区域底部)
@@ -77,10 +75,10 @@ onMounted(() => {
 
         state.left = caretRect.left - middleRect.left - caretRect.width
         state.top = caretRect.top - middleRect.top + caretRect.height
-        console.log('distanceToTop', distanceToTop, 'distanceToBottom', distanceToBottom, state.height)
+        // console.log('distanceToTop', distanceToTop, 'distanceToBottom', distanceToBottom, state.height)
         if (distanceToBottom < state.height) {
-          console.log('distanceToBottom < 0', distanceToBottom)
-          console.log('distanceToTop > state.height', distanceToTop, state.height)
+          // console.log('distanceToBottom < 0', distanceToBottom)
+          // console.log('distanceToTop > state.height', distanceToTop, state.height)
           if (distanceToTop > state.height) {
             state.top = caretRect.top - middleRect.top - state.height
           } else {
@@ -92,7 +90,6 @@ onMounted(() => {
             }
           }
         }
-
         // console.log(caretRect)
         // console.log(menuEl.value?.getBoundingClientRect())
         // const scrollTop = structurer.scrollerRef!.scrollTop
@@ -100,7 +97,7 @@ onMounted(() => {
 
         subs = [
           fromEvent(document, 'click', true).subscribe(ev => {
-            console.log('mousedown', ev, ev.target instanceof HTMLElement)
+            // console.log('mousedown', ev, ev.target instanceof HTMLElement)
             // TODO bug 不能使用 .contains(menuEl.value) ,因为所有包含 menuEl 的元素都算
             if (ev.target instanceof HTMLElement && !menuEl.value!.contains(ev.target)) {
               state.show = false
@@ -205,7 +202,7 @@ function openArrowKey() {
     keyboard.addShortcut({
       keymap: { key: 'ArrowLeft' },
       action: function (): boolean {
-        console.log('left', pointer.value)
+        // console.log('left', pointer.value)
         if (dropdownState.show) {
           dropdownState.show = false
           dropdownState.optionCount = 0
@@ -229,7 +226,7 @@ function openArrowKey() {
     keyboard.addShortcut({
       keymap: { key: 'ArrowRight' },
       action: function (): boolean {
-        console.log('right')
+        // console.log('right')
         if (dropdownState.show) {
           secondaryPointer.value = secondaryPointer.value < dropdownState.optionCount ? secondaryPointer.value + 1 : 1
           return true
@@ -290,7 +287,7 @@ function openArrowKey() {
         return true
       },
       try(key, agent) {
-        console.log(!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(key))
+        // console.log(!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(key))
         return !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(key)
       },
       action(content) {
@@ -382,9 +379,6 @@ onMounted(() => {})
   </div>
   <div ref="popoverEl" class="popover" v-show="popoverState.show" :style="{ left: `${popoverState.xRef}px`, top: `${popoverState.yRef}px` }">
     <component :is="renderOption" />
-    <!-- <div class="popover-content">
-        <component :is="renderOption" v-for="(item, index) in popoverOptions" :key="item.key" v-bind="item.props" @click="item.onClick" />
-      </div> -->
   </div>
 </template>
 

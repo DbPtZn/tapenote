@@ -1,4 +1,4 @@
-@import './components/anime/index.css';
+@import './components/anime.component.css';
 @import './formatters/anime.formatter.css';
 
 .anime-box {
@@ -13,10 +13,13 @@
   display: block;
   outline: 1px dashed #aaaaaa30;
 }
+table.anime-component-box {
+  display: table!important;
+}
 
 .anime-preset:after {
   border: 2px solid #e03f3f;
-  background: #e03f3f!important;;
+  background: #e03f3f!important;
   animation: .8s .5s tada infinite;
 }
 

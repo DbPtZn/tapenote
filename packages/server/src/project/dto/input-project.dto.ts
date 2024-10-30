@@ -11,6 +11,10 @@ export class InputProjectDto {
 
   @IsString()
   content: string
+  
+  @IsString()
+  @IsOptional()
+  firstPictrue
 
   @IsString()
   @IsOptional()

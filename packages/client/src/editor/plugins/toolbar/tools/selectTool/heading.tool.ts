@@ -8,7 +8,9 @@ import {
   Injector
 } from '@textbus/core'
 import { SelectTool, SelectToolConfig } from '../../toolkit/select-tool'
-import { I18n, headingComponent, paragraphComponent } from '@textbus/editor'
+import { I18n } from '@textbus/editor'
+import { headingComponent } from '../../../../components/heading.component'
+import { paragraphComponent } from '../../../../components/paragraph.component'
 
 export function headingToolConfigFactory(injector: Injector): SelectToolConfig {
   const i18n = injector.get(I18n)
@@ -83,10 +85,9 @@ export function headingToolConfigFactory(injector: Injector): SelectToolConfig {
     queryState(): QueryState<string> {
       const headingState = query.queryComponent(headingComponent)
       if (headingState.state === QueryStateType.Enabled) {
-        // console.log(headingState.value)
         return {
           state: QueryStateType.Enabled,
-          value: headingState.value!.state
+          value: headingState.value!.state.tag
         }
       }
       const paragraphState = query.queryComponent(paragraphComponent)
@@ -96,7 +97,6 @@ export function headingToolConfigFactory(injector: Injector): SelectToolConfig {
       }
     },
     onChecked(value: string) {
-      // console.log(value)
       const isHeading = /h[1-6]/.test(value)
       commander.transform({
         target: isHeading ? headingComponent : paragraphComponent,
@@ -109,7 +109,16 @@ export function headingToolConfigFactory(injector: Injector): SelectToolConfig {
         },
         stateFactory() {
           if (isHeading) {
-            return value
+            return {
+              tag: value,
+              dataAnime: false,
+              dataId: '',
+              dataEffect: '',
+              dataSerial: '',
+              dataActive: false,
+              dataTitle: '',
+              dataRange: false
+            }
           }
         }
       })

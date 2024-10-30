@@ -360,6 +360,14 @@ export interface TableConfig {
   useTextbusStyle: boolean,
   columnCount: number
   rowCount: number
+  
+  dataAnime?: boolean
+  dataId?: string
+  dataEffect?: string
+  dataSerial?: string
+  dataActive?: boolean
+  dataTitle?: string
+  dataRange?: boolean
 }
 
 export function findFocusCell(componentInstance: ComponentInstance, slot: TableCellSlot): TableCellSlot | null {

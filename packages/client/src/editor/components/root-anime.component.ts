@@ -19,11 +19,11 @@ import {
 } from '@textbus/core'
 import { ComponentLoader, VIEW_DOCUMENT, EDITOR_OPTIONS, SlotParser } from '@textbus/platform-browser'
 import { EditorOptions } from '@textbus/editor'
-import { AddAnimeService } from '../../services'
+import { AddAnimeService } from '../services'
 
 import { paragraphComponent } from './paragraph.component'
 
-export const rootComponent = defineComponent({
+export const rootAnimeComponent = defineComponent({
   type: ContentType.BlockComponent,
   name: 'RootComponent',
   setup(data?: ComponentInitData<any>) {
@@ -156,7 +156,7 @@ export const rootComponent = defineComponent({
   }
 })
 
-export const rootComponentLoader: ComponentLoader = {
+export const rootAnimeComponentLoader: ComponentLoader = {
   match(): boolean {
     return true
   },
@@ -167,7 +167,7 @@ export const rootComponentLoader: ComponentLoader = {
       ContentType.InlineComponent
     ])
     slotParser(slot, element)
-    return rootComponent.createInstance(context, {
+    return rootAnimeComponent.createInstance(context, {
       state: null,
       slots: [slot]
     })

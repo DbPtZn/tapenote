@@ -14,7 +14,7 @@ export function uploader(config: UploadConfig, account: string, hostname: string
         const target = event.target as HTMLInputElement
         const files = target.files
         if (files && files.length > 0) {
-          const { uploadImgFile } = useUploadImg('/upload/img', account, hostname)
+          const { uploadImgFile } = useUploadImg(account, hostname)
           uploadImgFile(files[0])
             .then(url => {
               resolve(url)

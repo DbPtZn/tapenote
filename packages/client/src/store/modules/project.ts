@@ -56,7 +56,7 @@ interface SubmissionHistory {
 
 interface Snapshot {
   id: string
-  cover: string
+  firstPicture: string
   title: string
   abbrev: string
   duration: number
@@ -64,19 +64,34 @@ interface Snapshot {
   createAt: string
 }
 
-interface HistoryCourse {
+interface RelevantProject {
   id: string
-  cover: string
+  lib: LibraryEnum
+  firstPicture: string
   title: string
   abbrev: string
   duration: number
-  detail: any
   createAt: string
   folder: {
     id: string
     name: string
   }
 }
+
+interface ParentProject {
+  id: string
+  lib: LibraryEnum
+  cover: string
+  title: string
+  abbrev: string
+  duration: number
+  createAt: string
+  folder: {
+    id: string
+    name: string
+  }
+}
+
 interface Memo {
   id: string
   content: string
@@ -107,6 +122,9 @@ export interface Project {
   dirname: string
   folderId: string
   folder: Folder
+  cover: string
+  coverPosition: number
+  firstPicture: string
   title: string
   content: string
   abbrev: string
@@ -134,7 +152,8 @@ export interface Project {
   submissionHistory: SubmissionHistory[]
 
   snapshots?: Snapshot[]
-  historyCourses?: HistoryCourse[]
+  relevantProjects?: RelevantProject[]
+  parentProjects?: ParentProject[]
 
   createAt: string
   updateAt: string
@@ -248,6 +267,9 @@ export const useProjectStore = defineStore('projectStore', {
         dirname: data.dirname || '',
         folderId: data.folderId || '',
         folder: data.folder || { id: '', name: '' },
+        cover: data.cover || '',
+        coverPosition: data.coverPosition || 50,
+        firstPicture: data.firstPicture || '',
         title: data.title || '',
         content: data.content || '',
         abbrev: data.abbrev || '',
@@ -383,6 +405,7 @@ export const useProjectStore = defineStore('projectStore', {
             .then(res => {
               // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才对 store 更新数据
               if (this.data[index].id === params.id) {
+                this.data[index].firstPicture = params.firstPicture || ''
                 this.data[index].content = params.content
                 this.data[index].updateAt = res.data.updateAt
                 this.data[index].detial.wordage = res.data.wordage
@@ -396,6 +419,18 @@ export const useProjectStore = defineStore('projectStore', {
         } else {
           resolve(true)
         }
+      })
+    },
+    updateCover(id: string, url: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.updateCover(id, url).then(res => {
+        const index = this.data.findIndex(i => i.id === id)
+        this.data[index].cover = url
+      })
+    },
+    updateCoverPosition(id: string, position: number, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.updateCoverPosition(id, position).then(res => {
+        const index = this.data.findIndex(i => i.id === id)
+        this.data[index].coverPosition = position
       })
     },
     addMemo(params: Parameters<typeof CreatorApi.prototype.project.addMemo>[0], account: string, hostname: string) {
@@ -1109,10 +1144,10 @@ export const useProjectStore = defineStore('projectStore', {
       })
     },
     /** ------------------------------- history course ------------------------------------------- */
-    getHistoryCourses(id: string, account: string, hostname: string) {
-      return this.creatorApi(account, hostname).project.getHistoryCourses<HistoryCourse[]>(id).then(res => {
+    getRelevantProjects(id: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.getRelevantProjects<RelevantProject[]>(id).then(res => {
         const index = this.data.findIndex(item => item.id === id)
-        if(index !== -1) this.data[index].historyCourses = res.data
+        if(index !== -1) this.data[index].relevantProjects = res.data
       })
     },
     async coverCourse(courseId: string, procedureId: string, account: string, hostname: string) {
@@ -1124,7 +1159,13 @@ export const useProjectStore = defineStore('projectStore', {
       } catch (error) {
         console.log(error)
       }
-    }
+    },
+    getParentProjects(id: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.getParentProjects<ParentProject[]>(id).then(res => {
+        const index = this.data.findIndex(item => item.id === id)
+        if(index !== -1) this.data[index].parentProjects = res.data
+      })
+    },
   },
   getters: {}
 })

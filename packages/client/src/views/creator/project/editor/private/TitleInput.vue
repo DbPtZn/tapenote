@@ -1,5 +1,9 @@
 <template>
   <div :class="['title', isSticky && 'title-Sticky']">
+    <div v-if="!allowAddCover" class="add-cover" @click="emits('addCover')">
+      <Icon icon="ic:outline-add-photo-alternate" />
+      <span>添加封面</span>
+    </div>
     <div class="title-wrapper" ref="titleEl">
       <div
         ref="textarea"
@@ -26,6 +30,7 @@ import { watchOnce } from '@vueuse/core'
 import { useMessage, useThemeVars } from 'naive-ui'
 import { LockRound, LockOpenRound } from '@vicons/material'
 import { watch } from 'vue'
+import { Icon } from '@iconify/vue'
 import { Bridge } from '../../bridge'
 
 const bridge = inject('bridge') as Bridge
@@ -34,6 +39,7 @@ const message = useMessage()
 const emits = defineEmits<{
   input: [string]
   sticky: [boolean]
+  addCover: []
   enter: []
 }>()
 const props = defineProps({
@@ -56,7 +62,11 @@ const props = defineProps({
   allowSticky: {
     type: Boolean,
     default: true
-  }
+  },
+  allowAddCover: {
+    type: Boolean,
+    default: true
+  },
 })
 const maxWidthVal = computed<string>(() => {
   if (typeof props.maxWidth === 'number') return props.maxWidth + 'px'
@@ -142,7 +152,24 @@ watchOnce(
   opacity: 0.8;
 }
 
+.add-cover {
+  z-index: 1;
+  position: absolute;
+  top: -10px;
+  left: 0;
+  display: none;
+  align-items: center;
+  color: v-bind('themeVars.textColor3');
+  font-size: 16px;
+  cursor: pointer;
+  span {
+    font-size: 14px;
+    margin-left: 2px;
+  }
+}
+
 .title {
+  position: relative;
   max-width: v-bind(maxWidthVal);
   width: 100%;
   // max-width: 880px;
@@ -176,6 +203,11 @@ watchOnce(
       .sticky {
         opacity: 1;
       }
+    }
+  }
+  &:hover {
+    .add-cover {
+      display: flex;
     }
   }
 }
