@@ -424,7 +424,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
             })
           }
           // 3.加载完成后启动播放
-          player!.start()
+          player!.start(false)
           playerState.isPlaying = true
           onPlayerStateUpdate.next(true)
           const timer = setInterval(() => {

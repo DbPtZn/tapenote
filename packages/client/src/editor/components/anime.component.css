@@ -5,7 +5,13 @@
   display: block;
   outline: 1px dashed #aaaaaa30!important;
 }
-[data-anime="true"] .anime-component-tab:after {
+tb-step[data-range="true"] {
+  display: flex;
+  outline: 1px dashed #aaaaaa30!important;
+}
+
+/* [data-serial]:not([data-serial=""]) */
+[data-anime="true"] > .anime-component-tab:after {
   position: absolute;
   right: -12px;
   top: -12px;
@@ -26,7 +32,12 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);
   pointer-events: auto;
 }
-[data-anime="true"] .anime-component-tab:hover:after {
+/* 针对组件嵌套的情况特别处理 [data-serial=""] */
+[data-anime="false"] > .anime-component-tab:after {
+  content: unset;
+}
+
+[data-anime="true"] > .anime-component-tab:hover:after {
   cursor: pointer;
   animation: .8s .5s tada infinite;
 }
@@ -34,19 +45,24 @@
   display: block;
   outline: 1px dashed #aaaaaa30!important;
 }
+tb-step[data-anime="true"]:hover {
+  display: flex;
+  outline: 1px dashed #aaaaaa30!important;
+}
 /* table 特别处理 */
 table[data-anime="true"]:hover {
   display: table;
   outline: 1px dashed #aaaaaa30!important;
 }
+tb-word-explain[data-anime="true"]:hover {
+  display: flex;
+  outline: 1px dashed #aaaaaa30!important;
+}
 
-[data-anime="true"][data-active="true"] .anime-component-tab:after { 
+[data-anime="true"][data-active="true"] > .anime-component-tab:after { 
   background-color: pink; 
 }
 
-[data-anime="false"].anime-component-tab:after {
-  content: unset;
-}
 
 
 

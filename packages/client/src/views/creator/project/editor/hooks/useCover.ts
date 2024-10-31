@@ -11,16 +11,15 @@ export function useCover(id: string, account: string, hostname: string) {
   const { projectStore } = useStore()
 
   const isAllowAdjust = ref(false) 
-  const cover = computed(() => projectStore.get(id)?.cover)
   const data = computed(() => projectStore.get(id))
   function handleUpdateCover() {
     dialog.create({
-      title: `${cover ? '更新' :'添加'}封面`,
+      title: `${data.value?.cover ? '更新' :'添加'}封面`,
       icon: () => h(Icon, { icon: 'ic:outline-add-photo-alternate', height: 24 }),
       content: () => h(CoverUploader, {
         onFinish: (url: string) => {
           projectStore.updateCover(id, url, account, hostname).catch(e => {
-            message.error(`${cover ? '更新' :'添加'}封面图片失败！`)
+            message.error(`${data.value?.cover ? '更新' :'添加'}封面图片失败！`)
           })
           dialog.destroyAll()
         }

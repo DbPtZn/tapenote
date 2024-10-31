@@ -11,14 +11,24 @@ import {
   RenderMode,
   Injector
 } from '@textbus/core'
-import { Dialog, FileUploader, Form, FormTextField, I18n, headingComponent, paragraphComponent } from '@textbus/editor'
+import { Dialog, FileUploader, Form, FormTextField, I18n } from '@textbus/editor'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
+import { headingComponent } from './heading.component'
+import { paragraphComponent } from './paragraph.component'
 
 export interface JumbotronComponentState {
   minHeight: string
   backgroundImage: string
   backgroundSize: string
   backgroundPosition: string
+  
+  dataAnime: boolean
+  dataId: string
+  dataEffect: string
+  dataSerial: string
+  dataActive: boolean
+  dataTitle: string
+  dataRange: boolean
 }
 
 export function createJumbotronSlot(injector: Injector) {
@@ -56,7 +66,15 @@ export const jumbotronComponent = defineComponent({
       minHeight: '200px',
       backgroundImage: '',
       backgroundPosition: 'center',
-      backgroundSize: 'cover'
+      backgroundSize: 'cover',
+      
+      dataAnime: false,
+      dataId: '',
+      dataEffect: '',
+      dataSerial: '',
+      dataActive: false,
+      dataTitle: '',
+      dataRange: false
     }
     const stateController = useState(state)
     const sub = stateController.onChange.subscribe(newState => {
@@ -117,13 +135,23 @@ export const jumbotronComponent = defineComponent({
 
     return {
       render(slotRender, renderMode): VElement {
+        const { dataAnime, dataId, dataEffect, dataSerial, dataActive, dataTitle, dataRange } = state
         return (
-          <tb-jumbotron style={{
-            backgroundImage: state.backgroundImage ? `url("${state.backgroundImage}")` : null,
-            backgroundSize: state.backgroundSize || 'cover',
-            backgroundPosition: state.backgroundPosition || 'center',
-            minHeight: state.minHeight
-          }}>
+          <tb-jumbotron
+            style={{
+              backgroundImage: state.backgroundImage ? `url("${state.backgroundImage}")` : null,
+              backgroundSize: state.backgroundSize || 'cover',
+              backgroundPosition: state.backgroundPosition || 'center',
+              minHeight: state.minHeight,
+            }}
+            data-anime={`${dataAnime}` || 'false'}
+            data-id={dataId || ''}
+            data-effect={dataEffect || ''}
+            data-serial={dataSerial || ''}
+            data-active={`${dataActive}` || 'false'}
+            data-title={dataTitle || ''}
+            data-range={`${dataRange}` || 'false'}
+          >
             {
               renderMode === RenderMode.Editing &&
               <button type="button" class="tb-jumbotron-setting" onClick={setting}><span
@@ -134,6 +162,7 @@ export const jumbotronComponent = defineComponent({
                 return <div>{children}</div>
               })
             }
+            <span class='anime-component-tab' data-serial={state.dataSerial} title={state.dataTitle} />
           </tb-jumbotron>
         )
       }
@@ -152,7 +181,15 @@ export const jumbotronComponentLoader: ComponentLoader = {
         backgroundImage: (style.backgroundImage || '').replace(/^url\(['"]?|['"]?\)$/g, ''),
         backgroundSize: style.backgroundSize,
         backgroundPosition: style.backgroundPosition,
-        minHeight: style.minHeight
+        minHeight: style.minHeight,
+        
+        dataAnime: element.dataset.anime === 'true',
+        dataId: element.dataset.id || '',
+        dataEffect: element.dataset.effect || '',
+        dataSerial: element.dataset.serial || '',
+        dataActive: element.dataset.active === 'true',
+        dataTitle: element.dataset.title || '',
+        dataRange: element.dataset.range === 'true'
       },
       slots: [
         slotParser(new Slot([

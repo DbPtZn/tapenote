@@ -4,7 +4,7 @@ tb-image-card {
   margin-bottom: 20px;
   box-shadow: var(--tb-imgCardBoxShadow)!important;
   border-radius: 3px;
-  overflow: hidden;
+  overflow: visible!important;
 }
 tb-image-card > div > img {
   width: 100%;

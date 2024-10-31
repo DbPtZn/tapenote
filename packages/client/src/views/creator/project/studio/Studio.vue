@@ -148,6 +148,10 @@ const stationMethods = {
     console.log('handleEnd')
     isStartedRecorder.value = false
     // checkPromoter()
+  },
+  // 产生片段后进行启动子检查
+  handleOutput() {
+    checkPromoter()
   }
 }
 
@@ -640,6 +644,7 @@ onUnmounted(() => {
     :speaker-id="speakerId"
     @start="stationMethods.handleStart"
     @end="stationMethods.handleEnd"
+    @output="stationMethods.handleOutput"
   />
 </template>
 

@@ -191,21 +191,12 @@ function applyAnime(
   el: HTMLElement,
   handler: (target: Element) => anime.AnimeInstance
 ) {
-  const display = el.style.display
-  switch (el.tagName.toLocaleLowerCase()) {
-    case 'anime':
-      el.style.display = 'inline-block'
-      break
-    case 'anime-component':
-      el.style.display = 'block'
-      break
-    default:
-      el.style.display = 'block'
-      break
-  }
+  const style = window.getComputedStyle(el)
+  const isInline = style.display === 'inline'
+  isInline && (el.classList.add('anime-playing'))
   el.style.visibility = 'visible'
   handler(el).finished.then(() => {
-    el.style.display = display
+    isInline && (el.classList.remove('anime-playing'))
   })
 }
 

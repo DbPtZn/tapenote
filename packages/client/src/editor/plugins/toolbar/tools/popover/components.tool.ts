@@ -6,21 +6,20 @@ import { PopoverTool, PopoverToolConfig } from '../../toolkit'
 import {
   I18n,
   TodoListSlotState,
-  alertComponent,
+  // alertComponent,
   boldFormatter,
-  imageCardComponent,
   // jumbotronComponent,
   katexComponent,
-  stepComponent,
+  // stepComponent,
   textAlignFormatter,
-  timelineComponent,
-  todolistComponent,
-  wordExplainComponent
+  // timelineComponent,
+  // todolistComponent,
+  // wordExplainComponent
 } from '@textbus/editor'
 import { VNode, h } from 'vue'
 import ComponentCard from './_utils/ComponentCard.vue'
 import Componentslist from './_utils/ComponentsList.vue'
-import { jumbotronComponent } from '../../../../'
+import { alertComponent, imageCardComponent, jumbotronComponent, stepComponent, timelineComponent, todolistComponent, wordExplainComponent } from '../../../../'
 
 // import { DropdownTool, DropdownToolConfig } from '../toolkit/_api'
 // import { I18n } from '../../i18n'

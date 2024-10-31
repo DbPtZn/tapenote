@@ -6,10 +6,10 @@
   border-radius: 4px;
 }
 
-.tb-blockquote > *:first-child {
-  margin-top: 0
+.tb-blockquote-content > *:first-child {
+  margin-top: 0;
 }
 
-.tb-blockquote > *:last-child {
-  margin-bottom: 0
+.tb-blockquote-content > *:last-child {
+  margin-bottom: 0;
 }

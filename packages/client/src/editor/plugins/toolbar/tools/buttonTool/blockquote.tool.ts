@@ -1,6 +1,7 @@
 import { Commander, QueryState, Query, QueryStateType, Injector, Selection } from '@textbus/core'
 import { ButtonTool, ButtonToolConfig } from '../../toolkit'
-import { I18n, blockquoteComponent } from '@textbus/editor'
+import { I18n } from '@textbus/editor'
+import { blockquoteComponent } from '../../../../components'
 
 export function blockquoteToolConfigFactory(injector: Injector): ButtonToolConfig {
   const i18n = injector.get(I18n)

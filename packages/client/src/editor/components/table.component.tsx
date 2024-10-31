@@ -585,7 +585,6 @@ export const tableComponent = defineComponent({
             data-title={dataTitle || ''}
             data-range={`${dataRange}` || 'false'}
           >
-            <span class='anime-component-tab' data-serial={dataSerial} title={dataTitle} />
             <tbody>
             {
               tableCells.map(row => {
@@ -603,6 +602,7 @@ export const tableComponent = defineComponent({
               })
             }
             </tbody>
+            <span class='anime-component-tab' data-serial={dataSerial} title={dataTitle} />
           </table>
         )
         
@@ -711,12 +711,12 @@ export const tableComponentLoader: ComponentLoader = {
     return element.tagName === 'TABLE' || element.tagName === 'DIV' && element.dataset.component === tableComponent.name
   },
   read(element: HTMLTableElement, injector: Injector, slotParser: SlotParser): ComponentInstance {
-    console.log(element)
-    console.log(element.children)
+    // console.log(element)
+    // console.log(element.children)
     if (element.tagName === 'DIV') {
       // element = element.children[0] as HTMLTableElement
       element = element.querySelector('table') as HTMLTableElement
-      console.log(element)
+      // console.log(element)
     }
     const { tHead, tBodies, tFoot } = element
     const headers: Slot[][] = []

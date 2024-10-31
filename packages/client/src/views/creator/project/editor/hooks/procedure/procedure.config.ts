@@ -35,8 +35,8 @@ import {
   paragraphComponent, paragraphComponentLoader,
   animeComponent, animeComponentLoader, animeIgnoreComponent, animeIgnoreComponentLoader,
   headingTool, olTool, ulTool, insertParagraphAfterTool, insertParagraphBeforeTool, 
-  tableComponent, tableComponentLoader,
-  dividerTool, dividerComponent, dividerComponentLoader, Memo, ImgToolbarPlugin, ShotcutPlugin, MemoProvider,
+  tableComponent, tableComponentLoader, blockquoteComponent, blockquoteComponentLoader,
+  dividerTool, dividerComponent, dividerComponentLoader, Memo, ImgToolbarPlugin, ShotcutPlugin, MemoProvider, stepComponent, stepComponentLoader, timelineComponent, timelineComponentLoader, todolistComponent, todolistComponentLoader, wordExplainComponent, wordExplainComponentLoader,
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
@@ -46,8 +46,6 @@ import {
   audioComponentLoader,
   blockComponent,
   blockComponentLoader,
-  blockquoteComponent,
-  blockquoteComponentLoader,
   defaultComponentLoaders,
   defaultComponents,
   defaultFormatLoaders,
@@ -56,16 +54,16 @@ import {
   katexComponent,
   katexComponentLoader,
   LinkJumpTipPlugin,
-  stepComponent,
-  stepComponentLoader,
-  timelineComponent,
-  timelineComponentLoader,
-  todolistComponent,
-  todolistComponentLoader,
+  // stepComponent,
+  // stepComponentLoader,
+  // timelineComponent,
+  // timelineComponentLoader,
+  // todolistComponent,
+  // todolistComponentLoader,
   videoComponent,
   videoComponentLoader,
-  wordExplainComponent,
-  wordExplainComponentLoader
+  // wordExplainComponent,
+  // wordExplainComponentLoader
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'

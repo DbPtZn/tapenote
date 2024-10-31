@@ -7,17 +7,12 @@ import {
   onDestroy,
   Slot,
   SlotRender,
-  useContext,
   useSlots,
   useState,
   VElement
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
-import { useEnterBreaking } from './_hooks/single-block-enter'
-
-interface HeadingComponentState {
-  tag: string
-
+interface State {
   dataAnime: boolean
   dataId: string
   dataEffect: string
@@ -27,18 +22,16 @@ interface HeadingComponentState {
   dataRange: boolean
 }
 
-export const headingComponent = defineComponent({
+export const blockquoteComponent = defineComponent({
   type: ContentType.BlockComponent,
-  name: 'HeadingComponent',
+  name: 'BlockquoteComponent',
   zenCoding: {
     key: ' ',
-    match(content: string) {
-      return /^#{1,6}$/.test(content)
-    },
-    generateInitData(content) {
+    match: /^>$/,
+    generateInitData() {
       return {
+        slots: [new Slot([ContentType.Text, ContentType.InlineComponent, ContentType.BlockComponent])],
         state: {
-          tag: 'h' + content.length,
           dataAnime: false,
           dataId: '',
           dataEffect: '',
@@ -50,10 +43,8 @@ export const headingComponent = defineComponent({
       }
     }
   },
-  setup(data?: ComponentInitData<HeadingComponentState>) {
-    const injector = useContext()
+  setup(data?: ComponentInitData<State>) {
     let state = data?.state || {
-      tag: 'h1',
       dataAnime: false,
       dataId: '',
       dataEffect: '',
@@ -62,34 +53,25 @@ export const headingComponent = defineComponent({
       dataTitle: '',
       dataRange: false
     }
-
     const stateController = useState(state)
     const sub = stateController.onChange.subscribe(v => {
       state = v
     })
-    const slots = useSlots(data?.slots || [new Slot([
-      ContentType.Text,
-      ContentType.InlineComponent
-    ])])
     onDestroy(() => {
       sub.unsubscribe()
     })
 
+    const slots = useSlots(data?.slots || [new Slot([ContentType.Text, ContentType.InlineComponent, ContentType.BlockComponent])])
     if (!slots.length) {
-      slots.push(new Slot([
-        ContentType.Text,
-        ContentType.InlineComponent
-      ]))
+      slots.push(new Slot([ContentType.Text, ContentType.InlineComponent, ContentType.BlockComponent]))
     }
-    useEnterBreaking(injector, slots)
-
     return {
-      type: state.tag || 'h1',
       render(slotRender: SlotRender): VElement {
-        const Tag = state.tag || 'h1'
         const { dataAnime, dataId, dataEffect, dataSerial, dataActive, dataTitle, dataRange } = state
+
         return (
-          <Tag
+          <blockquote
+            class="tb-blockquote"
             data-anime={`${dataAnime}` || 'false'}
             data-id={dataId || ''}
             data-effect={dataEffect || ''}
@@ -98,33 +80,26 @@ export const headingComponent = defineComponent({
             data-title={dataTitle || ''}
             data-range={`${dataRange}` || 'false'}
           >
-            {
-              slotRender(slots.get(0)!, children => {
-                return <span>{children}</span>
-              })
-            }
-            <span class='anime-component-tab' data-serial={dataSerial} title={dataTitle} />
-          </Tag>
+            {slotRender(slots.get(0)!, children => {
+              return <div class="tb-blockquote-content">{children}</div>
+            })}
+            <span class="anime-component-tab" data-serial={dataSerial} title={dataTitle} />
+          </blockquote>
         )
-        
       }
     }
   }
 })
 
-export const headingComponentLoader: ComponentLoader = {
+export const blockquoteComponentLoader: ComponentLoader = {
   match(element: HTMLElement): boolean {
-    return /^h[1-6]$/i.test(element.tagName)
+    return element.tagName === 'BLOCKQUOTE' || (element.tagName === 'DIV' && element.className === 'tb-blockquote')
   },
   read(element: HTMLElement, injector: Injector, slotParser: SlotParser): ComponentInstance {
-    const slot = slotParser(new Slot([
-      ContentType.Text,
-      ContentType.InlineComponent,
-    ]), element)
-    return headingComponent.createInstance(injector, {
+    const slot = slotParser(new Slot([ContentType.Text, ContentType.BlockComponent, ContentType.InlineComponent]), element)
+    return blockquoteComponent.createInstance(injector, {
       slots: [slot],
-      state: { 
-        tag: element.tagName.toLowerCase(),
+      state: {
         dataAnime: element.dataset.anime === 'true',
         dataId: element.dataset.id || '',
         dataEffect: element.dataset.effect || '',
@@ -134,5 +109,5 @@ export const headingComponentLoader: ComponentLoader = {
         dataRange: element.dataset.range === 'true'
       }
     })
-  },
+  }
 }

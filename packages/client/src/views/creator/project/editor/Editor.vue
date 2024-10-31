@@ -214,8 +214,9 @@ const methods = {
   handleContentSave(value: string, id: string, account: string, hostname: string) {
     // console.log('保存内容')
     const viewContainer = editor.get(VIEW_CONTAINER)
-    const img = viewContainer.querySelector('img')
-    const firstPicture = img?.src // 记录第一张图片
+    const imgs = viewContainer.querySelectorAll('img')
+    const img = Array.from(imgs).find(img => img.src.startsWith('http'))
+    const firstPicture = img?.src || '' // 记录第一张图片
     return projectStore.updateContent({ content: value, firstPicture, id: id }, handleSavingStart, account, hostname).then(res => {
       data.value!.isContentUpdating = false
       if (res) {

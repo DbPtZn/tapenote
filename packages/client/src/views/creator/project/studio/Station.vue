@@ -69,6 +69,7 @@ const {
   handleStartPause,
   handleStopRecord,
   handleCut,
+  handleAutoCut,
   handleWaveformVisible
 } = useRecorder({ silenceSpace: 3000 })
 const { mode, options, startSpeech, stopSpeech, getActionSequence } = useSpeech(bridge, getCurrentDuration, handleOperate)
@@ -183,7 +184,7 @@ const subs = [
             )
           })
 
-          // TODO 设置最大上传限制
+          // TODO 设置最大上传限制(防止文件过大导致上传失败)
           const tasks = audioChunks.map((audiobuffer, index) => {
             const wavData = AudioRecorder.audioBufferToWav(audiobuffer)
             const blob = new Blob([wavData], { type: 'audio/wav' })
@@ -196,6 +197,7 @@ const subs = [
           })
           Promise.all(tasks).then(resp => {
             console.log('创建片段成功')
+            emits('output')
           }).catch(err => {
             console.log('创建片段失败')
           })
@@ -266,12 +268,12 @@ onUnmounted(() => {
         分段
         <Icon icon="solar:video-frame-cut-broken" height="24" />
       </div>
-      <div :class="{ btn: 1 }" @click="isAutoCut = !isAutoCut">
+      <div :class="{ btn: 1 }" @click="handleAutoCut">
         静音分段
         <Icon v-if="isAutoCut" icon="material-symbols:check-circle-outline" height="24" />
         <Icon v-if="!isAutoCut" icon="material-symbols:cancel-outline" height="24" />
       </div>
-      <div :class="{ btn: 1 }" @click="speechMethods.cancel">
+      <div :class="{ btn: 1, disabled: !isStarted  }" @click="speechMethods.cancel">
         弃用
         <Icon icon="ic:outline-comments-disabled" height="24" />
       </div>

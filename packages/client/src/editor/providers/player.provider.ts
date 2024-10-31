@@ -253,16 +253,17 @@ export class Player {
 
   /** 启动播放 */
   @UpdateState
-  start() {
+  start(isInitScrollTop = true) {
     // console.log('开始播放')
     this.hideIgnoreComponent()
-    this.init()
+    this.init(isInitScrollTop)
     this.playMulti({ data: this.data, index: 0 })
   }
 
   /** 从此处开始 */
   @UpdateState
   startHere(startTime: number, startIndex: number) {
+    this.hideIgnoreComponent()
     this.clear()
     this.playMulti({ data: this.data, index: 0, startPoint: [{ startTime, startIndex }] })
   }
@@ -410,9 +411,9 @@ export class Player {
   }
 
   /** 初始化 */
-  private init() {
+  private init(isInitScrollTop = true) {
     // 初始化滚动区
-    this.scrollerRef.scrollTop = 0
+    isInitScrollTop && (this.scrollerRef.scrollTop = 0)
     // 初始化
     this.total = 0
     this.totalTime = 0

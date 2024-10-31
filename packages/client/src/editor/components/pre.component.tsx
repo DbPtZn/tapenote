@@ -119,6 +119,14 @@ export const languageList: Array<{ label: string, value: string }> = [{
 export interface PreComponentState {
   lang: string
   theme?: string
+  
+  dataAnime?: boolean
+  dataId?: string
+  dataEffect?: string
+  dataSerial?: string
+  dataActive?: boolean
+  dataTitle?: string
+  dataRange?: boolean
 }
 
 export class CodeStyleFormatter implements Formatter<string> {
@@ -378,15 +386,31 @@ export const preComponent = defineComponent({
     slots: [],
     state: {
       lang: '',
-      theme: ''
+      theme: '',
+      dataAnime: false,
+      dataId: '',
+      dataEffect: '',
+      dataSerial: '',
+      dataActive: false,
+      dataTitle: '',
+      dataRange: false
     }
   }) {
-    console.log('setup', 'precomponent')
+    // console.log('setup', 'precomponent')
     let languageGrammar = getLanguageGrammar(data.state!.lang)
     let [blockCommentStartString, blockCommentEndString] = getLanguageBlockCommentStart(data.state!.lang)
+
     const stateController = useState({
       lang: data.state!.lang,
-      theme: data.state?.theme || 'auto'
+      theme: data.state?.theme || 'auto',
+      // ANIME
+      dataAnime: data.state?.dataAnime || false,
+      dataId: data.state?.dataId || '',
+      dataEffect: data.state?.dataEffect || '',
+      dataSerial: data.state?.dataSerial || '',
+      dataActive: data.state?.dataActive || false,
+      dataTitle: data.state?.dataTitle || '',
+      dataRange: data.state?.dataRange || false
     })
     const injector = useContext()
 
@@ -395,6 +419,14 @@ export const preComponent = defineComponent({
     const selection = injector.get(Selection)
 
     stateController.onChange.subscribe(newState => {
+      data.state!.dataAnime = newState.dataAnime
+      data.state!.dataId = newState.dataId
+      data.state!.dataEffect = newState.dataEffect
+      data.state!.dataSerial = newState.dataSerial
+      data.state!.dataActive = newState.dataActive
+      data.state!.dataTitle = newState.dataTitle
+      data.state!.dataRange = newState.dataRange
+      
       data.state!.lang = newState.lang
       data.state!.theme = newState.theme
       languageGrammar = getLanguageGrammar(newState.lang);
@@ -708,8 +740,20 @@ export const preComponent = defineComponent({
           }
         })
         const blockHighlight = slots.toArray().some(i => i.state?.emphasize === true)
+        const { dataAnime, dataId, dataEffect, dataSerial, dataActive, dataTitle, dataRange } = data.state!
         return (
-          <pre class="tb-pre" lang={lang} data-theme={data.state!.theme || null}>
+          <pre 
+            class="tb-pre" 
+            lang={lang} 
+            data-theme={data.state!.theme || null}
+            data-anime={`${dataAnime}` || 'false'}
+            data-id={dataId || ''}
+            data-effect={dataEffect || ''}
+            data-serial={dataSerial || ''}
+            data-active={`${dataActive}` || 'false'}
+            data-title={dataTitle || ''}
+            data-range={`${dataRange}` || 'false'}
+            >
             {
               renderMode === RenderMode.Editing ?
               <ComponentToolbar>
@@ -739,6 +783,7 @@ export const preComponent = defineComponent({
               </div>
               <span class="tb-pre-lang">{lang}</span>
             </div>
+            <span class='anime-component-tab' data-serial={data.state!.dataSerial} title={data.state!.dataTitle} />
           </pre>
         )
       }
@@ -777,7 +822,15 @@ export const preComponentLoader: ComponentLoader = {
     return preComponent.createInstance(injector, {
       state: {
         lang: el.getAttribute('lang') || '',
-        theme: el.dataset.theme || ''
+        theme: el.dataset.theme || '',
+        
+        dataAnime: el.dataset.anime === 'true',
+        dataId: el.dataset.id || '',
+        dataEffect: el.dataset.effect || '',
+        dataSerial: el.dataset.serial || '',
+        dataActive: el.dataset.active === 'true',
+        dataTitle: el.dataset.title || '',
+        dataRange: el.dataset.range === 'true'
       },
       slots
     })

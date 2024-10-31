@@ -5,6 +5,19 @@ tb-word-explain {
   padding: 10px 20px;
   background-color: var(--tb-wordExplainBgColor)!important;
   border-radius: 10px;
+
+  &:hover {
+    .word-explain-close {
+      opacity: 1;
+      cursor: pointer;
+    }
+  }
+}
+
+.word-explain-close {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  cursor: pointer;
 }
 
 .tb-word-explain-title-group {

@@ -1,4 +1,5 @@
 import { Subject } from '@tanbo/stream'
+import { useMessage } from 'naive-ui'
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 // import WaveSurfer from 'wavesurfer.js'
 
@@ -12,6 +13,7 @@ export function useRecorder(args: {
 }) {
   const { silenceSpace } = args
 
+  const message = useMessage()
   const onRecorderEnd = new Subject<string>()
   const onStateUpdate = new Subject<boolean>()
   const ondataavailable = new Subject<{ blob: Blob; duration: number; isSilence?: boolean }>()
@@ -214,6 +216,11 @@ export function useRecorder(args: {
     startRecording() // 新起录音
   }
 
+  function handleAutoCut() {
+    isAutoCut.value = !isAutoCut.value
+    message.info(`自动静音分段已${isAutoCut.value ? '开启' : '关闭'}`)
+  }
+
   // 停止录音
   function handleStopRecord() {
     if(!isStarted.value) return
@@ -263,6 +270,7 @@ export function useRecorder(args: {
     handleStartPause,
     handleStopRecord,
     handleCut,
+    handleAutoCut,
     handleWaveformVisible
   }
 }

@@ -137,6 +137,16 @@
   opacity: 0.8;
 }
 
+.material-icons-outlined-close::before {
+  content: 'close';
+  font-size: 14px;
+  line-height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
 .material-icons-round-horizontal_rule::before {
   content: 'horizontal_rule';
   /* font-size: 18px; */

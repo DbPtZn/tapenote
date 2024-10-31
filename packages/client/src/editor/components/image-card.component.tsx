@@ -22,6 +22,14 @@ import { Dialog, FileUploader, Form, FormTextField, I18n, paragraphComponent } f
 export interface ImageCardComponentState {
   src: string
   height: string
+
+  dataAnime: boolean
+  dataId: string
+  dataEffect: string
+  dataSerial: string
+  dataActive: boolean
+  dataTitle: string
+  dataRange: boolean
 }
 
 // eslint-disable-next-line max-len
@@ -34,7 +42,15 @@ export const imageCardComponent = defineComponent({
   setup(initData?: ComponentInitData<ImageCardComponentState>) {
     let state = initData?.state || {
       src: defaultImageSrc,
-      height: '200px'
+      height: '200px',
+
+      dataAnime: false,
+      dataId: '',
+      dataEffect: '',
+      dataSerial: '',
+      dataActive: false,
+      dataTitle: '',
+      dataRange: false
     }
     const stateController = useState(state)
     const injector = useContext()
@@ -111,8 +127,19 @@ export const imageCardComponent = defineComponent({
 
     return {
       render(slotRender): VElement {
+        const { dataAnime, dataId, dataEffect, dataSerial, dataActive, dataTitle, dataRange } = state
         return (
-          <tb-image-card data-src={state.src} data-height={state.height}>
+          <tb-image-card 
+            data-src={state.src} 
+            data-height={state.height}
+            data-anime={`${dataAnime}` || 'false'}
+            data-id={dataId || ''}
+            data-effect={dataEffect || ''}
+            data-serial={dataSerial || ''}
+            data-active={`${dataActive}` || 'false'}
+            data-title={dataTitle || ''}
+            data-range={`${dataRange}` || 'false'}
+          >
             <div onClick={showForm}>
               <img src={state.src} style={{
                 height: state.height
@@ -123,6 +150,7 @@ export const imageCardComponent = defineComponent({
                 return <p>{children}</p>
               })
             }
+            <span class='anime-component-tab' data-serial={state.dataSerial} title={state.dataTitle} />
           </tb-image-card>
         )
       }
@@ -140,7 +168,15 @@ export const imageCardComponentLoader: ComponentLoader = {
     return imageCardComponent.createInstance(context, {
       state: {
         height: element.dataset.height!,
-        src: element.dataset.src!
+        src: element.dataset.src!,
+        
+        dataAnime: element.dataset.anime === 'true',
+        dataId: element.dataset.id || '',
+        dataEffect: element.dataset.effect || '',
+        dataSerial: element.dataset.serial || '',
+        dataActive: element.dataset.active === 'true',
+        dataTitle: element.dataset.title || '',
+        dataRange: element.dataset.range === 'true'
       },
       slots: [
         p ? slotParser(slot, p) : slot

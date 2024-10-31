@@ -5,7 +5,7 @@
 
 import { DropdownTool, DropdownToolConfig, ToolType, blockquoteToolConfigFactory, codeToolConfigFactory, emojiToolConfigFactory, leftToRightToolConfigFactory, letterSpacingToolConfigFactory, lineHeightToolConfigFactory, preToolConfigFactory, rightToLeftToolConfigFactory, subscriptToolConfigFactory, superscriptToolConfigFactory } from '../..'
 // import { Textbus } from '@textbus/core'
-import { audioToolConfigFactory } from '../dialog/_api'
+import { audioToolConfigFactory, videoToolConfigFactory } from '../dialog/_api'
 import { I18n } from '@textbus/editor'
 import { Injector } from '@textbus/core'
 
