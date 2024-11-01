@@ -87,15 +87,20 @@
 /* blockquote */
 .tb-blockquote {
   padding: 10px 15px;
-  border-left: 10px solid #dddee1;
-  background-color: #f8f8f9;
+  border-left: 10px solid var(--tb-blockquoteBorderColor)!important;
+  background-color: var(--tb-blockquoteBgColor)!important;
   margin: 1em 0;
   border-radius: 4px;
 }
 
-.tb-blockquote > *:first-child {
-  margin-top: 0
+.tb-blockquote-content > *:first-child {
+  margin-top: 0;
 }
+
+.tb-blockquote-content > *:last-child {
+  margin-bottom: 0;
+}
+
 
 blockquote > *:last-child {
   margin-bottom: 0
@@ -130,13 +135,33 @@ tb-image-card > p {
 .tb-img {
   max-width: 100%
 }
+@media (max-width: 767px) {
+  .tb-img {
+    object-fit: contain!important;
+  }
+}
+
+[border] {
+  box-sizing: border-box;
+}
+[border="solid"] {
+  border: 2px solid var(--tb-imgBorderColor);
+}
+
+[border="dashed"] {
+  border: 2px dashed var(--tb-imgBorderColor);
+}
+
+[border="dotted"] {
+  border: 2px dotted var(--tb-imgBorderColor);
+}
 
 /* jumbotron */
 tb-jumbotron {
   display: block;
   min-height: 200px;
   margin-bottom: 1em;
-  background-color: #eee;
+  background-color: var(--tb-jumbotronBgColor)!important;
   padding: 20px;
   position: relative;
   border-radius: 4px;
@@ -157,6 +182,14 @@ tb-katex {
 .tb-list-item {
   margin-top: 0.5em;
   margin-bottom: 0.5em
+}
+
+/** code */
+
+code {
+  color: var(--tb-codeTextColor)!important;
+  border-color: var(--tb-codeBorderColor)!important;
+  background-color: var(--tb-codeBgColor)!important;
 }
 
 /* pre */
@@ -253,6 +286,56 @@ code, kbd, pre, samp {
   font-size: 13px;
   padding: 4px 10px;
 }
+
+/* 重写 pre 样式 */
+
+/* auto */
+.tb-pre[data-theme=auto] .tb-pre-content {
+  color: var(--tb-preTextColor);
+  background-color: var(--tb-preBgColor);
+  border-color: var(--tb-preBorderColor);
+}
+.tb-pre[data-theme=auto] .tb-code-line-number-bg {
+  background-color: var(--tb-preSideBgColor);
+  border-right-color: var(--tb-preSideBorderColor);
+}
+.tb-pre[data-theme=auto] .tb-color-content-highlight {
+  background-color: var(--tb-preHighlightBgColor);
+}
+.tb-pre[data-theme=auto] .tb-color-content-highlight .tb-code-line-emphasize {
+  opacity: 1;
+  background-color: var(--tb-preEmphasizeBgColor);
+}
+
+/* dark */
+.tb-pre[data-theme=dark] .tb-pre-content {
+  color: #a9aeb2;
+  background-color: #1c2838;
+  border-color: #353535;
+}
+.tb-pre[data-theme=dark] .tb-code-line-number-bg {
+  background-color: #2d3a48;
+  border-right-color: #292929;
+}
+.tb-pre[data-theme=dark] .tb-color-content-highlight {
+  background-color: #263140;
+}
+.tb-pre[data-theme=dark] .tb-color-content-highlight .tb-code-line-emphasize {
+  opacity: 1;
+  background-color: #1c2838;
+}
+
+/* light */
+.tb-pre[data-theme=light] .tb-pre-content {
+  background-color: #fefefe;
+  color: #1f2225;
+}
+
+
+.tb-pre {
+  background-color: unset!important;
+}
+
 
 .tb-hl-keyword {
   font-weight: bold;
@@ -597,8 +680,12 @@ tb-word-explain {
   margin-top: 1em;
   margin-bottom: 1em;
   padding: 10px 20px;
-  background-color: #f8f8f9;
+  background-color: var(--tb-wordExplainBgColor)!important;
   border-radius: 10px;
+}
+
+.word-explain-close {
+  opacity: 0;
 }
 
 .tb-word-explain-title-group {
@@ -620,8 +707,55 @@ tb-word-explain {
 .tb-word-explain-detail {
   flex: 1;
   padding-left: 20px;
-  border-left: 1px solid #ddd;
+  border-left: 1px solid var(--tb-wordExplainDetailBorderColor)!important;
 }
+
+/** anime-component */
+anime-component {
+  position: relative;
+  display: block;
+  pointer-events: none;
+}
+
+.anime-component-content {
+  pointer-events: auto;
+}
+
+/** divider */
+.separator {
+  display: flex;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.tb-divider {
+  height: 1px;
+  width: 100%;
+  background-color: var(--tb-dividerColor);
+}
+
+.tb-divider-title {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.tb-divider-title-fill {
+  margin: 0 12px;
+}
+
+.separator-left {
+  .tb-divider-left {
+    width: 28px;
+  }
+}
+
+.separator-right {
+  .tb-divider-right {
+    width: 28px;
+  }
+}
+
+
 
 @media screen and (max-width: 767px) {
   tb-word-explain {

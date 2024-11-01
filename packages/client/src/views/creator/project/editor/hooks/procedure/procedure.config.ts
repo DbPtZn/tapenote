@@ -23,7 +23,6 @@ import {
   preComponentLoader,
   ContextMenu,
   MemoService,
-  MemoPlugin,
   MessageService,
   StudioService,
   ImgService,
@@ -36,7 +35,7 @@ import {
   animeComponent, animeComponentLoader, animeIgnoreComponent, animeIgnoreComponentLoader,
   headingTool, olTool, ulTool, insertParagraphAfterTool, insertParagraphBeforeTool, 
   tableComponent, tableComponentLoader, blockquoteComponent, blockquoteComponentLoader,
-  dividerTool, dividerComponent, dividerComponentLoader, Memo, ImgToolbarPlugin, ShotcutPlugin, MemoProvider, stepComponent, stepComponentLoader, timelineComponent, timelineComponentLoader, todolistComponent, todolistComponentLoader, wordExplainComponent, wordExplainComponentLoader,
+  dividerTool, dividerComponent, dividerComponentLoader, Memo, ImgToolbarPlugin, ShotcutPlugin, MemoProvider, stepComponent, stepComponentLoader, timelineComponent, timelineComponentLoader, todolistComponent, todolistComponentLoader, wordExplainComponent, wordExplainComponentLoader, defaultComponents, defaultComponentLoaders, blockBackgroundColorFormatter, blockBackgroundColorFormatterLoader,
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
@@ -46,8 +45,10 @@ import {
   audioComponentLoader,
   blockComponent,
   blockComponentLoader,
-  defaultComponentLoaders,
-  defaultComponents,
+  defaultAttributeLoaders,
+  defaultAttributes,
+  // defaultComponentLoaders,
+  // defaultComponents,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
@@ -67,7 +68,6 @@ import {
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_utils'
-import '@/editor/anime.css'
 import { uploader } from '../uploader'
 import { getResourceDomain } from '@/views/creator/_hooks'
 
@@ -84,6 +84,7 @@ export function getProcedureConfig(args: {
   content?: string
 }) {
   const { account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, memos, content } = args
+  editorRef.classList.add('anime-editor')
   const ResourceDomain = getResourceDomain(hostname)
   const config: EditorOptions = {
     theme: 'darkline',
@@ -96,49 +97,12 @@ export function getProcedureConfig(args: {
     i18n: i18n,
     rootComponent: rootAnimeComponent,
     rootComponentLoader: rootAnimeComponentLoader,
-    components: [
-      paragraphComponent, animeComponent, imageB2UComponent, animeIgnoreComponent, listComponent, headingComponent,
-      audioComponent,
-      blockComponent,
-      blockquoteComponent,
-      headingComponent,
-      paragraphComponent,
-      preComponent,
-      tableComponent,
-      videoComponent,
-      imageCardComponent,
-      todolistComponent,
-      katexComponent,
-      wordExplainComponent,
-      timelineComponent,
-      stepComponent,
-      alertComponent,
-      jumbotronComponent,
-      dividerComponent,
-    ],
-    componentLoaders: [
-      paragraphComponentLoader, animeComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, listComponentLoader, headingComponentLoader,
-      imageCardComponentLoader,
-      todolistComponentLoader,
-      katexComponentLoader,
-      wordExplainComponentLoader,
-      timelineComponentLoader,
-      stepComponentLoader,
-      alertComponentLoader,
-      jumbotronComponentLoader,
-      audioComponentLoader,
-      blockquoteComponentLoader,
-      blockComponentLoader,
-      headingComponentLoader,
-      listComponentLoader,
-      paragraphComponentLoader,
-      preComponentLoader,
-      tableComponentLoader,
-      videoComponentLoader,
-      dividerComponentLoader,
-    ],
+    components: defaultComponents,
+    componentLoaders: defaultComponentLoaders,
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
+    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
+    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
     providers: [
       { provide: Commander, useClass: CustomCommander },
       AnimeProvider, AddAnimeService, DialogProvider, 

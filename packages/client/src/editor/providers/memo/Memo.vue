@@ -83,14 +83,12 @@ const { x, y } = useDraggable(memoEl, {
 const offsetX = computed(() => {
   const middleRect = middleEl.getBoundingClientRect()
   const rootRect = rootEl!.getBoundingClientRect()
-  const scrollerRect = scrollerEl!.getBoundingClientRect() 
-  // console.log(middleRect, rootRect)
-  return x.value - middleRect.left + rootRect.left - scrollerRect.left
+  return x.value - middleRect.left + rootRect.left
 })
+
 const offsetY = computed(() => {
   const middleRect = middleEl.getBoundingClientRect()
   const scrollerRect = scrollerEl!.getBoundingClientRect()
-  // console.log(scrollerRect.top)
   return y.value - middleRect.top + scrollerRect.top - scrollerEl!.scrollTop
 })
 
@@ -123,11 +121,9 @@ function useEditor() {
   editor.mount(editorEl.value)
   subs2.push(
     editor.onFocus.subscribe(() => {
-      // console.log('focus')
       isEditorFocus.value = true
     }),
     editor.onBlur.subscribe(() => {
-      // console.log('blur')
       isEditorFocus.value = false
     })
   )
@@ -158,55 +154,47 @@ function handleMouseUp(ev) {
 function getSize() {
   emits('resize', props.id, heightVal.value, widthVal.value)
 }
+
 const widthVal = ref(props.width || 300)
 const heightVal = ref(props.height || 300)
 let subs: Subscription[] = []
 onMounted(() => {
   subs.push(
     fromEvent<MouseEvent>(verticalEl.value!, 'mousedown').subscribe(ev => {
-      // console.log('vertical down')
       ev.preventDefault() // 缩放的时候不会选中主编辑器富文本
       ev.stopPropagation()
       const rect = scrollerEl!.getBoundingClientRect()
       const moveSub = fromEvent<MouseEvent>(document, 'mousemove').subscribe(ev => {
-        // console.log('vertical move', ev.clientX - x.value)
         widthVal.value = ev.clientX - x.value - rect.left
       })
       const upSub = fromEvent<MouseEvent>(document, 'mouseup').subscribe(ev => {
-        // console.log('vertical up')
         getSize()
         moveSub.unsubscribe()
         upSub.unsubscribe()
       })
     }),
     fromEvent<MouseEvent>(horizontalEl.value!, 'mousedown').subscribe(ev => {
-      // console.log('horizontal down')
       ev.stopPropagation()
       ev.preventDefault()
       const rect = scrollerEl!.getBoundingClientRect()
       const moveSub = fromEvent<MouseEvent>(document, 'mousemove').subscribe(ev => {
-        // console.log('horizontal move', rect, rect.top)
         heightVal.value = ev.clientY - y.value - rect.top + scrollerEl!.scrollTop
       })
       const upSub = fromEvent<MouseEvent>(document, 'mouseup').subscribe(ev => {
-        // console.log('horizontal up')
         getSize()
         moveSub.unsubscribe()
         upSub.unsubscribe()
       })
     }),
     fromEvent<MouseEvent>(nwseEl.value!, 'mousedown').subscribe(ev => {
-      // console.log('nwse down')
       ev.stopPropagation()
       ev.preventDefault()
       const rect = scrollerEl!.getBoundingClientRect()
       const moveSub = fromEvent<MouseEvent>(document, 'mousemove').subscribe(ev => {
-        // console.log('nwse move', ev.clientX - x.value,)
         widthVal.value = ev.clientX - x.value - rect.left
         heightVal.value = ev.clientY - y.value - rect.top + scrollerEl!.scrollTop
       })
       const upSub = fromEvent<MouseEvent>(document, 'mouseup').subscribe(ev => {
-        // console.log('nwse up')
         getSize()
         moveSub.unsubscribe()
         upSub.unsubscribe()
@@ -221,11 +209,9 @@ onUnmounted(() => {
 })
 
 function handleFocus() {
-  // console.log('div focus')
   isMemoFocus.value = true
 }
 function handleBlur() {
-  // console.log('div blur')
   isMemoFocus.value = false
 }
 const isFocus = computed(() => isEditorFocus.value || isMemoFocus.value)
@@ -314,7 +300,6 @@ function handleDrawerVisible() {
           <div class="main" v-show="!isCollapsed">
             <div class="editor" ref="editorEl" />
           </div>
-          <!-- <div class="footer" v-show="!isCollapsed"></div> -->
         </div>
         <div ref="drawerEl" v-show="!isCollapsed" :class="{ drawer: true, 'drawer-visible': isDrawerVisible }">
           <div class="bgcolor-group">
@@ -414,7 +399,6 @@ function handleDrawerVisible() {
 }
 .vertical {
   width: 10px;
-  // background-color: rgba(255, 0, 0, 0.5);
   margin-right: -10px;
   cursor: e-resize;
 }

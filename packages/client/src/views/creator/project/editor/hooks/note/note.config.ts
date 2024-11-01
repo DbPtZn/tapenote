@@ -53,7 +53,6 @@ import {
   preComponentLoader,
   KeyboardManager,
   MemoService,
-  MemoPlugin,
   ImgToolbarPlugin,
   ImgService,
   MessageService,
@@ -73,7 +72,11 @@ import {
   jumbotronComponentLoader,
   headingComponentLoader,
   paragraphComponentLoader,
-  MemoProvider
+  MemoProvider,
+  defaultComponents,
+  defaultComponentLoaders,
+  blockBackgroundColorFormatter,
+  blockBackgroundColorFormatterLoader
 } from '@/editor'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {
@@ -85,8 +88,10 @@ import {
   blockComponentLoader,
   blockquoteComponent,
   blockquoteComponentLoader,
-  defaultComponentLoaders,
-  defaultComponents,
+  defaultAttributeLoaders,
+  defaultAttributes,
+  // defaultComponentLoaders,
+  // defaultComponents,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
@@ -123,6 +128,7 @@ export function getNoteConfig(args: {
 }) {
   const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, memos, content } = args
   // console.log(content)
+  editorRef.classList.add('note-editor')
   const ResourceDomain = getResourceDomain(hostname)
   const config: EditorOptions = {
     theme: 'darkline',
@@ -134,49 +140,12 @@ export function getNoteConfig(args: {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: content || '',
-    components: [
-      imageB2UComponent, listComponent, headingComponent,
-      audioComponent,
-      blockComponent,
-      blockquoteComponent,
-      headingComponent,
-      paragraphComponent,
-      preComponent,
-      videoComponent,
-      imageCardComponent,
-      todolistComponent,
-      katexComponent,
-      wordExplainComponent,
-      timelineComponent,
-      stepComponent,
-      alertComponent,
-      jumbotronComponent,
-      dividerComponent,
-      tableComponent
-    ],
-    componentLoaders: [
-      imageB2UComponentLoader, listComponentLoader, headingComponentLoader,
-      imageCardComponentLoader,
-      todolistComponentLoader,
-      katexComponentLoader,
-      wordExplainComponentLoader,
-      timelineComponentLoader,
-      stepComponentLoader,
-      alertComponentLoader,
-      jumbotronComponentLoader,
-      audioComponentLoader,
-      blockquoteComponentLoader,
-      blockComponentLoader,
-      headingComponentLoader,
-      listComponentLoader,
-      paragraphComponentLoader,
-      preComponentLoader,
-      videoComponentLoader,
-      dividerComponentLoader,
-      tableComponentLoader
-    ],
+    components: defaultComponents,
+    componentLoaders: defaultComponentLoaders,
     formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
+    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
+    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
     i18n: i18n,
     providers: [
       { provide: Commander, useClass: CustomCommander },
@@ -236,7 +205,7 @@ export function getNoteConfig(args: {
       () => new ShotcutPlugin(),
       // () => new MemoPlugin(memos),
       // () => new Clipboard(),
-      () => new ContextMenu()
+      // () => new ContextMenu()
     ],
     uploader(config) {
       return uploader(config, account, hostname)

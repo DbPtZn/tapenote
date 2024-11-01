@@ -18,14 +18,15 @@
         {{ titleInput }}
       </div>
       <div v-if="allowSticky" :class="['sticky', isSticky ? 'lock' : '']" @click="handleSticky">
-        <NIcon :component="isSticky ? LockRound : LockOpenRound" :size="24" />
+        <!-- <NIcon :component="isSticky ? LockRound : LockOpenRound" :size="24" /> -->
+        <Icon :icon="isSticky ? 'pajamas:thumbtack-solid': 'pajamas:thumbtack'" height="24" />
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, onMounted, Ref, ref, useTemplateRef } from 'vue'
+import { computed, inject, onMounted, ref, useTemplateRef } from 'vue'
 import { watchOnce } from '@vueuse/core'
 import { useMessage, useThemeVars } from 'naive-ui'
 import { LockRound, LockOpenRound } from '@vicons/material'
@@ -146,10 +147,13 @@ watchOnce(
 
 <style lang="scss" scoped>
 .title-Sticky {
-  position: sticky;
+  position: sticky!important;
   top: 0px;
   z-index: 1;
   opacity: 0.8;
+  .add-cover {
+    top: -18px;
+  }
 }
 
 .add-cover {
@@ -201,7 +205,7 @@ watchOnce(
     }
     &:hover {
       .sticky {
-        opacity: 1;
+        opacity: 0.5;
       }
     }
   }

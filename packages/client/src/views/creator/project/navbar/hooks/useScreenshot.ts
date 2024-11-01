@@ -9,29 +9,39 @@ export const useScreenshot = (bridge: Bridge) => {
   const dialog = useDialog()
   const message = useMessage()
   const handleScreenshot = async () => {
+    const coverEL = bridge.coverEl
     const titleEl = bridge.titleEl!
     const layout = bridge.editor!.get(Layout)
     const screenEl = layout.middle
     const msg = message.loading('截图中...', { duration: 0 })
     try {
+      let coverCanvas: HTMLCanvasElement | undefined
+      if(coverEL.value) {
+        coverEL.value.style.width = titleEl.offsetWidth + 'px'
+        coverCanvas = await html2canvas(coverEL.value, { useCORS: true })
+        coverEL.value.style.width = '100%'
+      }
+  
       const titleCanvas = await html2canvas(titleEl)
       const editorCanvas = await html2canvas(screenEl, { useCORS: true })
       setTimeout(() => {
         msg.destroy()
       }, 300)
 
-      const totalHeight= titleCanvas.height + editorCanvas.height
-      const totalWidth = Math.max(titleCanvas.width, editorCanvas.width);
+      const totalHeight = titleCanvas.height + editorCanvas.height + (coverCanvas?.height || 0)
+      const totalWidth = Math.max(titleCanvas.width, editorCanvas.width)
       const combinedCanvas = document.createElement('canvas')
       combinedCanvas.width = totalWidth
       combinedCanvas.height = totalHeight
       const ctx = combinedCanvas.getContext('2d')
       if (!ctx) return
+      coverCanvas && ctx.drawImage(coverCanvas, 0, 0)
+
       // 将第一个截图绘制到新 canvas 上
-      ctx.drawImage(titleCanvas, 0, 0)
+      ctx.drawImage(titleCanvas, 0, coverCanvas?.height || 0)
 
       // 将第二个截图绘制到新 canvas 上，位于第一个截图的下方
-      ctx.drawImage(editorCanvas, 0, titleCanvas.height)
+      ctx.drawImage(editorCanvas, 0, titleCanvas.height + (coverCanvas?.height || 0))
       
       const dataUrl = combinedCanvas.toDataURL('image/png')
 

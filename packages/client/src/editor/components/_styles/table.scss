@@ -4,7 +4,7 @@
   display: inline-flex;
   // flex: 1;
   font-size: 14px;
-  background: none;
+  // background: unset;
   border: none;
   cursor: pointer;
   line-height: 1;
@@ -32,6 +32,7 @@
   padding-right: 3px;
   outline: none;
   border: none;
+  background: unset;
   &:hover {
     background-color: rgba(0, 0, 0, .05);
   }
@@ -48,6 +49,7 @@
   padding-right: 4px;
   outline: none;
   border: none;
+  background: unset;
   &:hover {
     background-color: rgba(0, 0, 0, .05);
   }
@@ -76,14 +78,15 @@
   border-radius:3px;
   padding: 6px 6px;
   height: 28px;
-  background-color: aliceblue;
+  background-color: #f8f8f9;
+  box-shadow: 0 2px 4px 0 rgba(0,0,0,.12);
   .textbus-table-color-option {
     height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 24px;
-    background-color: aqua;
+    // background-color: aqua;
     margin-left: 3px;
     outline: none;
     border: none;

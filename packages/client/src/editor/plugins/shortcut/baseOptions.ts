@@ -433,6 +433,3 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
     popoverState
   }
 }
-
-
-

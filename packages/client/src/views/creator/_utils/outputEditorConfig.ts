@@ -15,21 +15,23 @@ import {
   animeFormatter,
   animeFormatLoader,
   animeIgnoreComponent, animeIgnoreComponentLoader, animeComponent, animeComponentLoader,
-  listComponent, listComponentLoader, headingComponent, headingComponentLoader
+  listComponent, listComponentLoader, headingComponent, headingComponentLoader, defaultPlayerComponents, defaultPlayerComponentLoaders, blockBackgroundColorFormatter, blockBackgroundColorFormatterLoader, ImgService
 } from '@/editor'
 import { Injector } from '@textbus/core'
-import { defaultComponentLoaders, defaultComponents, defaultFormatLoaders, defaultFormatters, EditorOptions } from '@textbus/editor'
+import { defaultAttributeLoaders, defaultAttributes, defaultComponentLoaders, defaultComponents, defaultFormatLoaders, defaultFormatters, EditorOptions } from '@textbus/editor'
 export function getEditorConfig(content?: string) {
   const config: EditorOptions = {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: content || '',
-    components: [imageU2BComponent, animeComponent, animeIgnoreComponent, ...defaultComponents],
-    componentLoaders: [imageU2BComponentLoader, animeComponentLoader, animeIgnoreComponentLoader, ...defaultComponentLoaders],
+    components: defaultPlayerComponents,
+    componentLoaders: defaultPlayerComponentLoaders,
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
+    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
+    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
     styleSheets: [],
-    providers: [Img2base64Service, DialogProvider, OutlineService, RootEventService],
+    providers: [Img2base64Service, ImgService, DialogProvider, OutlineService, RootEventService],
     setup(injector: Injector) {
       //
     }

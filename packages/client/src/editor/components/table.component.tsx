@@ -39,7 +39,8 @@ import {
 } from './_hooks/table-multiple-range'
 
 import { useComponentToolbar } from './_templates/component-toolbar'
-import { blockBackgroundColorFormatter, BlockStyleFormatter, I18n } from '@textbus/editor'
+import { I18n } from '@textbus/editor'
+import { blockBackgroundColorFormatter } from '../formatters'
 
 export {
   createCell
@@ -229,8 +230,8 @@ export const tableComponent = defineComponent({
 
     const ComponentToolbar = useComponentToolbar()
     
-    const colorOptions = ['#333333', '#1f1f1f', '#292929', '#3d3d5c', '#264653'] 
-    // ['#f0f0f0', '#ffffff', '#f9f9f9', '#e0e7ff', '#d1e7dd']
+    const colorOptions = ['#f0f0f0', '#f4f4f4', '#f9f9f9', '#e0e7ff', '#d1e7dd']
+    // 
     
     function handlePopover() {
       if (popoverEl.current!.style.visibility === 'visible') {
@@ -673,7 +674,7 @@ export const tableComponent = defineComponent({
                   <span class="textbus-toolbar-split-line"/>
                   <div title={i18n.get('components.tableComponent.fillColor')} class="textbus-table-tool-button">
                       <button class="textbus-table-toolbar-left-button" onClick={() => {instance.fillColor(currentColor)}}>
-                        <span class="material-icons-outlined-format_color_fill" style={{ color: currentColor }}/>
+                        <span class="material-icons-outlined-format_color_fill" data-color={currentColor} style={{ color: currentColor }}/>
                       </button>
                       <button class="textbus-table-toolbar-right-button" onClick={handlePopover}>
                         <span ref={caretEl} class="textbus-dropdown-caret"/>
@@ -681,7 +682,7 @@ export const tableComponent = defineComponent({
                       <div ref={popoverEl} class="textbus-table-color-popover">
                         {
                           colorOptions.map(color => {
-                            return <button class="textbus-table-color-option" style={{backgroundColor: color}} onClick={() => instance.fillColor(color)} />
+                            return <button class="textbus-table-color-option" data-bgcolor={color} style={{backgroundColor: color}} onClick={() => instance.fillColor(color)} />
                           })
                         }
                       </div>

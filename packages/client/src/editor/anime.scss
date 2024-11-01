@@ -1,0 +1,41 @@
+@import './components/anime.component.scss';
+@import './formatters/anime.formatter.scss';
+@import './providers/player.scss';
+
+.anime-editor {
+  .anime-box {
+    outline: 1px dashed #aaaaaa30;
+  }
+
+  .anime-img {
+    display: inline-block;
+  }
+
+  .anime-component-box {
+    display: block;
+    outline: 1px dashed #aaaaaa30;
+  }
+  table.anime-component-box {
+    display: table !important;
+  }
+
+  .anime-preset:after {
+    border: 2px solid #e03f3f;
+    background: #e03f3f !important;
+    animation: 0.8s 0.5s tada infinite;
+  }
+
+  [data-anime='true'].anime-preset > .anime-component-tab:after {
+    border: 2px solid #e03f3f;
+    background: #e03f3f !important;
+    animation: 0.8s 0.5s tada infinite;
+  }
+
+  .anime-badge-hide:after {
+    content: unset;
+  }
+
+  [data-anime='true'].anime-badge-hide .anime-component-tab:after {
+    content: unset;
+  }
+}

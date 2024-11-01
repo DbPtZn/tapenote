@@ -1,0 +1,165 @@
+.anime-editor {
+  [data-anime='true'] {
+    position: relative;
+  }
+
+  [data-range='true'] {
+    display: block;
+    outline: 1px dashed #aaaaaa30 !important;
+  }
+
+  tb-step[data-range='true'] {
+    display: flex;
+    outline: 1px dashed #aaaaaa30 !important;
+  }
+
+  /* [data-serial]:not([data-serial=""]) */
+  [data-anime='true'] > .anime-component-tab:after {
+    position: absolute;
+    right: -12px;
+    top: -12px;
+
+    z-index: 1;
+    content: attr(data-serial);
+    vertical-align: super;
+    display: inline-block;
+    /* padding: 0 3px; */
+    min-width: 23px;
+    height: 23px;
+    font-size: 15px;
+    color: white;
+    text-align: center;
+    line-height: 23px;
+    border-radius: 24px;
+    background-color: #c8c9cc;
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.12),
+      0 0 6px rgba(0, 0, 0, 0.04);
+    pointer-events: auto;
+  }
+
+  /* 针对组件嵌套的情况特别处理 [data-serial=""] */
+  [data-anime='false'] > .anime-component-tab:after {
+    content: unset;
+  }
+
+  [data-anime='true'] > .anime-component-tab:hover:after {
+    cursor: pointer;
+    animation: 0.8s 0.5s tada infinite;
+  }
+
+  [data-anime='true']:hover {
+    display: block;
+    outline: 1px dashed #aaaaaa30 !important;
+  }
+
+  tb-step[data-anime='true']:hover {
+    display: flex;
+    outline: 1px dashed #aaaaaa30 !important;
+  }
+
+  /* table 特别处理 */
+  table[data-anime='true']:hover {
+    display: table;
+    outline: 1px dashed #aaaaaa30 !important;
+  }
+
+  tb-word-explain[data-anime='true']:hover {
+    display: flex;
+    outline: 1px dashed #aaaaaa30 !important;
+  }
+
+  [data-anime='true'][data-active='true'] > .anime-component-tab:after {
+    background-color: pink;
+  }
+
+  /* AnimeComponent */
+  anime-component {
+    position: relative;
+    display: block;
+    pointer-events: none;
+  }
+
+  .anime-component-content {
+    pointer-events: auto;
+  }
+
+  .anime-component-evoke {
+    display: block;
+    outline: 1px dashed #aaaaaa30;
+  }
+
+  anime-component:after {
+    position: absolute;
+    right: -12px;
+    top: -12px;
+    content: attr(data-serial);
+    vertical-align: super;
+    color: white;
+    background-color: #c8c9cc;
+    border-radius: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 23px;
+    height: 23px;
+    font-size: 15px;
+    line-height: 0px;
+    -webkit-border-radius: 24px;
+    text-align: center;
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.12),
+      0 0 6px rgba(0, 0, 0, 0.04);
+    pointer-events: auto;
+  }
+
+  anime-component:hover:after {
+    cursor: pointer;
+    animation: 0.8s 0.5s tada infinite;
+  }
+
+  anime-component:hover {
+    outline: 1px dashed #aaaaaa30;
+    border-radius: 3px;
+  }
+
+  anime-component[data-active='true']:after {
+    background-color: pink;
+  }
+
+  anime-component p:empty::before {
+    content: '在此输入内容';
+    color: rgba(143, 143, 143, 0.64);
+  }
+
+  .anime-element-hidden anime-component {
+    opacity: 0 !important;
+  }
+
+  .anime-element-hidden [data-anime='true'] {
+    opacity: 0 !important;
+  }
+
+  .anime-badge-hidden anime-component:after {
+    display: none;
+    opacity: 0 !important;
+  }
+
+  .anime-badge-hidden .anime-component-tab:after {
+    display: none;
+    opacity: 0 !important;
+  }
+}
+
+
+.player-editor {
+  anime-component {
+    position: relative;
+    display: block;
+    pointer-events: none;
+  }
+
+  .anime-component-content {
+    pointer-events: auto;
+  }
+}

@@ -416,22 +416,17 @@ class Player {
 
   /** 应用动画播放控制 */
   applyAnime(effectValue, el) {
-    const display = el.style.display
-    switch(el.tagName.toLocaleLowerCase()) {
-      case 'anime':
-        el.style.display = 'inline-block'
-        break
-      case 'anime-component':
-        el.style.display = 'block'
-        break
-    }
+    const style = window.getComputedStyle(el)
+    const isInline = style.display === 'inline'
+    isInline && (el.classList.add('anime-playing'))
+    el.style.visibility = 'visible'
     const anime = getAnime(effectValue)
     if (anime) {
       anime.applyEffect(el).finished.then(() => {
-        el.style.display = display
+        isInline && (el.classList.remove('anime-playing'))
       })
     } else {
-      el.style.display = display
+      isInline && (el.classList.remove('anime-playing'))
     }
   }
 

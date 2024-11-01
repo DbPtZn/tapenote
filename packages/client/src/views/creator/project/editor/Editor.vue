@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import '@textbus/editor/bundles/textbus.min.css'
+import '@/editor/anime.scss'
 import { useThemeVars, useMessage, useDialog } from 'naive-ui'
 import { TitleInput } from './private'
 import { useToolbarResize } from '../../_hooks'
-import { computed, h, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { useCover, useEditor, useMemo, useScreenshot } from './hooks/_index'
+import { computed, h, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue'
+import { useCover, useEditor, useMemo } from './hooks/_index'
 import _ from 'lodash'
 import useStore from '@/store'
-import { Editor, Layout } from '@textbus/editor'
+import { Editor } from '@textbus/editor'
 import { Icon } from '@iconify/vue'
 import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
@@ -25,7 +26,7 @@ const props = defineProps<{
 const { projectStore, folderStore, userStore } = useStore()
 const themeVars = useThemeVars()
 // const loadingBar = useLoadingBar()
-const screenshot = useScreenshot()
+// const screenshot = useScreenshot()
 const message = useMessage()
 const dialog = useDialog()
 const rootRef = ref()
@@ -34,6 +35,8 @@ const controllerRef = ref()
 const toolbarWrapperRef = ref() 
 const scrollerRef = ref()
 bridge.scrollerEl = scrollerRef
+const coverEl = ref<HTMLElement>()
+bridge.coverEl = coverEl
 const editorRef = ref()
 const subs: Subscription[] = []
 const data = computed(() => projectStore.get(props.id))
@@ -300,7 +303,7 @@ onUnmounted(() => {
       </div>
       <!-- 滚动区 -->
       <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
-        <div class="cover">
+        <div ref="coverEl" class="cover">
           <img
             v-if="data?.cover"
             :class="{ 'cover-adjust': isAllowAdjust }"
@@ -464,6 +467,7 @@ onUnmounted(() => {
     width: 100%;
     margin: 0 auto;
     padding-bottom: 36px;
+    background-color: var(--dpz-editor-bgColor);
     img {
       height: 100%;
       width: 100%;
@@ -520,7 +524,7 @@ onUnmounted(() => {
       outline: none;
       border: none;
       border-radius: 0px;
-      .textbus-ui-middle {
+      >.textbus-ui-middle {
         border: none;
         max-width: v-bind('state.editorWidth');
         width: 100%;

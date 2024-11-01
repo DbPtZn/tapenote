@@ -213,7 +213,7 @@ export class Pack {
       })
       await Promise.all(jsFiles)
       // 4.获取 css 模板
-      const cssFiles = ['base.css', 'dark.css', 'edit-dark.css', 'index.css', 'light.css', 'textbus.cmpt.css'].map(filename => {
+      const cssFiles = ['base.css', 'dark.css', 'edit-dark.css', 'index.css', 'light.css', 'textbus.cmpt.css', 'player.css', 'tb-dark.css', 'tb-light.css'].map(filename => {
         return fetch(`./template/styles/${filename}`).then(response => response.blob()).then(blob => { zip.folder('styles')?.file(`${filename}`, blob) })
       })
       await Promise.all(cssFiles)

@@ -28,12 +28,14 @@ import {
   animeFormatter,
   animeFormatLoader,
   animeIgnoreComponent, animeIgnoreComponentLoader,
-  animeComponent, animeComponentLoader, MemoProvider, MessageService, MemoService
+  animeComponent, animeComponentLoader, MemoProvider, MessageService, MemoService, defaultComponents, defaultComponentLoaders, defaultPlayerComponents, defaultPlayerComponentLoaders, blockBackgroundColorFormatterLoader, blockBackgroundColorFormatter
 } from '@/editor'
 import { fromEvent, Injector } from '@textbus/core'
 import {
-  defaultComponentLoaders,
-  defaultComponents,
+  defaultAttributeLoaders,
+  defaultAttributes,
+  // defaultComponentLoaders,
+  // defaultComponents,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
@@ -49,6 +51,7 @@ export function getCourseConfig(args: {
   content?: string
 }) {
   const { rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  editorRef.classList.add('player-editor')
   const config: EditorOptions = {
     theme: 'darkline',
     autoFocus: true,
@@ -60,10 +63,12 @@ export function getCourseConfig(args: {
     content: content || '',
     rootComponent: rootPlayerComponent,
     rootComponentLoader: rootPlayerComponentLoader,
-    components: [animeComponent, animeIgnoreComponent, ...defaultComponents],
-    componentLoaders: [animeComponentLoader, animeIgnoreComponentLoader, ...defaultComponentLoaders],
+    components: defaultPlayerComponents,
+    componentLoaders: defaultPlayerComponentLoaders,
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
+    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
+    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
     styleSheets: [],
     providers: [
       Player,

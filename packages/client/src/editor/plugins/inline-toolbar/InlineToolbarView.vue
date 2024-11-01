@@ -45,6 +45,7 @@ const toolbarData = computed(() => {
   align-items: center;
   justify-content: center;
   background-color: v-bind('themeVars.baseColor');
+  box-shadow: v-bind('themeVars.boxShadow1');
   .close {
     display: none;
     cursor: pointer;

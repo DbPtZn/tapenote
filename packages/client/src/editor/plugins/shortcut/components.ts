@@ -1,5 +1,20 @@
+import { TodoListSlotState, alertComponent, imageCardComponent, jumbotronComponent, stepComponent, timelineComponent, todolistComponent, wordExplainComponent } from '@/editor'
 import { ContentType, Injector, Slot } from '@textbus/core'
-import { ComponentCreator, I18n, TodoListSlotState, alertComponent, boldFormatter, imageCardComponent, jumbotronComponent, katexComponent, stepComponent, textAlignFormatter, timelineComponent, todolistComponent, wordExplainComponent } from '@textbus/editor'
+import {
+  ComponentCreator,
+  I18n,
+  // TodoListSlotState,
+  // alertComponent,
+  boldFormatter,
+  // imageCardComponent,
+  // jumbotronComponent,
+  katexComponent,
+  // stepComponent,
+  textAlignFormatter,
+  // timelineComponent,
+  // todolistComponent,
+  // wordExplainComponent
+} from '@textbus/editor'
 
 type MyComponentCreator = { key: string } & ComponentCreator
 export const getComponents = (injector: Injector) => {

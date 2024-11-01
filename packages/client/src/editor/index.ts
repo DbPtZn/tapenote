@@ -7,3 +7,6 @@ export * from './formatters'
 export * from './core'
 export * from './version'
 export * from './i18n'
+
+export * from './default-components'
+

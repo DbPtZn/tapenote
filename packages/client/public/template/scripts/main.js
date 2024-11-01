@@ -15,7 +15,7 @@ function getData() {
 document.addEventListener("DOMContentLoaded", async function() {
 
   const data = await getData()
-  data.audio = 'audio.wav'
+  data.audio = 'audio.ogg'
   // console.log(data)
 
   // 填入数据
@@ -68,24 +68,45 @@ document.addEventListener("DOMContentLoaded", async function() {
 
     if (level > previousLevel) {
       // Increase nesting
-      const sublist = document.createElement('ul');
-      sublist.appendChild(listItem);
-      lastItem.appendChild(sublist);
+      console.log(listItem.textContent)
+      const sublist = document.createElement('div');
+      if (lastItem) {
+        lastItem.appendChild(sublist);
+      } else {
+        list.appendChild(sublist); // 如果 lastItem 为 null，添加到根列表
+      }
       lastItem = sublist; // Update lastItem to the sublist
+      lastItem.appendChild(listItem);
     } else if (level < previousLevel) {
       // Decrease nesting
-      for (let i = level; i < previousLevel; i++) {
-        lastItem = lastItem.parentElement.parentElement;
+      let tempLastItem = lastItem;
+      while (tempLastItem && getLevel(tempLastItem) >= level) {
+        tempLastItem = tempLastItem.parentElement;
       }
-      lastItem.parentElement.appendChild(listItem);
+      if (tempLastItem) {
+        tempLastItem.parentElement?.insertBefore(listItem, tempLastItem.nextSibling);
+      } else {
+        list.appendChild(listItem); // 如果没有找到合适的父元素，添加到根列表
+      }
+      lastItem = listItem;
     } else {
       // Same level
-      list.appendChild(listItem);
+      if (lastItem) {
+        lastItem.parentElement?.insertBefore(listItem, lastItem.nextSibling);
+      } else {
+        list.appendChild(listItem); // 如果 lastItem 为 null，添加到根列表
+      }
+      lastItem = listItem;
     }
-
-    lastItem = listItem;
+    // lastItem = listItem;
     previousLevel = level;
   });
+
+  function getLevel(element) {
+    if (!element) return 0;
+    const tagName = element.tagName;
+    return tagName ? parseInt(tagName[1], 10) : 0;
+  }
 
   // Function to determine which heading is currently active based on scroll position
   function setActiveLink() {
