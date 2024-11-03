@@ -116,7 +116,7 @@ export class StorageService {
             // console.log('file.path', file.path)
             const url = this.common.proxyDomain + '/' + dirname + '/' + basename(file.path)
             removeFile && fs.unlinkSync(file.path)
-            console.log('cos url:', url)
+            // console.log('cos url:', url)
             resolve(url)
           })
           .catch(err => {

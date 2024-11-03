@@ -92,15 +92,21 @@ const fragmentsLength = computed(() => fragments.value.length)
 watch(
   () => projectStore.fragment(props.id).getBySort(),
   fragmentsData => {
-    if (fragmentsLength.value < fragmentsData.length) {
-      nextTick(() => {
-        // 新增片段时，将滚动条滚动到底部
-        scrollerRef.value.scrollTop = scrollerRef.value.scrollHeight
-      })
-    }
+    // if (fragmentsLength.value < fragmentsData.length) {
+    //   nextTick(() => {
+    //     // 新增片段时，将滚动条滚动到底部
+    //     scrollerRef.value.scrollTop = scrollerRef.value.scrollHeight
+    //   })
+    // }
     fragments.value = fragmentsData
   }
 )
+// 将滚动条滚动到底部
+function scrollToBottom() {
+  nextTick(() => {
+    scrollerRef.value.scrollTop = scrollerRef.value.scrollHeight
+  })
+}
 
 /** 编辑器挂载完成后校验启动子和动画标记 */
 const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe(editor => {

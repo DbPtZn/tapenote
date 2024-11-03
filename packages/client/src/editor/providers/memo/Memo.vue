@@ -14,6 +14,7 @@ const layout = injector.get(Layout)
 // const workbenchEl = layout.workbench
 // positive: relative; 在 middle 上，虽然元素插入到 workbench 中，但实际相对于 middle 进行定位
 const middleEl = layout.middle 
+// const workbenchEl = layout.workbench
 
 const structurer = injector.get(Structurer)
 const scrollerEl = structurer.scrollerRef
@@ -48,7 +49,7 @@ const verticalEl = useTemplateRef<HTMLElement>('verticalEl')
 const horizontalEl = useTemplateRef<HTMLElement>('horizontalEl')
 const nwseEl = useTemplateRef<HTMLElement>('nwseEl')
 const drawerEl = useTemplateRef<HTMLElement>('drawerEl')
-
+console.log('props.isExpanded', props.isExpanded)
 const isCollapsed = ref(!props.isExpanded)
 const isEditorFocus = ref(false)
 const isMemoFocus = ref(false)
@@ -56,8 +57,13 @@ const isDrawerVisible = ref(false)
 
 let lastX = props.x
 let lastY = props.y
+const middleRect = middleEl.getBoundingClientRect()
+const scrollerRect = scrollerEl!.getBoundingClientRect()
+console.log('props.x', props.x)
+console.log('props.x / 100 * middleRect.width', props.x / 100 * middleRect.width)
+// props.x + (middleRect.left - scrollerRect.left)
 const { x, y } = useDraggable(memoEl, {
-  initialValue: { x: props.x, y: props.y },
+  initialValue: { x: (props.x / 100 * middleRect.width) + (middleRect.left - scrollerRect.left), y: props.y },
   containerElement: scrollerEl, //workbenchEl,
   stopPropagation: true, // 阻止冒泡
   handle: handlerEl, // 指定控制元素, 区别于 draggingElement 指定的是拽动元素（触发 move 和 up 的元素，start 事件依旧会在根元素上触发）
@@ -74,7 +80,13 @@ const { x, y } = useDraggable(memoEl, {
   },
   onEnd(position) {
     if (lastX === x.value && lastY === y.value) return // 避免点击的时候触发 position 更新
-    emits('move', props.id, position.x, position.y)
+    // const middleRect = middleEl.getBoundingClientRect()
+    // 'position.x - (middleRect.left - scrollerRect.left)' 因为 middleRect.left 会出现变化
+    // const xPct = (position.x - (middleRect.left - scrollerRect.left)) / middleRect.width
+    // console.log('xd', xPct)
+    // 因为目前无法处理位置受工作区宽度影响的问题，所以改成固定到工作区左侧 -36
+    // console.log(offsetX.value)
+    emits('move', props.id, offsetX.value, position.y)
     lastX = x.value
     lastY = y.value
   }
@@ -83,7 +95,13 @@ const { x, y } = useDraggable(memoEl, {
 const offsetX = computed(() => {
   const middleRect = middleEl.getBoundingClientRect()
   const rootRect = rootEl!.getBoundingClientRect()
-  return x.value - middleRect.left + rootRect.left
+  // const scrollerRect = scrollerEl!.getBoundingClientRect()
+  // const workbenchRect = workbenchEl.getBoundingClientRect()
+  // console.log('middleRect', middleRect.left, 'scrollerRect', scrollerRect.left, middleRect.left - scrollerRect.left)
+  // console.log('x',  x.value - (middleRect.left - scrollerRect.left))
+  // console.log('offsetx', (x.value - middleRect.left + rootRect.left) / middleRect.width * 100)
+  // 改成百分比的模式，这样位置不会受到工作区宽度变化的影响
+  return (x.value - middleRect.left + rootRect.left) / middleRect.width * 100
 })
 
 const offsetY = computed(() => {
@@ -146,6 +164,7 @@ function handleMouseUp(ev) {
     return
   }
   isCollapsed.value = !isCollapsed.value
+  console.log('isCollapsed.value', isCollapsed.value)
   emits('expand', props.id, !isCollapsed.value)
   isDrag = false
   useEditor()
@@ -275,7 +294,7 @@ function handleDrawerVisible() {
     ref="memoEl"
     tabindex="0"
     :class="{ memo: true, expand: !isCollapsed }"
-    :style="{ maxHeight: `${heightVal}px`, maxWidth: `${widthVal}px`, left: `${offsetX}px`, top: `${offsetY}px`, backgroundColor: bgcolor }"
+    :style="{ maxHeight: `${heightVal}px`, maxWidth: `${widthVal}px`, left: `${offsetX}%`, top: `${offsetY}px`, backgroundColor: bgcolor }"
     @focus="handleFocus"
     @blur="handleBlur"
     @contextmenu.stop=""

@@ -63,6 +63,7 @@
     "saslprep": "^1.0.3",
     "sherpa-onnx-node": "^1.0.27",
     "svg-captcha": "^1.4.0",
+    "tencentcloud-sdk-nodejs": "^4.0.965",
     "typeorm": "^0.3.20",
     "uuid": "^9.0.1",
     "wav": "^1.0.2",

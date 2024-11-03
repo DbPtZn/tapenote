@@ -21,9 +21,8 @@ const message = useMessage()
 
 const audioMethods = {
   handleConfirm: (fragments: SegmentFragment[]) => {
-    const tasks =  fragments.reverse().map(fragment => {
-      return projectStore.fragment(props.projectId).createBySegment({
-        sourceFragmentId: props.fragment.id,
+    const data = fragments.map(fragment => {
+      return {
         audio: fragment.audio,
         duration: fragment.duration,
         speaker: props.fragment.speaker,
@@ -32,9 +31,9 @@ const audioMethods = {
         transcript: fragment.transcript,
         tags: fragment.tags,
         promoters: fragment.promoters
-      })
+      }
     })
-    Promise.all(tasks).then(() => {
+    projectStore.fragment(props.projectId).createBySegment(data, props.fragment.id).then(() => {
       message.success('创建成功')
     }).catch(() => {
       message.error('创建失败')

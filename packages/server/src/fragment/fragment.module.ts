@@ -39,6 +39,7 @@ const __rootdirname = process.cwd()
       imports: [ConfigModule], // 导入 ConfigModule，以便在 TypeOrmModule 中使用 ConfigService
       inject: [ConfigService],
       useFactory(configService: ConfigService) {
+        console.log('multer')
         const common = configService.get<ReturnType<typeof commonConfig>>('common')
         // const dest = common.appDir ? `${common.appDir}/assets/temp/images` : join(__rootdirname, 'temp', 'audios')
         return {

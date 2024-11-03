@@ -47,7 +47,7 @@ export class BucketService {
             console.log(err)
             reject(err)
           } else {
-            console.log(data)
+            // console.log(data)
             resolve(data)
           }
         }

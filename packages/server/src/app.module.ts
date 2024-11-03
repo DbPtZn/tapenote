@@ -23,6 +23,7 @@ import { SpeakerModule } from './speaker/speaker.module'
 import { parentPort } from 'worker_threads'
 import { SnapshotModule } from './snapshot/snapshot.module'
 import { BucketModule } from './bucket/bucket.module'
+import { CvmModule } from './cvm/cvm.module';
 @Module({
   imports: [
     UserModule,
@@ -100,7 +101,8 @@ import { BucketModule } from './bucket/bucket.module'
     RequestScopedModule,
     SpeakerModule,
     SnapshotModule,
-    BucketModule
+    BucketModule,
+    CvmModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestScopedService]

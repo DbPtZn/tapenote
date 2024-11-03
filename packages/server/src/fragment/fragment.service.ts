@@ -404,11 +404,8 @@ export class FragmentService {
   }
 
   async createBySplitFragment(
-    dto: {
-      key: string
-      procedureId: string
-      sourceFragmentId: string // 源片段 id
-      removeSourceFragment: boolean
+    dataArray: {
+      // key: string
       audio: string
       duration: number
       speaker: any
@@ -417,32 +414,21 @@ export class FragmentService {
       transcript: string[]
       tags: string[]
       promoters: string[]
-    },
+    }[],
+    procedureId: string,
+    sourceFragmentId: string, // 源片段 id
+    removeSourceFragment: boolean,
     userId: string,
     dirname: string
   ) {
-    
-    this.userlogger.log(`正在创建分段片段：${dto.key}`)
-    const {
-      procedureId,
-      sourceFragmentId,
-      audio,
-      duration,
-      speaker,
-      txt,
-      timestamps,
-      transcript,
-      tags,
-      promoters
-    } = dto
-
-    // 从前端获取的 speaker.avatar 是完整路径，处理截取出文件名
-    const _speaker = speaker
-    _speaker.avatar = basename(_speaker.avatar)
-    
-    const fragmentId = UUID.v4() // 先创建 Fragment ID
-    
-    try {
+    // this.userlogger.log(`正在创建分段片段：${dto.key}`)
+    const sourceFragment = await this.fragmentsRepository.findOneBy({ id: sourceFragmentId, userId })
+    const fragments = []
+    const audios = []
+    for (const data of dataArray) {
+      const { audio, duration, speaker, txt, timestamps, transcript, tags, promoters} = data
+      // 从前端获取的 speaker.avatar 是完整路径，处理截取出文件名
+      const fragmentId = UUID.v4() // 先创建 Fragment ID
       // 先添加到项目工程文件中（占位）
       this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
       await this.projectService.updateSequence({ 
@@ -460,49 +446,63 @@ export class FragmentService {
       fragment.id = fragmentId
       fragment.userId = userId
       fragment.project = procudure
-      fragment.audio = ''
+      fragment.audio = basename(audio)  // 因为文件名不会改变，所以我们这里直接截取文件名即可
       fragment.duration = duration
       fragment.txt = txt
       fragment.transcript = transcript
       fragment.tags = tags
       fragment.promoters = promoters
       fragment.timestamps = timestamps
-      fragment.speaker = _speaker
+      fragment.speaker = sourceFragment.speaker
       fragment.removed = RemovedEnum.NEVER
 
-      fragment.audio = basename(audio)
-      
+      audios.push(audio)
+      fragments.push(fragment)
+    }
+
+    try {
       // 使用事务来确保所有操作要么全部成功，要么全部撤销
       const queryRunner = this.dataSource.createQueryRunner()
       await queryRunner.connect()
       await queryRunner.startTransaction()
       try {
-        await this.dataSource.manager.save(fragment)
-        // 确定创建片段成功后再上传文件
-        await this.uploadService.upload(
-          {
-            filename: fragment.audio,
-            path: audio,
-            mimetype: 'audio/wav'
-          },
-          userId,
-          dirname,
-          fragment.id
-        )
+        for (let i = 0; i < fragments.length; i++) {
+          await queryRunner.manager.save(fragments[i])
+          // 确定创建片段成功后再上传文件
+          await this.uploadService.upload(
+            {
+              filename: fragments[i].audio,
+              path: audios[i],
+              mimetype: 'audio/wav'
+            },
+            userId,
+            dirname,
+            fragments[i].id
+          )
+        }
         // 提交
         await queryRunner.commitTransaction()
       } catch (error) {
         console.log('创建片段失败：' + error.message)
-        await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
+        await this.projectService.checkAndCorrectFragmentSquence(procedureId)
+        // await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
         await queryRunner.rollbackTransaction()
         throw error
       } finally {
         await queryRunner.release()
       }
 
-      fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
-      fragment.speaker.avatar = this.storageService.getResponsePath(fragment.speaker.avatar, dirname)
-      return fragment
+      return fragments.map(fragment => {
+        const { project, userId, ...fragmentWithoutProject } = fragment
+        return {
+          ...fragmentWithoutProject,
+          audio: this.storageService.getResponsePath(fragmentWithoutProject.audio, dirname),
+          speaker: {
+            ...fragmentWithoutProject.speaker,
+            avatar: this.storageService.getResponsePath(fragmentWithoutProject.speaker.avatar, dirname)
+          }
+        }
+      })
     } catch (error) {
       console.log(error)
       throw error

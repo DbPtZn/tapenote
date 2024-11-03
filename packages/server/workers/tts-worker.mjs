@@ -5,7 +5,7 @@ import fs from 'fs'
 const { txt, filepath, speakerId, speed, config } = workerData
 
 try {
-  console.log(filepath)
+  // console.log(filepath)
   // console.log('fs')
   // console.log(fs)
   const tts = new sherpa_onnx.OfflineTts(config)
@@ -15,8 +15,8 @@ try {
   try {
     audio = tts.generate({ text: txt, sid: speakerId || 88, speed: speed || 1.0 })
   } catch (error) {
-    console.log('生成音频失败！')
-    console.log(error)
+    // console.log('生成音频失败！')
+    // console.log(error)
     throw error
   }
   const stop = Date.now()
@@ -32,7 +32,7 @@ try {
     sherpa_onnx.writeWave(filepath, { samples: audio.samples, sampleRate: audio.sampleRate })
   } catch (error) {
     console.log(error)
-    console.log('写入失败！')
+    // console.log('写入失败！')
     throw error
   }
 

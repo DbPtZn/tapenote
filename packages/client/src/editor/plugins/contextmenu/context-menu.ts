@@ -15,7 +15,7 @@ import {
   Plugin,
   Injector
 } from '@textbus/core'
-import { I18n, Message, paragraphComponent } from '@textbus/editor'
+import { I18n, Layout, Message, paragraphComponent } from '@textbus/editor'
 import {
   createElement,
   createTextNode,
@@ -52,6 +52,7 @@ export class ContextMenu implements Plugin {
     const renderer = injector.get(Renderer)
     const memoService = injector.get(MemoService)
     const structurer = injector.get(Structurer)
+    const layout = injector.get(Layout)
     const scroller = structurer.scrollerRef
     let animeService: AnimeService | null = null
     let studioService: StudioService | null = null
@@ -91,9 +92,10 @@ export class ContextMenu implements Plugin {
           onClick: () => {
             const target = ev.target as HTMLElement
             const targetRect = target.getBoundingClientRect()
-            const containeRect = container.getBoundingClientRect()
+            const middleRect = layout.middle.getBoundingClientRect()
             const scrollerRect = scroller!.getBoundingClientRect()
-            memoService.createMeno(ev.offsetX + containeRect.left, ev.offsetY + targetRect.top - scrollerRect.top)
+            //  + containeRect.left - scrollerRect.left
+            memoService.createMeno(ev.offsetX / middleRect.width * 100, ev.offsetY + targetRect.top - scrollerRect.top)
           }
         },{
           iconClasses: ['textbus-icon-copy'],

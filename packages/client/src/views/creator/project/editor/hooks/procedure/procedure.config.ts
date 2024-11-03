@@ -142,18 +142,17 @@ export function getProcedureConfig(args: {
           [animeBadgeVisibleTool, animeElementVisibleTool],
           [cleanTool]
         ], scrollerRef),
-      () => new OutlinePlugin(),
-      // () => new ContextMenu(),
-      () => new LinkJumpTipPlugin(),
-      // () => new AnimeContextmenuPlugin(),
       () => new ImgToolbarPlugin([`${ResourceDomain}`]),
-      () => new AnimeComponentSupport(),
+      () => new LinkJumpTipPlugin(),
+      () => new OutlinePlugin(),
       () => new ShotcutPlugin(),
+      () => new ContextMenu(),
+      () => new AnimeContextmenuPlugin(),
+      () => new AnimeComponentSupport(),
       () => new PreviewPlayerController([
         preview_startTool,
         preview_stopTool
       ],controllerRef!),
-      // () => new MemoPlugin(memos),
     ],
     uploader(config) {
       return uploader(config, account, hostname)

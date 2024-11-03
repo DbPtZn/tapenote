@@ -299,7 +299,7 @@ export const useProjectStore = defineStore('projectStore', {
         updateAt: data.updateAt || '',
         memos: data.memos || []
       }
-      // console.log(item)
+      // console.log(item.memos[0])
       const index = this.data.findIndex(i => i.id === item.id && i.account === item.account && i.hostname === item.hostname)
       if(index === -1) this.data.push(item)
       else {
@@ -865,69 +865,111 @@ export const useProjectStore = defineStore('projectStore', {
         })
       }
       /** 通过分段创建片段 */
-      const createBySegment = (params: Parameters<typeof CreatorApi.prototype.fragment.createBySegment>[0]) => {
+      const createBySegment = (params: Parameters<typeof CreatorApi.prototype.fragment.createBySegment>[0], sourceFragmentId: string, removeSourceFragment?: boolean) => {
         const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
-        const key = utils.randomString()
-        params.procedureId = procedureId
-        params.key = key
-        // 立即创建临时文本片段并插入到片段序列中
-        const fragment: Fragment = {
-          key,
-          id: key,
-          audio: '',
-          duration: params.duration,
-          txt: params.txt,
-          transcript: params.transcript,
-          tags: params.tags,
-          promoters: params.promoters,
-          timestamps: params.timestamps,
-          projectId: procedureId,
-          speaker: params.speaker,
-          collapsed: false,
-          removed: 'never'
-        }
-        get()?.push(fragment) // 不完全片段
-        const index = sequence?.findIndex(item => item === params.sourceFragmentId)
-        if(index && index !== -1) sequence?.splice(index + 1, 0, key) // 用 key 占位
-        
-        return this.creatorApi(account!, hostname!).fragment.createBySegment<Fragment>(params).then(res => {
-          const data = res.data
-          data.audio = ResourceDomain + data.audio
-          if (params.speaker)  data.speaker.avatar = ResourceDomain + data.speaker.avatar
-          else data.speaker = fragment.speaker
-          if(data.key) {
-            // 用片段 id 替换排序信息中的占位 key
-            sequence?.some((item, index, arr) => {
-              if(item === data.key) {
-                arr[index] = data.id
-                return true
-              }
-            })
-            // 替换成完整片段
-            get()?.some((item, index, arr) => {
-              if(item.key === data.key) {
-                arr[index] = data
-                delete arr[index].key // 会影响到 data, 所以放序列处理后面
-                return true
-              }
-            })
-          } else {
-            console.error('异常，未读取到合成片段返回的 key 值')
+        params.reverse().forEach(param => {
+          const key = utils.randomString()
+          param.key = key
+          // 立即创建临时文本片段并插入到片段序列中
+          const fragment: Fragment = {
+            key,
+            id: key,
+            audio: '',
+            duration: param.duration,
+            txt: param.txt,
+            transcript: param.transcript,
+            tags: param.tags,
+            promoters: param.promoters,
+            timestamps: param.timestamps,
+            projectId: procedureId,
+            speaker: param.speaker,
+            collapsed: false,
+            removed: 'never'
           }
+          // console.log('fragment', fragment.speaker)
+          get()?.push(fragment) // 不完全片段
+          const index = sequence?.findIndex(item => item === sourceFragmentId)
+          if(index !== undefined && index !== -1) sequence?.splice(index + 1, 0, key) // 用 key 占位
+          // console.log('sequence:', sequence)
+        })
+        
+        return this.creatorApi(account!, hostname!).fragment.createBySegment<Fragment[]>(params, procedureId, sourceFragmentId, removeSourceFragment).then(res => {
+          const data = res.data
+          data.forEach(segment => {
+            console.log('segment:',  ResourceDomain, segment.audio)
+            segment.audio = ResourceDomain + '/' + segment.audio
+            // if (segment.speaker) segment.speaker.avatar = ResourceDomain + segment.speaker.avatar
+            segment.speaker = this.fragmentSpeakerFilter(segment.speaker, account!, hostname!)
+            if (segment.key) {
+              sequence?.some((item, index, arr) => {
+                if(item === segment.key) {
+                  arr[index] = segment.id
+                  return true
+                }
+              })
+              // 替换成完整片段
+              get()?.some((item, index, arr) => {
+                if(item.key === segment.key) {
+                  arr[index] = segment
+                  delete arr[index].key // 会影响到 data, 所以放序列处理后面
+                  return true
+                }
+              })
+            }else {
+              console.error('异常，未读取到合成片段返回的 key 值')
+            }
+          })
+          // data.audio = ResourceDomain + data.audio
+          // if (data.speaker)  data.speaker.avatar = ResourceDomain + data.speaker.avatar
+          // else data.speaker = fragment.speaker
+          // if(data.key) {
+          //   // 用片段 id 替换排序信息中的占位 key
+          //   // sequence?.some((item, index, arr) => {
+          //   //   if(item === data.key) {
+          //   //     arr[index] = data.id
+          //   //     return true
+          //   //   }
+          //   // })
+          //   // // 替换成完整片段
+          //   // get()?.some((item, index, arr) => {
+          //   //   if(item.key === data.key) {
+          //   //     arr[index] = data
+          //   //     delete arr[index].key // 会影响到 data, 所以放序列处理后面
+          //   //     return true
+          //   //   }
+          //   // })
+          // } else {
+          //   console.error('异常，未读取到合成片段返回的 key 值')
+          // }
         }).catch(err => {
+          params.forEach(param => {
+            // 片段创建失败的时候，应移除前端的临时片段
+            get()?.some((item, index, arr) => {
+              if(item.key === param.key) {
+                arr.splice(index, 1)
+                return true
+              }
+            })
+            sequence?.some((item, index, arr) => {
+              if(item === param.key) {
+               arr.splice(index, 1)
+               return true
+              }
+            })
+          })
           // 片段创建失败的时候，应移除前端的临时片段
-          get()?.some((item, index, arr) => {
-            if(item.key === key) {
-              arr.splice(index, 1)
-              return true
-            }
-          })
-          sequence?.some((item, index, arr) => {
-            if(item === key) {
-              arr.splice(index, 1)
-              return true
-            }
-          })
+          // get()?.some((item, index, arr) => {
+          //   if(item.key === key) {
+          //     arr.splice(index, 1)
+          //     return true
+          //   }
+          // })
+          // sequence?.some((item, index, arr) => {
+          //   if(item === key) {
+          //     arr.splice(index, 1)
+          //     return true
+          //   }
+          // })
           console.error(err)
         })
       }

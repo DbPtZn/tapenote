@@ -10,14 +10,15 @@ import {
   Req,
   Res,
   UseInterceptors,
-  UploadedFile
+  UploadedFile,
+  UploadedFiles
 } from '@nestjs/common'
 import { FragmentService } from './fragment.service'
 import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { AuthGuard } from '@nestjs/passport'
 import { CreateASRFragmentDto } from './dto/create-asr-fragment.dto'
 import { REST } from 'src/enum'
-import { FileInterceptor } from '@nestjs/platform-express'
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
 import {
   RemoveFragmentDto,
   RestoreFragmentDto,
@@ -72,30 +73,45 @@ export class FragmentController {
   }
 
   @Post(`${REST.W}/create/segment`)
-  @UseInterceptors(FileInterceptor('audio'))
-  async createBySegment(@UploadedFile() audio, @Body() formData: CreateSegmentFragmentDto, @Req() req, @Res() res) {
+  @UseInterceptors(AnyFilesInterceptor())
+  async createBySegment(@UploadedFiles() audios, @Body() formData: any, @Req() req, @Res() res) {
     try {
-      console.log(formData)
-      const fragment = await this.fragmentService.createBySplitFragment(
-        {
-          procedureId: formData.procedureId,
-          audio: audio.path,
-          duration: formData.duration,
-          speaker: JSON.parse(formData.speaker),
-          key: formData.key,
-          sourceFragmentId: formData.sourceFragmentId,
-          removeSourceFragment: JSON.parse(formData.removeSourceFragment) === 'true',
-          txt: formData.txt,
-          timestamps: JSON.parse(formData.timestamps),
-          transcript: JSON.parse(formData.transcript),
-          tags: JSON.parse(formData.tags),
-          promoters: JSON.parse(formData.promoters)
-        },
+      // console.log(audios)
+      // console.log(formData)
+      // console.log(formData.key[0])
+      const projectId = formData.projectId
+      const sourceFragmentId = formData.sourceFragmentId
+      const removeSourceFragment = formData.removeSourceFragment === 'true'
+      const length = audios.length
+      const dataArray = []
+      for (let i = 0; i < length; i++) {
+        dataArray.push({
+          key: formData.key[i],
+          audio: audios[i].path,
+          duration: formData.duration[i],
+          speaker: JSON.parse(formData.speaker[i]),
+          txt: formData.txt[i],
+          timestamps: JSON.parse(formData.timestamps[i]),
+          transcript: JSON.parse(formData.transcript[i]),
+          tags: JSON.parse(formData.tags[i]),
+          promoters: JSON.parse(formData.promoters[i])
+        })
+      }
+      // console.log(dataArray)
+      // formData
+      const fragments = await this.fragmentService.createBySplitFragment(
+        dataArray,
+        projectId,
+        sourceFragmentId,
+        removeSourceFragment,
         req.user.id,
         req.user.dirname
       )
-      fragment['key'] = formData.key
-      res.send(fragment)
+      fragments.forEach((fragment, index, arr) => {
+        arr[index].key = dataArray[index].key
+      })
+      console.log(fragments)
+      res.send(fragments)
     } catch (error) {
       console.log(error)
       res.status(400).send(error.message)

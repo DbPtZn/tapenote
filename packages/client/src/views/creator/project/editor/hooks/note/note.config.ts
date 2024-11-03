@@ -203,9 +203,7 @@ export function getNoteConfig(args: {
       () => new LinkJumpTipPlugin(),
       () => new OutlinePlugin(),
       () => new ShotcutPlugin(),
-      // () => new MemoPlugin(memos),
-      // () => new Clipboard(),
-      // () => new ContextMenu()
+      () => new ContextMenu()
     ],
     uploader(config) {
       return uploader(config, account, hostname)

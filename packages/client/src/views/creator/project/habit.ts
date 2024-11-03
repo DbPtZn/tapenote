@@ -1,6 +1,6 @@
 import { reactive } from "vue"
 
-type PlatformWidth = '880px' | '1080px' |'100%'
+type PlatformWidth = '880px' | '1080px' |'95%'
 interface PlatformState {
   isScrollbarShow: boolean
   isOutlineShow: boolean
@@ -39,7 +39,7 @@ export class Habit {
       },
       {
         label: '超宽',
-        value: '100%'
+        value: '95%'
       }
     ]
   }

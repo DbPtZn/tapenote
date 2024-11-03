@@ -27,9 +27,11 @@ export interface ShortcutConfig {
   shift: boolean
   key: string
 }
+type UserRole = 'Basic' | 'Silver' | 'Gold'
 export interface User {
   resourceDomain: string
   account: string
+  role: UserRole 
   nickname: string
   avatar: string
   desc: string
@@ -211,6 +213,7 @@ export const useUserListStore = defineStore('userListStore', {
         resourceDomain: resourceDomain,
         hostname: data.hostname,
         account: data.account,
+        role: data.role || 'Basic',
         nickname: data.nickname,
         avatar: avatar,
         desc: data.desc || '',

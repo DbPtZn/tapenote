@@ -807,7 +807,8 @@ export class ProjectService {
       if(y !== undefined) project.memos[index].y = y
       project.updateAt = new Date()
       await this.projectsRepository.save(project)
-      return ''
+      // 出现更新 project.memos[index].isExpanded 后，前端刷新获取的数据依旧是未更新前的情况，原因未知（影响不大）
+      return { updateAt: project.updateAt }
     } catch (error) {
       throw error
     }
@@ -821,7 +822,7 @@ export class ProjectService {
       if (index === -1) throw new Error('便笺不存在')
       project.memos.splice(index, 1)
       await this.projectsRepository.save(project)
-      return ''
+      return { updateAt: project.updateAt }
     } catch (error) {
       throw error
     }
@@ -1203,7 +1204,9 @@ export class ProjectService {
             procedure.sequence.splice(index, 0, insertFragmentId)
           }
           if (insertPosition === 'after') {
+            console.log('插入前:', procedure.sequence, '插入位置：', index + 1, '插入id:', insertFragmentId)
             procedure.sequence.splice(index + 1, 0, insertFragmentId)
+            console.log('插入后:', procedure.sequence)
           }
           if (insertPosition === 'insert') {
             procedure.sequence.push(insertFragmentId)

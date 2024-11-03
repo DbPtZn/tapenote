@@ -30,11 +30,14 @@ export class SnapshotService {
       snapshot.userId = project.userId
       snapshot.project = project
       snapshot.editorVersion = project.editorVersion
-      // snapshot.projectId = project.id
       snapshot.cover = project.cover
+      snapshot.coverPosition = project.coverPosition
+      snapshot.screenShot = project.screenShot
+      snapshot.firstPicture = project.firstPicture
       snapshot.title = project.title
       snapshot.content = project.content
       snapshot.abbrev = project.abbrev
+      snapshot.memos = project.memos
       snapshot.bgm = project.bgm
       snapshot.sidenote = project.sidenote
       snapshot.audio = project.audio
@@ -109,11 +112,14 @@ export class SnapshotService {
       }
       
       project.cover = snapshot.cover
+      project.coverPosition = snapshot.coverPosition
+      project.screenShot = snapshot.screenShot
+      project.firstPicture = snapshot.firstPicture
       project.title = snapshot.title
       project.content = snapshot.content
       project.abbrev = snapshot.abbrev
       project.bgm = snapshot.bgm
-      project.sidenote = snapshot.sidenote
+      project.memos = snapshot.memos
       project.audio = snapshot.audio
       project.promoterSequence = snapshot.promoterSequence
       project.keyframeSequence = snapshot.keyframeSequence

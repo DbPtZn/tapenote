@@ -1,7 +1,7 @@
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { Folder } from 'src/folder/entities/folder.entity'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
-import { Project } from 'src/project/entities/project.entity'
+import { Annotation, Memo, Project, ProjectBGM } from 'src/project/entities/project.entity'
 import { User } from 'src/user/entities/user.entity'
 import {
   AfterUpdate,
@@ -16,37 +16,6 @@ import {
   UpdateDateColumn
 } from 'typeorm'
 
-export interface Annotation {
-  id: string
-  content: string
-  annotator: string
-  updateAt: string
-  createAt: string
-}
-export interface ProjectBGM {
-  id: string
-  picture: string
-  name: string
-  audio: string
-  volumn: number
-  duration: number
-}
-
-/** 投稿历史 */
-export interface SubmissionHistory {
-  key: string
-  receiver: string
-  editionId: string
-  address: string
-  code: string
-  title: string
-  content?: string
-  penname: string
-  email: string
-  blog: string
-  msg: string
-  date: string
-}
 
 @Entity()
 export class Snapshot {
@@ -80,6 +49,26 @@ export class Snapshot {
   cover: string // 封面
 
   @Column({
+    type: 'int',
+    default: 50
+  })
+  coverPosition: number // 封面位置
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    default: ''
+  })
+  firstPicture: string // 首图
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    default: ''
+  })
+  screenShot: string // 截图
+
+  @Column({
     type: 'varchar',
     length: 255,
     default: ''
@@ -97,6 +86,12 @@ export class Snapshot {
     default: ''
   })
   abbrev: string // 内容缩略
+
+  @Column({
+    type: 'simple-json',
+    nullable: true
+  })
+  memos: Memo[]
 
   /** ------------------------------------------ Procedure -------------------------------------------- */
   // @OneToMany(() => Fragment, fragment => fragment.project)

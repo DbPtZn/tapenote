@@ -26,11 +26,11 @@ export interface Annotation {
 }
 export interface ProjectBGM {
   id: string
-  picture: string
-  name: string
-  audio: string
-  volumn: number
-  duration: number
+  cover: string // 封面
+  name: string  // 名称
+  audio: string // 地址
+  volumn: number  // 音量
+  duration: number  // 时长
 }
 
 /** 投稿历史 */
