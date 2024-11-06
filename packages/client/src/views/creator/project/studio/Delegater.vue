@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
 import { computed, inject, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
-import { ArrowDownwardFilled } from '@vicons/material'
+// import { ArrowDownwardFilled } from '@vicons/material'
 import { usePromoter } from './hooks'
 import { Bridge } from '../bridge'
 import useStore from '@/store'
@@ -111,10 +111,10 @@ onMounted(() => {
     }),
     bridge.onAutoMoveAnimePointerChange.subscribe(isOpen => {
       isAutoMoveAnimePointer.value = isOpen
-      if(isOpen && bridge.editorRef && bridge.scrollerRef) {
-        const elements = bridge.editorRef.querySelectorAll<HTMLElement>(`[data-id]:not([data-id=""])`)
+      if(isOpen && bridge.editorEl && bridge.scrollerEl) {
+        const elements = bridge.editorEl.querySelectorAll<HTMLElement>(`[data-id]:not([data-id=""])`)
         animeMap = Array.from(elements)
-        scrollerRef.value = bridge.scrollerRef
+        scrollerRef.value = bridge.scrollerEl
         scrollerRef.value.style.position = 'relative' // 添加 'relative' 作为 pointer 绝对定位参照系
         subs2.push(
           fromEvent<KeyboardEvent>(window, 'keydown').pipe(auditTime(0)).subscribe(e => {
@@ -128,7 +128,7 @@ onMounted(() => {
               if(pointerIndex.value > 0) pointerIndex.value--
             }
           }),
-          fromEvent<PointerEvent>(bridge.editorRef, 'click').subscribe(e => {
+          fromEvent<PointerEvent>(bridge.editorEl, 'click').subscribe(e => {
             if(!props.allowSelectAnime) return
             const target = e.target as HTMLElement
             const animeElement = AnimeProvider.toAnimeElement(target)
@@ -147,7 +147,7 @@ onMounted(() => {
       }
     }),
     bridge.onEditorReady.subscribe(() => {
-      editorRef.value = bridge.editorRef
+      editorRef.value = bridge.editorEl
       subs5.push(
         fromEvent(editorRef.value!, 'click').pipe(auditTime(5)).subscribe(e => {
           // 延迟 5ms , 与 s 错开时间，这样在动画块之间切换的时候 selectAnimeElement 不会被 s 事件覆盖消除
@@ -173,6 +173,7 @@ onMounted(() => {
     })
   )
 })
+
 onUnmounted(() => {
   subs1.forEach(s => s.unsubscribe())
   subs1.length = 0

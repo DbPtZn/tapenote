@@ -1204,9 +1204,9 @@ export class ProjectService {
             procedure.sequence.splice(index, 0, insertFragmentId)
           }
           if (insertPosition === 'after') {
-            console.log('插入前:', procedure.sequence, '插入位置：', index + 1, '插入id:', insertFragmentId)
+            // console.log('插入前:', procedure.sequence, '插入位置：', index + 1, '插入id:', insertFragmentId)
             procedure.sequence.splice(index + 1, 0, insertFragmentId)
-            console.log('插入后:', procedure.sequence)
+            // console.log('插入后:', procedure.sequence)
           }
           if (insertPosition === 'insert') {
             procedure.sequence.push(insertFragmentId)

@@ -12,7 +12,7 @@ import { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import CreateAdvancedForm  from './utils/CreateAdvancedForm.vue'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../..'
-import { CreateNewFolderFilled, DriveFileMoveRtlFilled, DriveFileRenameOutlineFilled, ShareFilled } from '@vicons/material'
+// import { CreateNewFolderFilled, DriveFileMoveRtlFilled, DriveFileRenameOutlineFilled, ShareFilled } from '@vicons/material'
 import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
@@ -278,7 +278,7 @@ export function useItemListDropDown() {
   function createNewFolder(folderId: string, lib: LibraryEnum, isCloud?: boolean) {
     const node = folderTreeStore.findNodeById(folderId, folderTreeStore.get(lib))
     dialog.create({
-      icon: () => h(NIcon, { component: CreateNewFolderFilled, size: 24 }),
+      icon: () => h(Icon, { icon:'material-symbols:create-new-folder-outline', height: 24 }),
       title: '新建分支',
       content: () =>
         h(FolderForm, {
@@ -389,7 +389,7 @@ export function useItemListDropDown() {
     const { folderTreeStore } = useStore()
     const folderNameVal = ref(folder.name)
     dialog.create({
-      icon: () => h(NIcon, { component: DriveFileRenameOutlineFilled, size: 24 }),
+      icon: () => h(Icon, { icon: 'material-symbols:drive-file-rename-outline-outline', height: 24 }),
       title: '文件夹重命名',
       content: () =>
         h(NInput, {
@@ -423,7 +423,7 @@ export function useItemListDropDown() {
   function moveFolder(folder: Subfolder, lib: LibraryEnum) {
     const selectKey = ref('')
     dialog.create({
-      icon: () => h(NIcon, { component: DriveFileMoveRtlFilled, size: 24 }),
+      icon: () => h(Icon, { icon:'material-symbols:drive-file-move-outline-rounded', height: 24 }),
       title: '移动文件夹',
       content: () =>
         h(NTree, {
@@ -473,7 +473,7 @@ export function useItemListDropDown() {
   function moveFile(file: Subfile, lib: LibraryEnum) {
     const selectKey = ref('')
     dialog.create({
-      icon: () => h(NIcon, { component: DriveFileMoveRtlFilled, size: 24 }),
+      icon: () => h(Icon, { icon:'mdi:file-move-outline', height: 24 }),
       title: '移动文件',
       content: () =>
         h(NTree, {

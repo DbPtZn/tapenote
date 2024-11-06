@@ -1,4 +1,5 @@
 // export * from './diff'
+export * from './isVip'
 import { isDiff } from './diff'
 import { dateFormat } from './date-format'
 import { durationFormat } from './durationFormatter'

@@ -71,6 +71,7 @@ export class ProjectController {
   @Patch(`${REST.U}/content`)
   async updateContent(@Body() updateContentDto: UpdateContentDto, @Req() req, @Res() res) {
     try {
+      console.log(req.user.role)
       const result = await this.projectService.updateContent(updateContentDto, req.user.id)
       res.status(200).send(result)
     } catch (error) {

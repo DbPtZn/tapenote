@@ -12,6 +12,7 @@ import { HttpService } from '@nestjs/axios'
 import { commonConfig } from 'src/config'
 import randomstring from 'randomstring'
 import bcrypt from 'bcryptjs'
+import { VIP } from 'src/enum'
 
 @Injectable()
 export class AuthService {
@@ -60,17 +61,20 @@ export class AuthService {
         }
       }).then(async resp => {
         if(resp.status === 200) {
+          console.log(resp.data)
           const account = resp.data.account as string
+          const role = resp.data.role as string
           // console.log('account:', account)
           let user = await this.userService.findOneByAccount(account)
           // 用户不存在,说明是新用户第一次登录,创建新用户
           if(!user) {
             try {
-              console.log('新用户:', account)
+              // console.log('新用户:', account)
               user = await this.userService.create({
                 nickname: `新用户-${randomstring.generate(5)}`,
                 account: account,
-                password: randomstring.generate(12)
+                password: randomstring.generate(12),
+                role
               })
               this.logger.log(`为 ${account} 创建新用户成功！`)
               this.httpService.axiosRef.patch(`${this.common.ssoDomain}/user/register/note`, {
@@ -88,7 +92,7 @@ export class AuthService {
           }
           // rfh：刷新时间
           const rfh = this.configService.get('jwt.refreshIn')
-          const serverToken = this.jwtService.sign({ userId: user.id, account: user.account, dirname: user.dirname, rfh: (Math.floor(Date.now()/1000)) + rfh })
+          const serverToken = this.jwtService.sign({ userId: user.id, role, account: user.account, dirname: user.dirname, rfh: (Math.floor(Date.now()/1000)) + rfh })
           resolve(serverToken)
         }
       }).catch(err => {
@@ -101,12 +105,17 @@ export class AuthService {
     })
   }
 
+  /** 私有化部署时的刷新 token ：避免中断 */
   async refreshToken(id: string) {
     try {
+      if (this.common.ssoEnable) {
+        throw new Error('sso 模式下不允许使用 server refreshToken')
+      }
       const user = await this.userService.findOneById(id)
       if (!user) throw new UnauthorizedException('用户不存在')
       const rfh = this.configService.get('jwt.refreshIn')
-      const token = this.jwtService.sign({ userId: user.id, account: user.account, dirname: user.dirname, rfh: (Math.floor(Date.now()/1000)) + rfh })
+      // role 私有部署直接设置最高会员权限
+      const token = this.jwtService.sign({ userId: user.id, role: VIP.GOLD, account: user.account, dirname: user.dirname, rfh: (Math.floor(Date.now()/1000)) + rfh })
       return token
     } catch (err) {
       throw err

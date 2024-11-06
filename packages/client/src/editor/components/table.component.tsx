@@ -124,7 +124,6 @@ export const tableComponent = defineComponent({
     const commander = injector.get(Commander)
     const popoverEl = useRef<HTMLElement>()
     const caretEl = useRef<HTMLElement>()
-    let currentColor = '#333333'
 
     let tableInfo: TableConfig = {
       columnCount: tableCells[0].map(i => i.state!.colspan).reduce((v, n) => v + n, 0),
@@ -230,8 +229,8 @@ export const tableComponent = defineComponent({
 
     const ComponentToolbar = useComponentToolbar()
     
-    const colorOptions = ['#f0f0f0', '#f4f4f4', '#f9f9f9', '#e0e7ff', '#d1e7dd']
-    // 
+    const colorOptions = ['#F0F0F0', '#F4F4F4', '#F9F9F9', '#E0E7FF', '#D1E7DD'] // 必须大写
+    let currentColor = colorOptions[0]
     
     function handlePopover() {
       if (popoverEl.current!.style.visibility === 'visible') {

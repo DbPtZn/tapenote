@@ -32,34 +32,33 @@ export class SpeakerService {
   }
 
   async create(createSpeakerDto: CreateSpeakerDto, userId: string, dirname: string) {
-    const { role, name, avatar, changer } = createSpeakerDto
-    console.log(createSpeakerDto)
+    const { model, type, role, name, avatar, changer } = createSpeakerDto
+    // console.log(createSpeakerDto)
     try {
       const user = await this.userService.findOneById(userId)
       const speaker = new Speaker()
       speaker.id = UUID.v4()
       speaker.userId = userId
       speaker.user = user
-      speaker.type = role > 9999 ? 'human' : 'machine'
-      speaker.model =
-        speaker.type === 'human'
-          ? this.configService.get('sherpa.model.asr')
-          : this.configService.get('sherpa.model.tts')
+      speaker.model = model
+      speaker.type = type === 'human' ? 'human' : 'machine'
       speaker.role = role
       speaker.name = name
       speaker.avatar = basename(avatar)
       speaker.changer = changer ? changer : 0
-      if (speaker.type === 'machine') {
-        try {
-          const txt = '哈库拉玛塔塔'
-          const filepath = this.storageService.createLocalFilePath( `${speaker.id}.wav`, dirname)
-          this.sherpaService.tts(txt, filepath, role, 1)
-          speaker.audio = filepath
-        } catch (error) {
-          this.userLogger.error(`创建快速测试音频失败`, error.message)
-          throw error
-        }
-      }
+      // if (speaker.type === 'machine') {
+      //   if(speaker.model === 'local-base-tts') {
+      //     try {
+      //       const txt = '哈库拉玛塔塔'
+      //       const filepath = this.storageService.createLocalFilePath( `${speaker.id}.wav`, dirname)
+      //       this.sherpaService.tts(txt, filepath, role, 1)
+      //       speaker.audio = filepath
+      //     } catch (error) {
+      //       this.userLogger.error(`tts 测试失败`, error.message)
+      //       throw error
+      //     }
+      //   }
+      // }
       const result = await this.speakersRepository.save(speaker)
       delete result.user
       result.avatar = this.storageService.getResponsePath(result.avatar, dirname)
@@ -107,12 +106,23 @@ export class SpeakerService {
     }
   }
 
-  async testTts(speakerId: number, speed = 1) {
+  // TODO 可以使用 redis 存储来缓存优化
+  async testTts(speakerId: number, model: string, speed = 1) {
     try {
+      console.log(speakerId,model)
       const txt = '哈库拉玛塔塔'
       const filename = `${randomstring.generate(8)}.wav`
       const filepath= this.storageService.createLocalFilePath(filename ,'temp')
-      await this.sherpaService.tts(txt, filepath, speakerId, speed)
+      switch (model) {
+        case 'local-base-tts':
+          await this.sherpaService.tts(txt, filepath, speakerId, speed)
+          break
+        case 'xunfei-base-tts':
+          await this.sherpaService.tts(txt, filepath, speakerId, speed)
+          break
+        default:
+          throw new Error('不支持该目标模型')
+      }  
       return `${this.common.staticResourcePrefix}/temp/${filename}`
     } catch (error) {
       throw error

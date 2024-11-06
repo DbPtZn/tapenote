@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Res, UseGuards, Query } from '@nestjs/common'
 import { SpeakerService } from './speaker.service'
 import { CreateSpeakerDto } from './dto/create-speaker.dto'
 import { REST } from 'src/enum'
@@ -39,13 +39,13 @@ export class SpeakerController {
     }
   }
 
-  @Get(`${REST.R}/test/:role`)
-  async testTts(@Param('role') role: number, @Req() req, @Res() res) {
+  @Get(`${REST.R}/test`)
+  async testTts(@Query('role') role: number, @Query('model') model: string, @Req() req, @Res() res) {
     try {
-      const filepath = await this.speakerService.testTts(Number(role), 1)
+      const filepath = await this.speakerService.testTts(Number(role), model, 1)
       res.status(200).send(filepath)
     } catch (error) {
-      res.status(400).send('测试语音合成失败:' + error.message)
+      res.status(400).send(error.message)
     }
   }
 

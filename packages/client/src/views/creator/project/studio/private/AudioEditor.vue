@@ -66,7 +66,9 @@ const waveWidth = fragment.transcript.length * 25 * 2
 const secondWidth = waveWidth / fragment.duration
 
 let wavesurfer: WaveSurfer
+let timeline: Timeline
 let regions: Regions
+let hoverPlugin: HoverPlugin
 
 onMounted(() => {
   if (!waveEl.value) return
@@ -91,7 +93,7 @@ onMounted(() => {
   )
 
   // Timeline 时间轴
-  const timeline = Timeline.create({
+  timeline = Timeline.create({
     // container: timelineEl.value,
     duration: fragment.duration,
     height: 30,
@@ -101,14 +103,13 @@ onMounted(() => {
   })
   wavesurfer.registerPlugin(timeline)
   // Hover 随鼠标移动的指针
-  const hoverPlugin = HoverPlugin.create({
+  hoverPlugin = HoverPlugin.create({
     formatTimeCallback: function (seconds) {
       currentHoverTime = seconds
       return `${formatTimeToMinutesSecondsMilliseconds(seconds)}`
     }
   })
   wavesurfer.registerPlugin(hoverPlugin)
-
   // Region 选区
   regions = Regions.create()
   wavesurfer.registerPlugin(regions)
@@ -320,22 +321,7 @@ async function useSplitFragment(fragment: Fragment, buffer: AudioBuffer, splitPo
   }
 }
 
-const focus = ref(-1)
-// function handleConfirm() {
-//   // props.onConfirm(inputs)
-//   emits('confirm', inputs)
-// }
-function handleInput(ev: Event, index: number) {
-  const target = ev.target as HTMLInputElement
-  target.style.width = 24 + target.value.length * 12 + 'px'
-  inputs[index] = target.value ? target.value : ' ' // 不能为空
-}
-function handleBlur() {
-  focus.value = -1
-}
-function handleFocus(index: number) {
-  focus.value = index
-}
+
 onMounted(() => {
   subs.push(
     fromEvent<WheelEvent>(scrollerEl.value!, 'wheel').subscribe(ev => {
@@ -347,6 +333,10 @@ onMounted(() => {
   )
 })
 onUnmounted(() => {
+  wavesurfer.destroy()
+  timeline.destroy()
+  regions.destroy()
+  hoverPlugin.destroy()
   subs.forEach(sub => sub?.unsubscribe())
 })
 

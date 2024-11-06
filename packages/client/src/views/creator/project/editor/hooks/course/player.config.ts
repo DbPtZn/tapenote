@@ -78,8 +78,8 @@ export function getCourseConfig(args: {
       RootEventService,
       Structurer,
       ThemeProvider,
-      MemoProvider,
       MessageService,
+      MemoProvider,
       MemoService
     ],
     plugins: [

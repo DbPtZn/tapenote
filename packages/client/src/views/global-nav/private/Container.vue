@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
 import { useThemeVars } from 'naive-ui'
-import { ArrowLeftFilled, ArrowRightFilled } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { ArrowLeftFilled, ArrowRightFilled } from '@vicons/material'
 import useStore from '@/store'
 const emits = defineEmits<{
   collapse: [boolean]
@@ -26,8 +27,7 @@ function handleCollapse(is: boolean){
 
     <!-- 展开/折叠按钮 -->
     <div v-if="collapseVisible || isCollapse" class="collapse-btn" @click="handleCollapse(!isCollapse)">
-      <n-icon v-if="!isCollapse" :component="ArrowLeftFilled" />
-      <n-icon v-if="isCollapse" :component="ArrowRightFilled" />
+      <Icon :icon="!isCollapse ? 'mdi:chevron-left' : 'mdi:chevron-right'" />
     </div>
   </div>
 </template>

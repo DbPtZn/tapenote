@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { VNode, nextTick, onErrorCaptured, onMounted, provide, ref } from 'vue'
+import { VNode, nextTick, onErrorCaptured, onMounted, onUnmounted, provide, ref } from 'vue'
 import { RecursiveContainer, ContainerTypeEnum, WrapperInjectKey, ResizeInjectKey } from '.'
 import { ContainerTree } from '.'
 import { FractalContainerConfig, InsertType } from '.'
@@ -200,12 +200,13 @@ const handleControlMouseLeave = (ev: MouseEvent, node: FractalContainerConfig) =
 const handleControlContextmenu = (ev: MouseEvent, node: FractalContainerConfig) => {
   emits('onControlContextmenu', ev, node)
 }
+let timer
 const handleContainerDrop = (node: FractalContainerConfig, parent: FractalContainerConfig) => {
   innerMaskController.value = false
   sourceNode = null
   innerShredderVisible.value = ''
   draggable.value = false
-  const timer = setTimeout(() => {
+  timer = setTimeout(() => {
     // 延迟 remove node, 否则可能会出现 mask 残留的情况，原因未知
     // 怀疑可能是 mask 渲染与节点删除动作冲突，在 mask 关闭前，节点删除导致 mask 没有正常关闭或者与递归传参有关
     // 延迟还不能太低，太低可能失效
@@ -216,6 +217,10 @@ const handleContainerDrop = (node: FractalContainerConfig, parent: FractalContai
   containerTree.findUnnecessaryNestedNodeAndClean()
   emits('onContainerRemove', node, parent)
 }
+
+onUnmounted(() => {
+  clearTimeout(timer)
+})
 
 </script>
 

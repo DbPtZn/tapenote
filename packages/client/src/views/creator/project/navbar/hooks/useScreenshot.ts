@@ -9,17 +9,17 @@ export const useScreenshot = (bridge: Bridge) => {
   const dialog = useDialog()
   const message = useMessage()
   const handleScreenshot = async () => {
-    const coverEL = bridge.coverEl
+    const coverEL = bridge.coverEl!
     const titleEl = bridge.titleEl!
     const layout = bridge.editor!.get(Layout)
     const screenEl = layout.middle
     const msg = message.loading('截图中...', { duration: 0 })
     try {
       let coverCanvas: HTMLCanvasElement | undefined
-      if(coverEL.value) {
-        coverEL.value.style.width = titleEl.offsetWidth + 'px'
-        coverCanvas = await html2canvas(coverEL.value, { useCORS: true })
-        coverEL.value.style.width = '100%'
+      if(coverEL) {
+        coverEL.style.width = titleEl.offsetWidth + 'px'
+        coverCanvas = await html2canvas(coverEL, { useCORS: true })
+        coverEL.style.width = '100%'
       }
   
       const titleCanvas = await html2canvas(titleEl)

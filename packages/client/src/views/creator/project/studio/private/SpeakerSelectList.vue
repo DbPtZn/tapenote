@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { NMessageProvider, useDialog, useThemeVars } from 'naive-ui'
 import { computed, h, ref } from 'vue'
-import { VpnKeyOffOutlined, AddRound, VpnKeyOutlined, CloseRound, RemoveRound } from '@vicons/material'
+// import { VpnKeyOffOutlined, AddRound, VpnKeyOutlined, CloseRound, RemoveRound } from '@vicons/material'
 import AddSpeaker from './AddSpeaker.vue'
 import useStore from '@/store'
+import { Icon } from '@iconify/vue'
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 type SpeakerType = 'human' | 'machine'
 const props = defineProps<{
@@ -66,14 +67,16 @@ function handleRemove(id: string, type?: SpeakerType) {
     <n-tabs type="line" animated :default-value="type">
       <template #suffix>
         <n-button text>
-          <n-icon :component="!isShowKey ? VpnKeyOutlined : VpnKeyOffOutlined" :size="24" @click="isShowKey = !isShowKey" />
+          <!-- <n-icon :component="!isShowKey ? VpnKeyOutlined : VpnKeyOffOutlined" :size="24" @click="isShowKey = !isShowKey" /> -->
+          <Icon :icon="!isShowKey ? 'material-symbols:vpn-key-alert-rounded' : 'material-symbols:vpn-key-off'" height="24px" @click="isShowKey = !isShowKey" />
         </n-button>
       </template>
       <n-tab-pane name="machine" tab="合成语音">
         <n-flex>
           <div class="speaker-item" v-for="speaker in machineSpeaker" :key="speaker.id">
             <div :class="['speaker-wrapper', speakerHistory.machine === speaker.id ? 'active' : '']" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'machine')">
-              <n-icon v-if="speaker.role !== 0" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'machine')" />
+              <!-- <n-icon v-if="speaker.role !== 0" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'machine')" /> -->
+              <Icon v-if="!speaker.id" class="speaker-close" icon="mdi:close" height="24" @click.stop ="handleRemove(speaker.id, 'machine')" />
               <div class="speaker-avatar">
                 <img
                   :src="speaker.avatar"
@@ -87,7 +90,8 @@ function handleRemove(id: string, type?: SpeakerType) {
             </div>
           </div>
           <div class="speaker-add" @click="handleAdd('machine')">
-            <n-icon :component="AddRound" :size="24" />
+            <!-- <n-icon :component="AddRound" :size="24" /> -->
+            <Icon icon="mdi:plus" height="24" />
           </div>
         </n-flex>
       </n-tab-pane>
@@ -95,7 +99,8 @@ function handleRemove(id: string, type?: SpeakerType) {
         <n-flex>
           <div class="speaker-item" v-for="speaker in humanSpeaker" :key="speaker.id">
             <div :class="['speaker-wrapper', speakerHistory.human === speaker.id ? 'active' : '']" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'human')">
-              <n-icon v-if="speaker.role !== 10000" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'human')" />
+              <!-- <n-icon v-if="speaker.role !== 10000" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'human')" /> -->
+              <Icon v-if="!speaker.id" class="speaker-close" icon="mdi:close" height="24" @click.stop ="handleRemove(speaker.id, 'human')" /> 
               <div class="speaker-avatar">
                 <img
                   :src="speaker.avatar"
@@ -109,7 +114,8 @@ function handleRemove(id: string, type?: SpeakerType) {
             </div>
           </div>
           <div class="speaker-add" @click="handleAdd('human')">
-            <n-icon :component="AddRound" :size="24" />
+            <!-- <n-icon :component="AddRound" :size="24" /> -->
+            <Icon icon="mdi:plus" height="24" />
           </div>
         </n-flex>
       </n-tab-pane>

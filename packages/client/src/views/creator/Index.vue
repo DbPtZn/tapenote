@@ -5,7 +5,8 @@ import useStore from '@/store'
 import { CreatorShell, creatorShell } from './shell'
 import { NButton, NIcon, useThemeVars } from 'naive-ui'
 import { LibraryEnum } from '@/enums'
-import { MenuFilled } from '@vicons/material'
+// import { MenuFilled } from '@vicons/material'
+import { Icon } from '@iconify/vue'
 import { CacheListView } from './cache'
 import { onBeforeMount } from 'vue'
 const { dragStore, userStore } = useStore()
@@ -74,7 +75,7 @@ function renderControl({ options }: { options: FractalContainerConfig }) {
     }, 
     {
       default: () => {
-        return h(NIcon, { component: MenuFilled, size: 24 })
+        return h(Icon, { icon:'ic:round-menu', height: 24 })
       }
     }
   )

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import TrashFragment from './TrashFragment.vue'
 import useStore from '@/store'
-import { HeadsetOutlined, RestoreOutlined, DeleteOutlined } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { HeadsetOutlined, RestoreOutlined, DeleteOutlined } from '@vicons/material'
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 const props = defineProps<{
   data: Fragment[]
@@ -37,13 +38,13 @@ function handlePlay(audio: string) {
             <span>{{ item.transcript.join('') }}</span>
           </template>
           <template #play>
-            <n-icon :component="HeadsetOutlined" :size="18" @click="handlePlay(item.audio)" />
+            <Icon icon="mdi:headset" height="18" @click="handlePlay(item.audio)" />
           </template>
           <template #restore>
-            <n-icon :component="RestoreOutlined" :size="18" @click="onRestore(item.id)" />
+            <Icon icon="mdi:restore" height="18" @click="onRestore(item.id)" />
           </template>
           <template #delete>
-            <n-icon :component="DeleteOutlined" :size="18" @click="onDelete(item.id)" />
+            <Icon icon="mdi:delete" height="18" @click="onDelete(item.id)" />
           </template>
         </TrashFragment>
       </n-scrollbar>

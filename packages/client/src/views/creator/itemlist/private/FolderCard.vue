@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { NButton, useThemeVars } from 'naive-ui'
 import { PropType, computed, ref } from 'vue'
-import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface';
-import { FolderOutlined, MoreVertFilled } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { FolderOutlined, MoreVertFilled } from '@vicons/material'
 const themeVars = useThemeVars()
 const props = defineProps({
   /** 文件夹 id */
@@ -42,7 +42,8 @@ const elementRef = ref<HTMLElement | null>(null)
   <n-card class="folder-card" ref="elementRef" size="small" :bordered="false">
     <template #header>
       <div class="header-title">
-        <n-icon :style="{ marginRight: '6px' }" :component="FolderOutlined" :size="18" />
+        <!-- <n-icon :style="{ marginRight: '6px' }" :component="FolderOutlined" :size="18" /> -->
+        <Icon :style="{ marginRight: '6px' }" icon="mdi:folder-outline" height="18" />
         <n-text class="header-title-label" :depth="2">{{ title }}</n-text>
       </div>
     </template>
@@ -50,7 +51,8 @@ const elementRef = ref<HTMLElement | null>(null)
       <!-- <n-dropdown :options="dropdownOptions" :trigger="'click'" :show-arrow="true"> -->
         <n-button text class="header-icon" @click.prevent.stop="handleMoreAction">
           <!-- <DpzIcon :icon="`${MaterialTypeEnum.FILLED}more_vert`" size="18" /> -->
-          <n-icon :component="MoreVertFilled" :size="24" />
+          <!-- <n-icon :component="MoreVertFilled" :size="24" /> -->
+          <Icon icon="mdi:dots-vertical" height="24" />
         </n-button>
       <!-- </n-dropdown> -->
     </template>

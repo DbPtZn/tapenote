@@ -31,7 +31,7 @@ const emits = defineEmits<{
   expand: []
   select: [boolean]
 }>()
-const subs: Subscription[] = []
+let subs: Subscription[] = []
 const themeVars = useThemeVars()
 const fragmentRef = ref()
 const handleError = (ev: Event) => {
@@ -80,6 +80,7 @@ function useClickoutside() {
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
   subs.length = 0
+  subs = []
 })
 </script>
 
@@ -92,7 +93,7 @@ onUnmounted(() => {
     @contextmenu="handleContextmenu"
   >
     <!-- ------------------------------------------- Left --------------------------------------------- -->
-    <div class="fragment-wrapper left-fragment" v-if="speaker.role <= 9999">
+    <div class="fragment-wrapper left-fragment" v-if="speaker.type === 'machine'">
       <!-- 左侧 -->
       <div class="left-side">
         <div class="avator">
@@ -135,7 +136,7 @@ onUnmounted(() => {
       </div>
     </div>
     <!-- ------------------------------------------- Right --------------------------------------------- -->
-    <div class="fragment-wrapper right-fragment" v-if="speaker.role > 9999">
+    <div class="fragment-wrapper right-fragment" v-if="speaker.type === 'human'">
       <!-- 左侧 -->
       <div class="left-side" :style="{ width: `50px` }">
         <!-- Placeholder -->

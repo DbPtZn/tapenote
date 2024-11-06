@@ -9,12 +9,16 @@ const { userStore } = useStore()
 const accessToken = computed(() => getServerToken(userStore.account, userStore.hostname))
 const emits = defineEmits<{
   finish: [url: string]
+  error: []
 }>()
 function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
   if (args.event) {
     const path = userStore.resourceDomain + (args.event.currentTarget as XMLHttpRequest).response
     emits('finish', path)
   }
+}
+const handleError = () => {
+  emits('error')
 }
 
 </script>
@@ -27,6 +31,7 @@ function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
       Authorization: `Bearer ${accessToken}`
     }"
     @finish="handleFinish"
+    @error="handleError"
   >
     <n-upload-dragger>
       <div style="margin-bottom: 12px">

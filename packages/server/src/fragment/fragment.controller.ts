@@ -18,7 +18,7 @@ import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { AuthGuard } from '@nestjs/passport'
 import { CreateASRFragmentDto } from './dto/create-asr-fragment.dto'
 import { REST } from 'src/enum'
-import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express'
+import { AnyFilesInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express'
 import {
   RemoveFragmentDto,
   RestoreFragmentDto,
@@ -41,31 +41,42 @@ export class FragmentController {
   @Post(`${REST.W}/create/tts`)
   async createByText(@Body() createTTSFragmentDto: CreateTTSFragmentDto, @Req() req, @Res() res) {
     try {
-      const fragment = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname)
-      fragment['key'] = createTTSFragmentDto.key
-      res.send(fragment)
+      const fragments = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname, req.user.role)
+      res.send(fragments)
     } catch (error) {
       res.status(400).send(error.message)
     }
   }
 
   @Post(`${REST.W}/create/asr`)
-  @UseInterceptors(FileInterceptor('audio'))
-  async createByAudio(@UploadedFile() audio, @Body() formData: CreateASRFragmentDto, @Req() req, @Res() res) {
+  @UseInterceptors(AnyFilesInterceptor())
+  async createByAudio(@UploadedFiles() audios, @Body() formData: any, @Req() req, @Res() res) {
     try {
-      const fragment = await this.fragmentService.createByAudio(
-        {
-          procedureId: formData.procedureId,
-          audio: audio.path,
-          duration: formData.duration,
-          speakerId: formData.speakerId,
-          actions: JSON.parse(formData.actions) || []
-        },
+      const projectId = formData.projectId
+      const length = audios.length
+      // console.log(formData)
+      const dataArray = []
+      for (let i = 0; i < length; i++) {
+        dataArray.push({
+          key: formData.key[i],
+          audio: audios[i].path,
+          duration: formData.duration[i],
+          speakerId: formData.speakerId[i],
+          actions: JSON.parse(formData.actions[i]) || []
+        })
+      }
+      // console.log(dataArray)
+      const fragments = await this.fragmentService.createByAudio(
+        dataArray,
+        projectId,
         req.user.id,
-        req.user.dirname
+        req.user.dirname,
+        req.user.role
       )
-      fragment['key'] = formData.key
-      res.send(fragment)
+      // fragments.forEach((fragment, index, arr) => {
+      //   arr[index]['key'] = formData.key[index]
+      // })
+      res.send(fragments)
     } catch (error) {
       console.log(error)
       res.status(400).send(error.message)
@@ -84,6 +95,7 @@ export class FragmentController {
       const removeSourceFragment = formData.removeSourceFragment === 'true'
       const length = audios.length
       const dataArray = []
+      console.log(formData)
       for (let i = 0; i < length; i++) {
         dataArray.push({
           key: formData.key[i],
@@ -105,12 +117,13 @@ export class FragmentController {
         sourceFragmentId,
         removeSourceFragment,
         req.user.id,
-        req.user.dirname
+        req.user.dirname,
+        req.user.role
       )
-      fragments.forEach((fragment, index, arr) => {
-        arr[index].key = dataArray[index].key
-      })
-      console.log(fragments)
+      // fragments.forEach((fragment, index, arr) => {
+      //   arr[index].key = dataArray[index].key
+      // })
+      // console.log(fragments)
       res.send(fragments)
     } catch (error) {
       console.log(error)

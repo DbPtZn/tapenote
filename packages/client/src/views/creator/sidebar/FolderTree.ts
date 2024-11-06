@@ -10,7 +10,7 @@ import { Subject, Observable } from '@tanbo/stream'
 import { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../shell'
-import { CreateNewFolderFilled, DriveFileRenameOutlineFilled, MoreHorizFilled } from '@vicons/material'
+// import { CreateNewFolderFilled, DriveFileRenameOutlineFilled, MoreHorizFilled } from '@vicons/material'
 import router from '@/router'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
@@ -155,7 +155,7 @@ export class FolderTree {
               showArrow: true,
               options: this.treeNodeDropDownOptions(slotName, option)
             },
-            { default: () => h(NIcon, { class: 'tree-suffix', component: MoreHorizFilled, size: '24' }) }
+            { default: () => h(Icon, { class: 'tree-suffix', icon: 'material-symbols:more-horiz', height: 24 }) }
           )
       }
     )
@@ -245,7 +245,7 @@ export class FolderTree {
         props: {
           onClick: () => {
             dialog.create({
-              icon: () => h(NIcon, { component: CreateNewFolderFilled, size: 24 }),
+              icon: () => h(Icon, { icon: 'material-symbols:create-new-folder-outline', height: 24 }),
               title: '新建分支',
               content: () =>
                 h(FolderForm, {
@@ -284,7 +284,7 @@ export class FolderTree {
           onClick: () => {
             const folderNameVal = ref(node.label)
             dialog.create({
-              icon: () => h(NIcon, { component: DriveFileRenameOutlineFilled, size: 24 }),
+              icon: () => h(Icon, { icon: 'material-symbols:drive-file-rename-outline-outline', height: 24 }),
               title: '文件夹重命名',
               content: () =>
                 h(NInput, {

@@ -1,7 +1,16 @@
 import { creator, CreatorApi } from '@/api'
 import { defineStore } from 'pinia'
 import useStore from '..'
-
+import { VIP } from '@/enums'
+import { isPaidVip } from '@/utils'
+enum AsrModel {
+  Local = 'local-base-asr',
+  Xunfei = 'xunfei-base-asr'
+}
+enum TtsModel {
+  Local = 'local-base-tts',
+  Xunfei = 'xunfei-base-tts'
+}
 /**
  * human ：由真人真声录制，可以选择变声器改变音色
  * machine ：由服务商提供的语音合成的音色
@@ -13,7 +22,8 @@ interface Speaker {
   // model: string // 语音模型
   type: 'human' | 'machine' // 角色类型
   avatar: string // 头像地址
-  audio: string // 快速测试音频地址 仅在 type 为 mechanic 时生效
+  model: string // 语音模型
+  // audio: string // 快速测试音频地址 仅在 type 为 mechanic 时生效
   name: string // 角色名称
   role: number // 角色值 0~9999 为 AI 语音预留 10000~99999 为用户角色预留
   changer: number // 变声器 仅在 type 为 human 时生效
@@ -25,6 +35,7 @@ interface State {
   hostname: string
   data: Speaker[]
 }
+
 
 export const useSpeakerStore = defineStore('speakerStore', {
   state(): State {
@@ -93,16 +104,17 @@ export const useSpeakerStore = defineStore('speakerStore', {
     },
     getDefault(type: 'human' | 'machine', account: string, hostname: string) {
       let defaultSpeaker: Speaker
+      const { userListStore } = useStore()
+      const user = userListStore.get(account, hostname)!
       if (type === 'human') {
-        const { userListStore } = useStore()
-        const user = userListStore.get(account, hostname)
         defaultSpeaker =  {
           account: account,
           hostname: hostname,
           id: '',
           type: 'human',
+          model: getModel(user.role),
           avatar: user?.avatar || '',
-          audio: '',
+          // audio: '',
           name: user?.nickname || '',
           role: 10000,
           changer: 0
@@ -113,12 +125,19 @@ export const useSpeakerStore = defineStore('speakerStore', {
           hostname: hostname,
           id: '',
           type: 'machine',
+          model: getModel(user.role),
           avatar: 'robot.png',
-          audio: '',
+          // audio: '',
           name: '默认',
           role: 0,
           changer: 0
         }
+      }
+      function getModel(role: VIP) {
+        if (isPaidVip(role)) {
+          return type === 'human' ? AsrModel.Xunfei : TtsModel.Xunfei
+        }
+        return type === 'human' ? AsrModel.Local : TtsModel.Local
       }
       return defaultSpeaker
     },
@@ -130,8 +149,8 @@ export const useSpeakerStore = defineStore('speakerStore', {
         }
       })
     },
-    testTts(role: number, account: string, hostname: string) {
-      return this.creatorApi(account, hostname).speaker.testTts(role)
+    testTts(role: number, model: string, account: string, hostname: string) {
+      return this.creatorApi(account, hostname).speaker.testTts(role, model)
     },
     clearTemp(url: string, account: string, hostname: string) {
       return this.creatorApi(account, hostname).speaker.clearTemp(url)

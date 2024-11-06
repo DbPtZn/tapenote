@@ -9,13 +9,15 @@ import { CreatorShell } from '../creator'
 import { UserOption } from './types'
 import { useDropdown } from './hooks/_index'
 import { SettingsRound, LocalLibraryRound,  History, Blogger } from '@/components'
-import { AddFilled, FaceFilled } from '@vicons/material'
+// import { AddFilled, FaceFilled } from '@vicons/material'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useRouter } from 'vue-router'
 import Container from './private/Container.vue'
 import BloggerOption from './private/BloggerOption.vue'
 import AddBlogger from './private/AddBlogger.vue'
 import { markRaw } from 'vue'
+import { Icon } from '@iconify/vue'
+
 const emits = defineEmits<{
   collapse: [boolean]
 }>()
@@ -101,7 +103,7 @@ function getUserOptions() {
   return userListStore.getData.map(option => {
     return {
       ...option,
-      defaultIcon: markRaw(FaceFilled),
+      defaultIcon: 'material-symbols:face',
       onClick(opt) {
         router.push(RoutePathEnum.HOME).then(() => {
           const shell = useShell<CreatorShell>()
@@ -271,13 +273,14 @@ onErrorCaptured(err => {
         <VueDraggable v-if="state.userOption" class="draggable" v-model="userOptions" :itemKey="'key'" @end="userListStore.moveSequence($event)">
           <div class="btn user-option" v-for="element in userOptions" :key="element.key" :data-account="element.account" :data-hostname="element.hostname" :title="element.nickname" @click="element.onClick(element)" @contextmenu="handleContextMenu($event, element)">
             <img class="avatar" v-if="element.avatar" :src="element.avatar" alt="" @error="handleError" />
-            <n-icon v-if="!element.avatar" :component="element.defaultIcon" :size="24" />
+            <Icon v-if="!element.avatar" :icon="element.defaultIcon" :height="24" />
           </div>
         </VueDraggable>
         <!-- 添加用户按钮： 最多同时登录五个账户 -->
         <div v-if="userOptions.length < 5" class="btn user-option" :title="'添加'" @click="handleAddUser">
           <!-- <DpzIcon :icon="`${MaterialTypeEnum.FILLED}add`" :size="24" /> -->
-          <n-icon  :component="AddFilled" :size="24" />
+          <!-- <n-icon  :component="AddFilled" :size="24" /> -->
+          <Icon icon="mdi:plus" height="24" />
         </div>
       </div>
       <div class="footer" ref="footerRef">

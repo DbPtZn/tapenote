@@ -3,7 +3,7 @@ import { Component } from "vue"
 
 export interface UserOption extends UserState {
   key: string
-  defaultIcon: Component
+  defaultIcon: string
   onClick: (key: UserOption) => void
 }
 

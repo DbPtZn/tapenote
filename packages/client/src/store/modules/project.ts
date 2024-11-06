@@ -4,8 +4,11 @@ import _ from 'lodash'
 import utils from '@/utils'
 import { LibraryEnum } from '@/enums'
 import useStore from '..'
+import { fragment } from '@/api/creator/fragment'
 interface FragmentSpeaker {
+  id: string
   type: 'human' | 'machine'
+  model: string
   avatar: string
   name: string
   role: number
@@ -53,6 +56,8 @@ interface SubmissionHistory {
   msg: string
   date: string
 }
+
+interface ProjectConfig {}
 
 interface Snapshot {
   id: string
@@ -105,6 +110,7 @@ interface Memo {
   y: number
 }
 
+
 interface Folder {
   id: string
   name: string
@@ -135,6 +141,7 @@ export interface Project {
   removedSequence: Array<string>
   speakerRecorder: string[]
   speakerHistory: { human: string; machine: string }
+  config: ProjectConfig
 
   fromProcedureId?: string
   snapshotId?: string
@@ -275,13 +282,14 @@ export const useProjectStore = defineStore('projectStore', {
         abbrev: data.abbrev || '',
         fragments: data.fragments?.map(fragment => {
           fragment.audio = ResourceDomain + fragment.audio
-          fragment.speaker = this.fragmentSpeakerFilter(fragment.speaker, account, hostname)
+          fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account, hostname)
           return fragment
         }) || [],
         sequence: data.sequence || [],
         removedSequence: data.removedSequence || [],
         speakerRecorder: data.speakerRecorder || [],
         speakerHistory: data.speakerHistory || { human: '', machine: '' },
+        config: data.config || {},
         audio: data.audio ? ResourceDomain + data.audio : '',
         duration: data.duration || 0,
         promoterSequence: data.promoterSequence || [],
@@ -309,11 +317,11 @@ export const useProjectStore = defineStore('projectStore', {
       }
       return item
     },
-    fragmentSpeakerFilter(speaker: FragmentSpeaker, account: string, hostname: string) {
+    fragmentSpeakerTranslator(speaker: FragmentSpeaker, account: string, hostname: string) {
       const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
       switch(speaker.type) {
         case 'human':
-          if (speaker.role === 10000) {
+          if (speaker.id === '') {
             const namekey = `${account}&${hostname}:name`
             const avatarkey = `${account}&${hostname}:avatar`
             if (userInfoMap.has(namekey) && userInfoMap.has(avatarkey)) {
@@ -332,7 +340,7 @@ export const useProjectStore = defineStore('projectStore', {
           }
           break
         case 'machine':
-          if (speaker.role === 0) {
+          if (speaker.id === '') {
             speaker.name = '默认'
             speaker.avatar = './robot.png'
           } else {
@@ -702,155 +710,196 @@ export const useProjectStore = defineStore('projectStore', {
         get()?.splice(0, get()?.length) // 清空数组
         get()?.push(...data) // 赋值
       }
+
+      // 完成替换期间应禁止的操作：（如果用户完成替换期间跳出不会影响后端数据）
+      // 1. 片段移动（当前的 sequence 是临时的 key 值占位）
+      // 2. 片段移除（当前没有正确 id，无法完成移除操作）
+      // 3. 片段更新（当前没有正确 id，无法完成更新操作, 包括启动子的添加移除等操作均无法完成）
       /** 通过文本创建片段 */
       const createByText = (params: Parameters<typeof CreatorApi.prototype.fragment.createByText>[0]) => {
         const { speakerStore } = useStore()
         const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
         const speaker = speakerStore.get(params.speakerId, account!, hostname!, 'machine')!
-        const key = utils.randomString()
-        const txt = params.txt.replace(/\s*/g, '')
         params.procedureId = procedureId
-        params.key = key
-        // 立即创建临时文本片段并插入到片段序列中
-        const fragment: Fragment = {
-          key,
-          id: key,
-          audio: '',
-          duration: 0,
-          txt: txt,
-          transcript: Array.from(txt),
-          tags: new Array(txt.length),
-          promoters: new Array(txt.length),
-          timestamps: [],
-          projectId: procedureId,
-          speaker: {
-            type: 'machine',
-            name: speaker.name,
-            avatar: speaker.avatar,
-            role: speaker.role
-          },
-          collapsed: false,
-          removed: 'never'
-        }
-        get()?.push(fragment) // 不完全片段
-        sequence?.push(key) // 用 key 占位
-        return this.creatorApi(account!, hostname!).fragment.createByText<Fragment>(params).then(res => {
-          const data = res.data
-          data.audio = ResourceDomain + data.audio
-          if (params.speakerId !== '')  data.speaker.avatar = ResourceDomain + data.speaker.avatar
-          else data.speaker = fragment.speaker
-          if(data.key) {
-            // 用片段 id 替换排序信息中的占位 key
-            sequence?.some((item, index, arr) => {
-              if(item === data.key) {
-                arr[index] = data.id
-                return true
-              }
-            })
-            // 替换成完整片段
-            get()?.some((item, index, arr) => {
-              if(item.key === data.key) {
-                arr[index] = data
-                delete arr[index].key // 会影响到 data, 所以放序列处理后面
-                return true
-              }
-            })
-            // 完成替换期间应禁止的操作：（如果用户完成替换期间跳出不会影响后端数据）
-            // 1. 片段移动（当前的 sequence 是临时的 key 值占位）
-            // 2. 片段移除（当前没有正确 id，无法完成移除操作）
-            // 3. 片段更新（当前没有正确 id，无法完成更新操作, 包括启动子的添加移除等操作均无法完成）
-          } else {
-            console.error('异常，未读取到合成片段返回的 key 值')
+        params.data.forEach(param => {
+          const key = utils.randomString()
+          param.key = key
+          const txt = param.txt.replace(/\s*/g, '')
+          // 立即创建临时文本片段并插入到片段序列中
+          const fragment: Fragment = {
+            key,
+            id: key,
+            audio: '',
+            duration: 0,
+            txt: txt,
+            transcript: Array.from(txt),
+            tags: new Array(txt.length),
+            promoters: new Array(txt.length),
+            timestamps: [],
+            projectId: procedureId,
+            speaker: {
+              id: speaker.id,
+              model: speaker.model,
+              type: speaker.type,
+              name: speaker.name,
+              avatar: speaker.avatar,
+              role: speaker.role
+            },
+            collapsed: false,
+            removed: 'never'
           }
+
+          get()?.push(fragment) // 不完全片段
+          sequence?.push(key) // 用 key 占位
+
+        })
+
+        return this.creatorApi(account!, hostname!).fragment.createByText<Fragment[]>(params).then(res => {
+          const data = res.data
+          data.forEach(fragment => {
+            fragment.audio = ResourceDomain + fragment.audio
+            fragment.speaker = speaker
+
+            if(fragment.key) {
+                // 用片段 id 替换排序信息中的占位 key
+                sequence?.some((item, index, arr) => {
+                  if(item === fragment.key) {
+                    arr[index] = fragment.id
+                    return true
+                  }
+                })
+                // 替换成完整片段
+                get()?.some((item, index, arr) => {
+                  if(item.key === fragment.key) {
+                    arr[index] = fragment
+                    delete arr[index].key // 会影响到 data, 所以放序列处理后面
+                    return true
+                  }
+                })
+              } else {
+                console.error('异常，未读取到合成片段返回的 key 值')
+              }
+          })
         }).catch(err => {
           // 片段创建失败的时候，应移除前端的临时片段
-          get()?.some((item, index, arr) => {
-            if(item.key === key) {
-              arr.splice(index, 1)
-              return true
-            }
+          params.data.forEach(param => {
+            // 片段创建失败的时候，应移除前端的临时片段
+            get()?.some((item, index, arr) => {
+              if(item.key === param.key) {
+                arr.splice(index, 1)
+                return true
+              }
+            })
+            sequence?.some((item, index, arr) => {
+              if(item === param.key) {
+               arr.splice(index, 1)
+               return true
+              }
+            })
           })
-          sequence?.some((item, index, arr) => {
-            if(item === key) {
-              arr.splice(index, 1)
-              return true
-            }
-          })
-          console.error(err)
-          throw err
         })
       }
       /** 通过音频创建片段 */
       const createByAudio = (params: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0]) => {
         const { speakerStore } = useStore()
         const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
-        const speaker = speakerStore.get(params.speakerId, account!, hostname!, 'human')!
-        
-        const key = utils.randomString()
-        params.procedureId = procedureId
-        params.key = key
-        // 立即创建临时文本片段并插入到片段序列中
-        const fragment: Fragment = {
-          key,
-          id: key,
-          audio: '',
-          duration: 0,
-          txt: '',
-          transcript: ['识','别','中','...'],
-          tags: [],
-          promoters: [],
-          timestamps: [],
-          projectId: procedureId,
-          speaker: {
-            type: 'human',
-            name: speaker.name,
-            avatar: speaker.avatar,
-            role: speaker.role
-          },
-          collapsed: false,
-          removed: 'never'
-        }
-        get()?.push(fragment) // 不完全片段
-        sequence?.push(key) // 用 key 占位
-        return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment>(params).then(res => {
+        const speaker = speakerStore.get(params[0].speakerId, account!, hostname!, 'human')!
+        // params.procedureId = procedureId
+        params.forEach(param => {
+          const key = utils.randomString()
+          param.key = key
+
+          // 立即创建临时文本片段并插入到片段序列中
+          const fragment: Fragment = {
+            key,
+            id: key,
+            audio: '',
+            duration: 0,
+            txt: '',
+            transcript: ['识','别','中','...'],
+            tags: [],
+            promoters: [],
+            timestamps: [],
+            projectId: procedureId,
+            speaker: {
+              id: param.speakerId,
+              model: speaker.model,
+              type: 'human',
+              name: speaker.name,
+              avatar: speaker.avatar,
+              role: speaker.role
+            },
+            collapsed: false,
+            removed: 'never'
+          }
+          get()?.push(fragment) // 不完全片段
+          sequence?.push(key) // 用 key 占位
+        })
+
+        return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment[]>(params, procedureId).then(res => {
           const data = res.data
-          data.audio = ResourceDomain + data.audio
-          if (params.speakerId !== '')  data.speaker.avatar = ResourceDomain + data.speaker.avatar
-          else data.speaker = fragment.speaker
-          if(data.key) {
-            // 用片段 id 替换排序信息中的占位 key
-            sequence?.some((item, index, arr) => {
-              if(item === data.key) {
-                arr[index] = data.id
-                return true
+          data.forEach(fragment => {
+            fragment.audio = ResourceDomain + fragment.audio
+            // fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account!, hostname!)
+            fragment.speaker = speaker
+            if(fragment.key) {
+              // 用片段 id 替换排序信息中的占位 key
+              sequence?.some((item, index, arr) => {
+                if(item === fragment.key) {
+                  arr[index] = fragment.id
+                  return true
+                }
+              })
+              // 替换成完整片段
+              get()?.some((item, index, arr) => {
+                if(item.key === fragment.key) {
+                  arr[index] = fragment
+                  delete arr[index].key // 会影响到 data, 所以放序列处理后面
+                  return true
+                }
+              })
+            } else {
+              console.error('异常，未读取到合成片段返回的 key 值')
+            }
+          })
+          // 返回片段数量小于上传片段数量，意味着有片段处理失败，应删除掉失败的占位片段（以后可以进行更复杂的重新上传处理）
+          if (data.length < params.length) {
+            const keys = data.map(item => item.key)
+            params.forEach(param => {
+              if (!keys.includes(param.key)) {
+                // 片段创建失败的时候，应移除前端的临时片段
+                get()?.some((item, index, arr) => {
+                  if(item.key === param.key) {
+                    arr.splice(index, 1)
+                    return true
+                  }
+                })
+                sequence?.some((item, index, arr) => {
+                  if(item === param.key) {
+                    arr.splice(index, 1)
+                    return true
+                  }
+                })
               }
             })
-            // 替换成完整片段
-            get()?.some((item, index, arr) => {
-              if(item.key === data.key) {
-                arr[index] = data
-                delete arr[index].key // 会影响到 data, 所以放序列处理后面
-                return true
-              }
-            })
-          } else {
-            console.error('异常，未读取到合成片段返回的 key 值')
           }
         }).catch(err => {
-          // 片段创建失败的时候，应移除前端的临时片段
-          get()?.some((item, index, arr) => {
-            if(item.key === key) {
-              arr.splice(index, 1)
-              return true
-            }
-          })
-          sequence?.some((item, index, arr) => {
-            if(item === key) {
-              arr.splice(index, 1)
-              return true
-            }
-          })
           console.error(err)
+          params.forEach(param => {
+            // 片段创建失败的时候，应移除前端的临时片段
+            get()?.some((item, index, arr) => {
+              if(item.key === param.key) {
+                arr.splice(index, 1)
+                return true
+              }
+            })
+            sequence?.some((item, index, arr) => {
+              if(item === param.key) {
+               arr.splice(index, 1)
+               return true
+              }
+            })
+          })
         })
       }
       /** 创建空白片段 */
@@ -896,10 +945,8 @@ export const useProjectStore = defineStore('projectStore', {
         return this.creatorApi(account!, hostname!).fragment.createBySegment<Fragment[]>(params, procedureId, sourceFragmentId, removeSourceFragment).then(res => {
           const data = res.data
           data.forEach(segment => {
-            console.log('segment:',  ResourceDomain, segment.audio)
             segment.audio = ResourceDomain + '/' + segment.audio
-            // if (segment.speaker) segment.speaker.avatar = ResourceDomain + segment.speaker.avatar
-            segment.speaker = this.fragmentSpeakerFilter(segment.speaker, account!, hostname!)
+            segment.speaker = this.fragmentSpeakerTranslator(segment.speaker, account!, hostname!)
             if (segment.key) {
               sequence?.some((item, index, arr) => {
                 if(item === segment.key) {
@@ -915,33 +962,31 @@ export const useProjectStore = defineStore('projectStore', {
                   return true
                 }
               })
-            }else {
-              console.error('异常，未读取到合成片段返回的 key 值')
             }
           })
-          // data.audio = ResourceDomain + data.audio
-          // if (data.speaker)  data.speaker.avatar = ResourceDomain + data.speaker.avatar
-          // else data.speaker = fragment.speaker
-          // if(data.key) {
-          //   // 用片段 id 替换排序信息中的占位 key
-          //   // sequence?.some((item, index, arr) => {
-          //   //   if(item === data.key) {
-          //   //     arr[index] = data.id
-          //   //     return true
-          //   //   }
-          //   // })
-          //   // // 替换成完整片段
-          //   // get()?.some((item, index, arr) => {
-          //   //   if(item.key === data.key) {
-          //   //     arr[index] = data
-          //   //     delete arr[index].key // 会影响到 data, 所以放序列处理后面
-          //   //     return true
-          //   //   }
-          //   // })
-          // } else {
-          //   console.error('异常，未读取到合成片段返回的 key 值')
-          // }
+          // 返回片段数量小于上传片段数量，意味着有片段处理失败，应删除掉失败的占位片段（以后可以进行更复杂的重新上传处理）
+          if (data.length < params.length) {
+            const keys = data.map(item => item.key)
+            params.forEach(param => {
+              if (!keys.includes(param.key)) {
+                // 片段创建失败的时候，应移除前端的临时片段
+                get()?.some((item, index, arr) => {
+                  if(item.key === param.key) {
+                    arr.splice(index, 1)
+                    return true
+                  }
+                })
+                sequence?.some((item, index, arr) => {
+                  if(item === param.key) {
+                    arr.splice(index, 1)
+                    return true
+                  }
+                })
+              }
+            })
+          }
         }).catch(err => {
+          console.error(err)
           params.forEach(param => {
             // 片段创建失败的时候，应移除前端的临时片段
             get()?.some((item, index, arr) => {
@@ -957,20 +1002,6 @@ export const useProjectStore = defineStore('projectStore', {
               }
             })
           })
-          // 片段创建失败的时候，应移除前端的临时片段
-          // get()?.some((item, index, arr) => {
-          //   if(item.key === key) {
-          //     arr.splice(index, 1)
-          //     return true
-          //   }
-          // })
-          // sequence?.some((item, index, arr) => {
-          //   if(item === key) {
-          //     arr.splice(index, 1)
-          //     return true
-          //   }
-          // })
-          console.error(err)
         })
       }
       /** 更新转写文字 */
@@ -1129,7 +1160,6 @@ export const useProjectStore = defineStore('projectStore', {
         updateCollapsed
       }
     },
-
     /** ------------------------------- snapshot ------------------------------------------- */
     /** 创建快照 */
     createSnapshot(id: string, account: string, hostname: string) {

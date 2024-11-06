@@ -12,7 +12,6 @@ import { useShell } from '@/renderer'
 import dayjs from 'dayjs'
 import { Subtitles, SubtitlesOff, MoreHoriz, DpzButton } from '@/components'
 import { useSubmissionDialog } from './hooks/useSubmissionDialog'
-import { AutorenewOutlined, DownloadRound } from '@vicons/material'
 import { useDownloadDialog } from './hooks/useDownload'
 import TooltipButton from './private/TooltipButton.vue'
 import SubmissionCard from './private/SubmissionCard.vue'
@@ -31,7 +30,7 @@ const props = defineProps<{
   lib: LibraryEnum
   account: string
   hostname: string
-  readonly: () => boolean
+  readonly: boolean
 }>()
 const themeVars = useThemeVars()
 const dialog = useDialog()
@@ -43,7 +42,7 @@ const submissionHistory = computed(() => data.value?.submissionHistory.sort((a, 
 const rootRef = ref()
 const subs: Subscription[] = []
 const state = reactive({
-  isReadonly: computed(() => props.readonly()),
+  isReadonly: computed(() => props.readonly),
   isSaving: false,
   isToolbarShow: false,
   isDrawShow: false,
@@ -287,7 +286,8 @@ onUnmounted(() => {
         <span class="saving-text">{{
           state.isSaving ? '正在保存 ... ' : `${data?.isContentUpdating || data?.isTitleUpdating ? '未保存' : ''}`
         }}</span>
-        <n-icon v-if="state.isSaving" class="rotate" :component="AutorenewOutlined" :size="22" />
+        <!-- <n-icon v-if="state.isSaving" class="rotate" :component="AutorenewOutlined" :size="22" /> -->
+        <Icon v-if="state.isSaving" class="rotate" icon="material-symbols:autorenew-rounded" height="22" />
       </div>
       <TooltipButton
         v-if="lib === LibraryEnum.COURSE"
@@ -320,7 +320,8 @@ onUnmounted(() => {
         :disabled="state.isReadonly"
         @click="handleDownloadDialog(props.id)"
       >
-        <n-icon :component="DownloadRound" :size="22" />
+        <!-- <n-icon :component="DownloadRound" :size="22" /> -->
+        <Icon icon="material-symbols:download-2-rounded" height="22px" />
       </n-button>
       <!-- 更多 -->
       <DpzButton class="top-nav-btn" :disabled="state.isReadonly" @click="navMethods.handleMore">
@@ -330,7 +331,7 @@ onUnmounted(() => {
     <CollapseButton v-if="lib !== LibraryEnum.COURSE" class="collapse-btn" @click="navMethods.handleToolbarCollapse" :isCollapse="state.isToolbarShow" />
   </div>
   <!-- 抽屉 -->
-  <n-drawer v-if="bridge.habit" v-model:show="state.isDrawShow" :width="320" placement="right" :to="bridge.projectRef!" :disabled="state.isReadonly">
+  <n-drawer v-if="bridge.habit" v-model:show="state.isDrawShow" :width="320" placement="right" :to="bridge.projectEl!" :disabled="state.isReadonly">
     <n-drawer-content :style="{ zIndex: '1000' }">
       <n-tabs type="line" animated justify-content="space-evenly" @update:value="handleTabsUpdate">
         <n-tab-pane name="setting" tab="页面设置">
@@ -450,14 +451,13 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .navbar {
-  position: relative;
-  display: inline;
+  // position: relative;
+  // display: inline;
   height: 100%;
   width: 100%;
   border-top: 1px solid var(--dpz-dividerColor);
   border-bottom: 1px solid var(--dpz-dividerColor);
   box-sizing: border-box;
-  // overflow: hidden;
   background-color: v-bind('themeVars.bodyColor');
   .collapse-btn {
     opacity: 0;

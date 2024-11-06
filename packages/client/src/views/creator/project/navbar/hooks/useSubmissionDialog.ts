@@ -2,7 +2,8 @@ import { NIcon, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import { h } from 'vue'
 import SubmissionForm from '../submission/SubmissionForm.vue'
 import useStore from '@/store'
-import { ShareFilled } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { ShareFilled } from '@vicons/material'
 export function useSubmissionDialog() {
   const dialog = useDialog()
   const message = useMessage()
@@ -15,7 +16,7 @@ export function useSubmissionDialog() {
     if (!id) return
     console.log(data)
     dialog.create({
-      icon: () => h(NIcon, { component: ShareFilled, size: 24 }),
+      icon: () => h(Icon, { icon: 'material-symbols:share', height: 24 }),
       title: '投稿',
       content: () => h(SubmissionForm, {
         id: id,

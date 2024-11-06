@@ -108,8 +108,8 @@ export function getProcedureConfig(args: {
       AnimeProvider, AddAnimeService, DialogProvider, 
       OutlineService, ColorProvider, AnimeService,
       Structurer, ThemeProvider, Player, ImgToUrlService,
-      MemoService, MessageService, StudioService,
-      ImgService, MemoProvider
+      MessageService, StudioService,ImgService,
+      MemoService, MemoProvider
     ],
     plugins: [
       () => new Toolbar([

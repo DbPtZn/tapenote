@@ -1,20 +1,19 @@
-import { ColorProvider, DialogProvider, ImgToUrlService, OutlineService, Player, ResizeService, Structurer, ThemeProvider } from "@/editor"
+import { ColorProvider, DialogProvider, ImgToUrlService, MemoProvider, OutlineService, Player, ResizeService, Structurer, ThemeProvider } from "@/editor"
 import useStore from "@/store"
 import { Editor, createEditor } from "@textbus/editor"
-import { Ref, onMounted, onUnmounted, watch } from 'vue'
+import { Ref, ShallowRef, onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
 import { getNoteConfig } from "./note.config"
 import { useShell } from "@/renderer"
 import '@textbus/editor/bundles/textbus.min.css'
 import { CreatorShell } from '../../../../shell'
-import { Provider } from "@textbus/core"
 export function createTextEditor(args: {
   id: string, 
   account: string, 
   hostname: string, 
-  rootRef: Ref<HTMLElement>, 
-  editorRef: Ref<HTMLElement>, 
-  scrollerRef: Ref<HTMLElement>, 
-  toolbarRef: Ref<HTMLElement>
+  rootRef: Readonly<ShallowRef<HTMLElement | null>>, 
+  editorRef: Readonly<ShallowRef<HTMLElement | null>>, 
+  scrollerRef: Readonly<ShallowRef<HTMLElement | null>>, 
+  toolbarRef: Readonly<ShallowRef<HTMLElement | null>>
 }) {
   const { id, account, hostname, rootRef, editorRef, scrollerRef, toolbarRef } = args
   const { projectStore, settingStore } = useStore()
@@ -27,7 +26,7 @@ export function createTextEditor(args: {
       themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
     }
   )
-  onUnmounted(() => {
+  onBeforeUnmount(() => {
     try {
       editor.get(ResizeService).destory()
       editor.get(OutlineService).destory()
@@ -36,6 +35,7 @@ export function createTextEditor(args: {
       editor.get(Structurer).destory()
       editor.get(ThemeProvider).destory()
       editor.get(ImgToUrlService).destory()
+      editor.get(MemoProvider).destroy()
       console.log('销毁依赖')
     } catch (error) {
       console.log(error)
@@ -49,15 +49,15 @@ export function createTextEditor(args: {
           editor = createEditor(getNoteConfig({
             account,
             hostname,
-            rootRef: rootRef.value,
-            editorRef: editorRef.value,
-            scrollerRef: scrollerRef.value, 
-            toolbarRef: toolbarRef.value, 
+            rootRef: rootRef.value!,
+            editorRef: editorRef.value!,
+            scrollerRef: scrollerRef.value!, 
+            toolbarRef: toolbarRef.value!, 
             memos: project.memos,
             content: project.content,
             dirname: project.dirname
           }))
-          editor.mount(editorRef.value).then(() => {
+          editor.mount(editorRef.value!).then(() => {
             const themeProvider = editor?.get(ThemeProvider)
             themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
             // ⚠ 由于 tb 中解析嵌套 formatter 时，标签顺序可能会发生变化，所以应该在加载之后再获取 html 作为脏值检测依据

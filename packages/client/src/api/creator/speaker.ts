@@ -17,8 +17,9 @@ export const speaker = (axios: AxiosInstance) => {
     delete<T>(id: string) {
       return axios.delete<T>(`/speaker/delete/` + id)
     },
-    testTts(role: number) {
-      return axios.get('/speaker/read/test/' + role)
+    testTts(role: number, model: string) {
+      console.log(`/speaker/read/test?role=${role}&model=${model}`)
+      return axios.get(`/speaker/read/test?role=${role}&model=${model}`)
     },
     clearTemp(url: string) {
       return axios.post('/speaker/delete/temp',{ url })

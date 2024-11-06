@@ -5,7 +5,7 @@ import { SelectOption, useMessage } from 'naive-ui'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { Editor, Layout } from '@textbus/editor'
 import useStore from '@/store'
-type Action = Required<Parameters<ReturnType<ReturnType<typeof useStore>['projectStore']['fragment']>['createByAudio']>[0]['actions']>[0]
+type Action = Required<Parameters<ReturnType<ReturnType<typeof useStore>['projectStore']['fragment']>['createByAudio']>[0][0]['actions']>[0]
 
 export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, handleOperate: () => void) {
   const message = useMessage()
@@ -25,16 +25,27 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
   let actionSequence: Action[] = []
   let animeProvider: AnimeProvider
   let editor: Editor
+  const subs: Subscription[] = [] 
 
   onMounted(() => {
-    studioEl = bridge.studioRef!
-    bridge.onEditorReady.subscribe((e) => {
-      editor = e
-      editorEl = bridge.editorRef!
-      scrollerEl = bridge.scrollerRef!
+    studioEl = bridge.studioEl!
+    if(bridge.editor?.isReady) {
+      editor = bridge.editor
+      editorEl = bridge.editorEl!
+      scrollerEl = bridge.scrollerEl!
       containerEl = editor.get(Layout).container
       animeProvider = editor.get(AnimeProvider)
-    })
+      return
+    }
+    subs.push(
+      bridge.onEditorReady.subscribe((e) => {
+        editor = e
+        editorEl = bridge.editorEl!
+        scrollerEl = bridge.scrollerEl!
+        containerEl = editor.get(Layout).container
+        animeProvider = editor.get(AnimeProvider)
+      })
+    )
   })
   
   const options: SelectOption[] = [
@@ -51,14 +62,15 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
   ]
   
   /** 开始录制 */
+  let startEvent: Subscription | null = null
   function start(callback: () => void) {
+    if (!editorEl) return null
     const elements = editorEl.querySelectorAll<HTMLElement>(`[data-id]:not([data-id=""])`)
-    if (!elements) return
+    if (!elements) return null
     animeMap = Array.from(elements)
-    if (!editorEl) return
 
     // 监听点击事件, 从目标动画块开始录制
-    const startEvent = fromEvent<PointerEvent>(editorEl, 'click').subscribe(e => {
+    startEvent = fromEvent<PointerEvent>(editorEl, 'click').subscribe(e => {
       const target = e.target as HTMLElement
       const animeElement = AnimeProvider.toAnimeElement(target)
       if (!animeElement) return
@@ -79,7 +91,7 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
   
       callback() // 开启录音的回调
       bridge.handleBlur() // 将焦点从编辑器中移出
-      startEvent.unsubscribe()
+      startEvent?.unsubscribe()
 
       // 允许通过点击动画来移动指针、记录动作
       subs2.push(
@@ -120,6 +132,12 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
         // TODO 通知录音器，如果用户保持操作，不要重起新录音
       })
     )
+
+    return {
+      stop: () => {
+        startEvent?.unsubscribe()
+      }
+    }
   }
 
   /** 停止录制时 */
@@ -134,6 +152,8 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
 
   onUnmounted(() => {
     animeMap = []
+    startEvent?.unsubscribe()
+    subs.forEach(sub => sub.unsubscribe())
     subs1.forEach(sub => sub.unsubscribe())
     subs2.forEach(sub => sub.unsubscribe())
   })

@@ -6,14 +6,16 @@
       <span>{{ nickName }}</span>
     </div>
     <div class="sidebar-userbar-item-icon">
-      <n-icon :component="KeyboardArrowDownOutlined" />
+      <!-- <n-icon :component="KeyboardArrowDownOutlined" /> -->
+      <Icon icon="material-symbols:keyboard-arrow-down-rounded" />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui'
-import { KeyboardArrowDownOutlined } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { KeyboardArrowDownOutlined } from '@vicons/material'
 const props = defineProps<{
   nickName: string
   avatar: string

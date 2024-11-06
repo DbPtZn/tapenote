@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useThemeVars } from 'naive-ui';
+import { useThemeVars } from 'naive-ui'
 import { Component } from 'vue'
 import { DpzButton } from '@/components'
 defineProps<{

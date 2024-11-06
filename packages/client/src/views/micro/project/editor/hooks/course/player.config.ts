@@ -7,10 +7,8 @@ import {
   OutlinePlugin,
   OutlineService,
   Controller,
-  animePlayerComponent,
   rootPlayerComponentLoader,
   rootPlayerComponent,
-  animePlayerComponentLoader,
   startTool,
   rewindTool,
   forwardTool,
@@ -30,10 +28,16 @@ import {
   Structurer,
   ThemeProvider,
   animeFormatLoader,
-  animeFormatter
+  animeFormatter,
+  defaultPlayerComponents,
+  defaultPlayerComponentLoaders,
+  blockBackgroundColorFormatter,
+  blockBackgroundColorFormatterLoader
 } from '@/editor'
 import { fromEvent, Injector } from '@textbus/core'
 import {
+  defaultAttributeLoaders,
+  defaultAttributes,
   defaultComponentLoaders,
   defaultComponents,
   defaultFormatLoaders,
@@ -62,10 +66,12 @@ export function getCourseConfig(args: {
     content: content || '',
     rootComponent: rootPlayerComponent,
     rootComponentLoader: rootPlayerComponentLoader,
-    components: [animePlayerComponent, animeIgnoreComponent, ...defaultComponents],
-    componentLoaders: [animePlayerComponentLoader, animeIgnoreComponentLoader, ...defaultComponentLoaders],
+    components: defaultPlayerComponents,
+    componentLoaders: defaultPlayerComponentLoaders,
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
+    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
+    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
     styleSheets: [],
     providers: [
       Player,

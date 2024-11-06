@@ -11,13 +11,12 @@ import { useRecorder, useSpeech } from './hooks'
 import { Bridge } from '../bridge'
 import { Tip } from '../../_common'
 import { Subscription, fromEvent } from '@tanbo/stream'
-type Action = Required<Parameters<ReturnType<ReturnType<typeof useStore>['projectStore']['fragment']>['createByAudio']>[0]['actions']>[0]
+type Action = Required<Parameters<ReturnType<ReturnType<typeof useStore>['projectStore']['fragment']>['createByAudio']>[0][0]['actions']>[0]
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
   account: string
   hostname: string
-  speakerId?: string
 }>()
 
 const emits = defineEmits<{
@@ -30,28 +29,28 @@ const themeVars = useThemeVars()
 const message = useMessage()
 const dialog = useDialog()
 const { projectStore } = useStore()
-
+const speakerId = computed(() => projectStore.get(props.id)?.speakerHistory.human)
 // const isStartedRecorder = ref(false)
 const stationEl = useTemplateRef<HTMLElement>('stationEl')
 const handleEl = useTemplateRef<HTMLElement>('handleEl')
 const isShowStationToolbar = ref(true)
 const isRow = ref(true)
-
 const { x, y } = useDraggable(stationEl, {
   initialValue: { x: 0, y: 90 },
-  containerElement: bridge.projectRef,
+  containerElement: bridge.projectEl,
   stopPropagation: true, // 阻止冒泡
   preventDefault: true,
   handle: handleEl
 })
 
 const offsetX = computed(() => {
-  const rootRect = bridge.scrollerEl.value?.getBoundingClientRect()
-  const left = rootRect?.width || 0
-  return x.value - left
+  // const rootRect = bridge.scrollerEl.value?.getBoundingClientRect()
+  // const left = rootRect?.left || 0
+  // console.log(x.value, x.value - left, rootRect)
+  return x.value
 })
 const offsetY = computed(() => {
-  return y.value - 42
+  return y.value
 })
 
 const {
@@ -78,6 +77,7 @@ const isWaitForSelectAnime = ref(false)
 const shortcut: Subscription[] = []
 let msg: MessageReactive | undefined = undefined
 let isCancel = false
+let startSpeechEvent: { stop: () => void } | null = null
 const speechMethods = {
   start: () => {
     if (!isStarted.value) {
@@ -86,12 +86,14 @@ const speechMethods = {
       if (isWaitForSelectAnime.value) {
         isWaitForSelectAnime.value = false
         message.info('已取消')
+        startSpeechEvent?.stop()
         msg?.destroy()
+        emits('end')
         return
       }
       isWaitForSelectAnime.value = true
       msg = message.info('在选择一个动画块后开始录制', { duration: 0 })
-      startSpeech(() => {
+      startSpeechEvent = startSpeech(() => {
         handleStartPause()
         isWaitForSelectAnime.value = false
         shortcut.push(
@@ -143,17 +145,18 @@ const subs = [
       if (isCancel) return isCancel = false // 取消
       const actions = getActionSequence()
       const duration = data.duration
+      const interval = 60 // 分段间隔
       if (!data.isSilence) {
         // 小于 60s 的情况 直接创建片段
-        if (duration <= 60) {
+        if (duration <= interval) {
           const result = await AudioRecorder.toWAVBlob(data.blob)
-          console.log('duration:', duration, result.duration, 'actions:', actions)
-          await projectStore.fragment(props.id).createByAudio({
+          // console.log('duration:', duration, result.duration, 'actions:', actions)
+          await projectStore.fragment(props.id).createByAudio([{
             audio: result.blob,
             duration: duration,
-            speakerId: props.speakerId || '',
+            speakerId: speakerId.value || '',
             actions
-          })
+          }])
           emits('output')
           return
         } else {
@@ -163,7 +166,7 @@ const subs = [
           const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
 
           const sampleRate = audioBuffer.sampleRate
-          const segmentDuration = 60 // 每60秒一个分割点（分片不宜过短，否则会导致片段语音内容不连贯影响语音转写）
+          const segmentDuration = interval // 每60秒一个分割点（分片不宜过短，否则会导致片段语音内容不连贯影响语音转写）
           const windowSize = 1 // 在±1秒的窗口中查找低音点
           const threshold = 0.01 // 定义静音/低音的阈值
           const audioData = audioBuffer.getChannelData(0)
@@ -171,7 +174,7 @@ const subs = [
           const lowPoints = findLowPoints(audioData, sampleRate, segmentDuration, windowSize, threshold)
           const cutPoints = lowPoints.map(point => Number((point / sampleRate).toFixed(3)))
           
-              // 重新计算和分配动作关键帧
+          // 重新计算和分配动作关键帧
           const actionChunks: Action[][] = []
           const audioChunks = await splitAudio(audioBuffer, cutPoints, (previousPoint, currentPoint) => {
             actionChunks.push(
@@ -185,29 +188,36 @@ const subs = [
           })
 
           // TODO 设置最大上传限制(防止文件过大导致上传失败)
+          // TODO 多片段并发上传会出现排序更新冲突问题，需改成多片段统一上传的方式
           const tasks = audioChunks.map((audiobuffer, index) => {
             const wavData = AudioRecorder.audioBufferToWav(audiobuffer)
             const blob = new Blob([wavData], { type: 'audio/wav' })
-            return projectStore.fragment(props.id).createByAudio({
+            return {
               audio: blob,
               duration: audiobuffer.duration,
-              speakerId: props.speakerId || '',
+              speakerId: speakerId.value  || '',
               actions: actionChunks[index]
-            })
+            }
           })
-          Promise.all(tasks).then(resp => {
+          return projectStore.fragment(props.id).createByAudio(tasks).then(resp => {
             console.log('创建片段成功')
             emits('output')
           }).catch(err => {
             console.log('创建片段失败')
           })
-          return
+          // Promise.all(tasks).then(resp => {
+          //   console.log('创建片段成功')
+          //   emits('output')
+          // }).catch(err => {
+          //   console.log('创建片段失败')
+          // })
+          // return
         }
       }
       // TODO 一般可能最后一段音频才需要考虑是否包含说话声音
       if (actions && actions.length > 0) {
         const txtLength = Math.floor(data.duration / 0.5)
-        console.log('空白语音段：', data.duration, txtLength)
+        // console.log('空白语音段：', data.duration, txtLength)
         await projectStore.fragment(props.id).createBlank({
           txtLength,
           duration,
@@ -227,6 +237,7 @@ const subs = [
 ]
 
 onUnmounted(() => {
+  shortcut.forEach(s => s.unsubscribe())
   subs.forEach(sub => sub.unsubscribe())
 })
 </script>
@@ -403,8 +414,8 @@ onUnmounted(() => {
   }
 }
 .station-hide {
-  display: none;
-  right: -80px !important;
+  // display: none;
+  left: -80px !important;
   .collapse-btn {
     position: absolute;
     left: -44px;
@@ -416,6 +427,7 @@ onUnmounted(() => {
   position: absolute;
   // top: 0;
   // right: 0;
+  left: 500px;
   background-color: v-bind('themeVars.cardColor');
   border-radius: 3px;
   padding: 6px 6px;

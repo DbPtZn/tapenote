@@ -2,7 +2,8 @@
 import useStore from '@/store'
 import { DropdownOption, NCheckbox, useDialog, useMessage, useThemeVars } from 'naive-ui'
 import dayjs from 'dayjs'
-import { MoreVertRound } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { MoreVertRound } from '@vicons/material'
 import { h } from 'vue'
 import { LibraryEnum } from '@/enums'
 type Snapshot = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['snapshots']>[0]
@@ -96,7 +97,7 @@ const options: DropdownOption[] = [
       <!-- @click.prevent.stop=";" -->
       <n-dropdown trigger="hover" :options="options">
         <n-button text :size="'tiny'" class="icon">
-          <n-icon :component="MoreVertRound" :size="24" />
+          <Icon icon="material-symbols:more-vert" height="24" />
         </n-button>
       </n-dropdown>
     </template>

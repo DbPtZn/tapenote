@@ -13,7 +13,9 @@ import {
 } from 'typeorm'
 
 export interface FragmentSpeaker {
+  id: string
   type: 'human' | 'machine'
+  model: string
   avatar: string
   name: string
   role: number

@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { NButton, useThemeVars } from 'naive-ui'
-import { MoreVertRound } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { MoreVertRound } from '@vicons/material'
+
 import { useI18n } from 'vue-i18n'
 const themeVars = useThemeVars()
 const { t } = useI18n()
@@ -76,7 +78,8 @@ function getFolderName(name: string) {
     </template>
     <template #header-extra>
       <n-button text class="header-icon" @click.prevent.stop="handleMoreAction">
-        <NIcon :component="MoreVertRound" size="22" />
+        <!-- <NIcon :component="MoreVertRound" size="22" /> -->
+        <Icon icon="mdi:dots-vertical" height="22" />
       </n-button>
     </template>
     <template #default>

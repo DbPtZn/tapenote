@@ -2,7 +2,7 @@
 import Recorder from 'js-audio-recorder'
 import { useThemeVars } from 'naive-ui'
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { KeyboardOutlined } from '@vicons/material'
+// import { KeyboardOutlined } from '@vicons/material'
 import { fromEvent, Subscription, debounceTime, auditTime, throttleTime, distinctUntilChanged, filter } from '@tanbo/stream'
 import { AudioRecorder } from '../_utils/recorder'
 const props = defineProps<{

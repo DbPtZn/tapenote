@@ -1,4 +1,4 @@
-import { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
+import { DropdownOption } from "naive-ui"
 import { nextTick, reactive, ref, h } from "vue"
 import { UserOption } from "../types"
 import useStore from "@/store"
@@ -18,7 +18,7 @@ export function useDropdown() {
     yRef: ref<number>(0),
     showDropdownRef: ref<boolean>(false),
   })
-  const dropdownMenu = ref<DropdownMixedOption[]>([
+  const dropdownMenu: DropdownOption[] = [
     {
       key: 'details',
       label: '查看登录信息',
@@ -77,7 +77,7 @@ export function useDropdown() {
         }
       }
     }
-  ])
+  ]
   function handleContextMenu(ev, option: UserOption) {
     if (option.key === 'add') return
     dropdownState.option = option

@@ -2,7 +2,8 @@ import { NIcon, useDialog, useMessage } from 'naive-ui'
 import { h } from 'vue'
 import DownloadForm from '../submission/DownloadForm.vue'
 import useStore from '@/store'
-import { DownloadFilled } from '@vicons/material'
+// import { DownloadFilled } from '@vicons/material'
+import { Icon } from '@iconify/vue'
 
 export function useDownloadDialog() {
   const dialog = useDialog()
@@ -14,8 +15,8 @@ export function useDownloadDialog() {
     if (!data) return
     if (!id) return
     dialog.create({
-      icon: () => h(NIcon, { component: DownloadFilled, size: 24 }),
-      title: `导出${type === 'course' ? '课程动画' : '笔记项目'}`,
+      icon: () => h(Icon, { icon: 'material-symbols:download-2', height: 24 }),
+      title: `导出${type === 'course' ? '动画项目' : '笔记项目'}`,
       content: () => h(DownloadForm, {
         type: type,
 

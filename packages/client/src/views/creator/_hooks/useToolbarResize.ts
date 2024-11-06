@@ -1,9 +1,9 @@
 import elementResizeDetector from "element-resize-detector"
-import { onMounted, onBeforeUnmount, Ref } from "vue"
+import { onMounted, onBeforeUnmount, Ref, ShallowRef } from "vue"
 import _ from 'lodash'
 import { Observable, Subject } from "@textbus/core"
 
-export function useToolbarResize(toolbarRef: Ref<HTMLElement>) {
+export function useToolbarResize(toolbarRef: Readonly<ShallowRef<HTMLElement | null>>) {
   const resizeEvent: Subject<any> = new Subject()
   const onResize: Observable<{
     width: number,
@@ -11,8 +11,8 @@ export function useToolbarResize(toolbarRef: Ref<HTMLElement>) {
   }> = resizeEvent.asObservable()
   const erd = elementResizeDetector()
   onMounted(() => {
-    erd.listenTo(toolbarRef.value, () => {
-      resizeEvent.next({ width: toolbarRef.value.offsetWidth, height: toolbarRef.value.offsetHeight })
+    erd.listenTo(toolbarRef.value!, () => {
+      resizeEvent.next({ width: toolbarRef.value!.offsetWidth, height: toolbarRef.value!.offsetHeight })
     })
   })
   onBeforeUnmount(() => {

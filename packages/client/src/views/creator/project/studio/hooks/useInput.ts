@@ -3,12 +3,14 @@ import { splitText } from '../_utils/splitText'
 import { useI18n } from 'vue-i18n'
 import { NIcon, NMessageProvider, useDialog, useMessage } from 'naive-ui'
 import useStore from '@/store'
+import { Icon } from '@iconify/vue'
 import { CreateBlankFragment, SpeakerSelectList } from '../private'
-import { AddReactionSharp } from '@vicons/material'
+// import { AddReactionSharp } from '@vicons/material'
 import { formatTime } from '../_utils/formatTime'
+import { Bridge } from '../../bridge'
 
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
-export function useInput(id: string, account: string, hostname: string) {
+export function useInput(id: string, account: string, hostname: string, bridge: Bridge) {
   const { projectStore, speakerStore } = useStore()
   const message = useMessage()
   const dialog = useDialog()
@@ -26,55 +28,43 @@ export function useInput(id: string, account: string, hostname: string) {
     return speakerStore.get(speakerId.value || '', account, hostname, recorderMode.value === 'TTS' ? 'machine' : 'human')
   })
 
-  function handleTextOutput(text: string) {
-    if (text.length === 0) return
-    // TODO 对过长的文本进行分片
-    if (text.length > 32) {
-      const chunks = splitText(text)
-      if (typeof chunks === 'string') {
-        // console.log(chunks)
-        // 防御：避免字符串文本，因为会被 for let...of 解析为单字符数组
-        message.error(t('studio.msg.input_error'))
+  async function handleTextOutput(text: string) {
+    try {
+      if (text.length === 0) return
+      if (text.length > 32) {
+        const chunks = splitText(text)
+        if (typeof chunks === 'string') {
+          // console.log(chunks)
+          // 防御：避免字符串文本，因为会被 for let...of 解析为单字符数组
+          message.error(t('studio.msg.input_error'))
+          return
+        }
+        projectStore.fragment(id).createByText({
+          data: chunks.map(chunk => { return { txt: chunk } }),
+          speakerId: speakerId.value || '',
+          speed: ttsSpeed.value
+        })
         return
       }
-      const promiseArr: Promise<any>[] = []
-      for (let chunk of chunks) {
-        promiseArr.push(
-          projectStore.fragment(id).createByText({
-            txt: chunk,
-            speakerId: speakerId.value || '',
-            speed: ttsSpeed.value
-          })
-        )
-      }
-      // TODO 这里涉及并发问题，无法确定并发数量，如果中间有失败，则需要对失败片段重新上传，再次失败则放弃并提示用户
-      // 理论上我们可以限制最大 6 个并发，这样用户一次输入的文本长度不应该超过 32 * 6 个字符（中文），当超过时提示用户手动分片
-      Promise.all(promiseArr).catch(e => {
-        message.error(t('studio.msg.create_fragment_error'))
-      })
-      return
-    }
-    projectStore
-      .fragment(id)
-      .createByText({
-        txt: text,
+      await projectStore.fragment(id).createByText({
+        data: [{ txt: text }],
         speakerId: speakerId.value || '',
         speed: ttsSpeed.value
       })
-      .catch(e => {
-        message.error(t('studio.msg.create_fragment_error'))
-      })
+    } catch (error) {
+      message.error(t('studio.msg.create_fragment_error'))
+    }
   }
   function handleAudioOutput(data: { audio: Blob | undefined; duration: number }) {
     if (!data.audio) return
     projectStore
       .fragment(id)
-      .createByAudio({
+      .createByAudio([{
         audio: data.audio,
         duration: data.duration,
         speakerId: speakerId.value || '',
         actions: []
-      })
+      }])
       .catch(e => {
         message.error(t('studio.msg.create_fragment_error'))
       })
@@ -147,7 +137,7 @@ export function useInput(id: string, account: string, hostname: string) {
   function handleSpeakerChange(type: 'human' | 'machine') {
     dialog.destroyAll()
     dialog.create({
-      icon: () => h(NIcon, { component: AddReactionSharp, size: 24, style: { marginRight: '8px' } }),
+      icon: () => h(Icon, { icon: 'material-symbols:add-reaction-outline', height: 24, style: { marginRight: '8px' } }),
       title: t('studio.changeRoles'),
       content: () =>
         h(SpeakerSelectList, {

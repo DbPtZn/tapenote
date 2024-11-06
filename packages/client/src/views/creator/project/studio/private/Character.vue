@@ -8,6 +8,9 @@ defineProps<{
 const themeVars = useThemeVars()
 const badgeRef = ref<HTMLElement>()
 // TODO 考虑根据 serial 调整 badge 的宽度，暂不实现
+// onUnmounted(() => {
+//   console.log('badge unmounted')
+// })
 </script>
 <template>
   <span ref="badgeRef" :class="['character', 'animation-layer', isMarked ? 'marked' : '', isMarked ? 'badge' : '']">

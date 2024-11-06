@@ -16,7 +16,6 @@
     "--postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "@iconify/json": "^2.2.252",
     "@iconify/vue": "^4.1.2",
     "@losting/timeline": "^5.0.0",
     "@tanbo/bezier": "^1.0.1",
@@ -71,7 +70,6 @@
     "@types/jsrsasign": "^10.5.14",
     "@types/lodash": "^4.17.0",
     "@types/node": "^20.12.7",
-    "@vicons/material": "^0.12.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "cross-env": "^7.0.3",
     "electron": "^30.0.1",
@@ -79,7 +77,6 @@
     "prebuild-install": "^7.1.2",
     "sass": "^1.76.0",
     "typescript": "^5.2.2",
-    "unocss": "^0.62.4",
     "unplugin-vue-components": "^0.27.0",
     "vconsole": "^3.15.1",
     "vite": "^5.1.6",

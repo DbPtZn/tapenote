@@ -5,53 +5,35 @@ import { Habit } from "./habit"
 import { LibraryEnum } from "@/enums"
 import { VIEW_DOCUMENT } from "@textbus/platform-browser"
 import { Renderer } from "@textbus/core"
-import { Ref, ref } from "vue"
+import { Ref, nextTick, ref } from "vue"
 
 export class Bridge {
   habit: Habit | null = null
   editor: Editor | null = null
-  scrollerEl = ref<HTMLElement>()
-  coverEl = ref<HTMLElement>()
+
+  coverEl: HTMLElement | null = null
   titleEl: HTMLElement | null = null
-  editorRef: HTMLElement | null = null
-  studioRef: HTMLElement | null = null
-  scrollerRef: HTMLElement | null = null
-  projectRef: HTMLElement | null = null
-  renderer: Renderer | null = null
+  editorEl: HTMLElement | null = null
+  studioEl: HTMLElement | null = null
+  studioScrollerEl: HTMLElement | null = null
+  scrollerEl: HTMLElement | null = null
+  projectEl: HTMLElement | null = null
   container: HTMLElement | null = null
+
+  renderer: Renderer | null = null
   animeProvider: AnimeProvider | null = null
   outlineService: OutlineService | null = null
+
   focusDiv: HTMLElement | null = null
   
-  // private editorReadyEvent: Subject<any> = new Subject()
-  // onEditorReady: Observable<Editor> = this.editorReadyEvent.asObservable()
   onEditorReady = new Subject<Editor>()
-  // private toolbarCollapseEvent: Subject<any> = new Subject()
-  // onToolbarCollapse: Observable<any> = this.toolbarCollapseEvent.asObservable()
   onToolbarCollapse = new Subject<boolean>()
-  // private saveStartEvent: Subject<any> = new Subject()
-  // onSaveStart: Observable<any> = this.saveStartEvent.asObservable()
   onSaveStart = new Subject<void>()
-  // private saveEndEvent: Subject<any> = new Subject()
-  // onSaveEnd: Observable<any> = this.saveEndEvent.asObservable()
   onSaveEnd = new Subject<void>()
-  
-  // private sidenoteShowEvent: Subject<any> = new Subject()
-  // onSidenoteShow: Observable<boolean> = this.sidenoteShowEvent.asObservable()
   onSidenoteShow = new Subject<boolean>()
-  // private sidenoteReadyEvent: Subject<any> = new Subject()
-  // onSidenoteReady: Observable<Editor> = this.sidenoteReadyEvent.asObservable()
   onSidenoteReady = new Subject<Editor>()
-
-  // private editorReloadEvent: Subject<any> = new Subject()
-  // onEditorReload: Observable<Editor> = this.editorReloadEvent.asObservable()
   onEditorReload = new Subject<void>()
-
-  // private autoMoveAnimePointerChangeEvent: Subject<boolean> = new Subject()
-  // onAutoMoveAnimePointerChange:Observable<boolean> = this.autoMoveAnimePointerChangeEvent.asObservable()
   onAutoMoveAnimePointerChange = new Subject<boolean>()
-  // private addPromoterEvent: Subject<HTMLElement> = new Subject()
-  // onAddPromoter: Observable<HTMLElement> = this.addPromoterEvent.asObservable()
   onAddPromoter = new Subject<HTMLElement>()
 
   constructor() {
@@ -61,10 +43,8 @@ export class Bridge {
     this.focusDiv.tabIndex = 0
     document.body.appendChild(this.focusDiv)
   }
-  setup(editor: Editor, lib: LibraryEnum, editorRef: HTMLElement, scrollerRef: HTMLElement) {
+  setup(editor: Editor, lib: LibraryEnum) {
     this.editor = editor
-    this.editorRef = editorRef
-    this.scrollerRef = scrollerRef
     this.container = editor.get(VIEW_DOCUMENT)
     this.renderer = editor.get(Renderer)
     if (lib === LibraryEnum.PROCEDURE) this.animeProvider = editor.get(AnimeProvider)
@@ -128,13 +108,22 @@ export class Bridge {
     this.focusDiv?.focus()
   }
 
+  // 将滚动条滚动到底部
+  studioScrollToBottom() {
+    nextTick(() => {
+      if(!this.studioScrollerEl) return
+      this.studioScrollerEl.scrollTop = this.studioScrollerEl.scrollHeight
+    })
+  }
+
   destory() {
     this.habit = null
     this.editor = null
-    this.editorRef = null
-    this.studioRef = null
-    this.scrollerRef = null
-    this.projectRef = null
+    this.editorEl = null
+    this.studioEl = null
+    this.scrollerEl = null
+    this.projectEl = null
+    this.titleEl = null
     this.animeProvider = null
     this.focusDiv?.remove()
   }

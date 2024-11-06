@@ -15,36 +15,42 @@ import { LibraryEnum } from '@/enums'
 import { MemoProvider, MessageService, Player } from '@/editor'
 import { Subscription, debounceTime } from '@textbus/core'
 import { VIEW_CONTAINER } from '@textbus/platform-browser'
+
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string,
   lib: LibraryEnum
   account: string
   hostname: string
-  readonly: () => boolean
+  readonly: boolean
 }>()
+
 const { projectStore, folderStore, userStore } = useStore()
 const themeVars = useThemeVars()
-// const loadingBar = useLoadingBar()
-// const screenshot = useScreenshot()
 const message = useMessage()
 const dialog = useDialog()
-const rootRef = ref()
-const toolbarRef = ref()
-const controllerRef = ref()
-const toolbarWrapperRef = ref() 
-const scrollerRef = ref()
-bridge.scrollerEl = scrollerRef
-const coverEl = ref<HTMLElement>()
-bridge.coverEl = coverEl
-const editorRef = ref()
+
+const rootEl = useTemplateRef<HTMLElement>('rootEl')
+const toolbarEl = useTemplateRef<HTMLElement>('toolbarEl')
+const editorEl = useTemplateRef<HTMLElement>('editorEl')
+const controllerEl = useTemplateRef<HTMLElement>('controllerEl')
+const toolbarWrapperEl = useTemplateRef<HTMLElement>('toolbarWrapperEl')
+const scrollerEl = useTemplateRef<HTMLElement>('scrollerEl')
+const coverEl = useTemplateRef<HTMLElement>('coverEl')
+
+onMounted(() => {
+  bridge.editorEl = editorEl.value
+  bridge.scrollerEl = scrollerEl.value
+  bridge.coverEl = coverEl.value
+})
+
 const subs: Subscription[] = []
 const data = computed(() => projectStore.get(props.id))
 const state = reactive({
   isToolbarShow: true,
   isChangeByReadonly1: false,
   isChangeByReadonly2: false,
-  isReadonly: computed(() => props.readonly()),
+  isReadonly: computed(() => props.readonly),
   isDrawShow: false,
   isSaving: false,
   toolbarHeight: 50, // 基于顶部固定工具条的高度调整滚动区的高度
@@ -54,13 +60,6 @@ const state = reactive({
 })
 const autosave = computed(() => userStore.config.autosave) // 自动保存
 const saveInterval = computed(() => userStore.config.saveInterval) // 自动保存的间隔
-
-onBeforeMount(() => {
-  // loadingBar.start() // 加载条开始
-})
-onMounted(() => {
-  // loadingBar.finish()
-})
 
 // 当 readonly 状态改变时，editor onChange 也会监听到，设置 isChangeByReadonly1/2 为 true, 阻止两个 editor onChange 的事务
 watch(() => state.isReadonly, (is) => {
@@ -76,14 +75,13 @@ useEditor({
   lib: props.lib,
   account: props.account,
   hostname: props.hostname,
-  rootRef: rootRef,
-  editorRef: editorRef,
-  scrollerRef: scrollerRef,
-  toolbarRef: toolbarRef,
-  controllerRef: controllerRef,
+  rootRef: rootEl,
+  editorRef: editorEl,
+  scrollerRef: scrollerEl,
+  toolbarRef: toolbarEl,
+  controllerRef: controllerEl,
   bridge: bridge,
 }).then(({ editor: edi, content }) => {
-  // loadingBar.finish() // 加载条完成
   editor = edi
   const messageService = editor.get(MessageService)
   const memoProvider = editor.get(MemoProvider)
@@ -93,21 +91,14 @@ useEditor({
     subs.push(
       editor.onChange.subscribe(() => {
         if(state.isChangeByReadonly1) return state.isChangeByReadonly1 = false
-        console.log('content change')
+        // console.log('content change')
         data.value!.isContentUpdating = true
       }),
       editor.onSave.subscribe(() => {
         data.value!.isContentUpdating = true
-        if(props.readonly()) return
+        if(props.readonly) return
         const content = editor.getHTML()
-        // const layout = editor.get(Layout)
-        // screenshot(layout.middle).then(img => {
-        //   dialog.create({
-        //     title: '保存项目',
-        //     content: () => h('img', { src: img, style: { width: '100%', objectFit: 'contain' } }),
-        //   })
-        // })
-        console.log(content)
+        // console.log(content)
         if(lastContent === content) {
           data.value!.isContentUpdating = false
           return
@@ -151,7 +142,7 @@ useEditor({
       })
     )
   }
-  bridge?.setup(editor, props.lib, editorRef.value, scrollerRef.value)
+  bridge?.setup(editor, props.lib)
 }).catch(err => {
   console.error(err)
   message.error('项目打开失败！')
@@ -160,7 +151,7 @@ useEditor({
 if (props.lib !== LibraryEnum.COURSE) {
   subs.push(
     /** 工具条缩放 */
-    useToolbarResize(toolbarWrapperRef).pipe(debounceTime(500)).subscribe(args => {
+    useToolbarResize(toolbarWrapperEl).pipe(debounceTime(500)).subscribe(args => {
       state.toolbarHeight = args.height
     }),
     /** 工具条折叠 */
@@ -172,7 +163,7 @@ if (props.lib !== LibraryEnum.COURSE) {
 
 /** 更新只读模式 */
 if(props.lib !== LibraryEnum.COURSE){
-  watch(() => props.readonly(), isReadOnly => {
+  watch(() => props.readonly, isReadOnly => {
     editor.readonly = isReadOnly
   })
 }
@@ -242,8 +233,8 @@ const methods = {
 }
 
 const { handleContentSave, handleSavingEnd, handleTitleSave, handleSavingStart, handleTitleEnter, handleTitleInput } = methods
-const { isAllowAdjust, handleUpdateCover, handleRemoveCover, handleCoverMousedown, handleUpdateCoverPosition } = useCover(props.id, props.account, props.hostname)
-useMemo(props.id, props.account, props.hostname, scrollerRef, bridge)
+const { isAllowAdjust, handleUpdateCover, handleRemoveCover, handleCoverMousedown, handleUpdateCoverPosition, handleAllowUpdateCoverPosition, handleCancelUpdateCoverPosition } = useCover(props.id, props.account, props.hostname)
+// useMemo(props.id, props.account, props.hostname, scrollerRef, bridge)
 
 /** 离开页面前 */
 const debounceB = _.debounce(func => func(), 2000)
@@ -258,7 +249,7 @@ onBeforeUnmount(() => {
     const account = props.account
     const hostname = props.hostname
     debounceB(() => {
-      if(props.readonly()) return
+      if(props.readonly) return
       // tb 中的嵌套样式在重载时顺序会发生改变，比较字符串时会认为数据发生变化，因此需要先判断 isContentUpdating
       if(!data.value?.isContentUpdating) return
       if(lastContent === content) return
@@ -285,12 +276,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="rootRef" :class="['editor-wrapper', bridge?.habit?.state.platform.isScrollbarShow && 'scrollbar-visible', lib === LibraryEnum.COURSE && 'player-wrapper']">
+  <div ref="rootEl" :class="['editor-wrapper', bridge?.habit?.state.platform.isScrollbarShow && 'scrollbar-visible', lib === LibraryEnum.COURSE && 'player-wrapper']">
     <div class="main" :style="{ height: '100%', flexDirection: lib === LibraryEnum.COURSE ? 'row' : 'column' }">
       <!-- 工具条 -->
-      <div v-if="lib !== LibraryEnum.COURSE" ref="toolbarWrapperRef">
+      <div v-if="lib !== LibraryEnum.COURSE" ref="toolbarWrapperEl">
         <div
-          ref="toolbarRef"
+          ref="toolbarEl"
           class="toolbar"
           :style="{
             transform: state.isToolbarShow ? 'translateY(0)' : 'translateY(-1)',
@@ -302,10 +293,10 @@ onUnmounted(() => {
         />
       </div>
       <!-- 滚动区 -->
-      <div ref="scrollerRef" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
-        <div ref="coverEl" class="cover">
+      <div ref="scrollerEl" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
+        <div ref="coverEl" :class="{ cover: 1, 'cover-active': !!data?.cover }">
           <img
-            v-if="data?.cover"
+            v-if="!!data?.cover"
             :class="{ 'cover-adjust': isAllowAdjust }"
             :src="data?.cover"
             draggable="false"
@@ -318,14 +309,14 @@ onUnmounted(() => {
             <div v-if="isAllowAdjust" class="btn txt-btn" @click="handleUpdateCoverPosition">
               确定
             </div>
-            <div v-if="isAllowAdjust" class="btn txt-btn" @click="isAllowAdjust = false">
+            <div v-if="isAllowAdjust" class="btn txt-btn" @click="handleCancelUpdateCoverPosition">
               取消
             </div>
             
             <div v-if="!isAllowAdjust" class="btn" @click="handleUpdateCover">
               <Icon icon="mdi:image-refresh-outline" height="18" />
             </div>
-            <div v-if="!isAllowAdjust" class="btn" @click="isAllowAdjust = true">
+            <div v-if="!isAllowAdjust" class="btn" @click="handleAllowUpdateCoverPosition">
               <Icon icon="material-symbols:discover-tune" height="18" />
             </div>
             <div v-if="!isAllowAdjust" class="btn" @click="handleRemoveCover">
@@ -334,17 +325,17 @@ onUnmounted(() => {
           </div>
         </div>
         <!-- v-if="data" 保证在数据获取之前不会渲染标题栏 -->
-        <TitleInput v-if="data" class="title-input" :allow-add-cover="!!data.cover" @input="handleTitleInput($event)" @enter="handleTitleEnter" @add-cover="handleUpdateCover" :value="data?.title" :max-width="state.editorWidth" :readonly="props.readonly()" />
-        <div ref="editorRef" :class="['editor', props.readonly() ? 'editor-disabled' : '']" />
+        <TitleInput v-if="data" class="title-input" :allow-add-cover="!!data.cover" @input="handleTitleInput($event)" @enter="handleTitleEnter" @add-cover="handleUpdateCover" :value="data?.title" :max-width="state.editorWidth" :readonly="readonly" />
+        <div ref="editorEl" :class="['editor', readonly ? 'editor-disabled' : '']" />
       </div>
     </div>
     <div
       v-show="lib !== LibraryEnum.NOTE"
-      ref="controllerRef" 
+      ref="controllerEl" 
       :class="[
         `${lib === LibraryEnum.COURSE ? 'course-controller': ''}`, 
         `${lib === LibraryEnum.PROCEDURE ? 'procedure-controller': ''}`, 
-        props.readonly() ? 'controller-disabled' : ''
+        readonly ? 'controller-disabled' : ''
       ]" 
       />
     <div v-if="lib === LibraryEnum.COURSE && state.isSubtitleShow" class="subtitle">
@@ -460,14 +451,17 @@ onUnmounted(() => {
     // background-color: var(--dpz-editor-bgColor);
     // background-color: var(--dpz-editor-pgColor);
   }
-  .cover {
-    position: relative;
-    max-height: 276px;
-    height: 100%;
-    width: 100%;
-    margin: 0 auto;
+  .cover-active {
     padding-bottom: 36px;
     background-color: var(--dpz-editor-bgColor);
+  }
+  .cover {
+    position: relative;
+    user-select: none;
+    max-height: 276px;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 24px;
     img {
       height: 100%;
       width: 100%;

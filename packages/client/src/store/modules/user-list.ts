@@ -6,6 +6,7 @@ import jsrsasign from 'jsrsasign'
 import useStore from '..'
 import axios from 'axios'
 import { SortableEvent } from 'vue-draggable-plus'
+import { VIP } from '@/enums'
 export interface SubmissionConfig {
   id: string
   name: string
@@ -27,11 +28,11 @@ export interface ShortcutConfig {
   shift: boolean
   key: string
 }
-type UserRole = 'Basic' | 'Silver' | 'Gold'
+// type UserRole = 'Basic' | 'Silver' | 'Gold'
 export interface User {
   resourceDomain: string
   account: string
-  role: UserRole 
+  role: VIP
   nickname: string
   avatar: string
   desc: string

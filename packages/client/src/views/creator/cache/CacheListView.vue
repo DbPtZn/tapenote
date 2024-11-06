@@ -4,7 +4,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import useStore from '@/store'
 import { useDraggable } from '@vueuse/core'
 import CacheCard from './private/CacheCard.vue'
-import { MenuRound } from '@vicons/material'
+import { Icon } from '@iconify/vue'
 import utils from '@/utils'
 import { LibraryEnum } from '@/enums'
 import { CreatorShell } from '../shell'
@@ -13,7 +13,7 @@ import { watch } from 'vue'
 type Project = typeof projectStore.data[0]
 const { projectStore, settingStore, dragStore } = useStore()
 const shell = useShell<CreatorShell>()
-const themeVars = useThemeVars()
+// const themeVars = useThemeVars()
 const elementRef = ref()
 const dragRef = ref()
 const rootRef = document.body
@@ -75,9 +75,9 @@ function handleRemove(item: Project) {
 const dropdownState = reactive({
   isShow: false
 })
-const options = computed<DropdownOption[]>(() => [
+const options: DropdownOption[] = [
   {
-    label: `${state.isCollapse ? '展开' : '折叠'}`,
+    label: () => `${state.isCollapse ? '展开' : '折叠'}`,
     key: 'collaspe',
     props: {
       onClick: () => {
@@ -94,7 +94,8 @@ const options = computed<DropdownOption[]>(() => [
       }
     }
   }
-])
+]
+
 function handleSelect() {
   dropdownState.isShow = false
 }
@@ -113,13 +114,14 @@ onMounted(() => {
 <template>
   <div v-show="settingStore.isCacheListShow" ref="elementRef" class="cache" :style="style">
     <div ref="warpperRef" :class="['wrapper', state.isCollapse && 'collapse']">
-      <div ref="dragRef" class="cache-header" @click="dropdownState.isShow = false">
+      <div ref="dragRef" class="cache-header" @dblclick="handleIconDbclick">
         <div class="cache-header-title">
           <div>缓存列表</div>
         </div>
-        <div class="cache-header-icon" @dblclick="handleIconDbclick" @contextmenu.prevent="dropdownState.isShow = true">
-          <n-dropdown trigger="manual" :show="dropdownState.isShow" :options="options" @clickoutside="dropdownState.isShow = false" @select="handleSelect">
-            <n-icon :component="MenuRound" :size="24" />
+        <div class="cache-header-icon">
+          <n-dropdown :show="dropdownState.isShow" :options="options" @clickoutside="dropdownState.isShow = false" @select="handleSelect">
+            <!-- <n-icon :component="MenuRound" :size="24" /> -->
+            <Icon icon="mdi:dots-vertical" height="24" @click="dropdownState.isShow = !dropdownState.isShow" />
           </n-dropdown>
         </div>
         <!-- 筛选功能：选择当前用户/所有用户 -->

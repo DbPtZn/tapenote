@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { Component } from 'vue'
+import { Icon } from '@iconify/vue'
 const props = defineProps<{
-  icon: Component
+  icon: string
   label: string
   active: boolean
   disabled?: boolean
@@ -10,7 +11,8 @@ const props = defineProps<{
 
 <template>
   <div :class="['menu-item', active ? 'active' : '', disabled ? 'disabled' : '']">
-    <n-icon class="menu-item-icon" :depth="1" :component="props.icon" :size="20" />
+    <!-- <n-icon class="menu-item-icon" :depth="1" :component="props.icon" :size="20" /> -->
+    <Icon class="menu-item-icon" :icon="props.icon" :height="20" />
     <span class="menu-item-label">{{ label }}</span>
   </div>
 </template>

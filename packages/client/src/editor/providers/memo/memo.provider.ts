@@ -32,7 +32,7 @@ export class MemoProvider {
     this.app.mount(this.host)
   }
 
-  onDestroy() {
+  destroy() {
     this.subs.forEach(i => i.unsubscribe())
     this.app?.unmount()
     if (this.host) {

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui'
-import { ArrowLeftFilled, ArrowRightFilled } from '@vicons/material'
+// import { ArrowLeftFilled, ArrowRightFilled } from '@vicons/material'
+import { Icon } from '@iconify/vue'
 const themeVars = useThemeVars()
 defineProps<{
   isCollapse: boolean
@@ -9,8 +10,9 @@ defineProps<{
 
 <template>
   <div :class="['collapse-btn']">
-    <n-icon v-if="!isCollapse" :component="ArrowLeftFilled" />
-    <n-icon v-if="isCollapse" :component="ArrowRightFilled" />
+    <!-- <n-icon v-if="!isCollapse" :component="ArrowLeftFilled" /> -->
+    <!-- <n-icon v-if="isCollapse" :component="ArrowRightFilled" /> -->
+    <Icon :icon="isCollapse ? 'mdi:chevron-right' : 'mdi:chevron-left'" />
   </div>
 </template>
 

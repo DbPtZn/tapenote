@@ -44,10 +44,9 @@ const state = reactive({
 const pointer = ref(1)
 
 let subs: Subscription[] = []
-
+let arrowEvents: { remove: () => void }[] = []
 onMounted(() => {
   // console.log('shotcut menu mounted')
-  // openArrowKey()
   keyboard.addZenCodingInterceptor({
     match: function (content: string): boolean {
       return content === ''
@@ -93,7 +92,7 @@ onMounted(() => {
         // console.log(caretRect)
         // console.log(menuEl.value?.getBoundingClientRect())
         // const scrollTop = structurer.scrollerRef!.scrollTop
-        const arrowEvents = openArrowKey()
+        arrowEvents = openArrowKey()
 
         subs = [
           fromEvent(document, 'click', true).subscribe(ev => {
@@ -311,9 +310,19 @@ function openArrowKey() {
 
 const commonOptions = useCommonOptions(injector)
 
-const { secondaryPointer, baseOptions, renderOption, dropdownOptions, popoverOptions, dropdownState, popoverState } = useBaseOptions(injector, menuEl, dropdownEl, popoverEl)
+const { secondaryPointer, baseOptions, renderOption, dropdownOptions, popoverOptions, dropdownState, popoverState } = useBaseOptions(
+  injector,
+  menuEl,
+  dropdownEl,
+  popoverEl
+)
 
-onMounted(() => {})
+onUnmounted(() => {
+  subs.forEach(sub => sub.unsubscribe())
+  arrowEvents.forEach(event => event.remove())
+  subs = []
+  arrowEvents = []
+})
 </script>
 
 <template>

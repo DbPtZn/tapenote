@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 import { Injector, Subscription } from '@textbus/core'
 import { inject, nextTick, onUnmounted, reactive, ref } from 'vue'
-import { RootEventService } from '../../services'
-// import { AnimeEffectMap } from '../../common/_index'
-import { UIConfig } from '../..'
-import { Player } from '../..'
-import { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
+import { DropdownOption } from 'naive-ui'
 import _ from 'lodash'
 import dayjs from 'dayjs'
+import { RootEventService } from '../../services'
+import { UIConfig } from '../..'
+import { Player } from '../..'
 
 const injector = inject('injector') as Injector
 const rootEvent = injector.get(RootEventService)
@@ -71,8 +70,8 @@ subs.push(
   })
 )
 
-const options = ref<DropdownMixedOption[]>([])
-
+const options = ref<DropdownOption[]>()
+options.value = []
 function getOptions() {
   // console.log(animeElements.value)
   const sourceData = player.sourceData[0]

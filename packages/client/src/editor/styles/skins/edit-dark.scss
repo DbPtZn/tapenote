@@ -1,6 +1,7 @@
 // 应该与 src\editor\common\plugins\toolbar\toolkit\_utils\ColorOptions.ts 对应
+// 必须是大写
 $colors:(
-'#000000': #ffffff, 
+'#000000': #FFFFFF, 
 '#FF5A5F': #FF0000,
 '#FFA500': #FF8C00,
 '#FFD700': #FFFF00,
@@ -8,11 +9,11 @@ $colors:(
 '#00CED1': #00FFFF,
 '#007FFF': #0000FF,
 '#8A2BE2': #8B008B,
-'#f0f0f0': #333333,
-'#f4f4f4': #1f1f1f,
-'#f9f9f9': #292929,
-'#e0e7ff': #3d3d5c,
-'#d1e7dd': #264653
+'#F0F0F0': #333333,
+'#F4F4F4': #1F1F1F,
+'#F9F9F9': #292929,
+'#E0E7FF': #3D3D5C,
+'#D1E7DD': #264653
 );
 
 @each $source, $target in $colors {

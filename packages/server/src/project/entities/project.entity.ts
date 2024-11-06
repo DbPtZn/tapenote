@@ -49,6 +49,10 @@ export interface SubmissionHistory {
   date: string
 }
 
+export interface ProjectConfig {
+
+}
+
 export interface Memo {
   id: string
   content: string
@@ -301,6 +305,12 @@ export class Project {
     nullable: true
   })
   submissionHistory: SubmissionHistory[]
+
+  @Column({
+    type: 'simple-json',
+    nullable: true
+  })
+  config: ProjectConfig
 
   /** 预留字段 */
   @Column({

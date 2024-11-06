@@ -23,7 +23,7 @@ export class Speaker {
   @Column({
     type: 'varchar',
     default: '',
-    length: 36
+    // length: 36
   })
   model: string // 语音模型
 

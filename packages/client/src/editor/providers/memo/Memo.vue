@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Editor, Layout, createEditor, paragraphComponent, paragraphComponentLoader } from '@textbus/editor'
 import { Injector } from '@textbus/core'
-import { onMounted, ref, useTemplateRef, inject, onUnmounted, watch, computed } from 'vue'
+import { onMounted, ref, useTemplateRef, inject, onUnmounted, watch, computed, onBeforeUnmount } from 'vue'
 import { useThemeVars } from 'naive-ui'
 import { useDraggable } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
@@ -11,10 +11,9 @@ import { Memo } from './memo.provider'
 type BgColor = Memo['bgColor']
 const injector = inject('injector') as Injector
 const layout = injector.get(Layout)
-// const workbenchEl = layout.workbench
+
 // positive: relative; 在 middle 上，虽然元素插入到 workbench 中，但实际相对于 middle 进行定位
 const middleEl = layout.middle 
-// const workbenchEl = layout.workbench
 
 const structurer = injector.get(Structurer)
 const scrollerEl = structurer.scrollerRef
@@ -49,7 +48,7 @@ const verticalEl = useTemplateRef<HTMLElement>('verticalEl')
 const horizontalEl = useTemplateRef<HTMLElement>('horizontalEl')
 const nwseEl = useTemplateRef<HTMLElement>('nwseEl')
 const drawerEl = useTemplateRef<HTMLElement>('drawerEl')
-console.log('props.isExpanded', props.isExpanded)
+// console.log('props.isExpanded', props.isExpanded)
 const isCollapsed = ref(!props.isExpanded)
 const isEditorFocus = ref(false)
 const isMemoFocus = ref(false)
@@ -59,12 +58,12 @@ let lastX = props.x
 let lastY = props.y
 const middleRect = middleEl.getBoundingClientRect()
 const scrollerRect = scrollerEl!.getBoundingClientRect()
-console.log('props.x', props.x)
-console.log('props.x / 100 * middleRect.width', props.x / 100 * middleRect.width)
+// console.log('props.x', props.x)
+// console.log('props.x / 100 * middleRect.width', props.x / 100 * middleRect.width)
 // props.x + (middleRect.left - scrollerRect.left)
 const { x, y } = useDraggable(memoEl, {
   initialValue: { x: (props.x / 100 * middleRect.width) + (middleRect.left - scrollerRect.left), y: props.y },
-  containerElement: scrollerEl, //workbenchEl,
+  containerElement: scrollerEl,
   stopPropagation: true, // 阻止冒泡
   handle: handlerEl, // 指定控制元素, 区别于 draggingElement 指定的是拽动元素（触发 move 和 up 的元素，start 事件依旧会在根元素上触发）
   onMove(position, event) {
@@ -117,7 +116,7 @@ onMounted(() => {
 })
 
 let editor: Editor | null = null
-const subs2: Subscription[] = []
+const subs1: Subscription[] = []
 function useEditor() {
   if (!editorEl.value) return
   if (editor) return
@@ -137,7 +136,7 @@ function useEditor() {
   containerEl.classList.add('memo-container')
   middleEl.classList.add('memo-middle')
   editor.mount(editorEl.value)
-  subs2.push(
+  subs1.push(
     editor.onFocus.subscribe(() => {
       isEditorFocus.value = true
     }),
@@ -222,10 +221,14 @@ onMounted(() => {
   )
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
+  // console.log('memo destory')
   subs.forEach(sub => sub.unsubscribe())
-  subs2.forEach(sub => sub.unsubscribe())
+  subs1.forEach(sub => sub.unsubscribe())
+  editor?.destroy()
 })
+
+onUnmounted(() => {})
 
 function handleFocus() {
   isMemoFocus.value = true

@@ -1,10 +1,12 @@
 <script lang="ts" setup>
+import { useThemeVars } from 'naive-ui'
 import { AnimeProvider } from '../..'
 type AnimeOption = ReturnType<AnimeProvider['getOptions']>[0]
 const props = defineProps<{
   options: AnimeOption[]
   onSelect: (name: string, value: string) => void
 }>()
+const themeVars = useThemeVars()
 function handleSelect(option) {
   props.onSelect(option.label, option.value)
 }
@@ -52,7 +54,8 @@ function handleSelect(option) {
     transform: scale(1.1);
   }
   .option-label {
-    color: var(--tb-textColor1);
+    // color: var(--tb-textColor1);
+    color: v-bind('themeVars.textColor1');
     // color: #fff;
   }
 }

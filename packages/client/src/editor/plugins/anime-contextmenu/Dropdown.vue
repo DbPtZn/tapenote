@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { Keymap } from '@textbus/core'
-import { useThemeVars } from 'naive-ui'
 import { computed, reactive } from 'vue'
 import { UIConfig } from '../..'
 const props = defineProps<{
@@ -29,7 +27,7 @@ const emits = defineEmits<{
       :show="state.show"
       :placement="'bottom-start'" 
       :options="state.options" 
-      :to="to" 
+      to="body" 
       :x="state.x" 
       :y="state.y"
       @clickoutside="emits('clickoutside')"

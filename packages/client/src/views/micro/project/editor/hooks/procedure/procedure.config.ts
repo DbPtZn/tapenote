@@ -14,16 +14,12 @@ import { InlineToolbarPlugin,
   OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
   preview_startTool, preview_stopTool, imageB2UComponent, imageB2UComponentLoader,
   CustomCommander, ColorProvider,
-  Structurer, ThemeProvider, Player, ImgToUrlService
+  Structurer, ThemeProvider, Player, ImgToUrlService, rootAnimeComponent, rootAnimeComponentLoader, blockBackgroundColorFormatter, blockBackgroundColorFormatterLoader, defaultComponents, defaultComponentLoaders, animeTool, animeIgnoreTool, AnimeProvider
 } from '@/editor'
-import { 
-  animeTool, animeBadgeVisibleTool, rootComponentLoader, rootComponent, animeComponent, animeComponentLoader, animeIgnoreComponent, animeIgnoreComponentLoader, paragraphComponent, paragraphComponentLoader,  animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
-  listComponent, listComponentLoader, headingComponent, headingComponentLoader
-} from '@/editor/anime'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
-  defaultComponentLoaders,
-  defaultComponents,
+  defaultAttributeLoaders,
+  defaultAttributes,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
@@ -51,12 +47,14 @@ export function getProcedureConfig(args: {
     historyStackSize: 30,
     placeholder: '在此输入正文',
     content: content || '',
-    rootComponent: rootComponent,
-    rootComponentLoader: rootComponentLoader,
-    components: [animeComponent, paragraphComponent, imageB2UComponent, animeIgnoreComponent, ...defaultComponents],
-    componentLoaders: [animeComponentLoader, paragraphComponentLoader, imageB2UComponentLoader, animeIgnoreComponentLoader, ...defaultComponentLoaders],
-    formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter,...defaultFormatters],
+    rootComponent: rootAnimeComponent,
+    rootComponentLoader: rootAnimeComponentLoader,
+    components: defaultComponents,
+    componentLoaders: defaultComponentLoaders,
+    formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
+    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
+    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
     styleSheets: [
       'anime:after{content: attr(data-serial);vertical-align: super;color:white;background-color:#c8c9cc;border-radius:24px;display:inline-block;width:23px;height:23px;font-size:15px;line-height:23px;-webkit-border-radius:24px;text-align:center;box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);pointer-events: auto;}',
       'anime:hover:after{cursor: pointer;animation: .8s .5s tada infinite;}',
@@ -72,7 +70,7 @@ export function getProcedureConfig(args: {
     ],
     providers: [
       { provide: Commander, useClass: CustomCommander },
-      AnimeProvider, AddAnimeService, DialogProvider, 
+      AddAnimeService, DialogProvider, 
       OutlineService, ColorProvider,
       Structurer, ThemeProvider, Player, ImgToUrlService
     ],
@@ -82,7 +80,6 @@ export function getProcedureConfig(args: {
         [defaultGroupTool],
         [componentsTool],
         [headingTool],
-        [animeTool, animeIgnoreTool],
         [boldTool, italicTool, strikeThroughTool, underlineTool],
         [olTool, ulTool],
         [fontSizeTool, textIndentTool],
@@ -96,7 +93,6 @@ export function getProcedureConfig(args: {
         [formatPainterTool],
         [cleanTool],
         // [outlineTool],
-        [animeBadgeVisibleTool, animeElementVisibleTool]
       ], toolbarRef!),
       () =>
         new InlineToolbarPlugin([
@@ -105,7 +101,6 @@ export function getProcedureConfig(args: {
           [boldTool, italicTool, strikeThroughTool, underlineTool],
           [colorTool, textBackgroundTool],
           [fontSizeTool],
-          [animeBadgeVisibleTool, animeElementVisibleTool],
           [cleanTool]
         ], scrollerRef),
       () => new OutlinePlugin(),
@@ -154,7 +149,7 @@ export function getProcedureConfig(args: {
       // 图片工具
       // const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
       const imgToUrlService = injector.get(ImgToUrlService)
-      const { uploadImgFunction } = useUploadImg('/upload/img', account, hostname)
+      const { uploadImgFunction } = useUploadImg(account, hostname)
       imgToUrlService.setup(uploadImgFunction)
     }
   }

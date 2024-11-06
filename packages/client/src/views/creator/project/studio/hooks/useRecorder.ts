@@ -247,9 +247,10 @@ export function useRecorder(args: {
     audioCtx = null
   }
 
- onUnmounted(() => {
-   handleStopRecord()
- })
+  onUnmounted(() => {
+    isStarted.value && handleStopRecord()
+    init()
+  })
   function handleWaveformVisible() {
     isWaveformVisible.value = !isWaveformVisible.value
   }

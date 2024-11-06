@@ -22,6 +22,10 @@ export function useCover(id: string, account: string, hostname: string) {
             message.error(`${data.value?.cover ? '更新' :'添加'}封面图片失败！`)
           })
           dialog.destroyAll()
+        },
+        onError: () => {
+          message.error('图片上传失败！')
+          dialog.destroyAll()
         }
       })
     })
@@ -52,11 +56,24 @@ export function useCover(id: string, account: string, hostname: string) {
     })
   }
 
+  let coverPositionBackup = data.value?.coverPosition || 50
+  function handleAllowUpdateCoverPosition() {
+    coverPositionBackup = data.value?.coverPosition || 50
+    isAllowAdjust.value = true
+  }
+
+  function handleCancelUpdateCoverPosition() {
+    isAllowAdjust.value = false
+    if(data.value) data.value.coverPosition = coverPositionBackup
+  }
+
   return {
     isAllowAdjust,
     handleUpdateCover,
     handleRemoveCover,
     handleCoverMousedown,
-    handleUpdateCoverPosition
+    handleUpdateCoverPosition,
+    handleAllowUpdateCoverPosition,
+    handleCancelUpdateCoverPosition
   }
 }

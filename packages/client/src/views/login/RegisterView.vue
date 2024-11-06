@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router'
 import useStore from '@/store'
 import { RoutePathEnum } from '@/enums'
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui'
-import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
 import axios from 'axios'
 import FilingsFooter from './FilingsFooter.vue'
 interface ModelType {
@@ -196,11 +197,7 @@ function handleHostInputBlur() {
           <n-form-item path="hostname" label="服务器地址">
             <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
               <template #suffix>
-                <n-icon
-                  :color="isHostValid ? '' : 'red'"
-                  :component="isHostValid ? CheckCircleOutlineOutlined : DoNotDisturbAltOutlined"
-                  :size="18"
-                />
+                <Icon :style="{ color: isHostValid ? ' ' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
               </template>
             </n-input>
           </n-form-item>

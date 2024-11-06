@@ -8,10 +8,10 @@ import { Bridge } from '../bridge'
 import _ from 'lodash'
 import utils from '@/utils'
 import { useFragment, usePromoter, useRecorder, checkSilenceAudio, useInput, useTrash, useSpeech } from './hooks'
-import { auditTime } from '@tanbo/stream'
+import { Subscription, auditTime } from '@tanbo/stream'
 import { LibraryEnum } from '@/enums'
 import { Voice, Delete, Interpreter, ArrowDropDown, CommentAdd, FileImport, TextT24Filled } from '@/components'
-import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp, KeyboardOutlined } from '@vicons/material'
+// import { DeleteOutlined, EditOutlined, HeadsetOutlined, AddReactionSharp, KeyboardOutlined } from '@vicons/material'
 import { splitText, collapseText, containsEnglish } from './_utils'
 import { VueDraggable } from 'vue-draggable-plus'
 import { useI18n } from 'vue-i18n'
@@ -32,32 +32,46 @@ const props = defineProps<{
   lib: LibraryEnum
   account: string
   hostname: string
-  focus: () => boolean
-  readonly: () => boolean
+  focus: boolean
+  readonly: boolean
 }>()
 const { projectStore, clipboardStore } = useStore()
 const message = useMessage()
 const dialog = useDialog()
 const themeVars = useThemeVars()
 const { t } = useI18n()
-const scrollerRef = ref()
+const scrollerEl = useTemplateRef<HTMLElement>('scrollerEl')
 
 const state = reactive({
-  isReadonly: computed(() => props.readonly()),
-  isFocus: computed(() => props.focus()),
+  isReadonly: computed(() => props.readonly),
+  isFocus: computed(() => props.focus),
   isShortcutAllow: true,
   isTotalDurationShow: false
 })
 const studioEl = useTemplateRef<HTMLElement>('studioEl')
 
 onMounted(() => {
-  bridge.studioRef = studioEl.value
+  bridge.studioEl = studioEl.value
+  bridge.studioScrollerEl = scrollerEl.value
 })
+
+let isScrollToBottom = true
+watch(
+  () => projectStore.fragment(props.id).getBySort(),
+  fragmentsData => {
+    if (fragmentsLength.value < fragmentsData.length && isScrollToBottom) {
+      nextTick(() => {
+        // 新增片段时，将滚动条滚动到底部
+        if(scrollerEl.value) scrollerEl.value.scrollTop = scrollerEl.value.scrollHeight
+      })
+    }
+    fragments.value = fragmentsData
+  }
+)
 
 const {
   recorderMode,
   ttsSpeed,
-  speakerId,
   speaker,
   isAudioInputting,
   inputtingDuration,
@@ -68,7 +82,7 @@ const {
   handleAddBlank,
   handleModeSwitch,
   handleSpeakerChange
-} = useInput(props.id, props.account, props.hostname)
+} = useInput(props.id, props.account, props.hostname, bridge)
 const { removedFragments, handleTrashManage } = useTrash(props.id, props.account, props.hostname)
 const { checkAnimeState, checkPromoter, handleReorder } = usePromoter(props.id, bridge)
 const {
@@ -85,30 +99,15 @@ const {
   handleEdit,
   handleRemove,
   handleMove
-} = useFragment(props.id, bridge, checkAnimeState, checkPromoter, handleReorder)
+} = useFragment(props.id, bridge, checkAnimeState, () => isScrollToBottom = false, () => isScrollToBottom = true)
 
 const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort())
 const fragmentsLength = computed(() => fragments.value.length)
-watch(
-  () => projectStore.fragment(props.id).getBySort(),
-  fragmentsData => {
-    // if (fragmentsLength.value < fragmentsData.length) {
-    //   nextTick(() => {
-    //     // 新增片段时，将滚动条滚动到底部
-    //     scrollerRef.value.scrollTop = scrollerRef.value.scrollHeight
-    //   })
-    // }
-    fragments.value = fragmentsData
-  }
-)
-// 将滚动条滚动到底部
-function scrollToBottom() {
-  nextTick(() => {
-    scrollerRef.value.scrollTop = scrollerRef.value.scrollHeight
-  })
-}
+
+
 
 /** 编辑器挂载完成后校验启动子和动画标记 */
+const subs: Subscription[] = []
 const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe(editor => {
   checkPromoter()
   checkAnimeState()
@@ -125,13 +124,15 @@ const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe(editor 
   //   // 这样大致可以确保启动子和动画的一致性，且较大程度保持同步的时间紧密性。
   // })
   const studioService = editor.get(StudioService)
-  studioService.onTextToSpeech.subscribe(txt => {
-    if (containsEnglish(txt)) {
-      message.warning('目前语音合成模型暂不支持英文！')
-      return
-    }
-    handleTextOutput(txt)
-  })
+  subs.push(
+    studioService.onTextToSpeech.subscribe(txt => {
+      if (containsEnglish(txt)) {
+        message.warning('目前语音合成模型暂不支持英文！')
+        return
+      }
+      handleTextOutput(txt)
+    })
+  )
 })
 
 // 总时长
@@ -151,9 +152,9 @@ const stationMethods = {
     isStartedRecorder.value = true
   },
   handleEnd() {
-    console.log('handleEnd')
+    // console.log('handleEnd')
     isStartedRecorder.value = false
-    // checkPromoter()
+    checkPromoter()
   },
   // 产生片段后进行启动子检查
   handleOutput() {
@@ -382,7 +383,7 @@ const boundarySequence = Array.from({ length: options.length }).map((_, i) => (i
 // console.log(boundarySequence)
 const calculateThreshold = options.length * 40 + 40 // 开始计算的阈值 (+40 是留给返回时的计算)
 // console.log(calculateThreshold)
-useResizeObserver(headerEl, entries => {
+const resizeObserver = useResizeObserver(headerEl, entries => {
   const entry = entries[0]
   const { width } = entry.contentRect
   const toolbarWidth = width - 78 - 40
@@ -414,6 +415,8 @@ useResizeObserver(headerEl, entries => {
 })
 
 onUnmounted(() => {
+  resizeObserver.stop()
+  subs.forEach(sub => sub.unsubscribe())
   subscription.unsubscribe()
 })
 </script>
@@ -475,7 +478,7 @@ onUnmounted(() => {
       </n-dropdown> -->
     </div>
     <!-- 主展示区 -->
-    <div ref="scrollerRef" class="main" @contextmenu="handleContextmenu">
+    <div ref="scrollerEl" class="main" @contextmenu="handleContextmenu">
       <Delegater :id="id" :allow-select-anime="!isStartedRecorder">
         <!-- 拖拽组件 -->
         <VueDraggable class="draggable" v-model="fragments" :itemKey="'id'" @end="handleMove($event)">
@@ -516,17 +519,17 @@ onUnmounted(() => {
             </template>
             <!-- 播放音频 -->
             <template #play>
-              <n-icon v-if="!element.key" :component="HeadsetOutlined" :size="18" @click="handlePlay(element)" />
+              <Icon v-if="!element.key" icon="ic:baseline-headset" height="18" @click="handlePlay(element)" />
             </template>
             <!-- 编辑文字 -->
             <template #edit>
-              <n-icon :component="EditOutlined" :size="18" @click="handleEdit(element)" />
+              <Icon icon="material-symbols:edit-rounded" height="18" @click="handleEdit(element)" />
             </template>
             <!-- 移除片段 （可以优化，不用每个片段都创建一个实例） -->
             <template #delete>
               <n-popconfirm :positive-text="t('confirm')" :negative-text="t('cancel')" @positive-click="handleRemove(element)">
                 <template #trigger>
-                  <n-icon :component="DeleteOutlined" :size="18" />
+                  <Icon icon="material-symbols:delete-rounded" height="18" />
                 </template>
                 {{ t('studio.msg.whether_remove_fragment') }}
               </n-popconfirm>
@@ -637,21 +640,21 @@ onUnmounted(() => {
       trigger="manual"
       :x="dropdownState.x"
       :y="dropdownState.y"
-      :options="dropdownState.options as DropdownOption[]"
+      :options="dropdownState.options"
       :show="dropdownState.isShow"
       :on-clickoutside="() => (dropdownState.isShow = false)"
     />
+    <Station
+      v-if="isStationVisible"
+      :id="id"
+      :account="account"
+      :hostname="hostname"
+      @start="stationMethods.handleStart"
+      @end="stationMethods.handleEnd"
+      @output="stationMethods.handleOutput"
+    />
   </div>
-  <Station
-    v-show="isStationVisible"
-    :id="id"
-    :account="account"
-    :hostname="hostname"
-    :speaker-id="speakerId"
-    @start="stationMethods.handleStart"
-    @end="stationMethods.handleEnd"
-    @output="stationMethods.handleOutput"
-  />
+
 </template>
 
 <style lang="scss" scoped>
@@ -696,7 +699,7 @@ onUnmounted(() => {
   width: 100%;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid v-bind('themeVars.dividerColor');
+  // border-left: 1px solid v-bind('themeVars.dividerColor');
   background-color: v-bind('themeVars.bodyColor');
   &:hover {
     /*定义滑块 内阴影+圆角*/

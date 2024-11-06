@@ -1,6 +1,6 @@
 import useStore from '@/store'
-import { DropdownOption, NDialogProvider, NMessageProvider } from 'naive-ui'
-import { h, nextTick, onUnmounted, reactive, ref } from 'vue'
+import { DropdownOption } from 'naive-ui'
+import { h, onUnmounted, reactive, ref } from 'vue'
 import _ from 'lodash'
 import { useDialog, useMessage } from 'naive-ui'
 import { Player } from '@/editor'
@@ -9,23 +9,18 @@ import { Subject, Subscription } from '@tanbo/stream'
 import { SortableEvent } from 'vue-draggable-plus'
 import { Bridge } from '../../bridge'
 import FragmentEditor from '../FragmentEditor.vue'
-import { usePromoter } from './usePromoter'
 import { NConfig } from '@/views/creator/_common'
 
 type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
-export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: () => void, checkPromoter: () => void, handleReorder: () => void) {
+export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: () => void, pauseWatch: () => void, resumeWatch: () => void) {
   // console.log('useFragment：', bridge)
   const { projectStore, clipboardStore } = useStore()
-  // const isShowName = ref(false)
   const onPlayerStateUpdate = new Subject<boolean>()
   const isShowOrder = ref(false)
-  // const isShowSpeechModeToolbar = ref(false)
-  // let autoMoveAnimePointer = false
   const dialog = useDialog()
   const message = useMessage()
   let player: Player | undefined = undefined
   const subs: Subscription[] = []
-  // const { checkAnimeState, handleReorder } = usePromoter(projectId, bridge) // bridge 透传无法同步更新，只传入当前值
   const selectedFragments = ref<Fragment[]>([])
   const dropdownState = reactive({
     x: 0,
@@ -333,6 +328,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   }
   /** 编辑文字 */
   function handleEdit(fragment: Fragment) {
+    pauseWatch()
     dialog.create({
       showIcon: false,
       style: { width: '800px' },
@@ -340,7 +336,6 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       maskClosable: false,
       onMaskClick: ev => {
         ev.preventDefault()
-        // dialog.destroyAll()
       },
       content: () =>
         h(
@@ -352,11 +347,17 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
                 projectId: projectId,
                 fragment: fragment,
                 onClose: () => {
+                  console.log('close')
+                  resumeWatch()
                   dialog.destroyAll()
                 }
               })
           }
-        )
+        ),
+      onClose: () => {
+        console.log('close')
+        resumeWatch()
+      }
     })
   }
   /** 移除片段 */

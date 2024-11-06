@@ -11,7 +11,8 @@ import { useShell } from '@/renderer'
 import ItemListContainer from './ItemListContainer.vue'
 import { useItemListDropDown, useDrag } from './hooks/_index'
 import { DropdownOption } from 'naive-ui/es/dropdown/src/interface'
-import { ArrowDropDownRound, ChevronLeftFilled, MoreHorizFilled } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { ArrowDropDownRound, ChevronLeftFilled, MoreHorizFilled } from '@vicons/material'
 import _ from 'lodash'
 import { useI18n } from 'vue-i18n'
 const { folderStore, folderTreeStore, dragStore, userStore, projectStore } = useStore()
@@ -195,7 +196,8 @@ watch(() => folderStore.lib, (v) => {
             <!-- 普通文件夹模式下 -->
             <div v-if="folderStore.id !== 'recently'" class="header-nav-left-item">
               <n-button v-if="folderStore.parentId" text size="large" @click="handleRollback(folderStore.parentId)">
-                <n-icon :component="ChevronLeftFilled" :size="24" />
+                <!-- <n-icon :component="ChevronLeftFilled" :size="24" /> -->
+                <Icon icon="mdi:chevron-left" height="24" />
               </n-button>
               <n-text :depth="2"> {{ getFolderName(folderStore.name) }} </n-text>
             </div>
@@ -206,7 +208,8 @@ watch(() => folderStore.lib, (v) => {
                   <n-button text>
                     {{ libOptions[libOptions.findIndex(item => item.value === folderStore.lib)].label }}
                   </n-button>
-                  <n-icon :component="ArrowDropDownRound" :size="24" />
+                  <!-- <n-icon :component="ArrowDropDownRound" :size="24" /> -->
+                  <Icon icon="mdi:chevron-down" height="24" />
                 </div>
               </n-popselect>
             </div>
@@ -214,7 +217,8 @@ watch(() => folderStore.lib, (v) => {
           <!-- 按钮 -->
           <n-dropdown :options="navBtnDropdownOptions()" :trigger="'click'">
             <n-button text>
-              <n-icon :component="MoreHorizFilled" :size="24" />
+              <!-- <n-icon :component="MoreHorizFilled" :size="24" /> -->
+              <Icon icon="mdi:dots-horizontal" height="24" />
             </n-button>
           </n-dropdown>
         </div>

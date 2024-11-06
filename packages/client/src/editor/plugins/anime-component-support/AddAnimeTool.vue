@@ -5,7 +5,7 @@ import { AddAnimeService } from '../../services'
 import { Editor, Layout } from '@textbus/editor'
 import { UIIcon, UIConfig } from '../../common'
 import { AnimeProvider, Structurer } from '../..'
-import { animeComponent } from '../../components/anime/_api'
+// import { animeComponent } from '../../components/anime/_api'
 type AnimeOption = ReturnType<AnimeProvider['getOptions']>[0]
 const injector = inject('injector') as Injector
 const anime = injector.get(AnimeProvider)

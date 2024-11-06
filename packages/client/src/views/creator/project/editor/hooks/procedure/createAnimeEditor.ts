@@ -1,7 +1,7 @@
-import { AddAnimeService, AnimeProvider, ColorProvider, DialogProvider, ImgToUrlService, OutlineService, Player, Structurer, ThemeProvider } from '@/editor'
+import { AddAnimeService, AnimeProvider, ColorProvider, DialogProvider, ImgToUrlService, MemoProvider, OutlineService, Player, Structurer, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
-import { Ref, onMounted, onUnmounted, watch } from 'vue'
+import { Ref, ShallowRef, onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
 import { getProcedureConfig } from './procedure.config'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../../../../shell'
@@ -9,11 +9,11 @@ export function createAnimeEditor(args: {
   id: string,
   account: string,
   hostname: string,
-  rootRef: Ref<HTMLElement>,
-  editorRef: Ref<HTMLElement>,
-  scrollerRef: Ref<HTMLElement>,
-  toolbarRef: Ref<HTMLElement>,
-  controllerRef: Ref<HTMLElement>
+  rootRef: Readonly<ShallowRef<HTMLElement | null>>,
+  editorRef: Readonly<ShallowRef<HTMLElement | null>>,
+  scrollerRef: Readonly<ShallowRef<HTMLElement | null>>,
+  toolbarRef: Readonly<ShallowRef<HTMLElement | null>>,
+  controllerRef: Readonly<ShallowRef<HTMLElement | null>>
 }
 ) {
   const { id, account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef } = args
@@ -28,10 +28,9 @@ export function createAnimeEditor(args: {
     }
   )
 
-  onUnmounted(() => {
+  onBeforeUnmount(() => {
     try {
       editor.get(AnimeProvider).destory()
-      editor.get(AddAnimeService).destory()
       editor.get(DialogProvider).destory()
       editor.get(OutlineService).destory()
       editor.get(ColorProvider).destory()
@@ -39,6 +38,7 @@ export function createAnimeEditor(args: {
       editor.get(ThemeProvider).destory()
       editor.get(Player).destory()
       editor.get(ImgToUrlService).destory()
+      editor.get(MemoProvider).destroy()
       console.log('销毁依赖')
     } catch (error) {
       console.error(error)
@@ -56,16 +56,16 @@ export function createAnimeEditor(args: {
             editor = createEditor(getProcedureConfig({
               account,
               hostname,
-              rootRef: editorRef.value,
-              editorRef: editorRef.value,
-              scrollerRef: scrollerRef.value,
-              toolbarRef: toolbarRef.value,
-              controllerRef: controllerRef.value,
+              rootRef: editorRef.value!,
+              editorRef: editorRef.value!,
+              scrollerRef: scrollerRef.value!,
+              toolbarRef: toolbarRef.value!,
+              controllerRef: controllerRef.value!,
               memos: project.memos,
               content: project.content,
               dirname: project.dirname
             }))
-            editor.mount(editorRef.value).then(() => {
+            editor.mount(editorRef.value!).then(() => {
               const themeProvider = editor?.get(ThemeProvider)
               themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
               resolve({ editor, content: editor.getHTML() })

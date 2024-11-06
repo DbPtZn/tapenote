@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { NButton, useThemeVars } from 'naive-ui'
-import { MoreVertRound, CloseRound } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { MoreVertRound, CloseRound } from '@vicons/material'
 const themeVars = useThemeVars()
 const props = defineProps<{
   id: string
@@ -30,7 +31,8 @@ function handleRemoveCache(ev) {
     </template>
     <template #header-extra>
       <n-button text class="header-icon" @click.prevent.stop="handleRemoveCache">
-        <NIcon :component="CloseRound" size="18" />
+        <!-- <NIcon :component="CloseRound" size="18" /> -->
+        <Icon icon="mdi:close" height="18" />
       </n-button>
     </template>
     <template #default>

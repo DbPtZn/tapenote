@@ -29,7 +29,7 @@
 import { computed, inject, onMounted, ref, useTemplateRef } from 'vue'
 import { watchOnce } from '@vueuse/core'
 import { useMessage, useThemeVars } from 'naive-ui'
-import { LockRound, LockOpenRound } from '@vicons/material'
+// import { LockRound, LockOpenRound } from '@vicons/material'
 import { watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { Bridge } from '../../bridge'

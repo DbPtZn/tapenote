@@ -43,7 +43,7 @@ export class UserService {
   async create(createUserDto: CreateUserDto) {
     try {
       // 获取注册信息
-      const { account, password, nickname } = createUserDto
+      const { account, password, nickname, role } = createUserDto
       this.logger.log(`正在为 ${account} 创建新用户...`)
       const isValid = /^[a-zA-Z0-9@.]+$/.test(account)
       if (!isValid) throw new Error('账号名称包含非法字符！')

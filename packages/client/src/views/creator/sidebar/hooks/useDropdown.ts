@@ -1,6 +1,6 @@
 import { FolderOpenFilled, CoffeeMaker, Notebook, PlayLesson } from '@/components'
 import { LibraryEnum } from '@/enums'
-import { DeleteRound, LockClockRound } from '@vicons/material'
+// import { DeleteRound, LockClockRound } from '@vicons/material'
 import useStore from '@/store'
 import { DropdownOption, NIcon, NLog, NText, useDialog, useMessage, useModal } from 'naive-ui'
 import { Component, computed, h, nextTick, reactive, ref } from 'vue'
@@ -9,10 +9,11 @@ import { useShell } from '@/renderer'
 import { FolderForm } from '../../form'
 import { Subject } from '@tanbo/stream'
 import { DialogApiInjection } from 'naive-ui/es/dialog/src/DialogProvider'
-import { SettingsFilled, OutputFilled, BrowserUpdatedFilled, LogOutFilled, FolderRound, NoteRound, CreateNewFolderFilled } from '@vicons/material'
+// import { SettingsFilled, OutputFilled, BrowserUpdatedFilled, LogOutFilled, FolderRound, NoteRound, CreateNewFolderFilled } from '@vicons/material'
 import { pack } from '../../_utils'
 import JSZip from 'jszip'
 import dayjs from 'dayjs'
+import { Icon } from '@iconify/vue'
 import { useParser } from '../../_utils/parse'
 import { useI18n } from 'vue-i18n'
 type Folder = ReturnType<typeof useStore>['folderStore']['$state']
@@ -72,7 +73,7 @@ export function useSidebarDropDown() {
           {
             label: t('sidebar.settings'),
             key: 'settings',
-            icon: () => h(NIcon, { component: SettingsFilled, size: 24 }),
+            icon: () => h(Icon, { icon: 'ic:outline-settings', height: 24 }),
             props: {
               onClick: () => {
                 shell.useAdmin()
@@ -83,7 +84,7 @@ export function useSidebarDropDown() {
             label: '统计',
             key: 'count',
             show: false,
-            icon: () => h(NIcon, { component: SettingsFilled, size: 24 }),
+            icon: () => h(Icon, { icon: 'mingcute:counter-2-line', height: 24 }),
             props: {
               onClick: () => {
                 shell.workbench.useDefault()
@@ -93,7 +94,7 @@ export function useSidebarDropDown() {
           {
             label: t('sidebar.input'),
             key: 'input',
-            icon: () => h(NIcon, { component: SettingsFilled, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:input-circle', height: 24 }),
             props: {
               onClick: () => {
                 const targetFolderId = userStore.dir.note // 设置导入的根目录
@@ -205,7 +206,7 @@ export function useSidebarDropDown() {
           {
             label: t('sidebar.output'),
             key: 'output',
-            icon: () => h(NIcon, { component: OutputFilled, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:output-rounded', height: 24 }),
             // show: false,
             props: {
               onClick: () => {
@@ -329,7 +330,7 @@ export function useSidebarDropDown() {
             disabled: true,
             show: false,
             key: 'checkAndUpdate',
-            icon: () => h(NIcon, { component: BrowserUpdatedFilled, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:browser-updated', height: 24 }),
             props: {
               onClick: () => {
                 //
@@ -339,7 +340,7 @@ export function useSidebarDropDown() {
           {
             label: t('sidebar.logout'),
             key: 'logout',
-            icon: () => h(NIcon, { component: LogOutFilled, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:logout', height: 24 }),
             props: {
               onClick: () => {
                 userListStore.logout(userStore.account, userStore.hostname)
@@ -351,7 +352,7 @@ export function useSidebarDropDown() {
         return [
           {
             key: 'create-new-folder',
-            icon: () => h(NIcon, { component: FolderRound, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:create-new-folder-outline', height: 24 }),
             label: t('newFolder'),
             props: {
               onClick: () => {
@@ -363,7 +364,7 @@ export function useSidebarDropDown() {
             key: 'create-new-map',
             show: false,
             disabled: true,
-            icon: () => h(NIcon, { component: NoteRound, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:add-notes-outline', height: 24 }),
             label: '新建知识图谱',
             props: {
               onClick: () => {
@@ -376,7 +377,7 @@ export function useSidebarDropDown() {
         return [
           {
             key: LibraryEnum.NOTE,
-            icon: () => h(NIcon, { component: Notebook, size: 24 }),
+            icon: () => h(Icon, { icon: 'fluent:notebook-16-regular', height: 24 }),
             label: t('note'),
             props: {
               onClick: () => {
@@ -392,7 +393,7 @@ export function useSidebarDropDown() {
           },
           {
             key: LibraryEnum.COURSE,
-            icon: () => h(NIcon, { component: PlayLesson, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:play-lesson-outline', height: 24 }),
             label: t('course'),
             props: {
               onClick: () => {
@@ -408,7 +409,7 @@ export function useSidebarDropDown() {
           },
           {
             key: LibraryEnum.PROCEDURE,
-            icon: () => h(NIcon, { component: CoffeeMaker, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:coffee-maker-outline', height: 24 }),
             label: t('procedure'),
             props: {
               onClick: () => {
@@ -427,7 +428,7 @@ export function useSidebarDropDown() {
         return [
           {
             key: 'trash',
-            icon: () => h(NIcon, { component: DeleteRound, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:delete-outline', height: 24 }),
             label: t('sidebar.trash'),
             props: {
               onClick: () => {
@@ -439,7 +440,7 @@ export function useSidebarDropDown() {
             key: 'secret',
             disabled: true,
             show: false,
-            icon: () => h(NIcon, { component: LockClockRound, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:stabilization-lock', height: 24 }),
             label: '加密文档',
             props: {
               onClick: () => {
@@ -453,7 +454,7 @@ export function useSidebarDropDown() {
           {
             key: 'read-more',
             label: t('open'),
-            icon: renderIcon(FolderOpenFilled),
+            icon: renderIcon('material-symbols:folder-open-outline'),
             props: {
               onClick: () => {
                 dropdownState.lib && folderStore.fetchAndSet(userStore.getDirByLib(dropdownState.lib))
@@ -462,7 +463,7 @@ export function useSidebarDropDown() {
           },
           {
             key: 'create-new-folder',
-            icon: () => h(NIcon, { component: FolderRound, size: 24 }),
+            icon: () => h(Icon, { icon: 'material-symbols:create-new-folder-outline', height: 24 }),
             label: t('newFolder'),
             props: {
               onClick: () => {
@@ -592,8 +593,8 @@ export function useSidebarDropDown() {
   /** 树形节点按钮 */
   // 绑定在树形组件内部，暂不抽离处理
 
-  function renderIcon(component: Component) {
-    return () => h(NIcon, { component: component, size: 24 })
+  function renderIcon(icon: string) {
+    return () => h(Icon, { icon: icon, height: 24 })
   }
   function handleClickoutside() {
     dropdownState.showDropdownRef = false
@@ -612,7 +613,7 @@ export function useSidebarDropDown() {
 
   function createNewFolder(lib?: LibraryEnum) {
     dialog.create({
-      icon: () => h(NIcon, { component: CreateNewFolderFilled, size: 24 }),
+      icon: () => h(Icon, { icon: 'material-symbols:create-new-folder-outline', height: 24 }),
       title: t('newFolder'),
       content: () =>
         h(FolderForm, {
@@ -664,7 +665,10 @@ function renderCustomHeader() {
           h(
             NText,
             { depth: 2, style: { display: 'block', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
-            { default: () => userStore.account || '' } // 用户账号
+            { default: () => h('div', { style: 'display: flex; align-items: center;' }, [
+              h('span', {}, { default: () => userStore.account || '', }),
+              h(Icon, { icon: 'mingcute:vip-3-fill', style: { marginLeft: '4px', color: '#fbe30a', display: ['Silver', 'Gold'].includes(userStore.role) ? 'inline-block' : 'none' } })
+            ]) } // 用户账号
           )
         ]),
         h('div', { style: 'font-size: 12px;' }, [

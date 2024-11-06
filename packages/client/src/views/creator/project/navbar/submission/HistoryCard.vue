@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui'
-import { CloseRound } from '@vicons/material'
+import { Icon } from '@iconify/vue'
+// import { CloseRound } from '@vicons/material'
 const props = defineProps<{
   title: string
   site: string
@@ -32,7 +33,8 @@ function handleClose() {
         <n-text class="date">{{ date }}</n-text>
       </n-flex>
     </n-flex>
-    <n-icon class="close" :component="CloseRound" @click.stop.prevent="handleClose" />
+    <!-- <n-icon class="close" :component="CloseRound" @click.stop.prevent="handleClose" /> -->
+    <Icon class="close" icon="mdi:close" height="24" @click.stop.prevent="handleClose" />
   </div>
 </template>
 

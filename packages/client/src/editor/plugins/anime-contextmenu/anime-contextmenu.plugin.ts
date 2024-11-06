@@ -42,7 +42,7 @@ export class AnimeContextmenuPlugin implements Plugin {
     this.animeOptions = this.animeProvider.getOptions()
     const structurer = this.injector.get(Structurer)
     this.container = this.injector.get(VIEW_CONTAINER)
-    this.scrollerRef = structurer.scrollerRef
+    this.scrollerRef = structurer.rootRef!.parentElement
     const animeService = injector.get(AnimeService)
 
     this.host = createElement('div')
@@ -278,7 +278,7 @@ export class AnimeContextmenuPlugin implements Plugin {
   }
   // 可选，编辑器销毁时调用
   onDestroy() {
-    console.log('anime contextmenu 销毁')
+    // console.log('anime contextmenu 销毁')
     this.subs.forEach(sub => sub.unsubscribe())
     this.contextmenu?.unmount()
     this.animeOptions = []

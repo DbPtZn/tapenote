@@ -1,4 +1,4 @@
-import { Ref } from 'vue'
+import { Ref, ShallowRef } from 'vue'
 import { Bridge } from '../../bridge'
 import { LibraryEnum } from '@/enums'
 import { Editor } from '@textbus/editor'
@@ -10,11 +10,11 @@ export function useEditor(args: {
   lib: LibraryEnum
   account: string
   hostname: string
-  rootRef: Ref<HTMLElement>
-  editorRef: Ref<HTMLElement>
-  scrollerRef: Ref<HTMLElement>
-  controllerRef: Ref<HTMLElement>
-  toolbarRef: Ref<HTMLElement>
+  rootRef: Readonly<ShallowRef<HTMLElement | null>>
+  editorRef: Readonly<ShallowRef<HTMLElement | null>>
+  scrollerRef: ShallowRef<HTMLElement | null>
+  controllerRef: Readonly<ShallowRef<HTMLElement | null>>
+  toolbarRef: Readonly<ShallowRef<HTMLElement | null>>
   bridge: Bridge
 }) {
   const { id, lib, account, hostname, editorRef, scrollerRef, controllerRef, toolbarRef, rootRef, bridge } = args

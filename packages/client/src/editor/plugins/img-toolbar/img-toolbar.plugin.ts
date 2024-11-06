@@ -37,5 +37,4 @@ export class ImgToolbarPlugin implements Plugin {
     this.app?.unmount()
     if (this.viewContainer && this.host) this.viewContainer.removeChild(this.host)
   }
-  
 }

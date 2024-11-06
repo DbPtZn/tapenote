@@ -2,7 +2,7 @@ import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { Fragment, FragmentSpeaker } from './entities/fragment.entity'
 import { StorageService } from 'src/storage/storage.service'
-import { RemovedEnum } from 'src/enum'
+import { RemovedEnum, VIP } from 'src/enum'
 import {
   AddPromoterDto,
   DeleteFragmentDto,
@@ -26,14 +26,25 @@ import { LoggerService } from 'src/logger/logger.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { DataSource, Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
-import fs from 'fs'
+// import fs from 'fs'
 import fsx from 'fs-extra'
 import { Speaker } from 'src/speaker/entities/speaker.entity'
 import { SpeakerService } from 'src/speaker/speaker.service'
 // import sharp from 'sharp'
-import Jimp from 'jimp'
+// import Jimp from 'jimp'
 import { basename } from 'path'
 import { UploadService } from 'src/upload/upload.service'
+import { UserService } from 'src/user/user.service'
+import { isPaidVip } from 'src/utils'
+
+enum AsrModel {
+  Local = 'local-base-asr',
+  Xunfei = 'xunfei-base-asr'
+}
+enum TtsModel {
+  Local = 'local-base-tts',
+  Xunfei = 'xunfei-base-tts'
+}
 
 @Injectable()
 export class FragmentService {
@@ -42,6 +53,7 @@ export class FragmentService {
     private fragmentsRepository: Repository<Fragment>,
     private readonly dataSource: DataSource,
     private readonly projectService: ProjectService,
+    private readonly userService: UserService,
     private readonly speakerService: SpeakerService,
     private readonly storageService: StorageService,
     private readonly uploadService: UploadService,
@@ -51,22 +63,26 @@ export class FragmentService {
     private readonly logger: LoggerService
   ) {}
 
-  async getFragmentSpeaker(speakerId: string, type: 'human' | 'machine', userId: string, dirname: string) {
+  async getFragmentSpeaker(speakerId: string, type: 'human' | 'machine', userId: string, dirname: string, role: VIP) {
     try {
       let fragmentSpeaker: FragmentSpeaker
+      // 默认用户或默认机器人 speakerId 为空字符串
       if (speakerId) {
         const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
-        // console.log('speaker', speaker)
         if (speaker) {
           fragmentSpeaker = {
+            id: speakerId,
             type,
+            model: speaker.model,
             name: speaker.name,
             avatar: speaker.avatar,
             role: speaker.role
           }
         } else {
           fragmentSpeaker = {
+            id: '',
             type,
+            model: getModel(role),
             name: '',
             avatar: '',
             role: type === 'human' ? 10000 : 0
@@ -74,11 +90,19 @@ export class FragmentService {
         }
       } else {
         fragmentSpeaker = {
+          id: '',
           type,
+          model: getModel(role),
           name: '',
           avatar: '',
           role: type === 'human' ? 10000 : 0
         }
+      }
+      function getModel(role: VIP) {
+        if (isPaidVip(role)) {
+          return type === 'human' ? AsrModel.Xunfei : TtsModel.Xunfei
+        }
+        return type === 'human' ? AsrModel.Local : TtsModel.Local
       }
       return fragmentSpeaker
     } catch (error) {
@@ -88,120 +112,127 @@ export class FragmentService {
   }
 
   async createByAudio(
-    createASRFragmentDto: {
-      procedureId: string
+    dataArray: {
+      key: string
       audio: string
       duration: number
       actions: Action[]
       speakerId: string
-    },
+    }[],
+    procedureId: string,
     userId: string,
-    dirname: string
+    dirname: string,
+    role: VIP
   ) {
-    const { procedureId, audio, duration, speakerId, actions } = createASRFragmentDto
     try {
-      this.userlogger.log(`正在为项目${procedureId}创建音频转文本片段...`)
-      if (!audio || !procedureId || !dirname) {
-        console.log('输入错误, 缺少必要参数!')
-        throw new Error('输入错误, 缺少必要参数！')
-      }
-      if (duration === 0 || Number(duration) === 0) {
-        throw new Error('音频时长为 0 秒，录入音频数据失败，请检查录音设备是否存在问题')
-      }
-      const procudure = await this.projectService.findOneById(procedureId, userId)
-      if (!procudure) throw new Error('找不到项目工程文件！')
+      const fragments: Fragment[] = []
+      const audios: string[] = []
+      const keys: string[] = []
+      for(let i =0; i < dataArray.length; i++) {
+        const data = dataArray[i]
+        const { audio, duration, speakerId, actions, key } = data
+        this.userlogger.log(`正在为项目${procedureId}创建音频转文本片段...`)
+        if (!audio || !procedureId || !dirname) {
+          console.log('输入错误, 缺少必要参数!')
+          throw new Error('输入错误, 缺少必要参数！')
+        }
+        if (duration === 0 || Number(duration) === 0) {
+          throw new Error('音频时长为 0 秒，录入音频数据失败，请检查录音设备是否存在问题')
+        }
+        const procudure = await this.projectService.findOneById(procedureId, userId)
+        if (!procudure) throw new Error('找不到项目工程文件！')
 
-      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname)
+        const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname, role)
 
-      const fragmentId = UUID.v4()
-      let fragment = new Fragment()
-      fragment.id = fragmentId
-      fragment.userId = userId
-      fragment.project = procudure
-      fragment.audio = ''
-      fragment.duration = Number(duration)
-      fragment.txt = ''
-      fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
-      fragment.tags = []
-      fragment.promoters = []
-      fragment.timestamps = []
-      fragment.speaker = fragmentSpeaker
-      fragment.removed = RemovedEnum.NEVER
-      
-      // 先添加到项目工程文件中（占位）
-      this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
-      await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
+        const fragmentId = UUID.v4()
+        let fragment = new Fragment()
+        fragment.id = fragmentId
+        fragment.userId = userId
+        fragment.project = procudure
+        fragment.audio = basename(audio)
+        fragment.duration = Number(duration)
+        fragment.txt = ''
+        fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
+        fragment.tags = []
+        fragment.promoters = []
+        fragment.timestamps = []
+        fragment.speaker = fragmentSpeaker
+        fragment.removed = RemovedEnum.NEVER
+        
+        // 先添加到项目工程文件中（占位）
+        this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
+        await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
-      const filepath = this.storageService.createTempFilePath('.wav')
-      fragment.audio = basename(filepath)
+        try {
+          const result = await this.useAsr({ filepath: audio, model: fragmentSpeaker.model, role })
+          const punText = await this.sherpaService.addPunct(result.text)
+          const alignResult = this.sherpaService.align(punText, result)
+          this.userlogger.log(`语音识别成功，转写文本为: ${result.text}`)
 
-      // 格式化音频文件
-      await this.ffmpegService.audioformat(audio, filepath)
-
-      // 重新计算处理后音频的时长
-      // fragment.duration = await this.ffmpegService.calculateDuration(filepath)
-      // this.userlogger.log(`格式化后音频时长为：${fragment.duration}`)
-
-      // 语音识别
-      try {
-        const result = await this.sherpaService.asr(filepath)
-        const punText = await this.sherpaService.addPunct(result.text)
-        const data = this.sherpaService.align(punText, result)
-        this.userlogger.log(`语音识别成功，转写文本为: ${result.text}`)
-
-        fragment.txt = data.text
-        fragment.timestamps = data.timestamps
-        const length = data.tokens?.length
-        fragment.transcript = data.tokens
-        fragment.tags = new Array(length)
-        fragment.promoters = new Array(length)
+          fragment.txt = alignResult.text
+          fragment.timestamps = alignResult.timestamps
+          const length = alignResult.tokens?.length
+          fragment.transcript = alignResult.tokens
+          fragment.tags = new Array(length)
+          fragment.promoters = new Array(length)
+        } catch (error) {
+          console.log(`语音识别失败：${error.message}`)
+          this.userlogger.log(`语音识别失败，错误原因：${error.message} `)
+          fsx.removeSync(audio)
+          await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
+          // 语音识别失败后，跳出当前循环 (不再抛出错误，因为会导致整个过程中断)
+          continue // throw error
+        }
 
         // 添加动作
         if (actions.length > 0) fragment = addPromoter(fragment, actions)
-        // console.log(fragment)
-        // if (fragment.duration === 0) {
-        //   fsx.removeSync(filepath)
-        //   throw new Error('语音识别失败！')
-        // }
-        
-        // 使用事务来确保所有操作要么全部成功，要么全部撤销
-        const queryRunner = this.dataSource.createQueryRunner()
-        await queryRunner.connect()
-        await queryRunner.startTransaction()
 
-        try {
-          await this.dataSource.manager.save(fragment)
+        fragments.push(fragment)
+        audios.push(audio)
+        keys.push(key)
+      }
+
+      const queryRunner = this.dataSource.createQueryRunner()
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+      const newFragments: Fragment[] = []
+
+      try {
+        for(let j = 0; j < fragments.length; j++) {
+          const fragment = fragments[j]
+          const newFragement = await this.dataSource.manager.save(fragment)
           // 确定创建片段成功后再上传文件
           await this.uploadService.upload(
             {
               filename: fragment.audio,
-              path: filepath,
+              path: audios[j],
               mimetype: 'audio/wav'
             },
             userId,
             dirname,
             fragment.id
           )
-          // 提交
-          await queryRunner.commitTransaction()
-        } catch (error) {
-          console.log('创建片段失败：' + error.message)
-          await queryRunner.rollbackTransaction()
-          throw error
-        } finally {
-          await queryRunner.release()
+          newFragments.push(newFragement)
         }
+        // 提交
+        await queryRunner.commitTransaction()
       } catch (error) {
-        console.log(`语音识别失败：${error.message}`)
-        this.userlogger.log(`语音识别失败，错误原因：${error.message} `)
-        fsx.removeSync(filepath)
-        await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
+        console.log('创建片段失败：' + error.message)
+        await queryRunner.rollbackTransaction()
+        await this.projectService.checkAndCorrectFragmentSquence(procedureId)
         throw error
+      } finally {
+        await queryRunner.release()
       }
-
-      fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
-      fragment.speaker.avatar = this.storageService.getResponsePath(fragmentSpeaker.avatar, dirname)
-      return fragment
+      newFragments.forEach((fragment, index) => {
+        fragment['key'] = keys[index]
+        fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
+        fragment.speaker.avatar = this.storageService.getResponsePath(fragment.speaker.avatar, dirname)
+      })
+      return newFragments
+      // fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
+      // fragment.speaker.avatar = this.storageService.getResponsePath(fragmentSpeaker.avatar, dirname)
+      // return fragment
     } catch (error) {
       this.userlogger.error(`创建片段失败，错误原因：${error.message} `)
       throw error
@@ -209,58 +240,57 @@ export class FragmentService {
   }
 
   /** 通过文本创建音频片段 */
-  async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: string, dirname: string) {
-    const { procedureId, txt, speakerId, speed } = createTTSFragmentDto
+  async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: string, dirname: string, role: VIP) {
     try {
-      this.userlogger.log(`正在为项目${procedureId}创建文本转音频片段...`)
+      const { procedureId, speakerId, speed, data } = createTTSFragmentDto
       if (speed > 2 || speed <= 0) throw new Error('语速不能大于2或小于等于0')
-      if (!txt || !procedureId || !dirname) throw new Error('缺少必要参数！')
+      if (!procedureId || !dirname) throw new Error('缺少必要参数！')
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
+      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname, role)
+      this.userlogger.log(`正在为项目${procedureId}创建文本转音频片段...`)
 
-      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname)
+      const fragments: Fragment[] = []
+      const audios: string[] = []
+      const keys: string[] = []
+      for (let i = 0; i < data.length; i++) {
+        const { key, txt } = data[i]
+        if (!txt) throw new Error('文本不能为空！')
+        const text = txt.replace(/\s*/g, '')
+        const fragmentId = UUID.v4()
+        const filepath = this.storageService.createTempFilePath('.wav')
+        const fragment = new Fragment()
+        fragment.id = fragmentId
+        fragment.userId = userId
+        fragment.project = procudure
+        fragment.audio = basename(filepath)
+        fragment.duration = 0
+        fragment.txt = text
+        fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
+        fragment.tags = new Array(text.length).fill(null)
+        fragment.promoters = new Array(text.length).fill(null)
+        fragment.timestamps = []
+        fragment.speaker = fragmentSpeaker
+        fragment.removed = RemovedEnum.NEVER
 
-      const text = txt.replace(/\s*/g, '')
-      const fragmentId = UUID.v4()
+        // 先添加到项目工程文件序列中（占位）
+        this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
+        await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
-      // 创建音频存储地址
-      // const { filepath, filename } = this.storageService.createFilePath({
-      //   dirname: [dirname, procudure.dirname],
-      //   category: 'audio',
-      //   originalname: fragmentId,
-      //   extname: '.wav'
-      // })
-      const filepath = this.storageService.createTempFilePath('.wav')
-      const fragment = new Fragment()
-      fragment.id = fragmentId
-      fragment.userId = userId
-      fragment.project = procudure
-      fragment.audio = basename(filepath)
-      fragment.duration = 0
-      fragment.txt = text
-      fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
-      fragment.tags = new Array(text.length).fill(null)
-      fragment.promoters = new Array(text.length).fill(null)
-      fragment.timestamps = []
-      fragment.speaker = fragmentSpeaker
-      fragment.removed = RemovedEnum.NEVER
+        // 创建临时文件地址
+        const temppath1 = this.storageService.createTempFilePath('.wav')
 
-      // 先添加到项目工程文件序列中（占位）
-      this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
-      await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
-
-      // 创建临时文件地址
-      const temppath1 = this.storageService.createTempFilePath('.wav')
-
-      // 文字转音频
-      this.userlogger.log(`正在将文字‘${text}’转成音频...`)
-      await this.useTTS({
-        txt: text,
-        filepath: temppath1,
-        speakerId: fragmentSpeaker.role,
-        speed: speed | 1
-      })
-        .then(async () => {
+        // 文字转音频
+        this.userlogger.log(`正在将文字‘${text}’转成音频...`)
+        try {
+          await this.useTTS({
+            txt: text,
+            filepath: temppath1,
+            model: fragmentSpeaker.model,
+            timbre: fragmentSpeaker.role,
+            speed: speed || 1,
+            role
+          })
           // 合成成功，将正确内容替换回去
           fragment.transcript = Array.from(text)
           this.userlogger.log(`转化成功，正在计算合成音频时长...`)
@@ -273,7 +303,7 @@ export class FragmentService {
           const temppath2 = this.storageService.createTempFilePath('.wav')
           await this.ffmpegService.clearSilence(temppath1, temppath2)
 
-          // 格式化音频文件
+          // 格式化音频文件 (不同语音合成的音频可能具有不同属性，是否有必要格式化？)
           await this.ffmpegService.audioformat(temppath2, filepath)
           // console.log(filepath)
 
@@ -289,31 +319,57 @@ export class FragmentService {
           })
           // console.log(timestamps)
           fragment.timestamps = timestamps
-          if (filepath && fragment.duration !== 0) {
-            // console.log(fragment)
-            await this.fragmentsRepository.save(fragment)
-            await this.uploadService.upload(
-              {
-                filename: fragment.audio,
-                path: filepath,
-                mimetype: 'audio/wav'
-              },
-              userId,
-              dirname,
-              fragment.id
-            )
-          }
-        })
-        .catch(async error => {
+        } catch (error) {
           console.log(`语音合成失败：${error.message}`)
           await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
-          throw error
-        })
-      // console.log(fragment)
+          continue // throw error
+        }
+        if (filepath && fragment.duration !== 0) {
+          fragments.push(fragment)
+          audios.push(filepath)
+          keys.push(key)
+        }
+      }
+
+      const queryRunner = this.dataSource.createQueryRunner()
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+      const newFragments: Fragment[] = []
+      
+      try {
+        for(let j = 0; j < fragments.length; j++) {
+          const fragment = fragments[j]
+          const newFragement = await this.dataSource.manager.save(fragment)
+          // 确定创建片段成功后再上传文件
+          await this.uploadService.upload(
+            {
+              filename: fragment.audio,
+              path: audios[j],
+              mimetype: 'audio/wav'
+            },
+            userId,
+            dirname,
+            fragment.id
+          )
+          newFragments.push(newFragement)
+        }
+        // 提交
+        await queryRunner.commitTransaction()
+      } catch (error) {
+        console.log('创建片段失败：' + error.message)
+        await queryRunner.rollbackTransaction()
+        await this.projectService.checkAndCorrectFragmentSquence(procedureId)
+        throw error
+      } finally {
+        await queryRunner.release()
+      }
       this.userlogger.log(`合成语音创建片段成功！`)
-      fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
-      fragment.speaker.avatar = this.storageService.getResponsePath(fragmentSpeaker.avatar, dirname)
-      return fragment
+      newFragments.forEach((fragment, index) => {
+        fragment['key'] = keys[index]
+        fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
+        fragment.speaker.avatar = this.storageService.getResponsePath(fragment.speaker.avatar, dirname)
+      })
+      return newFragments
     } catch (error) {
       console.log(`创建片段失败：${error.message}`)
       this.userlogger.error(`创建片段失败，错误原因：${error.message} `)
@@ -347,7 +403,9 @@ export class FragmentService {
       fragment.promoters = new Array(text.length).fill(null)
       fragment.timestamps = timestamps
       fragment.speaker = {
+        id: '',
         type: 'machine',
+        model: '',
         name: '',
         avatar: '',
         role: 0
@@ -405,7 +463,7 @@ export class FragmentService {
 
   async createBySplitFragment(
     dataArray: {
-      // key: string
+      key: string
       audio: string
       duration: number
       speaker: any
@@ -419,14 +477,16 @@ export class FragmentService {
     sourceFragmentId: string, // 源片段 id
     removeSourceFragment: boolean,
     userId: string,
-    dirname: string
+    dirname: string,
+    role: VIP
   ) {
     // this.userlogger.log(`正在创建分段片段：${dto.key}`)
     const sourceFragment = await this.fragmentsRepository.findOneBy({ id: sourceFragmentId, userId })
     const fragments = []
     const audios = []
+    const keys = []
     for (const data of dataArray) {
-      const { audio, duration, speaker, txt, timestamps, transcript, tags, promoters} = data
+      const { audio, duration, speaker, txt, timestamps, transcript, tags, promoters, key } = data
       // 从前端获取的 speaker.avatar 是完整路径，处理截取出文件名
       const fragmentId = UUID.v4() // 先创建 Fragment ID
       // 先添加到项目工程文件中（占位）
@@ -458,10 +518,10 @@ export class FragmentService {
 
       audios.push(audio)
       fragments.push(fragment)
+      keys.push(key)
     }
 
     try {
-      // 使用事务来确保所有操作要么全部成功，要么全部撤销
       const queryRunner = this.dataSource.createQueryRunner()
       await queryRunner.connect()
       await queryRunner.startTransaction()
@@ -492,9 +552,10 @@ export class FragmentService {
         await queryRunner.release()
       }
 
-      return fragments.map(fragment => {
+      return fragments.map((fragment, index) => {
         const { project, userId, ...fragmentWithoutProject } = fragment
         return {
+          key: keys[index],
           ...fragmentWithoutProject,
           audio: this.storageService.getResponsePath(fragmentWithoutProject.audio, dirname),
           speaker: {
@@ -523,10 +584,33 @@ export class FragmentService {
     }
   }
 
-  useTTS(args: { txt: string; filepath: string; speakerId?: number; speed?: number }) {
-    const { txt, filepath, speakerId, speed } = args
+  useAsr(args: { filepath: string; model: string, role: VIP }) {
+    const { filepath, model, role } = args
+    if (model === AsrModel.Local) {
+      return this.sherpaService.asr(filepath)
+    }
+    if(model === AsrModel.Xunfei) {
+      if(!isPaidVip(role)) {
+        throw new Error('免费用户无法使用讯飞语音识别')
+      }
+      return this.sherpaService.asr(filepath)
+    }
+    throw new Error('不支持目标语音服务！')
+  }
+
+  useTTS(args: { txt: string; filepath: string; model: string, timbre?: number; speed?: number, role: VIP }) {
+    const { txt, filepath, model, timbre, speed, role } = args
     if (txt.length === 0) throw '文本为空！'
-    return this.sherpaService.tts(txt, filepath, speakerId, speed)
+    if(model === TtsModel.Local) {
+      return this.sherpaService.tts(txt, filepath, timbre, speed)
+    }
+    if(model === TtsModel.Xunfei) {
+      if(!isPaidVip(role)) {
+        throw new Error('免费用户无法使用讯飞语音合成')
+      }
+      return this.sherpaService.tts(txt, filepath, timbre, speed)
+    }
+    throw new Error('不支持目标语音服务！')
   }
 
   async updateTranscript(updateTranscriptDto: UpdateTranscriptDto, userId: string) {

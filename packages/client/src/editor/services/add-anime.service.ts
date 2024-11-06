@@ -12,6 +12,4 @@ export class AddAnimeService {
   updateActiveComponent(component: ComponentInstance | null) {
     this.componentActiveEvent.next(component)
   }
-
-  destory(){}
 }

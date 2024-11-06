@@ -15,13 +15,14 @@ import {
   DropdownOption,
   DropdownGroupOption
 } from 'naive-ui'
+import { Icon } from '@iconify/vue'
 import { RoutePathEnum } from '@/enums'
 import { h } from 'vue'
-import { KeyboardArrowDownRound, KeyboardArrowUpRound } from '@vicons/material'
+// import { KeyboardArrowDownRound, KeyboardArrowUpRound } from '@vicons/material'
 // import ValidateCode from './ValidateCode.vue'
 import LoginInfoCard from './private/LoginInfoCard.vue'
 import { Subscription, fromEvent } from '@tanbo/stream'
-import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
+// import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
 import FilingsFooter from './FilingsFooter.vue'
 import axios from 'axios'
 interface ModelType {
@@ -437,11 +438,7 @@ function handleSendCode() {
               <n-form-item path="hostname" label="服务器地址">
                 <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
                   <template #suffix>
-                    <n-icon
-                      :color="isHostValid ? '' : 'red'"
-                      :component="isHostValid ? CheckCircleOutlineOutlined : DoNotDisturbAltOutlined"
-                      :size="18"
-                    />
+                    <Icon :style="{ color: isHostValid ? ' ' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
                   </template>
                 </n-input>
               </n-form-item>
@@ -471,8 +468,9 @@ function handleSendCode() {
                       @clickoutside="isMenuShow = false"
                     >
                       <div class="input-suffix" @click.stop.prevent="handleMenuShow">
-                        <n-icon :component="KeyboardArrowUpRound" v-if="isMenuShow" size="18" />
-                        <n-icon :component="KeyboardArrowDownRound" v-else size="18" />
+                        <Icon :icon="isMenuShow ? 'material-symbols:keyboard-arrow-up' : 'material-symbols:keyboard-arrow-down'" height="18" />
+                        <!-- <n-icon :component="KeyboardArrowUpRound" v-if="isMenuShow" size="18" />
+                        <n-icon :component="KeyboardArrowDownRound" v-else size="18" /> -->
                       </div>
                     </n-dropdown>
                   </template>
@@ -499,11 +497,7 @@ function handleSendCode() {
               <n-form-item path="hostname" label="服务器地址">
                 <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
                   <template #suffix>
-                    <n-icon
-                      :color="isHostValid ? '' : 'red'"
-                      :component="isHostValid ? CheckCircleOutlineOutlined : DoNotDisturbAltOutlined"
-                      :size="18"
-                    />
+                    <Icon :style="{ color: isHostValid ? ' ' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
                   </template>
                 </n-input>
               </n-form-item>

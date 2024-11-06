@@ -1,6 +1,13 @@
 import { IsNotEmpty, IsString, Length, Max, Min, IsInt } from 'class-validator'
 
 export class CreateSpeakerDto {
+  @IsString()
+  @Length(0, 255)
+  model: string
+
+  @IsString()
+  type: 'human' | 'machine'
+
   @IsNotEmpty({ message: 'role 值不能为空' })
   @IsInt({ message: 'role 值必须为整数' })
   @Min(0, { message: 'role 值必须不能小于0' })

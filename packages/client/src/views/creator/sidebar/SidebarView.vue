@@ -8,7 +8,7 @@ import useStore, { TreeNode } from '@/store'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { Subscription } from '@textbus/core'
 import { useShell } from '@/renderer'
-import { AccessTimeRound, SearchRound, MoreHorizRound } from '@vicons/material'
+// import { AccessTimeRound, SearchRound, MoreHorizRound } from '@vicons/material'
 import { CreatorShell } from '../shell'
 import SidebarContainer from './SidebarContainer.vue'
 import { useI18n } from 'vue-i18n'
@@ -115,9 +115,9 @@ function hanldeToRecent() {
       </Header>
       <Main class="main" :flex="1">
         <!-- 导航菜单 -->
-        <NavMenuItem :label="t('sidebar.recently')" :icon="AccessTimeRound" :active="folderStore.id === 'recently'" @click="hanldeToRecent" @contextmenu.prevent="handleRecentContextmenu" />
-        <NavMenuItem :label="t('sidebar.search')" :icon="SearchRound" :active="false" disabled />
-        <NavMenuItem :label="t('sidebar.more')" :icon="MoreHorizRound" :active="false" @click="handleMoreDropdown" />
+        <NavMenuItem :label="t('sidebar.recently')" icon="ic:baseline-access-time" :active="folderStore.id === 'recently'" @click="hanldeToRecent" @contextmenu.prevent="handleRecentContextmenu" />
+        <NavMenuItem :label="t('sidebar.search')" icon="ic:outline-search" :active="false" disabled />
+        <NavMenuItem :label="t('sidebar.more')" icon="material-symbols:more-horiz" :active="false" @click="handleMoreDropdown" />
         <!-- 折叠面板 -->
         <CollapsePanel
           class="collapse"

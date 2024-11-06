@@ -1,7 +1,6 @@
 import { AxiosInstance } from 'axios'
 type Action = { animeId: string, serial: string, keyframe: number }
 interface CreateASRFragmentDto {
-  procedureId?: string
   key?: string
   audio: Blob
   duration: number
@@ -10,10 +9,9 @@ interface CreateASRFragmentDto {
 }
 interface CreateTTSFragmentDto {
   procedureId?: string
-  key?: string
-  txt: string
   speakerId: string
   speed: number
+  data: { key?: string, txt: string }[]
 }
 interface CreateBlankFragmentDto {
   procedureId?: string
@@ -94,29 +92,26 @@ interface CopyFragmentDto {
 
 export const fragment = (axios: AxiosInstance) => {
   return {
-    createByAudio<T>(dto: CreateASRFragmentDto) {
+    createByAudio<T>(data: CreateASRFragmentDto[], projectId: string) {
       const formdata = new FormData()
-      formdata.append('procedureId', dto.procedureId!)
-      formdata.append('audio', dto.audio, 'audio.wav') // 必须添加文件名和后缀
-      formdata.append('duration', dto.duration.toString())
-      formdata.append('speakerId', dto.speakerId)
-      formdata.append('key', dto.key!)
-      formdata.append('actions', JSON.stringify(dto.actions))
+      formdata.append('projectId', projectId!)
+
+      data.forEach((dto, index) => {
+        formdata.append(`audio[${index}]`, dto.audio, 'audio.wav') // 必须添加文件名和后缀
+        formdata.append(`duration[${index}]`, dto.duration.toString())
+        formdata.append(`speakerId[${index}]`, dto.speakerId)
+        formdata.append(`key[${index}]`, dto.key!)
+        formdata.append(`actions[${index}]`, JSON.stringify(dto.actions))
+      })
       return axios.post<T>('/fragment/write/create/asr', formdata, {
         headers: {
           'Content-Type':'multipart/form-data'
         }
       })
     },
-    createByText<T>(dto: CreateTTSFragmentDto) {
-      return axios.post<T>('/fragment/write/create/tts', dto)
-    },
-    createBlank<T>(dto: CreateBlankFragmentDto) {
-      return axios.post<T>('/fragment/write/create/blank', dto)
-    },
-    createBySegment<T>(data: CreateSegmentFragmentDto[], procedureId: string, sourceFragmentId, removeSourceFragment?: boolean) {
+    createBySegment<T>(data: CreateSegmentFragmentDto[], projectId: string, sourceFragmentId: string, removeSourceFragment?: boolean) {
       const formdata = new FormData()
-      formdata.append('projectId', procedureId!)
+      formdata.append('projectId', projectId!)
       formdata.append(`sourceFragmentId`, sourceFragmentId)
       formdata.append('removeSourceFragment', removeSourceFragment ? 'true' : 'false')
       data.forEach((dto, index) => {
@@ -136,6 +131,12 @@ export const fragment = (axios: AxiosInstance) => {
           'Content-Type':'multipart/form-data'
         }
       })
+    },
+    createByText<T>(dto: CreateTTSFragmentDto) {
+      return axios.post<T>('/fragment/write/create/tts', dto)
+    },
+    createBlank<T>(dto: CreateBlankFragmentDto) {
+      return axios.post<T>('/fragment/write/create/blank', dto)
     },
     get<T>(procudureId: string) {
       return axios.get<T>('/fragment/read/' + procudureId)

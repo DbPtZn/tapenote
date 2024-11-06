@@ -283,7 +283,7 @@ const paginationReactive = reactive({
               :titleAlign="'center'"
             />
           </n-tab-pane>
-          <n-tab-pane :name="'course'" tab="课程">
+          <n-tab-pane :name="'course'" tab="动画">
             <n-data-table
               :columns="createColumns()"
               :data="trashStore.courses"
@@ -292,7 +292,7 @@ const paginationReactive = reactive({
               :titleAlign="'center'"
             />
           </n-tab-pane>
-          <n-tab-pane :name="'procedure'" tab="工程">
+          <n-tab-pane :name="'procedure'" tab="制作">
             <n-data-table
               :columns="createColumns()"
               :data="trashStore.procedures"

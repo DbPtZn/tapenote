@@ -1,8 +1,8 @@
-import { InlineToolbarPlugin, OutlinePlugin, ResizeService, OutlineService, Toolbar, boldTool, historyBackTool, historyForwardTool, headingTool, italicTool, strikeThroughTool, underlineTool, olTool, ulTool, fontSizeTool, textIndentTool, colorTool, textBackgroundTool, insertParagraphBeforeTool, insertParagraphAfterTool, linkTool, fontFamilyTool, unlinkTool, imageTool, textAlignTool, tableRemoveTool, formatPainterTool, tableAddTool, cleanTool, colorFormatter, textBackgroundColorFormatLoader, colorFormatLoader, textBackgroundColorFormatter, defaultGroupTool, DialogProvider, imageB2UComponent, imageB2UComponentLoader, AxiosProvider, outlineTool, Clipboard, ContextMenu, CustomCommander, ColorProvider, componentsTool, rootComponent, rootComponentLoader, Structurer, ThemeProvider, ImgToUrlService, preComponent, preComponentLoader } from '@/editor'
+import { InlineToolbarPlugin, OutlinePlugin, ResizeService, OutlineService, Toolbar, boldTool, historyBackTool, historyForwardTool, headingTool, italicTool, strikeThroughTool, underlineTool, olTool, ulTool, fontSizeTool, textIndentTool, colorTool, textBackgroundTool, insertParagraphBeforeTool, insertParagraphAfterTool, linkTool, fontFamilyTool, unlinkTool, imageTool, textAlignTool, tableRemoveTool, formatPainterTool, tableAddTool, cleanTool, colorFormatter, textBackgroundColorFormatLoader, colorFormatLoader, textBackgroundColorFormatter, defaultGroupTool, DialogProvider, imageB2UComponent, imageB2UComponentLoader, outlineTool, Clipboard, ContextMenu, CustomCommander, ColorProvider, componentsTool, rootComponent, rootComponentLoader, Structurer, ThemeProvider, ImgToUrlService, preComponent, preComponentLoader, blockBackgroundColorFormatter, blockBackgroundColorFormatterLoader, defaultComponents, defaultComponentLoaders } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
-  defaultComponentLoaders,
-  defaultComponents,
+  defaultAttributeLoaders,
+  defaultAttributes,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
@@ -33,10 +33,12 @@ export function getNoteConfig(args: {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: content || '',
-    components: [imageB2UComponent, preComponent, ...defaultComponents],
-    componentLoaders: [imageB2UComponentLoader, preComponentLoader, ...defaultComponentLoaders],
+    components: defaultComponents,
+    componentLoaders: defaultComponentLoaders,
     formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
+    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
+    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
     // styleSheets: [],
     providers: [
       { provide: Commander, useClass: CustomCommander },
@@ -113,7 +115,7 @@ export function getNoteConfig(args: {
       // 图片工具
       // const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
       const imgToUrlService = injector.get(ImgToUrlService)
-      const { uploadImgFunction } = useUploadImg('/upload/img', account, hostname)
+      const { uploadImgFunction } = useUploadImg(account, hostname)
       imgToUrlService.setup(uploadImgFunction)
       // imgToUrlService.onFinish.subscribe((value) => {
       //   console.log('上传成功:')

@@ -5,7 +5,7 @@ import { Worker } from 'worker_threads'
 import child_process from 'child_process'
 import sherpa_onnx from 'sherpa-onnx-node'
 
-interface RecognizerResult {
+export interface RecognizerResult {
   text: string
   tokens: string[]
   timestamps: number[]

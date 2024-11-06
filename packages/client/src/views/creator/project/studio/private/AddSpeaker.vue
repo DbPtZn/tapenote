@@ -2,9 +2,11 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { FormInst, FormItemRule, FormRules, UploadFileInfo, useMessage } from 'naive-ui'
 import useStore from '@/store'
-import { getServerToken } from '@/api';
+import { getServerToken } from '@/api'
+import { Tip } from '../../../_common'
 interface ModelType {
   type:  'human' | 'machine'
+  model: string
   avatar: string
   name: string
   role: number
@@ -20,11 +22,12 @@ const props = defineProps<{
   submit: (res: Response) => void
 }>()
 const ResourceDomain = localStorage.getItem(`ResourceDomain:${props.hostname}`) as string
-console.log('ResourceDomain:', ResourceDomain)
+// console.log('ResourceDomain:', ResourceDomain)
 const formRef = ref<FormInst | null>(null)
 /** 表单数据 */
 const model = ref<ModelType>({
   type: props.type,
+  model: '',
   avatar: '',
   name: '',
   role: 0,
@@ -57,17 +60,17 @@ const rules: FormRules = {
         }
       }
     },
-    {
-      message: '扮演角色的角色值不能小于或等于 9999',
-      trigger: 'blur',
-      validator: (rule: FormItemRule, value: number) => {
-        if (props.type === 'human') {
-          if (value <= 9999) {
-            return false
-          }
-        }
-      }
-    },
+    // {
+    //   message: '扮演角色的角色值不能小于或等于 9999',
+    //   trigger: 'blur',
+    //   validator: (rule: FormItemRule, value: number) => {
+    //     if (props.type === 'human') {
+    //       if (value <= 9999) {
+    //         return false
+    //       }
+    //     }
+    //   }
+    // },
     {
       message: '扮演角色的角色值不能超过 99999',
       trigger: 'blur',
@@ -126,31 +129,54 @@ function handleError(ev: Event) {
   target.src = './image-add.png'
 }
 
-const audioCache = new Map<number, HTMLAudioElement>()
+const audioCache = new Map<string, HTMLAudioElement>()
 const isLoading = ref(false)
-function handleTest(role: number) {
+function handleTest(role: number, ttsModel: string) {
   // 如果存在缓存，直接播放缓存信息
-  if (audioCache.has(role)) {
-    audioCache.get(role)?.play()
+  if (audioCache.has(`${ttsModel}&${role}`)) {
+    audioCache.get(`${ttsModel}&${role}`)?.play()
     return
   }
   isLoading.value = true
-  speakerStore.testTts(role, props.account, props.hostname).then(res => {
+  speakerStore.testTts(role, ttsModel, props.account, props.hostname).then(res => {
     // const url = ResourceDomain + res.data as string
     const url = props.hostname + res.data as string // 临时音频文件从服务器端读取
-    console.log('url:', url)
+    // console.log('url:', url)
     const audio = new Audio(url)
     isLoading.value = false
     audio.oncanplay =() => {
       audio.play()
       // 如果没有缓存，则缓存，并通知服务端移除临时音频文件
-      if (!audioCache.has(role)) {
-        audioCache.set(role, audio)
+      if (!audioCache.has(`${ttsModel}&${role}`)) {
+        audioCache.set(`${ttsModel}&${role}`, audio)
         speakerStore.clearTemp(url, props.account, props.hostname)
       }
     }
   })
 }
+
+const ttsOptions = [
+  { label: '基础语音合成 (免费)', value: 'local-base-tts' },
+  { label: '讯飞语音合成 (会员)', value: 'xunfei-base-tts' },
+]
+
+const asrOptions = [
+  { label: '基础语音识别 (免费)', value: 'local-base-asr'},
+  { label: '讯飞语音识别 (会员)', value: 'xunfei-base-asr' },
+]
+
+function handleSelect(value: string) {
+  switch (value) {
+    case 'sherpa-onnx-paraformer-zh-2023-09-14':
+      break;
+    case 'xunfei-base':
+      break;
+    default:
+      break;
+  }
+}
+
+
 onUnmounted(() => {
   audioCache.forEach((audio, role) => {
     if(audio) {
@@ -182,12 +208,32 @@ onUnmounted(() => {
         <n-form-item path="name" label="名称">
           <n-input class="form-input" v-model:value="model.name" type="text" placeholder="请输入名称" maxlength="12" show-count />
         </n-form-item>
-        <n-form-item path="role" label="角色值">
+        <div class="tip-wrapper">
+          <div class="tip-content">
+            <Tip>
+              <p><b>基础服务：</b> 本地运行的语音处理服务，速度慢且质量会比较差，同时间任务多的话阻塞等待时间较长。<span style="color: aqua;">(免费)</span></p>
+              <p><b>会员服务：</b> 云厂商提供的远端语音处理服务, 速度快且质量高、稳定。<span style="color: #ff6161">(会员)</span></p>
+            </Tip>
+          </div>
+        </div>
+        <n-form-item path="model" label="来源">
+          <n-select v-model:value="model.model" :options="type === 'human' ? asrOptions : ttsOptions" @update:value="handleSelect" />
+        </n-form-item>
+        <div v-if="type === 'machine'" class="tip-wrapper">
+          <div class="tip-content">
+            <Tip>
+              <p>语音合成音色</p>
+              <p>基础服务： 目前只有女声，支持 0 ~ 99 音色值控制。</p>
+              <p>讯飞语音合成服务音色表： </p>
+            </Tip>
+          </div>
+        </div>
+        <n-form-item v-if="type === 'machine'" path="role" label="音色值">
           <n-input-number v-model:value="model.role" placeholder="请输入角色值" :precision="0" :show-button="false" />
-          <n-button class="test" @click="handleTest(model.role)">测试</n-button>
+          <n-button class="test" @click="handleTest(model.role, model.model)">测试</n-button>
           <n-spin v-show="isLoading" size="small" />
         </n-form-item>
-        <n-form-item v-if="type === 'human'" path="changer" label="变声器编号(暂不可用)">
+        <n-form-item v-if="type === 'human'" path="changer" label="变声器编号 (暂不支持)">
           <n-input-number v-model:value="model.changer" placeholder="请输入变身器编号" :show-button="false" disabled />
         </n-form-item>
       </n-form>
@@ -197,6 +243,20 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.tip-wrapper {
+  position: relative;
+  // width: 100%;
+  // height: 5px;
+  // background-color: aliceblue;
+  .tip-content {
+    position: absolute;
+    height: 24px;
+    width: 24px;
+    top: 0px;
+    right: 0px;
+  }
+}
+
 .avatar {
   height: 80px;
   width: 80px;
@@ -213,13 +273,13 @@ onUnmounted(() => {
   justify-content: center;
   margin: 30px 0 0;
   z-index: 1;
-  .tip {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    font-size: 26px;
-    margin: 25px auto 30px auto;
-  }
+  // .tip {
+  //   width: 100%;
+  //   display: flex;
+  //   align-items: center;
+  //   font-size: 26px;
+  //   margin: 25px auto 30px auto;
+  // }
   .confirm {
     width: 100%;
     height: 40px;
