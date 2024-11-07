@@ -4,8 +4,6 @@ import { Bgm, BgmItem } from './entities/bgm.entity'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { StorageService } from 'src/storage/storage.service'
-import UUID from 'uuid'
-import path from 'path'
 
 @Injectable()
 export class BgmService {

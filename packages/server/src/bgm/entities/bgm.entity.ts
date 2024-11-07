@@ -1,14 +1,18 @@
 import { User } from 'src/user/entities/user.entity'
 import {
+  BeforeInsert,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
+import { uuidv7 } from 'uuidv7'
 
 export interface BgmItem {
   id: string
@@ -18,11 +22,18 @@ export interface BgmItem {
 
 @Entity()
 export class Bgm {
-  @PrimaryGeneratedColumn('uuid') id: string
+  @PrimaryColumn('uuid')
+  id: string
 
-  @Column() userId: string // 用户 id
+  @BeforeInsert()
+  generateUuid() {
+    if(!this.id) this.id = uuidv7()
+  }
+
+  @Column('uuid') userId: string // 用户 id
 
   @ManyToOne(() => User, user => user.bgms)
+  @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
   user: User
 
   @Column({

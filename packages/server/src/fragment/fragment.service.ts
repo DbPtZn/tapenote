@@ -21,7 +21,7 @@ import { CreateBlankFragmentDto } from './dto/create-blank-fragment.dto'
 import { ProjectService } from 'src/project/project.service'
 import { FfmpegService } from 'src/ffmpeg/ffmpeg.service'
 import { CopyFragmentDto } from './dto/copy-fragment'
-import * as UUID from 'uuid'
+import { uuidv7 } from 'uuidv7'
 import { LoggerService } from 'src/logger/logger.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { DataSource, Repository } from 'typeorm'
@@ -144,7 +144,7 @@ export class FragmentService {
 
         const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname, role)
 
-        const fragmentId = UUID.v4()
+        const fragmentId = uuidv7()
         let fragment = new Fragment()
         fragment.id = fragmentId
         fragment.userId = userId
@@ -257,7 +257,7 @@ export class FragmentService {
         const { key, txt } = data[i]
         if (!txt) throw new Error('文本不能为空！')
         const text = txt.replace(/\s*/g, '')
-        const fragmentId = UUID.v4()
+        const fragmentId = uuidv7()
         const filepath = this.storageService.createTempFilePath('.wav')
         const fragment = new Fragment()
         fragment.id = fragmentId
@@ -392,7 +392,7 @@ export class FragmentService {
         return Number((section * index).toFixed(3))
       })
       let fragment = new Fragment()
-      fragment.id = UUID.v4()
+      fragment.id = uuidv7()
       fragment.userId = userId
       fragment.project = procudure
       fragment.audio = ''
@@ -488,7 +488,7 @@ export class FragmentService {
     for (const data of dataArray) {
       const { audio, duration, speaker, txt, timestamps, transcript, tags, promoters, key } = data
       // 从前端获取的 speaker.avatar 是完整路径，处理截取出文件名
-      const fragmentId = UUID.v4() // 先创建 Fragment ID
+      const fragmentId = uuidv7() // 先创建 Fragment ID
       // 先添加到项目工程文件中（占位）
       this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
       await this.projectService.updateSequence({ 
@@ -900,7 +900,7 @@ export class FragmentService {
         const newFragment = new Fragment()
         const { id, project, audio, ...entityData } = sourceFragment
         Object.assign(newFragment, entityData)
-        newFragment.id = UUID.v4()
+        newFragment.id = uuidv7()
         newFragment.promoters.fill(null)
         newFragment.tags.fill(null)
 

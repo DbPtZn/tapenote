@@ -14,9 +14,12 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
+import { uuidv7 } from 'uuidv7'
+
 export type Sex = 'male' | 'female' | 'other' | 'secrecy'
 
 export class Dir {
@@ -48,8 +51,13 @@ export class UserConfig {
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string
+
+  @BeforeInsert()
+  generateUuid() {
+    if(!this.id) this.id = uuidv7()
+  }
 
   @OneToMany(() => Project, project => project.user)
   projects: Project[]

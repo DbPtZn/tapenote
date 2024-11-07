@@ -11,11 +11,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
+import { uuidv7 } from 'uuidv7'
 
 export interface Annotation {
   id: string
@@ -68,13 +71,19 @@ export interface Memo {
 
 @Entity()
 export class Project {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string
+
+  @BeforeInsert()
+  generateUuid() {
+    if(!this.id) this.id = uuidv7()
+  }
 
   @Column('uuid')
   userId: string // 用户 id
 
   @ManyToOne(() => User, user => user.projects)
+  @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
   user: User
 
   @Column('uuid')

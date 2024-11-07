@@ -9,7 +9,7 @@ import fs from 'fs'
 import path, { basename } from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { UpdateUserConfigDto, UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
-import * as UUID from 'uuid'
+import { uuidv7 } from 'uuidv7'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { LibraryEnum } from 'src/enum'
@@ -66,7 +66,7 @@ export class UserService {
 
       const folders = [LibraryEnum.NOTE, LibraryEnum.COURSE, LibraryEnum.PROCEDURE].map(lib => {
         const folder = new Folder()
-        folder.id = UUID.v4()
+        folder.id = uuidv7()
         folder.name = `${lib.toLocaleUpperCase()} ROOT DIR`
         folder.desc = 'Root Folder'
         folder.lib = lib
@@ -274,7 +274,7 @@ export class UserService {
       const user = await this.findOneById(id)
       // console.log(user)
       const config = new SubmissionConfig()
-      config.id = UUID.v4()
+      config.id = Randomstring.generate(8)
       config.name = ''
       config.site = ''
       config.code = ''
@@ -341,7 +341,7 @@ export class UserService {
       this.userLogger.log(`正在添加订阅配置...`)
       const user = await this.findOneById(id)
       const config = new SubscriptionConfig()
-      config.id = UUID.v4()
+      config.id = Randomstring.generate(8)
       config.name = ''
       config.site = ''
       config.code = ''

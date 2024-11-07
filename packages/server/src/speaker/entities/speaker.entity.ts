@@ -7,18 +7,26 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
+import { uuidv7 } from 'uuidv7'
 
 type SpeakerType = 'human' | 'machine'
 
 @Entity()
 export class Speaker {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string
+
+  @BeforeInsert()
+  generateUuid() {
+    if(!this.id) this.id = uuidv7()
+  }
 
   @Column({
     type: 'varchar',
@@ -38,6 +46,7 @@ export class Speaker {
   userId: string // 用户 id
 
   @ManyToOne(() => User, user => user.speakers)
+  @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
   user: User
 
   @Column({

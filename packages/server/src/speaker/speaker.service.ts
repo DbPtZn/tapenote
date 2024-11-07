@@ -10,7 +10,7 @@ import path, { basename, dirname } from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { SherpaService } from 'src/sherpa/sherpa.service'
 import { ConfigService } from '@nestjs/config'
-import * as UUID from 'uuid'
+import { uuidv7 } from 'uuidv7'
 import { commonConfig } from 'src/config'
 import randomstring from 'randomstring'
 import fsx from 'fs-extra'
@@ -37,7 +37,6 @@ export class SpeakerService {
     try {
       const user = await this.userService.findOneById(userId)
       const speaker = new Speaker()
-      speaker.id = UUID.v4()
       speaker.userId = userId
       speaker.user = user
       speaker.model = model

@@ -8,9 +8,11 @@ import {
   DeleteDateColumn,
   Entity,
   ManyToOne,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
+import { uuidv7 } from 'uuidv7'
 
 export interface FragmentSpeaker {
   id: string
@@ -22,8 +24,13 @@ export interface FragmentSpeaker {
 }
 @Entity()
 export class Fragment {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string
+
+  @BeforeInsert()
+  generateUuid() {
+    if(!this.id) this.id = uuidv7()
+  }
 
   @Column({
     type: 'uuid',

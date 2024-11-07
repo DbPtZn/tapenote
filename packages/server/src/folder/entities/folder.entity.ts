@@ -12,13 +12,22 @@ import {
   PrimaryGeneratedColumn,
   Tree,
   UpdateDateColumn,
-  DeleteDateColumn
+  DeleteDateColumn,
+  PrimaryColumn,
+  JoinColumn
 } from 'typeorm'
+import { uuidv7 } from 'uuidv7'
 
 @Entity()
 @Tree('adjacency-list')
 export class Folder {
-  @PrimaryGeneratedColumn('uuid') id: string
+  @PrimaryColumn('uuid')
+  id: string
+
+  @BeforeInsert()
+  generateUuid() {
+    if(!this.id) this.id = uuidv7()
+  }
 
   @Column({
     type: 'uuid',
@@ -38,6 +47,7 @@ export class Folder {
   userId: string
 
   @ManyToOne(() => User, user => user.folders)
+  @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
   user: User
 
   @OneToMany(() => Project, project => project.folder)

@@ -12,15 +12,21 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
-
+import { uuidv7 } from 'uuidv7'
 
 @Entity()
 export class Snapshot {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string
+
+  @BeforeInsert()
+  generateUuid() {
+    if(!this.id) this.id = uuidv7()
+  }
 
   @Column('uuid')
   userId: string // 用户 id

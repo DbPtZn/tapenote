@@ -14,7 +14,7 @@ import { FfmpegService } from 'src/ffmpeg/ffmpeg.service'
 import path, { basename, extname } from 'path'
 import fs from 'fs'
 import fsx from 'fs-extra'
-import * as UUID from 'uuid'
+import { uuidv7 } from 'uuidv7'
 import randomstring from 'randomstring'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
@@ -143,7 +143,7 @@ export class ProjectService {
 
       const folder = await this.folderService.findOneById(folderId, userId)
       const project = new Project()
-      project.id = UUID.v4()
+      project.id = uuidv7()
       project.lib = lib
       // project.dirname = await this.generateDirname(dirname)
       project.folderId = folderId
@@ -948,7 +948,7 @@ export class ProjectService {
       const target = Object.assign(new Project(), source)
 
       // 对部分属性进行重写
-      target.id = UUID.v4()
+      target.id = uuidv7()
 
       // 设置目标文件夹 (目标与源不一样的情况才需要重新设置)
       if (folderId !== source.folderId) {
@@ -968,7 +968,7 @@ export class ProjectService {
           // 先将全部片段信息复制到新片段上（再修改需要变更的内容）
           const newFragment = Object.assign(new Fragment(), fragment)
           // 赋予新 uuid
-          newFragment.id = UUID.v4()
+          newFragment.id = uuidv7()
           // 建立新的实体关系
           // newFragment.project = target
           // 复制文件路径

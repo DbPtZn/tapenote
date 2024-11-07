@@ -5,12 +5,20 @@ import {
   Entity,
   Column,
   UpdateDateColumn,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
+  PrimaryColumn
 } from 'typeorm'
+import { uuidv7 } from 'uuidv7'
 
 @Entity()
 export class UploadFile {
-  @PrimaryGeneratedColumn('uuid') id: string
+  @PrimaryColumn('uuid')
+  id: string
+
+  @BeforeInsert()
+  generateUuid() {
+    if(!this.id) this.id = uuidv7()
+  }
 
   @Column({
     type: 'uuid',
