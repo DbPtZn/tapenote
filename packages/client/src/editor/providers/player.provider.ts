@@ -218,7 +218,8 @@ export class Player {
       }
       /** 速率改变时 */
       this.audio.onratechange = () => {
-        this.rateChangeEvent.next(this.audio?.playbackRate)
+        const rate = Math.floor(this.audio!.playbackRate * 10) / 10
+        this.rateChangeEvent.next(rate)
       }
 
       // 监听音频播放结束事件，然后递归播放下一个音频
@@ -329,7 +330,7 @@ export class Player {
     }
     this.audio.playbackRate += 0.2
     this.rate = this.audio.playbackRate
-    this.rateChangeEvent.next(this.rate) // 发布速率变化订阅
+    // this.rateChangeEvent.next(this.rate) // 发布速率变化订阅
   }
   /** 减速 */
   @UpdateState
@@ -340,7 +341,7 @@ export class Player {
     }
     this.audio.playbackRate -= 0.2
     this.rate = this.audio.playbackRate
-    this.rateChangeEvent.next(this.rate) // 发布速率变化订阅
+    // this.rateChangeEvent.next(this.rate) // 发布速率变化订阅
   }
 
   /** 增大音量 */

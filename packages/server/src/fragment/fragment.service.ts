@@ -2,7 +2,7 @@ import { Inject, Injectable, forwardRef } from '@nestjs/common'
 import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { Fragment, FragmentSpeaker } from './entities/fragment.entity'
 import { StorageService } from 'src/storage/storage.service'
-import { RemovedEnum, VIP } from 'src/enum'
+import { RemovedEnum } from 'src/enum'
 import {
   AddPromoterDto,
   DeleteFragmentDto,
@@ -35,7 +35,6 @@ import { SpeakerService } from 'src/speaker/speaker.service'
 import { basename } from 'path'
 import { UploadService } from 'src/upload/upload.service'
 import { UserService } from 'src/user/user.service'
-import { isPaidVip } from 'src/utils'
 
 enum AsrModel {
   Local = 'local-base-asr',
@@ -63,7 +62,7 @@ export class FragmentService {
     private readonly logger: LoggerService
   ) {}
 
-  async getFragmentSpeaker(speakerId: string, type: 'human' | 'machine', userId: string, dirname: string, role: VIP) {
+  async getFragmentSpeaker(speakerId: string, type: 'human' | 'machine', userId: string, dirname: string, isVip: boolean) {
     try {
       let fragmentSpeaker: FragmentSpeaker
       // 默认用户或默认机器人 speakerId 为空字符串
@@ -82,7 +81,7 @@ export class FragmentService {
           fragmentSpeaker = {
             id: '',
             type,
-            model: getModel(role),
+            model: getModel(isVip),
             name: '',
             avatar: '',
             role: type === 'human' ? 10000 : 0
@@ -92,14 +91,14 @@ export class FragmentService {
         fragmentSpeaker = {
           id: '',
           type,
-          model: getModel(role),
+          model: getModel(isVip),
           name: '',
           avatar: '',
           role: type === 'human' ? 10000 : 0
         }
       }
-      function getModel(role: VIP) {
-        if (isPaidVip(role)) {
+      function getModel(isVip: boolean) {
+        if (isVip) {
           return type === 'human' ? AsrModel.Xunfei : TtsModel.Xunfei
         }
         return type === 'human' ? AsrModel.Local : TtsModel.Local
@@ -122,7 +121,7 @@ export class FragmentService {
     procedureId: string,
     userId: string,
     dirname: string,
-    role: VIP
+    isVip: boolean
   ) {
     try {
       const fragments: Fragment[] = []
@@ -142,7 +141,7 @@ export class FragmentService {
         const procudure = await this.projectService.findOneById(procedureId, userId)
         if (!procudure) throw new Error('找不到项目工程文件！')
 
-        const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname, role)
+        const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname, isVip)
 
         const fragmentId = uuidv7()
         let fragment = new Fragment()
@@ -164,7 +163,7 @@ export class FragmentService {
         await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
         try {
-          const result = await this.useAsr({ filepath: audio, model: fragmentSpeaker.model, role })
+          const result = await this.useAsr({ filepath: audio, model: fragmentSpeaker.model, isVip })
           const punText = await this.sherpaService.addPunct(result.text)
           const alignResult = this.sherpaService.align(punText, result)
           this.userlogger.log(`语音识别成功，转写文本为: ${result.text}`)
@@ -240,14 +239,14 @@ export class FragmentService {
   }
 
   /** 通过文本创建音频片段 */
-  async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: string, dirname: string, role: VIP) {
+  async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: string, dirname: string, isVip: boolean) {
     try {
       const { procedureId, speakerId, speed, data } = createTTSFragmentDto
       if (speed > 2 || speed <= 0) throw new Error('语速不能大于2或小于等于0')
       if (!procedureId || !dirname) throw new Error('缺少必要参数！')
       const procudure = await this.projectService.findOneById(procedureId, userId)
       if (!procudure) throw new Error('找不到项目工程文件！')
-      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname, role)
+      const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname, isVip)
       this.userlogger.log(`正在为项目${procedureId}创建文本转音频片段...`)
 
       const fragments: Fragment[] = []
@@ -289,7 +288,7 @@ export class FragmentService {
             model: fragmentSpeaker.model,
             timbre: fragmentSpeaker.role,
             speed: speed || 1,
-            role
+            isVip
           })
           // 合成成功，将正确内容替换回去
           fragment.transcript = Array.from(text)
@@ -478,7 +477,7 @@ export class FragmentService {
     removeSourceFragment: boolean,
     userId: string,
     dirname: string,
-    role: VIP
+    isVip: boolean
   ) {
     // this.userlogger.log(`正在创建分段片段：${dto.key}`)
     const sourceFragment = await this.fragmentsRepository.findOneBy({ id: sourceFragmentId, userId })
@@ -584,13 +583,13 @@ export class FragmentService {
     }
   }
 
-  useAsr(args: { filepath: string; model: string, role: VIP }) {
-    const { filepath, model, role } = args
+  useAsr(args: { filepath: string; model: string, isVip: boolean }) {
+    const { filepath, model, isVip } = args
     if (model === AsrModel.Local) {
       return this.sherpaService.asr(filepath)
     }
     if(model === AsrModel.Xunfei) {
-      if(!isPaidVip(role)) {
+      if(!isVip) {
         throw new Error('免费用户无法使用讯飞语音识别')
       }
       return this.sherpaService.asr(filepath)
@@ -598,14 +597,14 @@ export class FragmentService {
     throw new Error('不支持目标语音服务！')
   }
 
-  useTTS(args: { txt: string; filepath: string; model: string, timbre?: number; speed?: number, role: VIP }) {
-    const { txt, filepath, model, timbre, speed, role } = args
+  useTTS(args: { txt: string; filepath: string; model: string, timbre?: number; speed?: number, isVip: boolean }) {
+    const { txt, filepath, model, timbre, speed, isVip } = args
     if (txt.length === 0) throw '文本为空！'
     if(model === TtsModel.Local) {
       return this.sherpaService.tts(txt, filepath, timbre, speed)
     }
     if(model === TtsModel.Xunfei) {
-      if(!isPaidVip(role)) {
+      if(!isVip) {
         throw new Error('免费用户无法使用讯飞语音合成')
       }
       return this.sherpaService.tts(txt, filepath, timbre, speed)

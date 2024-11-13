@@ -3,12 +3,11 @@ import { VNode, inject, onBeforeMount, onMounted, onUnmounted, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import { Injector, Subscription, auditTime, fromEvent } from '@textbus/core'
 import _ from 'lodash'
-import * as UUID from 'uuid'
 import { useDraggable } from '@vueuse/core'
-import { Player, Structurer } from '../..'
+import { Player, Structurer, generateRandomString } from '../..'
 import { DragHandle } from './toolkit/_utils/_index'
 const injector = inject<Injector>('injector')!
-const player = injector.get(Player)
+// const player = injector.get(Player)
 const structurer = injector.get(Structurer)
 const rootRef = structurer.rootRef as HTMLElement
 const props = defineProps<{
@@ -23,7 +22,7 @@ const isAutoHide = ref(false)
 const isControllerShow = ref(true)
 onBeforeMount(() => {
   controllerData.value = props.cmpts.map(vnode => {
-    vnode.key = UUID.v4()
+    vnode.key = generateRandomString(8)
     return vnode
   })
 })

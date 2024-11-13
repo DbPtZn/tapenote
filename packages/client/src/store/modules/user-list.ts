@@ -6,7 +6,6 @@ import jsrsasign from 'jsrsasign'
 import useStore from '..'
 import axios from 'axios'
 import { SortableEvent } from 'vue-draggable-plus'
-import { VIP } from '@/enums'
 export interface SubmissionConfig {
   id: string
   name: string
@@ -32,7 +31,7 @@ export interface ShortcutConfig {
 export interface User {
   resourceDomain: string
   account: string
-  role: VIP
+  isVip: boolean
   nickname: string
   avatar: string
   desc: string
@@ -214,7 +213,7 @@ export const useUserListStore = defineStore('userListStore', {
         resourceDomain: resourceDomain,
         hostname: data.hostname,
         account: data.account,
-        role: data.role || 'Basic',
+        isVip: data.isVip,
         nickname: data.nickname,
         avatar: avatar,
         desc: data.desc || '',
@@ -299,6 +298,7 @@ export const useUserListStore = defineStore('userListStore', {
               console.log('更新 sso-token 成功')
             }
           }).catch(err => {
+            this.logout(account, hostname)
             console.error('更新 sso-token 失败！')
           })
         }
@@ -324,6 +324,7 @@ export const useUserListStore = defineStore('userListStore', {
               console.log('更新 server-token 成功')
             }
           }).catch(err => {
+            this.logout(account, hostname)
             console.error('更新 server-token 失败！')
           })
         }

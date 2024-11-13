@@ -129,10 +129,11 @@ function handleToLogin() {
 
 const codeTxt = ref('获取验证码')
 function handleSendCode() {
+  if (codeTxt.value !== '获取验证码') return
   if (isQuerying.value) return message.loading('正在连接服务器...')
   if (!isHostValid.value) return message.error('服务器地址不可用！')
   // TODO: 发送验证码
-  console.log(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
+  // console.log(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
   axios
     .get(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
     .then(res => {
@@ -197,7 +198,7 @@ function handleHostInputBlur() {
           <n-form-item path="hostname" label="服务器地址">
             <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
               <template #suffix>
-                <Icon :style="{ color: isHostValid ? 'unset' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
+                <Icon :style="{ color: isHostValid ? 'greenyellow' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
               </template>
             </n-input>
           </n-form-item>

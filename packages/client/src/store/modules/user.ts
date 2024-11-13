@@ -14,7 +14,7 @@ export const useUserStore = defineStore('userStore', {
       resourceDomain: '',
       hostname: '',
       account: '',
-      role: 'Basic',
+      isVip: false,
       nickname: '',
       avatar: '',
       desc: '',

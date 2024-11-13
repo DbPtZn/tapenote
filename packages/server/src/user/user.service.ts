@@ -43,7 +43,7 @@ export class UserService {
   async create(createUserDto: CreateUserDto) {
     try {
       // 获取注册信息
-      const { account, password, nickname, role } = createUserDto
+      const { account, password, nickname } = createUserDto
       this.logger.log(`正在为 ${account} 创建新用户...`)
       const isValid = /^[a-zA-Z0-9@.]+$/.test(account)
       if (!isValid) throw new Error('账号名称包含非法字符！')
@@ -274,7 +274,7 @@ export class UserService {
       const user = await this.findOneById(id)
       // console.log(user)
       const config = new SubmissionConfig()
-      config.id = Randomstring.generate(8)
+      config.id = randomstring.generate(8)
       config.name = ''
       config.site = ''
       config.code = ''
@@ -341,7 +341,7 @@ export class UserService {
       this.userLogger.log(`正在添加订阅配置...`)
       const user = await this.findOneById(id)
       const config = new SubscriptionConfig()
-      config.id = Randomstring.generate(8)
+      config.id = randomstring.generate(8)
       config.name = ''
       config.site = ''
       config.code = ''

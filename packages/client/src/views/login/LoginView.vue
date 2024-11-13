@@ -438,7 +438,7 @@ function handleSendCode() {
               <n-form-item path="hostname" label="服务器地址">
                 <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
                   <template #suffix>
-                    <Icon :style="{ color: isHostValid ? ' ' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
+                    <Icon :style="{ color: isHostValid ? 'greenyellow' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
                   </template>
                 </n-input>
               </n-form-item>
@@ -497,7 +497,7 @@ function handleSendCode() {
               <n-form-item path="hostname" label="服务器地址">
                 <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
                   <template #suffix>
-                    <Icon :style="{ color: isHostValid ? ' ' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
+                    <Icon :style="{ color: isHostValid ? 'greenyellow' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
                   </template>
                 </n-input>
               </n-form-item>

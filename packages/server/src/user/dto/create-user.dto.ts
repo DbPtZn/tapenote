@@ -16,7 +16,4 @@ export class CreateUserDto {
     message: '密码长度必须在6~30个字符之间'
   })
   password: string
-  
-  @IsString()
-  role: string
 }

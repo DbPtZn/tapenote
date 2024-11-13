@@ -66,7 +66,6 @@ watch(() => state.isReadonly, (is) => {
   state.isChangeByReadonly1 = true
   state.isChangeByReadonly2 = true
 })
-
 let player: Player
 let editor: Editor
 let lastContent = ''
@@ -139,6 +138,9 @@ useEditor({
     subs.push(
       player.onSubtitleUpdate.subscribe(() => {
         state.subtitle = player.subtitle
+      }),
+      player.onRateChange.subscribe((rate) => {
+        message.info(`当前播放速度：${rate}x`)
       })
     )
   }
@@ -147,6 +149,8 @@ useEditor({
   console.error(err)
   message.error('项目打开失败！')
 })
+
+
 
 if (props.lib !== LibraryEnum.COURSE) {
   subs.push(
