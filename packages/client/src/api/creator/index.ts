@@ -1,6 +1,5 @@
 /** creator */
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios'
-// import { auth } from './auth'
 export * from './auth'
 import { user } from './user'
 import { folder } from './folder'
@@ -14,6 +13,7 @@ import { bgm } from './bgm'
 import useStore from '@/store'
 import { speaker } from './speaker'
 import { upload } from './upload'
+import jsrsasign from 'jsrsasign'
 
 export function getSsoToken(account: string, hostname: string) {
   return sessionStorage.getItem(`SSO:${account}&${hostname}`)
@@ -22,6 +22,9 @@ export function getSsoToken(account: string, hostname: string) {
 export function getServerToken(account: string, hostname: string) {
   return sessionStorage.getItem(`Server:${account}&${hostname}`)
 }
+
+/** 向 SSO 系统发送的请求, 转换携带 ssoToken */
+const ssoRequest = ['/user/pwd', '/user/addVip']
 
 export class CreatorApi {
   user: ReturnType<typeof user>
@@ -59,11 +62,11 @@ export class CreatorApi {
       // 重要：发送给 SSO 服务器的权限请求，如果 sso-token 错误，会导致死循环
       // 向 sso 服务器发送请求时携带 serverToken 导致错误 - 触发刷新token - 刷新又添加 serverToken重新向 sso 服务器发送请求
       // 目前暂时没有办法区分来自 server 和 sso 的 401 错误
-      if(['/user/pwd'].includes(config.url!)) {
+      if(ssoRequest.includes(config.url!)) {
         const ssoToken = this.getSsoToken(account, hostname)
         if(ssoToken) config.headers.Authorization = `Bearer ${ssoToken}`
       }
-      defense = 0
+      // defense = 0
       return config
     })
     let defense = 0 // 防御措施，防止无限重试
@@ -77,9 +80,10 @@ export class CreatorApi {
         if (err.response?.status) {
           switch (err.response?.status) {
             case 401:
+              // console.log('Token 错误 401，正在尝试刷新 Token', defense)
               /** ------------ ↓ 防御性策略 ↓ ------------ */
-              // 短时间达到 10 次 401 错误，则抛出错误不要继续请求
-              if(defense > 10) {
+              // 短时间达到 6 次 401 错误，则抛出错误不要继续请求
+              if(defense >= 5) {
                 defense = 0
                 return Promise.reject(err)
               }
@@ -170,14 +174,19 @@ export class CreatorApi {
         __isRefreshToken: true
       } as any).then(resp => {
         console.log('resp:', resp)
-        if(resp?.data?.token) {
+        const serverToken = resp?.data?.token
+        if(serverToken) {
           // 刷新成功，重新设置 server-token
-          console.log('刷新成功，重新设置 server-token')
-          sessionStorage.setItem(`Server:${account}&${hostname}`, resp.data.token)
+          console.log('刷新 Token 成功，更新 server-token')
+          sessionStorage.setItem(`Server:${account}&${hostname}`, serverToken)
+          // 解析 Token, 获取用户会员信息并更新至 store
+          const { userStore } = useStore()
+          userStore.updateUserVipInfo(account, hostname)
         }
         // 约定: 比如刷新成功后返回一个值来判断是否刷新成功
         resolve(resp?.data?.type === 'server')
       }).catch(err => {
+        console.error('刷新 Token 失败', err)
         resolve(false)
       })
     })

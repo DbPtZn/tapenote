@@ -30,6 +30,7 @@ export class UserModule {
     common.ssoEnable && consumer.apply(UserMiddleware).forRoutes(
       // { path: `/user/register/:type`, method: RequestMethod.PATCH },
       { path: `/user/pwd`, method: RequestMethod.PATCH },
+      { path: `/user/addVip`, method: RequestMethod.POST },
     )
   }
 }

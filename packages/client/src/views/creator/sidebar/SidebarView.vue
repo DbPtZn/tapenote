@@ -109,7 +109,7 @@ function hanldeToRecent() {
     <div class="sidebar" ref="sidebarRef">
       <Header class="header" :height="142">
         <!-- 用户 -->
-        <Userbar :nick-name="userStore.nickname || ''" :avatar="userStore.avatar || ''" @click="handleUserDropdown" />
+        <Userbar :nick-name="userStore.nickname || ''" :avatar="userStore.avatar || ''" :is-vip="userStore.isVip" @click="handleUserDropdown" />
         <!-- 主按钮 -->
         <n-button class="header-master-button" @click.stop="handleMasterDropdown"> ＋ 新建 </n-button>
       </Header>

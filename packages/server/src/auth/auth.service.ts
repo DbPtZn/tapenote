@@ -52,15 +52,15 @@ export class AuthService {
   }
 
   /** sso 单点登录模式的认证鉴权 */
-  async identify(token: string) {
+  async identify(token: string, ip: string) {
     return new Promise<string>(async (resolve, reject) => {
-      await this.httpService.axiosRef.get(`${this.common.ssoDomain}/auth/identify`, {
+      await this.httpService.axiosRef.get(`${this.common.ssoDomain}/auth/identify/${ip}`, {
         headers: {
           Authorization: `Bearer ${token}`
-        }
+        },
       }).then(async resp => {
         if(resp.status === 200) {
-          console.log(resp.data)
+          // console.log(resp.data)
           const account = resp.data.account as string
           const isVip = resp.data.isVip as boolean
           const vipExpirationAt = resp.data.vipExpirationAt
@@ -93,7 +93,17 @@ export class AuthService {
           }
           // rfh：刷新时间
           const rfh = this.configService.get('jwt.refreshIn')
-          const serverToken = this.jwtService.sign({ userId: user.id, isVip, account: user.account, dirname: user.dirname, rfh: (Math.floor(Date.now()/1000)) + rfh })
+          const serverToken = this.jwtService.sign(
+            { 
+              userId: user.id, 
+              isVip,
+              vipExpirationAt,
+              storageUsage,
+              isTester,
+              account: user.account, 
+              dirname: user.dirname,
+              rfh: (Math.floor(Date.now()/1000)) + rfh,
+            })
           resolve(serverToken)
         }
       }).catch(err => {

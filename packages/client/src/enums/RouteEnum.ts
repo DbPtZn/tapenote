@@ -7,6 +7,7 @@ export enum RouteNameEnum {
   _400 = '400',
   _403 = '403',
   _404 = '404',
+  // PAYMENT = 'payment',
 
   // micro
   NOTE = 'note',
@@ -29,6 +30,7 @@ export enum RoutePathEnum {
   _400 = '/400',
   _403 = '/403',
   _404 = '/404',
+  // PAYMENT = '/payment',
 
   // micro
   NOTE = '/note',

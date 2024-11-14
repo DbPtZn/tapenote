@@ -48,6 +48,11 @@ const routes: Array<RouteRecordRaw> = [
     name: RouteNameEnum.REGISTER,
     component: () => import(/* webpackChunkName: "about" */ '../pages/modules/RegisterPage.vue')
   },
+  // {
+  //   path: RoutePathEnum.PAYMENT,
+  //   name: RouteNameEnum.PAYMENT,
+  //   component: () => import(/* webpackChunkName: "about" */ '../pages/modules/PaymentPage.vue')
+  // },
   ...microRoutes,
   ...errorRoutes
 ]

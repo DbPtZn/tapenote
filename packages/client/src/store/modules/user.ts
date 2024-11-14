@@ -2,6 +2,7 @@ import { CreatorApi, creator } from '@/api'
 import { LibraryEnum } from '@/enums'
 import _ from 'lodash'
 import { defineStore } from 'pinia'
+import jsrsasign from 'jsrsasign'
 import { SubmissionConfig, SubscriptionConfig, UserState } from './user-list'
 import useStore from '..'
 
@@ -15,6 +16,8 @@ export const useUserStore = defineStore('userStore', {
       hostname: '',
       account: '',
       isVip: false,
+      vipExpirationAt: null,
+      isTester: false,
       nickname: '',
       avatar: '',
       desc: '',
@@ -70,10 +73,32 @@ export const useUserStore = defineStore('userStore', {
         })
       })
     },
+    updateUserVipInfo(account: string, hostname: string) {
+      const serverToken = sessionStorage.getItem(`Server:${account}&${hostname}`)
+      if(!serverToken) return
+      const payload = JSON.parse(jsrsasign.b64toutf8(serverToken.split('.')[1]))
+      const { isVip, vipExpirationAt, isTester } = payload
+      this.isVip = isVip
+      this.vipExpirationAt = vipExpirationAt
+      this.isTester = isTester
+      if (account === this.account && hostname === this.hostname) {
+        this.saveCache() // 更新缓存
+      }
+      const { userListStore } = useStore()
+        userListStore.data.some((item, index, arr) => {
+          if (item.account === account && item.hostname === hostname) {
+            // 更新用户列表
+            arr[index].isVip = isVip
+            arr[index].vipExpirationAt = vipExpirationAt
+            arr[index].isTester = isTester
+            return true
+          }
+        })
+    },
     updateConfig(params: Parameters<typeof CreatorApi.prototype.user.updateConfig>[0]) {
       return this.creatorApi().user.updateConfig(params).then(res => {
         this.config = params
-        console.log(this.$state)
+        // console.log(this.$state)
         this.saveCache() // 更新缓存
       })
     },
@@ -111,7 +136,7 @@ export const useUserStore = defineStore('userStore', {
     /** SubscriptionConfig */
     addSubscriptionConfig() {
       return this.creatorApi().user.addSubscriptionConfig<{ config: SubscriptionConfig }>().then(res => {
-        console.log(res.data)
+        // console.log(res.data)
         this.subscriptionConfig.push(res.data.config)
         this.saveCache()
         return res.data.config
@@ -155,6 +180,10 @@ export const useUserStore = defineStore('userStore', {
       const data = JSON.stringify(this.$state)
       localStorage.setItem(`User:${this.account}&${this.hostname}`, data)
     },
+
+    addVip() {
+      return this.creatorApi().user.addVip()
+    }
   },
   getters: {}
 })

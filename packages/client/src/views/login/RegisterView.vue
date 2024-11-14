@@ -5,9 +5,10 @@ import useStore from '@/store'
 import { RoutePathEnum } from '@/enums'
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui'
 import { Icon } from '@iconify/vue'
+import { useVerificationCode } from './hooks/useVerificationCode'
 // import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
 import axios from 'axios'
-import FilingsFooter from './FilingsFooter.vue'
+import FilingsFooter from '../_common/FilingsFooter.vue'
 interface ModelType {
   hostname: string
   nickname: string
@@ -126,30 +127,11 @@ function handleToLogin() {
 }
 
 /** ------------------------------- 邮箱 验证 --------------------------- */
-
-const codeTxt = ref('获取验证码')
+const { codeTxt, sendCode } = useVerificationCode()
 function handleSendCode() {
-  if (codeTxt.value !== '获取验证码') return
   if (isQuerying.value) return message.loading('正在连接服务器...')
   if (!isHostValid.value) return message.error('服务器地址不可用！')
-  // TODO: 发送验证码
-  // console.log(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
-  axios
-    .get(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
-    .then(res => {
-      // message.success('验证码已发送！')
-      let count = 60
-      const timer = setInterval(() => {
-        codeTxt.value = `${--count}秒后重发`
-        if (count <= 0) {
-          clearInterval(timer)
-          codeTxt.value = '获取验证码'
-        }
-      }, 1000)
-    })
-    .catch(err => {
-      message.error('验证码发送失败！')
-    })
+  sendCode(model.value.account, model.value.hostname)
 }
 
 /** ------------------------------- 服务器 验证 --------------------------- */

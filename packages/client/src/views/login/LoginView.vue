@@ -23,8 +23,9 @@ import { h } from 'vue'
 import LoginInfoCard from './private/LoginInfoCard.vue'
 import { Subscription, fromEvent } from '@tanbo/stream'
 // import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
-import FilingsFooter from './FilingsFooter.vue'
+import FilingsFooter from '../_common/FilingsFooter.vue'
 import axios from 'axios'
+import { useVerificationCode } from './hooks/useVerificationCode'
 interface ModelType {
   hostname: string
   account: string
@@ -110,7 +111,7 @@ const submit = () => {
   if (isQuerying.value) return message.loading('正在连接服务器...')
   if (!isHostValid.value) return message.error('服务器地址不可用！')
   const isLoginByEmail = loginMode.value === 'loginByEmail'
-  if (!hadSendCode && isLoginByEmail) return message.error('请先获取验证码！')
+  // if (isLoginByEmail) return message.error('请先获取验证码！')
   formRef.value?.validate(async errors => {
     if (!errors) {
       // 先判断是否已经登录
@@ -133,13 +134,13 @@ const submit = () => {
           model.value.hostname
         )
         .then(avatar => {
-          loggingMsg.destroy()
+          loggingMsg?.destroy()
           /** In Electron */
           window.electronAPI && setLoginStorage(avatar)
           router.push(RoutePathEnum.HOME)
         })
         .catch(err => {
-          loggingMsg.destroy()
+          loggingMsg?.destroy()
           console.log(err)
           // console.log(err?.response?.data?.message)
           const msg = err?.response?.data?.message
@@ -147,7 +148,13 @@ const submit = () => {
         })
     } else {
       console.log(errors)
-      message.error('表单校验失败！')
+      if(Array.isArray(errors) ) {
+        errors.forEach(error => {
+          error.forEach(item => {
+            item.message && message.error(item.message)
+          })
+        })
+      }
     }
   })
 }
@@ -397,30 +404,32 @@ function handleHostInputBlur() {
 }
 
 /** ------------------------------- 邮箱 验证 --------------------------- */
-const codeTxt = ref('获取验证码')
+const { codeTxt, sendCode } = useVerificationCode()
+// const codeTxt = ref('获取验证码')
 let hadSendCode = false // 是否已经发出验证码
 function handleSendCode() {
   if (isQuerying.value) return message.loading('正在连接服务器...')
   if (!isHostValid.value) return message.error('服务器地址不可用！')
+  sendCode(model.value.account, model.value.hostname)
   // TODO: 发送验证码
-  console.log(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
-  axios
-    .get(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
-    .then(res => {
-      // message.success('验证码已发送！')
-      hadSendCode = true
-      let count = 60
-      const timer = setInterval(() => {
-        codeTxt.value = `${--count}秒后重发`
-        if (count <= 0) {
-          clearInterval(timer)
-          codeTxt.value = '获取验证码'
-        }
-      }, 1000)
-    })
-    .catch(err => {
-      message.error('验证码发送失败！')
-    })
+  // console.log(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
+  // axios
+  //   .get(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
+  //   .then(res => {
+  //     // message.success('验证码已发送！')
+  //     hadSendCode = true
+  //     let count = 60
+  //     const timer = setInterval(() => {
+  //       codeTxt.value = `${--count}秒后重发`
+  //       if (count <= 0) {
+  //         clearInterval(timer)
+  //         codeTxt.value = '获取验证码'
+  //       }
+  //     }, 1000)
+  //   })
+  //   .catch(err => {
+  //     message.error('验证码发送失败！')
+  //   })
 }
 </script>
 

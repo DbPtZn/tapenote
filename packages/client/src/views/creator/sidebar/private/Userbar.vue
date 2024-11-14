@@ -1,12 +1,11 @@
-<!-- eslint-disable prettier/prettier -->
 <template>
   <div class="sidebar-userbar">
     <n-avatar class="sidebar-userbar-item-avatar" size="medium" :src="avatar" :fallback-src="'./avatar03.png'" />
     <div class="sidebar-userbar-item-label">
       <span>{{ nickName }}</span>
+      <Icon icon="mingcute:vip-3-fill" :style="{ marginLeft: '4px', color: '#fbe30a', display: isVip ? 'inline-block' : 'none' }" />
     </div>
     <div class="sidebar-userbar-item-icon">
-      <!-- <n-icon :component="KeyboardArrowDownOutlined" /> -->
       <Icon icon="material-symbols:keyboard-arrow-down-rounded" />
     </div>
   </div>
@@ -15,12 +14,12 @@
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui'
 import { Icon } from '@iconify/vue'
-// import { KeyboardArrowDownOutlined } from '@vicons/material'
 const props = defineProps<{
   nickName: string
   avatar: string
+  isVip: boolean
 }>()
-const themeVars = useThemeVars()
+// const themeVars = useThemeVars()
 // const imgProps = {
 //   src: props.avatar,
 //   onError: (ev) => handleError(ev) 

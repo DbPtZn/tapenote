@@ -16,6 +16,8 @@ import dayjs from 'dayjs'
 import { Icon } from '@iconify/vue'
 import { useParser } from '../../_utils/parse'
 import { useI18n } from 'vue-i18n'
+import { PaymentView } from '@/views'
+import { NConfig } from '../../_common'
 type Folder = ReturnType<typeof useStore>['folderStore']['$state']
 const createFolderEvent = new Subject<LibraryEnum>()
 const onCreateFolder = createFolderEvent.asObservable()
@@ -77,6 +79,25 @@ export function useSidebarDropDown() {
             props: {
               onClick: () => {
                 shell.useAdmin()
+              }
+            }
+          },
+          {
+            label: '升级订阅',
+            key: 'vip',
+            icon: () => h(Icon, { icon: 'icon-park-outline:vip-one', height: 24 }),
+            props: {
+              onClick: () => {
+                dialog.create({
+                  icon: () => h(Icon, { icon: 'icon-park-outline:vip-one', height: 24 }),
+                  title: '升级订阅',
+                  style: { width: '60vw', boxSizing: 'border-box' },
+                  content: () => h(NConfig, {}, {
+                    default: () => h(PaymentView, {
+                      account: userStore.account,
+                    })
+                  })
+                })
               }
             }
           },
@@ -654,6 +675,7 @@ export function useSidebarDropDown() {
 
 function renderCustomHeader() {
   const { userStore } = useStore()
+  console.log(userStore.$state)
   return h(
     'div',
     {
@@ -667,7 +689,7 @@ function renderCustomHeader() {
             { depth: 2, style: { display: 'block', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
             { default: () => h('div', { style: 'display: flex; align-items: center;' }, [
               h('span', {}, { default: () => userStore.account || '', }),
-              h(Icon, { icon: 'mingcute:vip-3-fill', style: { marginLeft: '4px', color: '#fbe30a', display: ['Silver', 'Gold'].includes(userStore.role) ? 'inline-block' : 'none' } })
+              h(Icon, { icon: 'mingcute:vip-3-fill', style: { marginLeft: '4px', color: '#fbe30a', display: userStore.isVip ? 'inline-block' : 'none' } })
             ]) } // 用户账号
           )
         ]),
@@ -675,7 +697,7 @@ function renderCustomHeader() {
           h(
             NText,
             { depth: 3, style: { display: 'block', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
-            { default: () => userStore.desc } // 用户简介
+            { default: () => `VIP 至 ${dayjs(userStore.vipExpirationAt).format('YYYY-MM-DD')} 结束` } // 用户会员状态
           )
         ])
       ])

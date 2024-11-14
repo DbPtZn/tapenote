@@ -5,6 +5,7 @@ import { LocalAuthGuard } from './auth.guard'
 import { AuthGuard } from '@nestjs/passport'
 import { CreateUserDto } from 'src/user/dto/_api'
 import { ConfigService } from '@nestjs/config'
+import { getRealIp } from './utils/getRealIp'
 
 @Controller('auth')
 export class AuthController {
@@ -50,9 +51,9 @@ export class AuthController {
   @Get(`/identify`)
   async identify(@Req() req, @Res() res) {
     try {
-      // console.log(`req.headers.authorization:`, req.headers.authorization)
-      const authorization = req.headers.authorization.substring(7).trim();
-      const token = await this.authService.identify(authorization)
+      const ip = getRealIp(req)
+      const authorization = req.headers.authorization.substring(7).trim()
+      const token = await this.authService.identify(authorization, ip)
       // console.log(`token:`, token)
       res.status(200).send({ type: 'server', token })
     } catch (error) {

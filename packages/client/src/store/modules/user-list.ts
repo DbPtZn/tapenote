@@ -32,6 +32,8 @@ export interface User {
   resourceDomain: string
   account: string
   isVip: boolean
+  vipExpirationAt: number | null
+  isTester: boolean
   nickname: string
   avatar: string
   desc: string
@@ -42,13 +44,13 @@ export interface User {
     note: string
     course: string
     procedure: string
-  },
+  }
   config: {
-    autosave: boolean, // 是否自动保存
+    autosave: boolean // 是否自动保存
     saveInterval: number // 自动保存间隔毫秒
   }
-  submissionConfig: SubmissionConfig[],
-  subscriptionConfig: SubscriptionConfig[],
+  submissionConfig: SubmissionConfig[]
+  subscriptionConfig: SubscriptionConfig[]
   shortcutConfig: ShortcutConfig[]
 }
 
@@ -78,10 +80,6 @@ export const useUserListStore = defineStore('userListStore', {
     /** 注册 */
     register(params: Parameters<typeof auth.register>[0], hostname: string) {
       return auth.register(params, hostname)
-      // .then(res => {
-      //   // const id = res.data.id
-      //   // auth.createRootDir(id, hostname)
-      // })
     },
     /** 登录业务系统 */
     login(params: Parameters<typeof auth.login>[0], hostname: string) {
@@ -92,21 +90,34 @@ export const useUserListStore = defineStore('userListStore', {
           .then(res => {
             // console.log(res)
             if (!res.data) reject('登录失败')
-
             // 存储 sso-token 或 server-token （ 若存储了 sso-token, 则会在下一次请求 server 时触发 refreshToken，自动获取 server-token ）
-            sessionStorage.setItem(res.data.type === 'sso' ? `SSO:${params.account}&${hostname}` : `Server:${params.account}&${hostname}`, res.data.token as string)
-            localStorage.setItem(res.data.type === 'sso' ? `SSO:${params.account}&${hostname}` : `Server:${params.account}&${hostname}`, res.data.token as string)
+            sessionStorage.setItem(
+              res.data.type === 'sso' ? `SSO:${params.account}&${hostname}` : `Server:${params.account}&${hostname}`,
+              res.data.token as string
+            )
+            localStorage.setItem(
+              res.data.type === 'sso' ? `SSO:${params.account}&${hostname}` : `Server:${params.account}&${hostname}`,
+              res.data.token as string
+            )
             // 创建用户请求实例
             creator.createCreatorApi(params.account, hostname)
-            this.fetch(params.account, hostname).then(state => {
-              const data = this.set(state) // 拿到头像等路径处理后的数据
-              this.addSequence(params.account, hostname)
-              userStore.$patch(data)
-              folderTreeStore.$reset() // 新登录用户时重置文件夹目录
-              folderStore.$reset() // 新登录用户时重置文件夹
-              loginStateChangeEvent.next({ type: 'login', account: params.account, hostname })
-              resolve(data?.avatar)
-            }).catch(err => reject(err))
+            this.fetch(params.account, hostname)
+              .then(state => {
+                const serverToken = sessionStorage.getItem(`Server:${params.account}&${hostname}`)!
+                const payload = JSON.parse(jsrsasign.b64toutf8(serverToken.split('.')[1]))
+                const { isVip, vipExpirationAt, isTester } = payload // exp 是以秒为单位的时间戳
+                state.isVip = isVip
+                state.vipExpirationAt = vipExpirationAt
+                state.isTester = isTester
+                const data = this.set(state) // 拿到头像等路径处理后的数据
+                this.addSequence(params.account, hostname)
+                userStore.$patch(data)
+                folderTreeStore.$reset() // 新登录用户时重置文件夹目录
+                folderStore.$reset() // 新登录用户时重置文件夹
+                loginStateChangeEvent.next({ type: 'login', account: params.account, hostname })
+                resolve(data?.avatar)
+              })
+              .catch(err => reject(err))
           })
           .catch(err => {
             reject(err)
@@ -187,8 +198,8 @@ export const useUserListStore = defineStore('userListStore', {
     },
     /** 请求用户信息（token 存在的情况下才会生效） */
     fetch(account: string, hostname: string): Promise<UserState> {
-      return this.creatorApi(account, hostname).user
-        .get<User>()
+      return this.creatorApi(account, hostname)
+        .user.get<User>()
         .then(res => {
           console.log('请求用户数据成功')
           return {
@@ -208,12 +219,14 @@ export const useUserListStore = defineStore('userListStore', {
     set(data: UserState) {
       const resourceDomain = data.resourceDomain ? data.resourceDomain : data.hostname
       // console.log('resourceDomain:', resourceDomain)
-      const avatar = data.avatar ? data.avatar.includes(resourceDomain) ? data.avatar : resourceDomain + data.avatar : ''
+      const avatar = data.avatar ? (data.avatar.includes(resourceDomain) ? data.avatar : resourceDomain + data.avatar) : ''
       const state: UserState = {
         resourceDomain: resourceDomain,
         hostname: data.hostname,
         account: data.account,
         isVip: data.isVip,
+        vipExpirationAt: data.vipExpirationAt,
+        isTester: data.isTester,
         nickname: data.nickname,
         avatar: avatar,
         desc: data.desc || '',
@@ -225,7 +238,7 @@ export const useUserListStore = defineStore('userListStore', {
           course: data?.dir?.course || '',
           procedure: data?.dir?.procedure || ''
         },
-        config: data.config || { autosave: true , saveInterval: 15000 },
+        config: data.config || { autosave: true, saveInterval: 15000 },
         submissionConfig: data.submissionConfig || [],
         subscriptionConfig: data.subscriptionConfig || [],
         shortcutConfig: data.shortcutConfig || []
@@ -239,14 +252,14 @@ export const useUserListStore = defineStore('userListStore', {
         code: import.meta.env.VITE_OFFICAL_SUBMIT_CODE,
         desc: import.meta.env.VITE_OFFICAL_SUBMIT_DESC
       }
-      if(defaultSubmissionConfig.name) {
-        if(!state.submissionConfig) {
+      if (defaultSubmissionConfig.name) {
+        if (!state.submissionConfig) {
           state.submissionConfig = [defaultSubmissionConfig]
-        } else if(state.submissionConfig[0]?.id !== defaultSubmissionConfig.id) {
+        } else if (state.submissionConfig[0]?.id !== defaultSubmissionConfig.id) {
           state.submissionConfig.unshift(defaultSubmissionConfig)
         }
       }
-      
+      // console.log('set user state:', state)
       // 特殊情况处理：
       // 1. 如果 hostname 为空
       if (!state.hostname) throw console.warn('未设置主机名')
@@ -269,65 +282,84 @@ export const useUserListStore = defineStore('userListStore', {
     },
     async checkToken(account: string, hostname: string) {
       // console.log('检查 token 是否即将过期')
-      const ssokey = `SSO:${account}&${hostname}`
-      const serverkey = `Server:${account}&${hostname}`
-      const ssoToken = sessionStorage.getItem(ssokey)
-      // 存在 sso-token 时不需要主动更新 server-token
-      if(ssoToken) {
-        const payload = JSON.parse(jsrsasign.b64toutf8(ssoToken.split('.')[1]))
-        const { exp, rfh } = payload // exp 是以秒为单位的时间戳
-        // console.log('rfh:', rfh, 'exp:', exp)
-        // 不能使用客户端时间，因为客户端时间可能不准确，必须使用服务器时间
-        const nowTimestamp = await axios.get(`${hostname}/date`).then(res => Number(res.data)/1000)
-        // console.log('nowTimestamp:', nowTimestamp)
-        if(nowTimestamp > exp) return this.logout(account, hostname)  // 已经到期，退出登录
-        // 检查剩余时间是否小于或等于一天
-        // console.log('剩余刷新时间:', `${(rfh - nowTimestamp) / 3600} hours`)
-        // console.log('sso token 是否即将过期:', nowTimestamp >= rfh)
-        if(nowTimestamp >= rfh) {
-          // sso-token 即将过期，申请更新 sso-token
-          await axios.get('/auth/refresh', {
-            baseURL: hostname,
-            headers: {
-              Authorization: `Bearer ${ssoToken}`
-            }
-          }).then(resp => {
-            if(resp?.data?.type === 'sso') {
-              sessionStorage.setItem(ssokey, resp?.data?.token as string)
-              localStorage.setItem(ssokey, resp?.data?.token as string)
-              console.log('更新 sso-token 成功')
-            }
-          }).catch(err => {
-            this.logout(account, hostname)
-            console.error('更新 sso-token 失败！')
-          })
+      try {
+        const ssokey = `SSO:${account}&${hostname}`
+        const serverkey = `Server:${account}&${hostname}`
+
+        // 获取服务器时间（毫秒）并转换成秒数
+        const millisecond = await axios.get(`${hostname}/date`).then(res => res.data)
+        if (!millisecond || typeof millisecond !== 'number') throw new Error('服务器时间获取出现错误！')
+        const nowTimestamp = Number(millisecond) / 1000
+        
+        const ssoToken = sessionStorage.getItem(ssokey)
+        // 存在 sso-token 时不需要主动更新 server-token
+        if (ssoToken) {
+          const payload = JSON.parse(jsrsasign.b64toutf8(ssoToken.split('.')[1]))
+          const { exp, rfh } = payload // exp 是以秒为单位的时间戳
+          // console.log('rfh:', rfh, 'exp:', exp)
+          // 不能使用客户端时间，因为客户端时间可能不准确，必须使用服务器时间
+          // console.log('nowTimestamp:', nowTimestamp)
+          if (nowTimestamp > exp) return this.logout(account, hostname) // 已经到期，退出登录
+          // 检查剩余时间是否小于或等于一天
+          // console.log('剩余刷新时间:', `${(rfh - nowTimestamp) / 3600} hours`)
+          // console.log('sso token 是否即将过期:', nowTimestamp >= rfh)
+          if (nowTimestamp >= rfh) {
+            // sso-token 即将过期，申请更新 sso-token
+            await axios
+              .get('/auth/refresh', {
+                baseURL: hostname,
+                headers: {
+                  Authorization: `Bearer ${ssoToken}`
+                }
+              })
+              .then(resp => {
+                if (resp?.data?.type === 'sso') {
+                  sessionStorage.setItem(ssokey, resp?.data?.token as string)
+                  localStorage.setItem(ssokey, resp?.data?.token as string)
+                  console.log('更新 sso-token 成功')
+                }
+              })
+              .catch(err => {
+                this.logout(account, hostname)
+                console.error('更新 sso-token 失败！')
+              })
+          }
+          return
         }
-        return  // 若存在 sso-token 就不需要主动更新 server-token 了
-      }
-      const serverToken = sessionStorage.getItem(serverkey)
-      if(serverToken) {
-        const payload = JSON.parse(jsrsasign.b64toutf8(serverToken.split('.')[1]))
-        const { exp, rfh } = payload // exp 是以秒为单位的时间戳
-        const nowTimestamp = await axios.get(`${hostname}/date`).then(res => Number(res.data)/1000)
-        if(nowTimestamp > exp) return this.logout(account, hostname)  // 已经到期，退出登录
-        if(nowTimestamp >= rfh) {
-          // server-token 即将过期，申请更新 server-token
-          await axios.get('/auth/refresh', {
-            baseURL: hostname,
-            headers: {
-              Authorization: `Bearer ${serverToken}`
-            }
-          }).then(resp => {
-            if(resp?.data?.type === 'server') {
-              sessionStorage.setItem(serverkey, resp?.data?.token as string)
-              localStorage.setItem(serverkey, resp?.data?.token as string)
-              console.log('更新 server-token 成功')
-            }
-          }).catch(err => {
-            this.logout(account, hostname)
-            console.error('更新 server-token 失败！')
-          })
+         // 若不存在 sso-token 就需要主动更新 server-token
+        const serverToken = sessionStorage.getItem(serverkey)
+        if (serverToken) {
+          const payload = JSON.parse(jsrsasign.b64toutf8(serverToken.split('.')[1]))
+          const { exp, rfh } = payload // exp 是以秒为单位的时间戳
+          const millisecond = await axios.get(`${hostname}/date`).then(res => res.data)
+          if (!millisecond || typeof millisecond !== 'number') throw new Error('服务器时间获取出现错误！')
+          const nowTimestamp = Number(millisecond) / 1000
+          if (nowTimestamp > exp) return this.logout(account, hostname) // 已经到期，退出登录
+          if (nowTimestamp >= rfh) {
+            // server-token 即将过期，申请更新 server-token
+            await axios
+              .get('/auth/refresh', {
+                baseURL: hostname,
+                headers: {
+                  Authorization: `Bearer ${serverToken}`
+                }
+              })
+              .then(resp => {
+                if (resp?.data?.type === 'server') {
+                  sessionStorage.setItem(serverkey, resp?.data?.token as string)
+                  localStorage.setItem(serverkey, resp?.data?.token as string)
+                  console.log('更新 server-token 成功')
+                }
+              })
+              .catch(err => {
+                this.logout(account, hostname)
+                console.error('更新 server-token 失败！')
+              })
+          }
         }
+      } catch (error) {
+        console.error('检查 token 失败！', error)
+        return
       }
     },
     fillInfo() {
@@ -339,7 +371,7 @@ export const useUserListStore = defineStore('userListStore', {
           Object.keys(sessionStorage).map(key => {
             if (key.startsWith('Server:') || key.startsWith('SSO:')) {
               let suffix = ''
-              if(key.startsWith('SSO:')) {
+              if (key.startsWith('SSO:')) {
                 suffix = key.substring(4)
               } else {
                 suffix = key.substring(7)
@@ -358,7 +390,7 @@ export const useUserListStore = defineStore('userListStore', {
           if (key.startsWith('Server:') || key.startsWith('SSO:')) {
             // const prefix = key.substring(0, 7)
             let suffix = ''
-            if(key.startsWith('SSO:')) {
+            if (key.startsWith('SSO:')) {
               suffix = key.substring(4)
             } else {
               suffix = key.substring(7)
@@ -392,7 +424,7 @@ export const useUserListStore = defineStore('userListStore', {
             this.set(state)
           }
         }
-        if(promiseArr.length !== 0) {
+        if (promiseArr.length !== 0) {
           await Promise.all(promiseArr).then(() => {
             resolve('')
           })
@@ -442,7 +474,7 @@ export const useUserListStore = defineStore('userListStore', {
       localStorage.setItem(`ResourceDomain:${data.hostname}`, data.resourceDomain) // 缓存资源域名(会被覆盖，不会移除)
       // const ResourceDomain = localStorage.getItem(`ResourceDomain:${props.hostname}`) as string
     },
-     /** 移除缓存 */
+    /** 移除缓存 */
     removeCache(account: string, hostname: string) {
       const key = `User:${account}&${hostname}`
       localStorage.removeItem(key)
@@ -464,7 +496,7 @@ export const useUserListStore = defineStore('userListStore', {
       this.sequence.splice(this.sequence.indexOf(key), 1)
       sessionStorage.setItem('sequence', JSON.stringify(this.sequence))
     },
-    moveSequence(event: SortableEvent, element?: { account: string, hostname: string }) {
+    moveSequence(event: SortableEvent, element?: { account: string; hostname: string }) {
       const { item, oldIndex, newIndex } = event
       const account = item.dataset.account
       const hostname = item.dataset.hostname
@@ -488,14 +520,16 @@ export const useUserListStore = defineStore('userListStore', {
   },
   getters: {
     getData(state) {
-      return state.data.map((item) => {
-        return {
-          key: `Server:${item.account}&${item.hostname}`,
-          ...item
-        }
-      }).sort((a, b) => {
-        return state.sequence.indexOf(a.key) - state.sequence.indexOf(b.key)
-      })
+      return state.data
+        .map(item => {
+          return {
+            key: `Server:${item.account}&${item.hostname}`,
+            ...item
+          }
+        })
+        .sort((a, b) => {
+          return state.sequence.indexOf(a.key) - state.sequence.indexOf(b.key)
+        })
     }
   }
 })

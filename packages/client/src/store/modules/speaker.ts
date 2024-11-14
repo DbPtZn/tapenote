@@ -1,8 +1,6 @@
 import { creator, CreatorApi } from '@/api'
 import { defineStore } from 'pinia'
 import useStore from '..'
-import { VIP } from '@/enums'
-import { isPaidVip } from '@/utils'
 enum AsrModel {
   Local = 'local-base-asr',
   Xunfei = 'xunfei-base-asr'
@@ -112,7 +110,7 @@ export const useSpeakerStore = defineStore('speakerStore', {
           hostname: hostname,
           id: '',
           type: 'human',
-          model: getModel(user.role),
+          model: getModel(user.isVip),
           avatar: user?.avatar || '',
           // audio: '',
           name: user?.nickname || '',
@@ -125,7 +123,7 @@ export const useSpeakerStore = defineStore('speakerStore', {
           hostname: hostname,
           id: '',
           type: 'machine',
-          model: getModel(user.role),
+          model: getModel(user.isVip),
           avatar: 'robot.png',
           // audio: '',
           name: '默认',
@@ -133,8 +131,8 @@ export const useSpeakerStore = defineStore('speakerStore', {
           changer: 0
         }
       }
-      function getModel(role: VIP) {
-        if (isPaidVip(role)) {
+      function getModel(isVip: boolean) {
+        if (isVip) {
           return type === 'human' ? AsrModel.Xunfei : TtsModel.Xunfei
         }
         return type === 'human' ? AsrModel.Local : TtsModel.Local
