@@ -27,7 +27,16 @@ export interface ShortcutConfig {
   shift: boolean
   key: string
 }
-// type UserRole = 'Basic' | 'Silver' | 'Gold'
+
+export interface Countor {
+  date: string // 统计日期
+  noteCount: number
+  procedureCount: number
+  courseCount: number
+  wordCount: number
+  storageCount: number
+}
+
 export interface User {
   resourceDomain: string
   account: string
@@ -37,6 +46,7 @@ export interface User {
   nickname: string
   avatar: string
   desc: string
+  countor: Countor
   email: string
   homepage: string
   phone: string
@@ -112,6 +122,7 @@ export const useUserListStore = defineStore('userListStore', {
                 const data = this.set(state) // 拿到头像等路径处理后的数据
                 this.addSequence(params.account, hostname)
                 userStore.$patch(data)
+                userStore.updateCountor() // 每次登录时更新用户统计数据
                 folderTreeStore.$reset() // 新登录用户时重置文件夹目录
                 folderStore.$reset() // 新登录用户时重置文件夹
                 loginStateChangeEvent.next({ type: 'login', account: params.account, hostname })
@@ -237,6 +248,14 @@ export const useUserListStore = defineStore('userListStore', {
           note: data?.dir?.note || '',
           course: data?.dir?.course || '',
           procedure: data?.dir?.procedure || ''
+        },
+        countor: data.countor || {
+          date: '',
+          noteCount: 0,
+          procedureCount: 0,
+          courseCount: 0,
+          wordCount: 0,
+          storageCount: 0
         },
         config: data.config || { autosave: true, saveInterval: 15000 },
         submissionConfig: data.submissionConfig || [],

@@ -78,6 +78,9 @@ export const user = (axios: AxiosInstance) => {
     updateSubscriptionConfig<T>(dto: UpdateUserSubscriptionConfigDto) {
       return axios.patch<T>('/user/update/subscription/modify', dto)
     },
+    updateCountor<T>() {
+      return axios.patch<T>('/user/update/countor')
+    },
     addVip<T>() {
       return axios.post<T>('/user/addVip')
     }

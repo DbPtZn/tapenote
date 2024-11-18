@@ -5,5 +5,6 @@ import { CvmController } from './cvm.controller';
 @Module({
   controllers: [CvmController],
   providers: [CvmService],
+  exports: [CvmService]
 })
 export class CvmModule {}

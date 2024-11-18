@@ -21,6 +21,14 @@ import {
 import { uuidv7 } from 'uuidv7'
 
 export type Sex = 'male' | 'female' | 'other' | 'secrecy'
+export interface Countor {
+  date: Date // 统计日期
+  noteCount: number
+  procedureCount: number
+  courseCount: number
+  wordCount: number
+  storageCount: number
+}
 
 export class Dir {
   note: string
@@ -140,11 +148,6 @@ export class User {
 
   @Column({
     type: 'simple-json'
-    // default: JSON.stringify({
-    //   note: '',
-    //   course: '',
-    //   procedure: ''
-    // })
   })
   dir: Dir
 
@@ -153,22 +156,25 @@ export class User {
     length: 18,
   })
   dirname: string
-
+  
+  @Column({
+    type: 'simple-json',
+    nullable: true
+  })
+  countor: Countor
+  
   @Column({
     type: 'simple-json'
-    // default: JSON.stringify({})
   })
   config: UserConfig
 
   @Column({
     type: 'simple-json'
-    // default: JSON.stringify([])
   })
   submissionConfig: SubmissionConfig[]
 
   @Column({
     type: 'simple-json'
-    // default: JSON.stringify([])
   })
   subscriptionConfig: SubscriptionConfig[]
 

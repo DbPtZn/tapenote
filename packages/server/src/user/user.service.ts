@@ -90,6 +90,15 @@ export class UserService {
         saveInterval: 15000 // 自动保存间隔毫秒
       }
 
+      user.countor = {
+        date: new Date(),
+        noteCount: 0,
+        procedureCount: 0,
+        courseCount: 0,
+        wordCount: 0,
+        storageCount: 0
+      }
+
       // 使用事务来确保所有操作要么全部成功，要么全部撤销
       const queryRunner = this.dataSource.createQueryRunner()
       await queryRunner.connect()
@@ -204,6 +213,57 @@ export class UserService {
   async getAccount(id: string) {
     const user = await this.findOneById(id)
     return user.account
+  }
+  
+  async updateCountor(id: string) {
+    try {
+      const user = await this.usersRepository.findOne({
+        where: { id },
+        relations: ['projects']
+      })
+      // console.log(user?.countor?.date instanceof Date)
+      if (user?.countor?.date) {
+        const now = new Date()
+        const interval = now.getTime() - (new Date(user.countor.date)).getTime()
+        console.log(interval)
+        if (interval < 86400000) {
+          throw new Error('今天已经统计过啦！')
+        }
+      }
+      
+      const dirname = user.dirname
+      // console.log(dirname)
+      const storageCount = await this.storageService.calsculateSize(dirname)
+      // console.log(storageCount)
+      let noteCount = 0
+      let procedureCount = 0
+      let courseCount = 0
+      let wordCount = 0
+
+      user.projects.forEach(project => {
+        wordCount += project.detail.wordage
+        if (project.lib === LibraryEnum.NOTE) noteCount++
+        if (project.lib === LibraryEnum.PROCEDURE) procedureCount++
+        if (project.lib === LibraryEnum.COURSE) courseCount++
+      })
+      // console.log(noteCount)
+      user.countor = {
+        date: new Date(),
+        noteCount,
+        procedureCount,
+        courseCount,
+        wordCount,
+        storageCount
+      }
+      // console.log(user.countor)
+      await this.usersRepository.save(user)
+      this.userLogger.log(`更新用户统计信息成功！时间为：${user.countor.date}`)
+      return user.countor
+    } catch (error) {
+      console.log(error)
+      this.userLogger.warn(`更新用户统计信息失败！`)
+      throw error
+    }
   }
 
   async updateInfo(updateUserDto: UpdateUserDto, id: string, dirname: string) {

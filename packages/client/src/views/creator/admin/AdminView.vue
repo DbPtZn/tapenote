@@ -5,6 +5,7 @@ import type { DataTableColumns, FormItemRule, FormRules, UploadFileInfo } from '
 import { Main, Header } from '@/components'
 import useStore from '@/store'
 import UserInfo from './UserInfo.vue'
+import Counter from './Counter.vue'
 import UserConfig from './UserConfig.vue'
 import Password from './Password.vue'
 import PwdByEmail from './PwdByEmail.vue'
@@ -26,8 +27,9 @@ const subscriptionConfig = useSubscriptionConfig()
       <n-card title="账户配置管理" style="height: 100%; margin-bottom: 16px; border-radius: 0">
         <n-tabs :placement="'left'" pane-class="pane">
           <!-- 个人信息 -->
-          <n-tab-pane name="userInfo" tab="个人信息">
+          <n-tab-pane name="userInfo" tab="个人信息" class="user-info-pane">
             <UserInfo />
+            <Counter />
           </n-tab-pane>
           <!-- 习惯配置 -->
           <n-tab-pane name="userConfig" tab="习惯配置">
@@ -106,6 +108,10 @@ const subscriptionConfig = useSubscriptionConfig()
   display: flex;
   box-sizing: border-box;
   position: relative;
+}
+.user-info-pane {
+  display: flex;
+  flex-direction: row;
 }
 .pane {
   height: 92vh;

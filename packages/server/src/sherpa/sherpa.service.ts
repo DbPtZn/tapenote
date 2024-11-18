@@ -144,11 +144,11 @@ export class SherpaService {
       worker.on('message', message => {
         console.log('接收到子线程返回的结果：-----------------------------------------')
         if (message.error) {
-          console.log('语音合成发生错误：' + message.error)
+          console.log('语音合成发生错误：', message.error)
           reject(message.error)
         } else {
-          console.log('语音合成成功:')
-          console.log(message)
+          // console.log('语音合成成功:')
+          // console.log(message)
           resolve(message)
         }
         worker.terminate()
@@ -216,10 +216,10 @@ export class SherpaService {
     })
     if (this.checkPunText(punText, { text, tokens, timestamps })) {
       const punTextArr = Array.from(punText)
-      console.log('source tokens:')
-      console.log(tokens)
-      console.log('source timestamps:')
-      console.log(timestamps)
+      // console.log('source tokens:')
+      // console.log(tokens)
+      // console.log('source timestamps:')
+      // console.log(timestamps)
       for (let i = 0; i < punTextArr.length; i++) {
         if (tokens[i] !== punTextArr[i]) {
           if (regex.test(punTextArr[i])) {

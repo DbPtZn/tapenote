@@ -14,7 +14,7 @@ export interface LocalUploadFile extends Partial<Express.Multer.File> {
   filename: string
   path: string
   mimetype: 'image/jpeg' | 'image/png' | 'image/gif' | 'audio/wav' | 'audio/ogg' | string
-  // md5: string
+  md5?: string
   // size: number
 }
 @Injectable()
@@ -37,26 +37,46 @@ export class UploadService {
   // }
 
   /**
-   * 
-   * @param file 
-   * @param userId 
-   * @param dirname 
-   * @param quoteId 
-   * @param removeLocalFile 上传完成后删除本地文件 仅云存储模式下生效
-   * @returns 
+   * @param file >>>>
+   * @param file_quoteId 引用对象的 id
+   * @param file_removeLocalFile 上传完成后删除本地文件 仅云存储模式下生效
+   * @param file_md5 文件md5 默认会自动计算md5 传入此参数的话会直接使用此参数，不会重新计算
+   * @param file_ignore 忽略已存在文件检查
+   * @param file_hadExists 文件已存在时的回调 (相同文本相同角色合成的语音文件可能是一样)
+   * @param userId
+   * @param dirname
+   * @returns
    */
-  async upload(file: LocalUploadFile, userId: string, dirname: string, quoteId?: string, removeLocalFile = true) {
+  async upload(
+    arg: {
+      file: LocalUploadFile
+      removeLocalFile?: boolean
+      quoteId?: string
+      md5?: string
+      ignore?: boolean
+      hadExists?: (url: string) => void
+    },
+    userId: string,
+    dirname: string,
+  ) {
+    const { file, removeLocalFile, quoteId, ignore, hadExists } = arg
     try {
-      const md5 = await this.calculateFileStats(file.path).catch(err => {
-        throw new Error('计算文件md5失败')
-      })
-      if(!file.size) {
+      if (!file.md5) {
+        file.md5 = await this.calculateFileStats(file.path).catch(err => {
+          throw new Error('计算文件md5失败')
+        })
+      }
+      if (!file.size) {
         file.size = fs.statSync(file.path).size
       }
-      const uploadfile = await this.uploadFilesRepository.findOneBy({ md5, userId })
-      if (uploadfile) {
-        console.log('用户上传的文件已存在，直接返回文件路径!')
-        return this.storageService.getResponsePath(uploadfile.name, dirname)
+      if (!ignore) {
+        const uploadfile = await this.uploadFilesRepository.findOneBy({ md5: file.md5, userId })
+        if (uploadfile) {
+          console.log('用户上传的文件已存在，直接返回文件路径!')
+          const url = this.storageService.getResponsePath(uploadfile.name, dirname)
+          hadExists?.(url)
+          return url
+        }
       }
       const filepath = await this.storageService.save(file, dirname, removeLocalFile).catch(err => {
         throw new Error('保存文件失败')
@@ -67,7 +87,7 @@ export class UploadService {
       upload.path = filepath
       upload.userId = userId
       upload.mimetype = file.mimetype
-      upload.md5 = md5
+      upload.md5 = file.md5
       upload.size = file.size
       upload.quote = quoteId ? [quoteId] : []
       await this.uploadFilesRepository.save(upload)
@@ -78,6 +98,18 @@ export class UploadService {
       throw error
     }
   }
+
+  
+  
+  // async checkExist(filepath: string, userId: string) {
+  //   const md5 = await this.calculateFileStats(filepath).catch(err => {
+  //     throw new Error('计算文件md5失败')
+  //   })
+  //   const audio = await this.uploadFilesRepository.findOneBy({ md5, userId })
+  //   return isExits ? md5 : null 
+  // }
+
+  
 
   // async localUpload(file: LocalUploadFile, userId: string, dirname: string) {
   //   try {

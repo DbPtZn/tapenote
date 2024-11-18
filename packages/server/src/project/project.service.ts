@@ -305,17 +305,23 @@ export class ProjectService {
 
       // 存储 mp3 文件 
       await this.uploadService.upload({
-        filename: basename(mp3path),
-        path: mp3path,
-        mimetype: 'audio/mp3'
+        file: {
+          filename: basename(mp3path),
+          path: mp3path,
+          mimetype: 'audio/mp3',
+        },
+        ignore: true // 忽略重复文件检查
       }, userId, dirname)
 
       // 存储 ogg 文件
       const filepath = await this.uploadService.upload(
         {
-          filename: basename(tempPath),
-          path: tempPath,
-          mimetype: 'audio/ogg'
+          file: {
+            filename: basename(tempPath),
+            path: tempPath,
+            mimetype: 'audio/ogg'
+          },
+          ignore: true // 忽略重复文件检查
         }, userId, dirname)
 
       return {

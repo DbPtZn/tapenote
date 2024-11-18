@@ -13,12 +13,12 @@ export class UploadController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadImg(@UploadedFile() file: Express.Multer.File, @Body() formData, @Req() req, @Res() res) {
     try {
-      console.log(file)
+      // console.log(file)
       // console.log(formData.dirname) // 暂不考虑该方案
       // await this.uploadService.upload(file, file.originalname, req.user.dirname)
       // const path = `https://pic.tapenote.cn/${req.user.dirname}/${file.originalname}`
       // console.log(path)
-      const filePath = await this.uploadService.upload(file, req.user.id, req.user.dirname)
+      const filePath = await this.uploadService.upload({ file }, req.user.id, req.user.dirname)
       // const path = '/public' + (filePath as string).split('public')[1]
       // console.log(path)
       res.status(200).send(filePath)

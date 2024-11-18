@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { databaseConfig, jwtConfig, commonConfig, sherpaDevConfig, sherpaProdConfig } from './config'
+import { databaseConfig, jwtConfig, commonConfig, sherpaDevConfig, sherpaProdConfig, xunfeiConfig, aliConfig } from './config'
 import { AuthModule } from './auth/auth.module'
 import { BgmModule } from './bgm/bgm.module'
 import { FfmpegModule } from './ffmpeg/ffmpeg.module'
@@ -23,7 +23,10 @@ import { SpeakerModule } from './speaker/speaker.module'
 import { parentPort } from 'worker_threads'
 import { SnapshotModule } from './snapshot/snapshot.module'
 import { BucketModule } from './bucket/bucket.module'
-import { CvmModule } from './cvm/cvm.module';
+import { CvmModule } from './cvm/cvm.module'
+import { XunfeiModule } from './xunfei/xunfei.module'
+import { AliModule } from './ali/ali.module'
+
 @Module({
   imports: [
     UserModule,
@@ -32,11 +35,27 @@ import { CvmModule } from './cvm/cvm.module';
         databaseConfig,
         jwtConfig,
         commonConfig,
-        process.env.NODE_ENV === 'production' ? sherpaProdConfig : sherpaDevConfig
+        process.env.NODE_ENV === 'production' ? sherpaProdConfig : sherpaDevConfig,
+        xunfeiConfig,
+        aliConfig
       ],
       cache: true,
       isGlobal: true
     }),
+    // CacheModule.registerAsync({
+    //   isGlobal: true,
+    //   imports: [ConfigModule],
+    //   inject: [ConfigService],
+    //   useFactory: (configService: ConfigService) => {
+    //     // https://docs.nestjs.cn/10/techniques?id=%e9%ab%98%e9%80%9f%e7%bc%93%e5%ad%98%ef%bc%88caching%ef%bc%89
+    //     const cache = configService.get<ReturnType<typeof cacheConfig>>('cache')
+    //     // console.log('cache:', cache)
+    //     return {
+    //       ttl: cache.ttl, // 设置默认的缓存过期时间（秒）
+    //       max: cache.max, // 缓存中最大和最小数量
+    //     }
+    //   },
+    // }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule], // 导入 ConfigModule，以便在 TypeOrmModule 中使用 ConfigService
       inject: [ConfigService],
@@ -102,7 +121,9 @@ import { CvmModule } from './cvm/cvm.module';
     SpeakerModule,
     SnapshotModule,
     BucketModule,
-    CvmModule
+    CvmModule,
+    XunfeiModule,
+    AliModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestScopedService]

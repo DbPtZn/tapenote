@@ -656,6 +656,7 @@ $hideColor: #575757c7;
     position: absolute;
     left: -11px;
     bottom: -25px;
+    word-break: normal;
   }
 }
 .content {

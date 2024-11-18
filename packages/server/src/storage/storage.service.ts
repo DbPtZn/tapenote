@@ -157,6 +157,7 @@ export class StorageService {
   getResponsePath(filename: string, dirname: string) {
     return `${this.common.staticPrefix}/${dirname}/${filename}`
   }
+  
 
   /**
    * 删除文件
@@ -266,6 +267,10 @@ export class StorageService {
     } catch (error){
       throw error
     }
+  }
+
+  async calsculateSize(dirname: string) {
+    return this.bucketService.calsculateSize(dirname)
   }
 }
 /** 复制文件 */

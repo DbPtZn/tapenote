@@ -141,4 +141,15 @@ export class UserController {
       res.status(400).send(error.message)
     }
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch(`${REST.U}/countor`)
+  async updateCountor(@Req() req, @Res() res) {
+    try {
+      const countor = await this.userService.updateCountor(req.user.id)
+      return res.status(200).send(countor)
+    } catch (error) {
+      return res.status(400).send('获取用户统计信息失败！' + error.message)
+    }
+  }
 }

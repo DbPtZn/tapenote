@@ -62,33 +62,58 @@ export class BucketService {
     })
   }
 
-    /**
+  /**
    * 获取远程文件
-   * @param filename 文件名 
+   * @param filename 文件名
    * @param dirname 目录名
    * @param output 输出路径
    * @returns data
    */
-    async fetchFile(filename: string, dirname: string, output: string) {
-      return new Promise((resolve, reject) => {
-        this.cos.getObject(
-          {
-            Bucket: this.common.bucket,
-            Region: this.common.region,
-            Key: `${dirname}/${filename}`,
-            Output: fsx.createWriteStream(output),
-          },
-          function (err, data) {
-            console.log(err)
-            if(err) {
-              reject(err)
-            }
-            resolve(data)
+  async fetchFile(filename: string, dirname: string, output: string) {
+    return new Promise((resolve, reject) => {
+      this.cos.getObject(
+        {
+          Bucket: this.common.bucket,
+          Region: this.common.region,
+          Key: `${dirname}/${filename}`,
+          Output: fsx.createWriteStream(output)
+        },
+        function (err, data) {
+          console.log(err)
+          if (err) {
+            reject(err)
           }
-        )
-      })
-    }
+          resolve(data)
+        }
+      )
+    })
+  }
 
+  /** 统计指定目录下的文件大小 */
+  calsculateSize(dirname: string) {
+    return new Promise<number>((resolve, reject) => {
+      this.cos.getBucket(
+        {
+          Bucket: this.common.bucket,
+          Region: this.common.region,
+          Prefix: `${dirname}/`
+        },
+        (err, data) => {
+          if (err) {
+            console.log(err)
+            reject(err)
+          } else {
+            const total = data.Contents.reduce((acc, cur) => {
+              acc += Number(cur.Size)
+              return acc
+            }, 0)
+            resolve(total)
+          }
+        }
+      )
+    })
+  }
+  
   async deleteObject(path: string) {
     return new Promise((resolve, reject) => {
       this.cos.deleteObject(

@@ -41,7 +41,7 @@ export class FragmentController {
   @Post(`${REST.W}/create/tts`)
   async createByText(@Body() createTTSFragmentDto: CreateTTSFragmentDto, @Req() req, @Res() res) {
     try {
-      const fragments = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname, req.user.role)
+      const fragments = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname, req.user.isVip)
       res.send(fragments)
     } catch (error) {
       res.status(400).send(error.message)
@@ -71,7 +71,7 @@ export class FragmentController {
         projectId,
         req.user.id,
         req.user.dirname,
-        req.user.role
+        req.user.isVip
       )
       // fragments.forEach((fragment, index, arr) => {
       //   arr[index]['key'] = formData.key[index]
@@ -118,7 +118,7 @@ export class FragmentController {
         removeSourceFragment,
         req.user.id,
         req.user.dirname,
-        req.user.role
+        req.user.isVip
       )
       // fragments.forEach((fragment, index, arr) => {
       //   arr[index].key = dataArray[index].key

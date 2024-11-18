@@ -3,11 +3,13 @@ import { defineStore } from 'pinia'
 import useStore from '..'
 enum AsrModel {
   Local = 'local-base-asr',
-  Xunfei = 'xunfei-base-asr'
+  Xunfei = 'xunfei-base-asr',
+  Tencent = 'tencent-base-asr'
 }
 enum TtsModel {
   Local = 'local-base-tts',
-  Xunfei = 'xunfei-base-tts'
+  Xunfei = 'xunfei-base-tts',
+  Tencent = 'tencent-base-tts'
 }
 /**
  * human ：由真人真声录制，可以选择变声器改变音色
@@ -133,7 +135,7 @@ export const useSpeakerStore = defineStore('speakerStore', {
       }
       function getModel(isVip: boolean) {
         if (isVip) {
-          return type === 'human' ? AsrModel.Xunfei : TtsModel.Xunfei
+          return type === 'human' ? AsrModel.Tencent : TtsModel.Tencent
         }
         return type === 'human' ? AsrModel.Local : TtsModel.Local
       }
