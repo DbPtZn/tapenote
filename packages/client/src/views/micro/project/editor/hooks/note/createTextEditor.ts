@@ -50,10 +50,11 @@ export function createTextEditor(args: {
           editor = createEditor(getNoteConfig({
             account,
             hostname,
-            rootRef: rootRef.value,
-            editorRef: editorRef.value,
-            scrollerRef: scrollerRef.value, 
-            toolbarRef: toolbarRef.value, 
+            rootRef: rootRef.value!,
+            editorRef: editorRef.value!,
+            scrollerRef: scrollerRef.value!, 
+            toolbarRef: toolbarRef.value!, 
+            memos: project.memos,
             content: project.content,
             dirname: project.dirname
           }))

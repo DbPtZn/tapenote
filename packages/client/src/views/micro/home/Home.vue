@@ -3,11 +3,12 @@ import { LibraryEnum, RoutePathEnum } from '@/enums'
 import useStore from '@/store'
 import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
 import { DropdownOption, useMessage, useThemeVars } from 'naive-ui'
-import { StickyNote2Outlined } from '@vicons/material'
-import { computed, onMounted, ref } from 'vue'
+// import { StickyNote2Outlined } from '@vicons/material'
+import { computed, h, onMounted, ref } from 'vue'
 import Header from './Header.vue'
 import dayjs from 'dayjs'
 import router from '@/router'
+import { Icon } from '@iconify/vue'
 import { Footer } from '../layout'
 import _ from 'lodash'
 type RecentFile = (typeof recentStore.data)[0]
@@ -65,7 +66,7 @@ function getCurrentLibIcon(lib: LibraryEnum) {
     case LibraryEnum.PROCEDURE:
       return CoffeeMaker
     default:
-      return StickyNote2Outlined
+      return h(Icon, { icon:'material-symbols:sticky-note-2-outline', height: 24 })
   }
 }
 

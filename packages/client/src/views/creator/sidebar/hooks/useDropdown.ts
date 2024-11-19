@@ -11,6 +11,7 @@ import { Subject } from '@tanbo/stream'
 import { DialogApiInjection } from 'naive-ui/es/dialog/src/DialogProvider'
 // import { SettingsFilled, OutputFilled, BrowserUpdatedFilled, LogOutFilled, FolderRound, NoteRound, CreateNewFolderFilled } from '@vicons/material'
 import { pack } from '../../_utils'
+import iconv from 'iconv-lite'
 import JSZip from 'jszip'
 import dayjs from 'dayjs'
 import { Icon } from '@iconify/vue'
@@ -146,7 +147,12 @@ export function useSidebarDropDown() {
                   const file = input.files[0]
 
                   const reader = new FileReader()
-
+                  // const decoder = new TextDecoder("gbk")
+                  // , { 
+                  //   decodeFileName: (bytes) => {
+                  //     return iconv.decode(bytes as Buffer, 'UTF-8')
+                  //   }
+                  // }
                   reader.onload = e => {
                     const arrayBuffer = e.target?.result as string
                     jszip
@@ -181,6 +187,7 @@ export function useSidebarDropDown() {
 
                               await file.async('string').then(async jsonStr => {
                                 try {
+                                  console.log('jsonStr', jsonStr)
                                   const jsonObj = JSON.parse(jsonStr)
                                   // console.log('JSON对象:', jsonObj)
                                   addLog(`正在转换文本 :::`)
@@ -195,6 +202,7 @@ export function useSidebarDropDown() {
                                   addLog(`正在创建文件 ${data.title}`)
                                   await projectStore.input(data, userStore.account, userStore.hostname)
                                 } catch (error) {
+                                  console.log('jsonStr', jsonStr)
                                   console.error('解析 JSON 时出错:', error)
                                 }
                               })
@@ -267,13 +275,14 @@ export function useSidebarDropDown() {
                               const subfile = folders[i].subfiles![j]
                               const project = await projectStore.fetch(subfile.id, userStore.account, userStore.hostname).then(res => res.data)
                               const content = (await pack.getContent(project.content)).content
+                              // console.log(content)
                               const data = {
                                 lib: project.lib,
                                 title: project.title,
                                 content: content
                               }
                               const jsonString = JSON.stringify(data)
-                              zip.folder(basePath)?.file(`${folders[i].name}/${subfile.title}.json`, jsonString, { binary: true })
+                              zip.folder(basePath)?.file(`${folders[i].name}/${subfile.title}.json`, jsonString, { binary: false }) // 注意 json 数据不能用二进制压缩
                             } catch (error) {
                               message.error('项目 folders[i][j] 获取失败')
                             }

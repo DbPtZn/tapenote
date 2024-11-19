@@ -1,34 +1,144 @@
-import { InlineToolbarPlugin, OutlinePlugin, ResizeService, OutlineService, Toolbar, boldTool, historyBackTool, historyForwardTool, headingTool, italicTool, strikeThroughTool, underlineTool, olTool, ulTool, fontSizeTool, textIndentTool, colorTool, textBackgroundTool, insertParagraphBeforeTool, insertParagraphAfterTool, linkTool, fontFamilyTool, unlinkTool, imageTool, textAlignTool, tableRemoveTool, formatPainterTool, tableAddTool, cleanTool, colorFormatter, textBackgroundColorFormatLoader, colorFormatLoader, textBackgroundColorFormatter, defaultGroupTool, DialogProvider, imageB2UComponent, imageB2UComponentLoader, outlineTool, Clipboard, ContextMenu, CustomCommander, ColorProvider, componentsTool, rootComponent, rootComponentLoader, Structurer, ThemeProvider, ImgToUrlService, preComponent, preComponentLoader, blockBackgroundColorFormatter, blockBackgroundColorFormatterLoader, defaultComponents, defaultComponentLoaders } from '@/editor'
-import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
+  InlineToolbarPlugin,
+  OutlinePlugin,
+  ResizeService,
+  OutlineService,
+  Toolbar,
+  boldTool,
+  historyBackTool,
+  historyForwardTool,
+  headingTool,
+  italicTool,
+  strikeThroughTool,
+  underlineTool,
+  olTool,
+  ulTool,
+  fontSizeTool,
+  textIndentTool,
+  colorTool,
+  textBackgroundTool,
+  insertParagraphBeforeTool,
+  insertParagraphAfterTool,
+  linkTool,
+  fontFamilyTool,
+  unlinkTool,
+  imageTool,
+  textAlignTool,
+  tableRemoveTool,
+  formatPainterTool,
+  tableAddTool,
+  cleanTool,
+  colorFormatter,
+  textBackgroundColorFormatLoader,
+  colorFormatLoader,
+  textBackgroundColorFormatter,
+  defaultGroupTool,
+  DialogProvider,
+  imageB2UComponent,
+  imageB2UComponentLoader,
+  outlineTool,
+  Clipboard,
+  ContextMenu,
+  CustomCommander,
+  ColorProvider,
+  componentsTool,
+  rootComponent,
+  rootComponentLoader,
+  listComponent,
+  listComponentLoader,
+  Structurer,
+  ThemeProvider,
+  ImgToUrlService,
+  preComponent,
+  preComponentLoader,
+  KeyboardManager,
+  MemoService,
+  ImgToolbarPlugin,
+  ImgService,
+  MessageService,
+  tableComponent,
+  tableComponentLoader,
+  dividerComponent,
+  dividerComponentLoader,
+  i18n,
+  dividerTool,
+  ShotcutPlugin,
+  Memo,
+  jumbotronComponent,
+  imageCardComponent,
+  paragraphComponent,
+  headingComponent,
+  imageCardComponentLoader,
+  jumbotronComponentLoader,
+  headingComponentLoader,
+  paragraphComponentLoader,
+  MemoProvider,
+  defaultComponents,
+  defaultComponentLoaders,
+  blockBackgroundColorFormatter,
+  blockBackgroundColorFormatterLoader
+} from '@/editor'
+import { getResourceDomain } from '@/views/creator/_hooks'
+import { useUploadImg } from '@/views/creator/_utils'
+import { uploader } from '@/views/creator/project/editor/hooks/uploader'
+import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
+import {
+  alertComponent,
+  alertComponentLoader,
+  audioComponent,
+  audioComponentLoader,
+  blockComponent,
+  blockComponentLoader,
+  blockquoteComponent,
+  blockquoteComponentLoader,
   defaultAttributeLoaders,
   defaultAttributes,
+  // defaultComponentLoaders,
+  // defaultComponents,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
+  katexComponent,
+  katexComponentLoader,
   LinkJumpTipPlugin,
+  stepComponent,
+  stepComponentLoader,
+  timelineComponent,
+  timelineComponentLoader,
+  todolistComponent,
+  todolistComponentLoader,
+  videoComponent,
+  videoComponentLoader,
+  wordExplainComponent,
+  wordExplainComponentLoader
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
-import { useUploadImg } from '@/views/creator/_utils'
+// import { useUploadImg } from '../../../../_utils'
+// import { getResourceDomain } from '../../../../_hooks'
+import { resolve } from 'path'
+// import { uploader } from '../uploader'
 export function getNoteConfig(args: {
-  account: string,
-  hostname: string,
-  dirname: string,
-  rootRef: HTMLElement,
-  editorRef: HTMLElement,
-  scrollerRef: HTMLElement,
-  toolbarRef?: HTMLElement,
-  controllerRef?: HTMLElement,
+  account: string
+  hostname: string
+  dirname: string
+  rootRef: HTMLElement
+  editorRef: HTMLElement
+  scrollerRef: HTMLElement
+  memos: Memo[],
+  toolbarRef?: HTMLElement
+  controllerRef?: HTMLElement
   content?: string
 }) {
-  const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, memos, content } = args
+  // console.log(content)
+  editorRef.classList.add('note-editor')
+  const ResourceDomain = getResourceDomain(hostname)
   const config: EditorOptions = {
     theme: 'darkline',
     autoFocus: true,
     autoHeight: true,
     zenCoding: true,
     historyStackSize: 30,
-    useContentEditable: true,
     placeholder: '在此输入正文',
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
@@ -39,51 +149,68 @@ export function getNoteConfig(args: {
     formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
     attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
-    // styleSheets: [],
+    i18n: i18n,
     providers: [
       { provide: Commander, useClass: CustomCommander },
-      ResizeService, 
+      ResizeService,
       OutlineService,
       DialogProvider,
       ColorProvider,
       Structurer,
       ThemeProvider,
-      ImgToUrlService
+      ImgToUrlService,
+      // MemoProvider,
+      // MemoService,
+      ImgService,
+      MessageService
     ],
     plugins: [
-      () => new Toolbar([
-        [historyBackTool, historyForwardTool],
-        [defaultGroupTool],
-        [componentsTool],
-        [headingTool],
-        [boldTool, italicTool, strikeThroughTool, underlineTool],
-        [olTool, ulTool],
-        [fontSizeTool, textIndentTool],
-        [colorTool, textBackgroundTool],
-        [insertParagraphBeforeTool, insertParagraphAfterTool],
-        [fontFamilyTool],
-        [linkTool, unlinkTool],
-        [imageTool],
-        [textAlignTool],
-        [tableAddTool, tableRemoveTool],
-        [formatPainterTool],
-        [cleanTool],
-        // [outlineTool]
-      ], toolbarRef!),
       () =>
-        new InlineToolbarPlugin([
-          [headingTool],
-          [boldTool, italicTool, strikeThroughTool, underlineTool],
-          [colorTool, textBackgroundTool],
-          [fontSizeTool],
-          [olTool, ulTool],
-          [cleanTool]
-        ], scrollerRef),
+        new Toolbar(
+          [
+            [historyBackTool, historyForwardTool],
+            [defaultGroupTool],
+            [componentsTool],
+            [headingTool],
+            [boldTool, italicTool, strikeThroughTool, underlineTool],
+            [olTool, ulTool],
+            [fontSizeTool, textIndentTool],
+            [colorTool, textBackgroundTool],
+            [insertParagraphBeforeTool, insertParagraphAfterTool],
+            [fontFamilyTool],
+            [linkTool, unlinkTool],
+            [imageTool],
+            [textAlignTool],
+            [tableAddTool, tableRemoveTool],
+            // [formatPainterTool],
+            [dividerTool],
+            [cleanTool]
+            // [outlineTool]
+          ],
+          toolbarRef!
+        ),
+      () =>
+        new InlineToolbarPlugin(
+          [
+            [headingTool],
+            [textAlignTool],
+            [boldTool, italicTool, strikeThroughTool, underlineTool],
+            [colorTool, textBackgroundTool],
+            [fontSizeTool],
+            [olTool, ulTool],
+            [cleanTool]
+          ],
+          scrollerRef
+        ),
+      () => new ImgToolbarPlugin([`${ResourceDomain}`]),
       () => new LinkJumpTipPlugin(),
       () => new OutlinePlugin(),
-      // () => new Clipboard(),
+      () => new ShotcutPlugin(),
       // () => new ContextMenu()
     ],
+    uploader(config) {
+      return uploader(config, account, hostname)
+    },
     setup(injector: Injector) {
       const input = injector.get(Input)
       input.caret.correctScrollTop({
@@ -99,6 +226,9 @@ export function getNoteConfig(args: {
           scrollerRef.scrollTop += offsetScrollTop
         }
       })
+
+      // const keyboardManager = injector.get(KeyboardManager)
+      // keyboardManager.setup(injector)
       /** 依赖注入 */
       // 主题依赖
       const themeProvider = injector.get(ThemeProvider)
@@ -112,8 +242,7 @@ export function getNoteConfig(args: {
         editorRef,
         controllerRef
       })
-      // 图片工具
-      // const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
+      // 上传图片
       const imgToUrlService = injector.get(ImgToUrlService)
       const { uploadImgFunction } = useUploadImg(account, hostname)
       imgToUrlService.setup(uploadImgFunction)

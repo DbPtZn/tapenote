@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import useStore from '@/store'
 import { useThemeVars } from 'naive-ui'
-import { computed, onMounted } from 'vue'
-import { FolderFilled, StickyNote2Outlined, AutoAwesomeMotionOutlined } from '@vicons/material'
+import { computed, h, onMounted } from 'vue'
+// import { FolderFilled, StickyNote2Outlined, AutoAwesomeMotionOutlined } from '@vicons/material'
 import Header from './Header.vue'
 import router from '@/router'
 import dayjs from 'dayjs'
+import { Icon } from '@iconify/vue'
 import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
 import { LibraryEnum, RoutePathEnum } from '@/enums'
 import { Footer } from '../layout'
@@ -41,7 +42,7 @@ function getCurrentLibIcon(lib: LibraryEnum | undefined) {
     case LibraryEnum.PROCEDURE:
       return CoffeeMaker
     default:
-      return StickyNote2Outlined 
+      return h(Icon, { icon: 'material-symbols:sticky-note-2-outline' })
   }
 }
 
@@ -60,7 +61,8 @@ function handleSubfileClick(item: Subfile) {
       <div class="item" v-for="item in folderStore.subfolders" :key="item.id" @click="handleSubfolderClick(item)">
         <div class="wrapper">
           <div class="title">
-            <n-icon :component="FolderFilled" :size="18" color="#F8D777"/>
+            <!-- <n-icon :component="FolderFilled" :size="18" color="#F8D777"/> -->
+            <Icon icon="material-symbols:folder" height="18" color="#F8D777" />
             <span style="margin-left: 6px;margin-top: 1px;">{{ item.name }}</span>
           </div>
           <div class="meta">

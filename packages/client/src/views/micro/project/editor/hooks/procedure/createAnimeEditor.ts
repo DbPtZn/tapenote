@@ -4,6 +4,7 @@ import {
   ColorProvider,
   DialogProvider,
   ImgToUrlService,
+  MemoProvider,
   OutlineService,
   Player,
   Structurer,
@@ -43,7 +44,6 @@ export function createAnimeEditor(args: {
     try {
       // editor.get(Commander).destory()
       editor.get(AnimeProvider).destory()
-      editor.get(AddAnimeService).destory()
       editor.get(DialogProvider).destory()
       editor.get(OutlineService).destory()
       editor.get(ColorProvider).destory()
@@ -51,6 +51,7 @@ export function createAnimeEditor(args: {
       editor.get(ThemeProvider).destory()
       editor.get(Player).destory()
       editor.get(ImgToUrlService).destory()
+      // editor.get(MemoProvider).destroy()
       // console.log('销毁依赖')
       // console.log('编辑器是否已经销毁：' + editor.destroyed)
     } catch (error) {
@@ -70,11 +71,12 @@ export function createAnimeEditor(args: {
               getProcedureConfig({
                 account,
                 hostname,
-                rootRef: editorRef.value,
-                editorRef: editorRef.value,
-                scrollerRef: scrollerRef.value,
-                toolbarRef: toolbarRef.value,
-                controllerRef: controllerRef.value,
+                rootRef: editorRef.value!,
+                editorRef: editorRef.value!,
+                scrollerRef: scrollerRef.value!,
+                toolbarRef: toolbarRef.value!,
+                controllerRef: controllerRef.value!,
+                memos: project.memos,
                 content: project.content,
                 dirname: project.dirname
               })

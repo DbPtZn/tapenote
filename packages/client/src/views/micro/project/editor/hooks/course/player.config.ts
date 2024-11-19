@@ -22,24 +22,20 @@ import {
   volumeDownTool,
   RootEventService,
   PlayerContextMenuPlugin,
-  animeIgnoreComponent,
-  animeIgnoreComponentLoader,
   AnimeProvider,
   Structurer,
   ThemeProvider,
-  animeFormatLoader,
   animeFormatter,
-  defaultPlayerComponents,
-  defaultPlayerComponentLoaders,
-  blockBackgroundColorFormatter,
-  blockBackgroundColorFormatterLoader
+  animeFormatLoader,
+  animeIgnoreComponent, animeIgnoreComponentLoader,
+  animeComponent, animeComponentLoader, MemoProvider, MessageService, MemoService, defaultComponents, defaultComponentLoaders, defaultPlayerComponents, defaultPlayerComponentLoaders, blockBackgroundColorFormatterLoader, blockBackgroundColorFormatter
 } from '@/editor'
 import { fromEvent, Injector } from '@textbus/core'
 import {
   defaultAttributeLoaders,
   defaultAttributes,
-  defaultComponentLoaders,
-  defaultComponents,
+  // defaultComponentLoaders,
+  // defaultComponents,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
@@ -55,6 +51,7 @@ export function getCourseConfig(args: {
   content?: string
 }) {
   const { rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  editorRef.classList.add('player-editor')
   const config: EditorOptions = {
     theme: 'darkline',
     autoFocus: true,
@@ -80,7 +77,10 @@ export function getCourseConfig(args: {
       AnimeProvider,
       RootEventService,
       Structurer,
-      ThemeProvider
+      ThemeProvider,
+      MessageService,
+      // MemoProvider,
+      // MemoService
     ],
     plugins: [
       () =>

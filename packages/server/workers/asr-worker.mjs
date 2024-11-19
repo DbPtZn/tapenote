@@ -7,7 +7,7 @@ try {
   // console.log('asr-workers')
   const recognizer = new sherpa_onnx.OfflineRecognizer(config)
   // console.log('Started')
-  const start = Date.now()
+  // const start = Date.now()
   const stream = recognizer.createStream()
   let wave
   try {
@@ -29,12 +29,12 @@ try {
 
   recognizer.decode(stream)
   const result = recognizer.getResult(stream)
-  const stop = Date.now()
+  // const stop = Date.now()
   // console.log('Done')
 
-  const elapsed_seconds = (stop - start) / 1000
-  const duration = wave.samples.length / wave.sampleRate
-  const real_time_factor = elapsed_seconds / duration
+  // const elapsed_seconds = (stop - start) / 1000
+  // const duration = wave.samples.length / wave.sampleRate
+  // const real_time_factor = elapsed_seconds / duration
 
   // console.log('Wave duration', duration.toFixed(3), 'secodns')
   // console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')

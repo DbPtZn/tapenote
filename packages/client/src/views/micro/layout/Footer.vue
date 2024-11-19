@@ -1,19 +1,20 @@
 <script lang="ts" setup>
 import { useThemeVars } from 'naive-ui'
-import {
-  CreateFilled,
-  HomeFilled,
-  MapFilled,
-  FolderFilled,
-  AccountCircleFilled,
-  EmergencyShareFilled,
-  CreateOutlined,
-  HomeOutlined,
-  MapOutlined,
-  FolderOutlined,
-  AccountCircleOutlined,
-  EmergencyShareOutlined
-} from '@vicons/material'
+// import {
+//   CreateFilled,
+//   HomeFilled,
+//   MapFilled,
+//   FolderFilled,
+//   AccountCircleFilled,
+//   EmergencyShareFilled,
+//   CreateOutlined,
+//   HomeOutlined,
+//   MapOutlined,
+//   FolderOutlined,
+//   AccountCircleOutlined,
+//   EmergencyShareOutlined
+// } from '@vicons/material'
+import { Icon } from '@iconify/vue'
 import { onMounted, ref } from 'vue'
 import useStore from '@/store'
 import router from '@/router';
@@ -46,16 +47,21 @@ function handleClick(tab: RouteNameEnum) {
 <template>
   <div class="footer">
     <div class="footer-item" @click="handleClick(RouteNameEnum.RECENT)">
-      <n-icon :component="microStore.tab === RouteNameEnum.RECENT ? CreateFilled : CreateOutlined" :size="24" />
+      <!-- <n-icon :component="microStore.tab === RouteNameEnum.RECENT ? CreateFilled : CreateOutlined" :size="24" /> -->
+      <Icon :icon="microStore.tab === RouteNameEnum.RECENT ? 'material-symbols:book-4' : 'material-symbols:book-4-outline'" :height="24" />
     </div>
     <div class="footer-item" @click="handleClick(RouteNameEnum.FOLDER)">
-      <n-icon :component="microStore.tab === RouteNameEnum.FOLDER ? FolderFilled : FolderOutlined" :size="24" />
+      <!-- <n-icon :component="microStore.tab === RouteNameEnum.FOLDER ? FolderFilled : FolderOutlined" :size="24" /> -->
+      <Icon :icon="microStore.tab === RouteNameEnum.FOLDER ? 'material-symbols:folder-rounded': 'material-symbols:folder-outline'" :height="24" />
     </div>
     <div class="footer-item" @click="handleClick(RouteNameEnum.SHARE)">
-      <n-icon :component="microStore.tab === RouteNameEnum.SHARE ? EmergencyShareFilled : EmergencyShareOutlined" :size="24" />
+      <!-- <n-icon :component="microStore.tab === RouteNameEnum.SHARE ? EmergencyShareFilled : EmergencyShareOutlined" :size="24" /> -->
+      <Icon :icon="microStore.tab === RouteNameEnum.SHARE ?  'material-symbols:emergency-share' : 'material-symbols:emergency-share-outline-rounded'" :height="24" />
+      
     </div>
     <div class="footer-item" @click="handleClick(RouteNameEnum.ADMIN)">
-      <n-icon :component="microStore.tab === RouteNameEnum.ADMIN ? AccountCircleFilled : AccountCircleOutlined" :size="24" />
+      <!-- <n-icon :component="microStore.tab === RouteNameEnum.ADMIN ? AccountCircleFilled : AccountCircleOutlined" :size="24" /> -->
+      <Icon :icon="microStore.tab === RouteNameEnum.ADMIN ? 'material-symbols:account-circle' : 'material-symbols:account-circle-outline'" :height="24" />
     </div>
   </div>
 </template>

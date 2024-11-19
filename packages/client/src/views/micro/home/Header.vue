@@ -1,18 +1,19 @@
 <script lang="ts" setup>
 import { LibraryEnum } from '@/enums'
 import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
-import { 
-  ArrowBackIosFilled, 
-  AddCircleOutlineFilled, 
-  WorkspacesFilled, 
-  AutoAwesomeMotionOutlined,
-  SearchOutlined,
-  PostAddOutlined,
-StickyNote2Outlined
-} from '@vicons/material'
+// import { 
+//   ArrowBackIosFilled, 
+//   AddCircleOutlineFilled, 
+//   WorkspacesFilled, 
+//   AutoAwesomeMotionOutlined,
+//   SearchOutlined,
+//   PostAddOutlined,
+// StickyNote2Outlined
+// } from '@vicons/material'
 import { DropdownOption, NIcon, useMessage, useThemeVars } from 'naive-ui'
 import { Component, computed, h, nextTick, reactive } from 'vue'
 import useStore from '@/store'
+import { Icon } from '@iconify/vue'
 import { Footer } from '../layout'
 import { user } from '@/api/creator/user'
 const { recentStore, userStore, projectStore } = useStore()
@@ -43,9 +44,13 @@ const dropdownState = reactive({
   showArrowRef: false,
   placementRef: 'bottom-start' as 'bottom' | 'bottom-start' | 'bottom-end' | 'left'
 })
-function renderIcon(component: Component) {
+function renderIcon(icon: string) {
+  return h(Icon, { icon: icon, height: 24 })
+}
+function renderNIcon(component: Component) {
   return h(NIcon, { component: component, size: 24 })
 }
+
 function handleSelectLib(lib: LibraryEnum) {
   recentStore.currentLib = lib
   if(recentStore.get.length === 0) {
@@ -60,7 +65,7 @@ const options = computed<DropdownOption[]>(() => {
   return [
     {
       key: 'note',
-      icon: () => renderIcon(Notebook),
+      icon: () => renderNIcon(Notebook),
       label: '笔记',
       show: dropdownState.type === 'floatBtn',
       props: {
@@ -71,7 +76,7 @@ const options = computed<DropdownOption[]>(() => {
     },
     {
       key: 'course',
-      icon: () => renderIcon(PlayLesson),
+      icon: () => renderNIcon(PlayLesson),
       label: '课程',
       show: dropdownState.type === 'floatBtn',
       props: {
@@ -82,7 +87,7 @@ const options = computed<DropdownOption[]>(() => {
     },
     {
       key: 'procedure',
-      icon: () => renderIcon(CoffeeMaker),
+      icon: () => renderNIcon(CoffeeMaker),
       label: '工程',
       show: dropdownState.type === 'floatBtn',
       props: {
@@ -94,7 +99,7 @@ const options = computed<DropdownOption[]>(() => {
     // Right Button
     {
       key: 'create-new-file',
-      icon: () => renderIcon(PostAddOutlined),
+      icon: () => renderIcon('material-symbols:post-add'),
       label: '新建项目',
       show: dropdownState.type === 'rightBtn',
       disabled: recentStore.currentLib !== LibraryEnum.NOTE,
@@ -124,7 +129,7 @@ const options = computed<DropdownOption[]>(() => {
     },
     {
       key: 'search',
-      icon: () => renderIcon(SearchOutlined),
+      icon: () => renderIcon('material-symbols:search-rounded'),
       label: '查找',
       show: dropdownState.type === 'rightBtn',
       disabled: true,
@@ -187,7 +192,7 @@ function getCurrentLibIcon(lib: LibraryEnum | undefined) {
     case LibraryEnum.PROCEDURE:
       return CoffeeMaker
     default:
-      return StickyNote2Outlined 
+      return renderIcon('material-symbols:sticky-note-2-outline')
   }
 }
 function handleFloatBtnClick(ev) {
@@ -213,7 +218,8 @@ function handleFloatBtnClick(ev) {
     </div>
     <div class="item title">{{ getCurrentLibName() }}</div>
     <div class="item rightBtn" @click="handleRightBtnClick">
-      <n-icon class="icon" :component="AddCircleOutlineFilled" :size="24" />
+      <!-- <n-icon class="icon" :component="AddCircleOutlineFilled" :size="24" /> -->
+      <Icon class="icon" icon="material-symbols:add-circle-outline" height="24" />
     </div>
   </div>
   <!-- 右击下拉列表 -->

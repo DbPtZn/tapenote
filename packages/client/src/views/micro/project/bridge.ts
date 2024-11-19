@@ -1,4 +1,4 @@
-import { AnimeAutoProvider, AnimeStateProvider, AnimeUtilsProvider, OutlineService } from "@/editor"
+import { AnimeProvider, OutlineService } from "@/editor"
 import { Observable, Subject } from "@tanbo/stream"
 import { Editor } from "@textbus/editor"
 // import { Habit } from "./habit"
@@ -16,8 +16,8 @@ export class Bridge {
   projectRef: HTMLElement | null = null
   renderer: Renderer | null = null
   container: HTMLElement | null = null
-  animeState: AnimeStateProvider | null = null
-  animeUtils: AnimeUtilsProvider | null = null
+  // animeState: AnimeStateProvider | null = null
+  // animeUtils: AnimeUtilsProvider | null = null
   outlineService: OutlineService | null = null
 
   private editableEvent: Subject<boolean> = new Subject()
@@ -53,8 +53,8 @@ export class Bridge {
     this.container = editor.get(VIEW_DOCUMENT)
     this.renderer = editor.get(Renderer)
     if (lib === LibraryEnum.PROCEDURE) {
-      this.animeState = editor.get(AnimeStateProvider)
-      this.animeUtils = editor.get(AnimeUtilsProvider)
+      // this.animeState = editor.get(AnimeStateProvider)
+      // this.animeUtils = editor.get(AnimeUtilsProvider)
     }
     this.editorReadyEvent.next(editor)
     this.outlineService = editor.get(OutlineService)
@@ -100,8 +100,8 @@ export class Bridge {
   }
 
   handleAutoAnime() {
-    const animeAutoProvider = this.editor?.get(AnimeAutoProvider)
-    animeAutoProvider?.autoAdd()
+    // const animeAutoProvider = this.editor?.get(AnimeAutoProvider)
+    // animeAutoProvider?.autoAdd()
   }
 
   /** 编辑模块重载（实现数据更新） */
@@ -116,7 +116,7 @@ export class Bridge {
     this.studioRef = null
     this.scrollerRef = null
     this.projectRef = null
-    this.animeState = null
-    this.animeUtils = null
+    // this.animeState = null
+    // this.animeUtils = null
   }
 }

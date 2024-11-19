@@ -1,20 +1,21 @@
 <script lang="ts" setup>
 import { LibraryEnum, RoutePathEnum } from '@/enums'
 import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
-import { 
-  ArrowBackIosFilled, 
-  AddCircleOutlineFilled, 
-  WorkspacesFilled, 
-  AutoAwesomeMotionOutlined,
-  SearchOutlined,
-  PostAddOutlined,
-  MoreHorizFilled,
-  StickyNote2Outlined,
-  KeyboardArrowLeftFilled,
-  SaveFilled,
-  CheckFilled
-} from '@vicons/material'
+// import { 
+//   ArrowBackIosFilled, 
+//   AddCircleOutlineFilled, 
+//   WorkspacesFilled, 
+//   AutoAwesomeMotionOutlined,
+//   SearchOutlined,
+//   PostAddOutlined,
+//   MoreHorizFilled,
+//   StickyNote2Outlined,
+//   KeyboardArrowLeftFilled,
+//   SaveFilled,
+//   CheckFilled
+// } from '@vicons/material'
 import dayjs from 'dayjs'
+import { Icon } from '@iconify/vue'
 import { DropdownOption, NIcon, useThemeVars } from 'naive-ui'
 import { Component, computed, h, inject, nextTick, onMounted, reactive, ref } from 'vue'
 import useStore from '@/store'
@@ -51,7 +52,7 @@ subs.push(
   })
 )
 function getLeftBtnIcon() {
-  return isEditable.value ? CheckFilled : ArrowBackIosFilled
+  return isEditable.value ? 'fluent:checkmark-12-filled' : 'material-symbols:arrow-back-ios'
 }
 const handleLeftBtnClick = (ev: MouseEvent) => {
   if(isEditable.value) {
@@ -65,8 +66,8 @@ const handleLeftBtnClick = (ev: MouseEvent) => {
 
 
 
-function renderIcon(component: Component) {
-  return h(NIcon, { component: component, size: 24 })
+function renderIcon(icon: string) {
+  return h(Icon, { icon: icon, height: 24 })
 }
 const handleRightBtnClick = (ev: MouseEvent) => {
   isDrawerActive.value = !isDrawerActive.value
@@ -126,13 +127,14 @@ const isDrawerActive = ref(false)
 <template>
   <div class="header">
     <div class="item leftBtn" @click="handleLeftBtnClick">
-      <n-icon class="icon" :component="getLeftBtnIcon()" :size="24" />
+      <Icon class="icon" :icon="getLeftBtnIcon()" :size="24" />
     </div>
     <div class="item title">
       <span> </span>
     </div>
     <div class="item rightBtn" @click="handleRightBtnClick">
-      <n-icon class="icon" :component="MoreHorizFilled" :size="24" />
+      <!-- <n-icon class="icon" :component="MoreHorizFilled" :size="24" /> -->
+      <Icon icon="material-symbols:more-horiz" height="24" />
     </div>
   </div>
   <!-- 右击下拉列表 -->

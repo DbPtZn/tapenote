@@ -24,14 +24,20 @@ export function getEditorConfig(content?: string) {
     rootComponent: rootComponent,
     rootComponentLoader: rootComponentLoader,
     content: content || '',
-    components: defaultPlayerComponents,
-    componentLoaders: defaultPlayerComponentLoaders,
+    components: [imageU2BComponent, ...defaultPlayerComponents],
+    componentLoaders: [imageU2BComponentLoader, ...defaultPlayerComponentLoaders],
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
     attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
     styleSheets: [],
-    providers: [Img2base64Service, ImgService, DialogProvider, OutlineService, RootEventService],
+    providers: [
+      Img2base64Service, 
+      ImgService, 
+      DialogProvider, 
+      OutlineService, 
+      RootEventService
+    ],
     setup(injector: Injector) {
       //
     }

@@ -10,7 +10,7 @@ try {
   // console.log(fs)
   const tts = new sherpa_onnx.OfflineTts(config)
 
-  const start = Date.now()
+  // const start = Date.now()
   let audio = null
   try {
     audio = tts.generate({ text: txt, sid: speakerId || 88, speed: speed || 1.0 })
@@ -19,10 +19,10 @@ try {
     // console.log(error)
     throw error
   }
-  const stop = Date.now()
-  const elapsed_seconds = (stop - start) / 1000
-  const duration = audio.samples.length / audio.sampleRate
-  const real_time_factor = elapsed_seconds / duration
+  // const stop = Date.now()
+  // const elapsed_seconds = (stop - start) / 1000
+  // const duration = audio.samples.length / audio.sampleRate
+  // const real_time_factor = elapsed_seconds / duration
 
   // console.log('Wave duration', duration.toFixed(3), 'secodns')
   // console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
@@ -36,7 +36,7 @@ try {
     throw error
   }
 
-  console.log(`Saved to ${filepath}`)
+  // console.log(`Saved to ${filepath}`)
 
   // 将结果发送回主线程
   parentPort.postMessage(true)

@@ -90,14 +90,11 @@ export class ProjectService {
     private readonly uploadService: UploadService
   ) {
     this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
-    // 测试校验功能
-    // this.checkAndCorrectFragmentSquence(new string('65f9c02f6c5a54c1b4b249a0'))
   }
 
   async create(createDto: CreateProjectDto, userId: string, dirname: string) {
     try {
       const { lib, folderId, noteId, procedureId, penname, email, homepage } = createDto
-      // title, content, abbrev, wordage, filesize, fragments, sequence, removedSequence, sidenote, annotations
       let data: InheritDto = {
         title: '',
         content: '',
@@ -145,7 +142,6 @@ export class ProjectService {
       const project = new Project()
       project.id = uuidv7()
       project.lib = lib
-      // project.dirname = await this.generateDirname(dirname)
       project.folderId = folderId
       project.folder = folder
       project.userId = userId
@@ -387,7 +383,7 @@ export class ProjectService {
   async input(dto: InputProjectDto, userId: string, dirname: string) {
     try {
       const { lib, firstPictrue, title, content, cover, penname, email, homepage } = dto
-      checkTitle(title)
+      const allowTitle = checkTitle(title)
       const user = await this.usersRepository.findOneBy({ id: userId })
       // console.log(dto.folderId)
       const folderId = dto.folderId ? dto.folderId : user.dir[lib]
@@ -400,7 +396,7 @@ export class ProjectService {
       project.userId = userId
       project.user = user
       project.lib = lib as LibraryEnum
-      project.title = title
+      project.title = allowTitle
       project.content = content
       project.abbrev = txt ? txt.slice(0, 100) : ''
       project.firstPicture = firstPictrue || ''
@@ -650,9 +646,9 @@ export class ProjectService {
   async updateTitle(updateprojectTitleDto: UpdateTitleDto, userId: string) {
     const { id, title } = updateprojectTitleDto
     try {
-      checkTitle(title)
+      const allowTitle = checkTitle(title)
       const project = await this.findOneById(id, userId)
-      project.title = title
+      project.title = allowTitle
       const newproject = await this.projectsRepository.save(project)
       return { updateAt: newproject.updateAt, msg: '标题更新成功！' }
     } catch (error) {
@@ -1388,8 +1384,9 @@ function subtitleProcessing(transcriptGroup: string[][], fragmentDurationGroup: 
 function checkTitle(title: string) {
   const regex = /[<>:"/\\|?*]/
   if (regex.test(title)) {
-    throw new Error('标题中包含非法字符')
+    return title.replace(regex, '')
   }
+  return title
 }
 
 // async copyFragment(args: {

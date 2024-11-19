@@ -1,44 +1,93 @@
-import { InlineToolbarPlugin,
-  Toolbar, boldTool, 
-  historyBackTool, historyForwardTool, headingTool, 
-  italicTool, strikeThroughTool, underlineTool, olTool, ulTool, 
-  fontSizeTool, textIndentTool, colorTool, textBackgroundTool, 
-  insertParagraphBeforeTool, insertParagraphAfterTool, linkTool, 
-  fontFamilyTool, unlinkTool, imageTool, textAlignTool, tableRemoveTool, 
+import { 
+  InlineToolbarPlugin, Toolbar, boldTool,
+  historyBackTool, historyForwardTool,
+  italicTool, strikeThroughTool, underlineTool,
+  fontSizeTool, textIndentTool, colorTool, textBackgroundTool,
+  linkTool, fontFamilyTool, unlinkTool, imageTool, textAlignTool, tableRemoveTool,
   formatPainterTool, tableAddTool, cleanTool,
-  colorFormatLoader, colorFormatter, textBackgroundColorFormatter, 
-  textBackgroundColorFormatLoader, animeFormatter, animeFormatLoader, 
-  AddAnimeService, AnimeComponentSupport, 
-  defaultGroupTool, DialogProvider, componentsTool, 
-  AnimeContextmenuPlugin, 
-  OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController, 
-  preview_startTool, preview_stopTool, imageB2UComponent, imageB2UComponentLoader,
-  CustomCommander, ColorProvider,
-  Structurer, ThemeProvider, Player, ImgToUrlService, rootAnimeComponent, rootAnimeComponentLoader, blockBackgroundColorFormatter, blockBackgroundColorFormatterLoader, defaultComponents, defaultComponentLoaders, animeTool, animeIgnoreTool, AnimeProvider
+  colorFormatLoader, colorFormatter, textBackgroundColorFormatter,
+  textBackgroundColorFormatLoader, animeFormatter, animeFormatLoader,
+  AddAnimeService, AnimeComponentSupport,
+  defaultGroupTool, DialogProvider, componentsTool,
+  AnimeContextmenuPlugin,
+  OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController,
+  preview_startTool, preview_stopTool,
+  imageB2UComponent, imageB2UComponentLoader,  CustomCommander,
+  ColorProvider, Structurer, ThemeProvider, Player, ImgToUrlService,
+  AnimeService,
+  preComponent,
+  imageCardComponent,
+  jumbotronComponent,
+  imageCardComponentLoader,
+  jumbotronComponentLoader,
+  preComponentLoader,
+  ContextMenu,
+  MemoService,
+  MessageService,
+  StudioService,
+  ImgService,
+  i18n,
+  rootAnimeComponent,
+  rootAnimeComponentLoader,
+  animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
+  listComponent, listComponentLoader, headingComponent, headingComponentLoader,
+  paragraphComponent, paragraphComponentLoader,
+  animeComponent, animeComponentLoader, animeIgnoreComponent, animeIgnoreComponentLoader,
+  headingTool, olTool, ulTool, insertParagraphAfterTool, insertParagraphBeforeTool, 
+  tableComponent, tableComponentLoader, blockquoteComponent, blockquoteComponentLoader,
+  dividerTool, dividerComponent, dividerComponentLoader, Memo, ImgToolbarPlugin, ShotcutPlugin, MemoProvider, stepComponent, stepComponentLoader, timelineComponent, timelineComponentLoader, todolistComponent, todolistComponentLoader, wordExplainComponent, wordExplainComponentLoader, defaultComponents, defaultComponentLoaders, blockBackgroundColorFormatter, blockBackgroundColorFormatterLoader,
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
+  alertComponent,
+  alertComponentLoader,
+  audioComponent,
+  audioComponentLoader,
+  blockComponent,
+  blockComponentLoader,
   defaultAttributeLoaders,
   defaultAttributes,
+  // defaultComponentLoaders,
+  // defaultComponents,
   defaultFormatLoaders,
   defaultFormatters,
   EditorOptions,
-  LinkJumpTipPlugin
+  katexComponent,
+  katexComponentLoader,
+  LinkJumpTipPlugin,
+  // stepComponent,
+  // stepComponentLoader,
+  // timelineComponent,
+  // timelineComponentLoader,
+  // todolistComponent,
+  // todolistComponentLoader,
+  videoComponent,
+  videoComponentLoader,
+  // wordExplainComponent,
+  // wordExplainComponentLoader
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
+// import { useUploadImg } from '../../../../_utils'
+// import { uploader } from '../uploader'
+import { getResourceDomain } from '@/views/creator/_hooks'
+import { uploader } from '@/views/creator/project/editor/hooks/uploader'
 import { useUploadImg } from '@/views/creator/_utils'
+
 export function getProcedureConfig(args: {
   account: string,
   hostname: string,
   dirname: string,
   rootRef: HTMLElement,
   editorRef: HTMLElement,
-  scrollerRef: HTMLElement, 
+  scrollerRef: HTMLElement,
+  memos: Memo[],
   toolbarRef?: HTMLElement,
   controllerRef?: HTMLElement,
   content?: string
 }) {
-  const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
+  const { account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, memos, content } = args
+  editorRef.classList.add('anime-editor')
+  const ResourceDomain = getResourceDomain(hostname)
   const config: EditorOptions = {
     theme: 'darkline',
     autoFocus: true,
@@ -47,6 +96,7 @@ export function getProcedureConfig(args: {
     historyStackSize: 30,
     placeholder: '在此输入正文',
     content: content || '',
+    i18n: i18n,
     rootComponent: rootAnimeComponent,
     rootComponentLoader: rootAnimeComponentLoader,
     components: defaultComponents,
@@ -55,24 +105,13 @@ export function getProcedureConfig(args: {
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
     attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
-    styleSheets: [
-      'anime:after{content: attr(data-serial);vertical-align: super;color:white;background-color:#c8c9cc;border-radius:24px;display:inline-block;width:23px;height:23px;font-size:15px;line-height:23px;-webkit-border-radius:24px;text-align:center;box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);pointer-events: auto;}',
-      'anime:hover:after{cursor: pointer;animation: .8s .5s tada infinite;}',
-      '[data-theme="dark-theme"] anime:hover{outline: 1px dashed #aaaaaa30; border-radius: 3px;}',
-      'anime:hover{outline: 1px dashed #aaaaaa30; border-radius: 3px;}',
-      'anime{pointer-events:none;}',
-      'anime:active{pointer-events:none;}',
-      '[data-state="active"]:after { background-color:pink }',
-      '.anime-element-hidden anime{ opacity: 0!important; }',
-      '.anime-element-hidden anime-component{opacity:0!important;}',
-      '.anime-badge-hidden anime:after{ display: none; opacity: 0!important; }',
-      '.anime-badge-hidden .anime-component-tab:after{ display: none; opacity:0!important;}'
-    ],
     providers: [
       { provide: Commander, useClass: CustomCommander },
-      AddAnimeService, DialogProvider, 
-      OutlineService, ColorProvider,
-      Structurer, ThemeProvider, Player, ImgToUrlService
+      AnimeProvider, AddAnimeService, DialogProvider, 
+      OutlineService, ColorProvider, AnimeService,
+      Structurer, ThemeProvider, Player, ImgToUrlService,
+      MessageService, StudioService,ImgService,
+      // MemoService, MemoProvider
     ],
     plugins: [
       () => new Toolbar([
@@ -80,6 +119,7 @@ export function getProcedureConfig(args: {
         [defaultGroupTool],
         [componentsTool],
         [headingTool],
+        [animeTool, animeIgnoreTool],
         [boldTool, italicTool, strikeThroughTool, underlineTool],
         [olTool, ulTool],
         [fontSizeTool, textIndentTool],
@@ -88,30 +128,37 @@ export function getProcedureConfig(args: {
         [fontFamilyTool],
         [linkTool, unlinkTool],
         [imageTool],
-        [textAlignTool],
         [tableAddTool, tableRemoveTool],
-        [formatPainterTool],
+        // [formatPainterTool],
+        [dividerTool],
         [cleanTool],
-        // [outlineTool],
       ], toolbarRef!),
       () =>
         new InlineToolbarPlugin([
           [headingTool],
           [animeTool, animeIgnoreTool],
+          [textAlignTool],
           [boldTool, italicTool, strikeThroughTool, underlineTool],
           [colorTool, textBackgroundTool],
           [fontSizeTool],
+          [animeBadgeVisibleTool, animeElementVisibleTool],
           [cleanTool]
         ], scrollerRef),
-      () => new OutlinePlugin(),
+      () => new ImgToolbarPlugin([`${ResourceDomain}`]),
       () => new LinkJumpTipPlugin(),
+      () => new OutlinePlugin(),
+      () => new ShotcutPlugin(),
+      () => new ContextMenu(),
       () => new AnimeContextmenuPlugin(),
       () => new AnimeComponentSupport(),
       () => new PreviewPlayerController([
         preview_startTool,
         preview_stopTool
-      ],controllerRef!)
+      ],controllerRef!),
     ],
+    uploader(config) {
+      return uploader(config, account, hostname)
+    },
     setup(injector: Injector) {
       const input = injector.get(Input)
       input.caret.correctScrollTop({
@@ -128,7 +175,7 @@ export function getProcedureConfig(args: {
         }
       })
       /** 依赖注入 */
-      // 动画状态依赖
+      // 动画依赖
       const animeProvider = injector.get(AnimeProvider)
       animeProvider.setup(injector, scrollerRef)
       // 组成元素
@@ -147,7 +194,6 @@ export function getProcedureConfig(args: {
       const player = injector.get(Player)
       player.setup(injector, scrollerRef)
       // 图片工具
-      // const accessToken = sessionStorage.getItem(`User:${account}&${hostname}`)
       const imgToUrlService = injector.get(ImgToUrlService)
       const { uploadImgFunction } = useUploadImg(account, hostname)
       imgToUrlService.setup(uploadImgFunction)

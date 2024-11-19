@@ -1,5 +1,5 @@
 import useStore from "@/store"
-type Action = Required<Parameters<ReturnType<ReturnType<typeof useStore>['projectStore']['fragment']>['createByAudio']>[0]['actions']>[0]
+type Action = Required<Parameters<ReturnType<ReturnType<typeof useStore>['projectStore']['fragment']>['createByAudio']>[0][0]['actions']>[0]
 export async function cropAudio(
   audioSource: string | AudioBuffer, // 接收 string (URL) 或 AudioBuffer
   startTime: number,

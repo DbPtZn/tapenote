@@ -1,17 +1,18 @@
 <script lang="ts" setup>
 import { LibraryEnum, RoutePathEnum } from '@/enums'
 import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
-import { 
-  ArrowBackIosFilled, 
-  AddCircleOutlineFilled, 
-  WorkspacesFilled, 
-  AutoAwesomeMotionOutlined,
-  SearchOutlined,
-  PostAddOutlined,
-  StickyNote2Outlined,
-  KeyboardArrowLeftFilled
-} from '@vicons/material'
+// import { 
+//   ArrowBackIosFilled, 
+//   AddCircleOutlineFilled, 
+//   WorkspacesFilled, 
+//   AutoAwesomeMotionOutlined,
+//   SearchOutlined,
+//   PostAddOutlined,
+//   StickyNote2Outlined,
+//   KeyboardArrowLeftFilled
+// } from '@vicons/material'
 import { DropdownOption, NIcon, useThemeVars } from 'naive-ui'
+import { Icon } from '@iconify/vue'
 import { Component, computed, h, nextTick, onMounted, reactive, ref } from 'vue'
 import useStore from '@/store'
 import router from '@/router'
@@ -42,7 +43,11 @@ const dropdownState = reactive({
   showArrowRef: false,
   placementRef: 'bottom-start' as 'bottom' | 'bottom-start' | 'bottom-end' | 'top-start' | 'top' | 'top-end' | 'left-start' | 'left' | 'left-end'
 })
-function renderIcon(component: Component) {
+
+function renderIcon(icon: string) {
+  return h(Icon, { icon: icon, height: 24 })
+}
+function renderNIcon(component: Component) {
   return h(NIcon, { component: component, size: 24 })
 }
 function handleSelectLib(lib: LibraryEnum) {
@@ -74,7 +79,7 @@ const options = computed<DropdownOption[]>(() => {
   return [
     {
       key: 'note',
-      icon: () => renderIcon(Notebook),
+      icon: () => renderNIcon(Notebook),
       label: '笔记',
       show: dropdownState.type === 'floatBtn',
       props: {
@@ -85,7 +90,7 @@ const options = computed<DropdownOption[]>(() => {
     },
     {
       key: 'course',
-      icon: () => renderIcon(PlayLesson),
+      icon: () => renderNIcon(PlayLesson),
       label: '课程',
       show: dropdownState.type === 'floatBtn',
       props: {
@@ -96,7 +101,7 @@ const options = computed<DropdownOption[]>(() => {
     },
     {
       key: 'procedure',
-      icon: () => renderIcon(CoffeeMaker),
+      icon: () => renderNIcon(CoffeeMaker),
       label: '工程',
       show: dropdownState.type === 'floatBtn',
       props: {
@@ -108,7 +113,7 @@ const options = computed<DropdownOption[]>(() => {
     // Right Button
     {
       key: 'create-new-file',
-      icon: () => renderIcon(PostAddOutlined),
+      icon: () => renderIcon('material-symbols:post-add'),
       label: '新建项目',
       show: dropdownState.type === 'rightBtn',
       disabled: folderStore.lib !== LibraryEnum.NOTE,
@@ -136,7 +141,7 @@ const options = computed<DropdownOption[]>(() => {
     },
     {
       key: 'search',
-      icon: () => renderIcon(SearchOutlined),
+      icon: () => renderIcon('material-symbols:search-rounded'),
       label: '查找',
       show: dropdownState.type === 'rightBtn',
       disabled: true,
@@ -200,7 +205,7 @@ function getCurrentLibIcon(lib: LibraryEnum | undefined) {
     case LibraryEnum.PROCEDURE:
       return CoffeeMaker
     default:
-      return StickyNote2Outlined 
+      return renderIcon('material-symbols:sticky-note-2-outline')
   }
 }
 
@@ -236,13 +241,15 @@ function getFolderName(name: string) {
 <template>
   <div class="header">
     <div class="item leftBtn" @click="handleLeftBtnClick">
-      <n-icon v-if="folderStore.parentId" class="icon" :component="KeyboardArrowLeftFilled" :size="24" />
+      <!-- <n-icon v-if="folderStore.parentId" class="icon" :component="KeyboardArrowLeftFilled" :size="24" /> -->
+      <Icon v-if="folderStore.parentId" class="icon" icon="material-symbols:arrow-back-ios" height="24" />
     </div>
     <div class="item title">
       <span>{{ getFolderName(folderStore.name) }}</span>
     </div>
     <div class="item rightBtn" @click="handleRightBtnClick">
-      <n-icon class="icon" :component="AddCircleOutlineFilled" :size="24" />
+      <!-- <n-icon class="icon" :component="AddCircleOutlineFilled" :size="24" /> -->
+      <Icon class="icon" icon="material-symbols:add-circle-outline" height="24" />
     </div>
   </div>
   <!-- 右击下拉列表 -->

@@ -26,7 +26,8 @@ import {
   animeIgnoreComponent,
   animeIgnoreComponentLoader,
   animeComponent,
-  animeComponentLoader
+  animeComponentLoader,
+  ImgService
 } from '@/editor'
 
 export function getInputEditorConfig(account: string, hostname: string) {
@@ -39,7 +40,7 @@ export function getInputEditorConfig(account: string, hostname: string) {
     formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
     formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
     plugins: [],
-    providers: [ImgToUrlService],
+    providers: [ImgToUrlService, ImgService],
     setup(injector: Injector) {
       const imgToUrlService = injector.get(ImgToUrlService)
       const { uploadImgFunction } = useUploadImg(account, hostname)
