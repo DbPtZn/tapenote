@@ -34,22 +34,17 @@ export class Snapshot {
   @ManyToOne(() => Project, project => project.snapshots)
   project: Project
 
+  // 编辑器版本号，如 1.0.0，规则同 package.json 的 version 规则一致
   @Column({
     type: 'varchar',
-    length: 18,
+    length: 10,
     nullable: true
   })
   editorVersion: string
 
-  // @Column({
-  //   type: 'varchar',
-  //   length: 18
-  // })
-  // lib: LibraryEnum
-
   @Column({
     type: 'varchar',
-    length: 255,
+    length: 36,
     default: ''
   })
   cover: string // 封面
@@ -62,14 +57,14 @@ export class Snapshot {
 
   @Column({
     type: 'varchar',
-    length: 255,
+    length: 36,
     default: ''
   })
   firstPicture: string // 首图
 
   @Column({
     type: 'varchar',
-    length: 255,
+    length: 36,
     default: ''
   })
   screenShot: string // 截图
@@ -126,12 +121,6 @@ export class Snapshot {
 
   /** ------------------------------------------  course  -------------------------------------------- */
   @Column({
-    type: 'text',
-    nullable: true
-  })
-  sidenote: string
-
-  @Column({
     type: 'varchar',
     default: ''
   })
@@ -181,9 +170,9 @@ export class Snapshot {
     nullable: true
   })
   detail: {
-    penname: string
-    homepage: string
-    email: string
+    penname: string // 笔名
+    homepage: string // 个人主页
+    email: string // 邮箱
     wordage: number // 字数
     filesize: number // 文件大小(包含音频文件、文本、图片)
   }

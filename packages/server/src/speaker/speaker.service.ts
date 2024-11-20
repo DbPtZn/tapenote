@@ -14,6 +14,7 @@ import { uuidv7 } from 'uuidv7'
 import { commonConfig } from 'src/config'
 import randomstring from 'randomstring'
 import fsx from 'fs-extra'
+import { TencentService } from 'src/tencent/tencent.service'
 
 @Injectable()
 export class SpeakerService {
@@ -26,6 +27,7 @@ export class SpeakerService {
     private readonly sherpaService: SherpaService,
     private readonly configService: ConfigService,
     private readonly userLogger: UserLoggerService,
+    private readonly tencentService: TencentService,
     private readonly logger: LoggerService
   ) {
     this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
@@ -45,22 +47,10 @@ export class SpeakerService {
       speaker.name = name
       speaker.avatar = basename(avatar)
       speaker.changer = changer ? changer : 0
-      // if (speaker.type === 'machine') {
-      //   if(speaker.model === 'local-base-tts') {
-      //     try {
-      //       const txt = '哈库拉玛塔塔'
-      //       const filepath = this.storageService.createLocalFilePath( `${speaker.id}.wav`, dirname)
-      //       this.sherpaService.tts(txt, filepath, role, 1)
-      //       speaker.audio = filepath
-      //     } catch (error) {
-      //       this.userLogger.error(`tts 测试失败`, error.message)
-      //       throw error
-      //     }
-      //   }
-      // }
       const result = await this.speakersRepository.save(speaker)
       delete result.user
       result.avatar = this.storageService.getResponsePath(result.avatar, dirname)
+      this.userLogger.log(`创建 speaker 成功,speaker id:${result.id}`)
       return result
     } catch (error) {
       this.userLogger.error(`创建 speaker 失败`, error.message)
@@ -75,6 +65,7 @@ export class SpeakerService {
       })
       return speaker
     } catch (error) {
+      this.userLogger.error(`查询 speaker 失败`, error.message)
       throw error
     }
   }
@@ -98,9 +89,10 @@ export class SpeakerService {
   async remove(id: string, userId: string) {
     try {
       await this.speakersRepository.delete({ id, userId })
-      this.userLogger.log(`删除 speaker [${id}]配置成功`)
+      this.userLogger.log(`删除 speaker [${id}]成功`)
       return `This action removes a #${id} speaker`
     } catch (error) {
+      this.userLogger.error(`删除 speaker [${id}]失败`, error.message)
       throw error
     }
   }
@@ -108,7 +100,7 @@ export class SpeakerService {
   // TODO 可以使用 redis 存储来缓存优化
   async testTts(speakerId: number, model: string, speed = 1) {
     try {
-      console.log(speakerId,model)
+      // console.log(speakerId, model)
       const txt = '哈库拉玛塔塔'
       const filename = `${randomstring.generate(8)}.wav`
       const filepath= this.storageService.createLocalFilePath(filename ,'temp')
@@ -116,8 +108,10 @@ export class SpeakerService {
         case 'local-base-tts':
           await this.sherpaService.tts(txt, filepath, speakerId, speed)
           break
-        case 'xunfei-base-tts':
-          await this.sherpaService.tts(txt, filepath, speakerId, speed)
+        case 'tencent-base-tts':
+          const data = await this.tencentService.tts(txt, speakerId, speed)
+          const buffer = Buffer.from(data.Audio, 'base64')
+          fsx.writeFileSync(filepath, buffer)
           break
         default:
           throw new Error('不支持该目标模型')

@@ -14,8 +14,9 @@ import randomstring from 'randomstring'
 const AsrClient = tencentcloud.asr.v20190614.Client
 const TtsClient = tencentcloud.tts.v20190823.Client
 const regex = /[!"#\$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~！￥…（）、—【】‘；：”“’。，？\s]/
+
 @Injectable()
-export class CvmService {
+export class TencentService {
   private common: ReturnType<typeof commonConfig>
   asrClient: any
   ttsClient: any

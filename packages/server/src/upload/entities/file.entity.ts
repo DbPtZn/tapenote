@@ -12,7 +12,10 @@ import { uuidv7 } from 'uuidv7'
 
 @Entity()
 export class UploadFile {
-  @PrimaryColumn('uuid')
+  @PrimaryColumn({
+    type: 'varchar',
+    length: 36
+  })
   id: string
 
   @BeforeInsert()
@@ -21,15 +24,15 @@ export class UploadFile {
   }
 
   @Column({
-    type: 'uuid',
+    type: 'varchar',
+    length: 36,
     nullable: true
   })
   userId: string // 用户ID
 
   @Column({
     type: 'varchar',
-    length: 18,
-    // nullable: true
+    length: 18
   })
   dirname: string
 
@@ -40,14 +43,12 @@ export class UploadFile {
 
   @Column({
     type: 'simple-array'
-    // default: JSON.stringify([])
   })
   quote: string[] // 引用的项目 id
 
   @Column({
     type: 'varchar',
-    length: 24,
-    // nullable: true
+    length: 24
   })
   mimetype: string // 文件类型
 

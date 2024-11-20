@@ -7,9 +7,9 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryColumn,
-  PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
 import { uuidv7 } from 'uuidv7'
@@ -24,7 +24,10 @@ export interface FragmentSpeaker {
 }
 @Entity()
 export class Fragment {
-  @PrimaryColumn('uuid')
+  @PrimaryColumn({
+    type: 'varchar',
+    length: 36
+  })
   id: string
 
   @BeforeInsert()
@@ -33,14 +36,18 @@ export class Fragment {
   }
 
   @Column({
-    type: 'uuid',
+    type: 'varchar',
+    length: 36,
     nullable: true
   })
   userId: string
 
+  @ManyToOne(() => Project, project => project.fragments)
+  project: Project
+
   @Column({
     type: 'varchar',
-    length: 255,
+    length: 36,
     default: ''
   })
   audio: string
@@ -56,39 +63,29 @@ export class Fragment {
   })
   txt: string
 
-  // 可能包含逗号，不能使用 simple-array
+  // 注意：可能包含逗号，不能使用 simple-array
   @Column({
     type: 'simple-json'
-    // default: JSON.stringify([]) // QueryFailedError: BLOB, TEXT, GEOMETRY or JSON column 'promoters' can't have a default value
   })
   transcript: string[]
 
   @Column({
     type: 'simple-json'
-    // default: JSON.stringify([])
   })
   tags: string[]
 
   @Column({
     type: 'simple-json'
-    // default: JSON.stringify([])
   })
   promoters: string[]
 
   @Column({
     type: 'simple-json'
-    // default: JSON.stringify([])
   })
   timestamps: number[]
 
   @Column({
     type: 'simple-json'
-    // default: JSON.stringify({
-    //   type: 'machine',
-    //   avatar: '',
-    //   name: '',
-    //   role: 0
-    // })
   })
   speaker: FragmentSpeaker
 
@@ -100,15 +97,10 @@ export class Fragment {
 
   @Column({
     type: 'varchar',
+    length: 8,
     default: RemovedEnum.NEVER
-    // type: 'enum',
-    // enum: RemovedEnum,
-    // default: RemovedEnum.NEVER
   })
   removed: RemovedEnum
-
-  @ManyToOne(() => Project, project => project.fragments)
-  project: Project
 
   /** 创建时间 */
   @CreateDateColumn() createAt: Date

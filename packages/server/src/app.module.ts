@@ -1,7 +1,15 @@
 import { Module } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { databaseConfig, jwtConfig, commonConfig, sherpaDevConfig, sherpaProdConfig, xunfeiConfig, aliConfig } from './config'
+import {
+  databaseConfig,
+  jwtConfig,
+  commonConfig,
+  sherpaDevConfig,
+  sherpaProdConfig,
+  xunfeiConfig,
+  aliConfig
+} from './config'
 import { AuthModule } from './auth/auth.module'
 import { BgmModule } from './bgm/bgm.module'
 import { FfmpegModule } from './ffmpeg/ffmpeg.module'
@@ -23,9 +31,9 @@ import { SpeakerModule } from './speaker/speaker.module'
 import { parentPort } from 'worker_threads'
 import { SnapshotModule } from './snapshot/snapshot.module'
 import { BucketModule } from './bucket/bucket.module'
-import { CvmModule } from './cvm/cvm.module'
 import { XunfeiModule } from './xunfei/xunfei.module'
 import { AliModule } from './ali/ali.module'
+import { TencentModule } from './tencent/tencent.module'
 
 @Module({
   imports: [
@@ -63,7 +71,7 @@ import { AliModule } from './ali/ali.module'
         // FIXME 警告：设置 synchronize: true 不能被用于生产环境，否则您可能会丢失生产环境数据
         // const config = configService.get<ReturnType<typeof databaseConfig>>('database')
         let retryCount = 0
-        console.log('NODE_ENV:' + process.env.NODE_ENV)
+        console.log('NODE_ENV:', process.env.NODE_ENV)
         if (process.env.NODE_ENV === 'electron') {
           // console.log('better-sqlite3')
           return {
@@ -72,13 +80,13 @@ import { AliModule } from './ali/ali.module'
             synchronize: configService.get('database.synchronize'), // synchronize字段代表是否自动将实体类同步到数据库
             autoLoadEntities: true, // 如果为true,将自动加载实体 forFeature() 方法注册的每个实体都将自动添加到配置对象的实体数组中
             toRetry: err => {
-              console.log('连接失败：' + err.message)
+              console.log('连接失败：', err.message)
               // 考虑把这个对 electron 的回复封装一下
               if (process.env.NODE_ENV === 'electron') {
                 try {
                   parentPort.postMessage({ msg: `连接 better-sqlite3 数据库失败`, error: err.message })
                 } catch (error) {
-                  console.log('无法回复 electron 主进程:' + error.message)
+                  console.log('无法回复 electron 主进程:', error.message)
                 }
               }
               retryCount++
@@ -121,9 +129,9 @@ import { AliModule } from './ali/ali.module'
     SpeakerModule,
     SnapshotModule,
     BucketModule,
-    CvmModule,
-    XunfeiModule,
-    AliModule
+    TencentModule
+    // XunfeiModule,
+    // AliModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestScopedService]

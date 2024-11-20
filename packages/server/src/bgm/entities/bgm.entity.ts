@@ -7,9 +7,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryColumn,
-  PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
 import { uuidv7 } from 'uuidv7'
@@ -22,7 +20,10 @@ export interface BgmItem {
 
 @Entity()
 export class Bgm {
-  @PrimaryColumn('uuid')
+  @PrimaryColumn({
+    type: 'varchar',
+    length: 36
+  })
   id: string
 
   @BeforeInsert()
@@ -30,7 +31,11 @@ export class Bgm {
     if(!this.id) this.id = uuidv7()
   }
 
-  @Column('uuid') userId: string // 用户 id
+  @Column({
+    type: 'varchar',
+    length: 36
+  })
+  userId: string // 用户 id
 
   @ManyToOne(() => User, user => user.bgms)
   @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
@@ -38,14 +43,13 @@ export class Bgm {
 
   @Column({
     type: 'varchar',
-    length: 255,
     default: ''
   })
   name: string
 
   @Column({
     type: 'varchar',
-    length: 255,
+    length: 36,
     default: ''
   })
   audio: string

@@ -217,7 +217,7 @@ export class FolderService {
     // where: { userId, removed: Not(RemovedEnum.NEVER) },\
     const folders = await this.foldersRepository.find({
       where: { userId, removed: RemovedEnum.ACTIVE },
-      select: ['id', 'name', 'userId', 'parentId', 'removed', 'lib', 'isCloud', 'updateAt', 'createAt'],
+      select: ['id', 'name', 'userId', 'parentId', 'removed', 'lib', 'updateAt', 'createAt'],
       order: { updateAt: 'DESC' }
     })
     return folders

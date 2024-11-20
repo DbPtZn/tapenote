@@ -59,7 +59,10 @@ export class UserConfig {
 
 @Entity()
 export class User {
-  @PrimaryColumn('uuid')
+  @PrimaryColumn({
+    type: 'varchar',
+    length: 36
+  })
   id: string
 
   @BeforeInsert()
@@ -81,7 +84,7 @@ export class User {
 
   @Column({
     type: 'varchar',
-    unique: true
+    unique: true,
   })
   account: string // 账号
 
@@ -108,7 +111,7 @@ export class User {
 
   @Column({
     type: 'varchar',
-    length: 255,
+    length: 32,
     default: ''
   })
   email: string // 邮箱
@@ -128,16 +131,17 @@ export class User {
   homepage: string // 个人主页
 
   @Column({
-    type: 'int',
+    type: 'tinyint',
     default: 0
   })
   age: number // 年龄
 
+  // 性别 0: 保密 1: 男 2: 女 3: 其他
   @Column({
-    type: 'varchar',
-    default: 'secrecy'
+    type: 'tinyint',
+    default: 0
   })
-  sex: Sex // 性别
+  sex: number // 性别
 
   @Column({
     type: 'varchar',
@@ -146,33 +150,39 @@ export class User {
   })
   desc: string // 描述
 
+  // 项目根目录
   @Column({
     type: 'simple-json'
   })
   dir: Dir
 
+  // 用户对象存储目录名
   @Column({
     type: 'varchar',
     length: 18,
   })
   dirname: string
   
+  // 统计数据
   @Column({
     type: 'simple-json',
     nullable: true
   })
   countor: Countor
   
+  // 用户配置
   @Column({
     type: 'simple-json'
   })
   config: UserConfig
 
+  // 投稿配置
   @Column({
     type: 'simple-json'
   })
   submissionConfig: SubmissionConfig[]
 
+  // 订阅配置
   @Column({
     type: 'simple-json'
   })
@@ -186,13 +196,6 @@ export class User {
 
   @DeleteDateColumn()
   deleteAt: Date
-
-  /** 预留字段 */
-  @Column({
-    type: 'simple-json',
-    nullable: true
-  })
-  reserved: string
 
   /** 插入实体时设置创建时间 */
   @BeforeInsert()

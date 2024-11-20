@@ -9,7 +9,6 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
   Tree,
   UpdateDateColumn,
   DeleteDateColumn,
@@ -21,7 +20,10 @@ import { uuidv7 } from 'uuidv7'
 @Entity()
 @Tree('adjacency-list')
 export class Folder {
-  @PrimaryColumn('uuid')
+  @PrimaryColumn({
+    type: 'varchar',
+    length: 36
+  })
   id: string
 
   @BeforeInsert()
@@ -30,7 +32,8 @@ export class Folder {
   }
 
   @Column({
-    type: 'uuid',
+    type: 'varchar',
+    length: 36,
     nullable: true
   })
   parentId: string
@@ -43,7 +46,10 @@ export class Folder {
   @OneToMany(type => Folder, folder => folder.parent)
   children: Folder[]
 
-  @Column('uuid')
+  @Column({
+    type: 'varchar',
+    length: 36
+  })
   userId: string
 
   @ManyToOne(() => User, user => user.folders)
@@ -54,33 +60,28 @@ export class Folder {
   projects: Project[]
 
   @Column({
-    length: 18,
+    type: 'varchar',
+    length: 32,
     default: '未命名文件夹'
   })
   name: string // 文件夹名称
 
   @Column({
     type: 'varchar',
-    length: 60,
+    length: 64,
     default: ''
   })
   desc: string // 描述
 
   @Column({
-    type: 'varchar'
-    // type: 'enum',
-    // enum: LibraryEnum
+    type: 'varchar',
+    length: 10
   })
   lib: LibraryEnum // 库
 
   @Column({
-    type: 'boolean',
-    default: false
-  })
-  isCloud: boolean // 云同步
-
-  @Column({
     type: 'varchar',
+    length: 8,
     default: RemovedEnum.NEVER
   })
   removed: RemovedEnum // 移除状态

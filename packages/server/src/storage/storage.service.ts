@@ -54,7 +54,6 @@ export class StorageService {
    * 根据给定信息创建文件路径 (本地文件系统路径)
    */
   createLocalFilePath(filename: string, dirname: string, prv = false) {
-    // const filename = path.basename(sourcePath)
     const dirPath = this.getLocalDir(dirname, prv)
     const filepath = `${dirPath}/${filename}`
     return filepath
@@ -111,12 +110,8 @@ export class StorageService {
         this.bucketService
           .uploadFile(file, dirname)
           .then(res => {
-            // console.log('file.filename:', file.filename)
-            // console.log('file.originalname:', file.originalname)
-            // console.log('file.path', file.path)
             const url = this.common.proxyDomain + '/' + dirname + '/' + basename(file.path)
             removeFile && fs.unlinkSync(file.path)
-            // console.log('cos url:', url)
             resolve(url)
           })
           .catch(err => {
@@ -140,7 +135,6 @@ export class StorageService {
   createTempFilePath(ext: string, filename?: string) {
     const extWithoutDot = ext.charAt(0) === '.' ? ext.slice(1) : ext
     if(!filename) return join(os.tmpdir(), `${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`)
-    // const fileNameWithoutExt = filename.replace(path.extname(filename), '')
     const fileNameWithoutExt = basename(filename, extname(filename))
     console.log('fileNameWithoutExt:', fileNameWithoutExt)
     return join(os.tmpdir(), `${fileNameWithoutExt}.${extWithoutDot}`)
@@ -168,7 +162,6 @@ export class StorageService {
    * @param prv 是否私有 默认false，仅本地存储时有效
    */
   async deleteFile(filename: string, quoteId: string, userId: string, dirname: string, prv = false) {
-    // TODO 还应删除对应数据库中的对象
     const uploadfile = await this.uploadFilesRepository.findOne({
       where: {
         userId,

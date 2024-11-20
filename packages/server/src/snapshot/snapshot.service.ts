@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Snapshot } from './entities/snapshot.entity';
-import { Project } from 'src/project/entities/project.entity';
-import { DataSource, Repository } from 'typeorm';
-import { UserLoggerService } from 'src/user-logger/userLogger.service';
-import { LibraryEnum } from 'src/enum';
-import { StorageService } from 'src/storage/storage.service';
+import { Injectable } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Snapshot } from './entities/snapshot.entity'
+import { Project } from 'src/project/entities/project.entity'
+import { DataSource, Repository } from 'typeorm'
+import { UserLoggerService } from 'src/user-logger/userLogger.service'
+import { StorageService } from 'src/storage/storage.service'
+import { LibraryEnum } from 'src/enum'
 
 @Injectable()
 export class SnapshotService {
@@ -16,14 +16,14 @@ export class SnapshotService {
     private projectsRepository: Repository<Project>,
     private readonly storageService: StorageService,
     private readonly userlogger: UserLoggerService,
-    private readonly dataSource: DataSource,
+    private readonly dataSource: DataSource
   ) {}
-  
+
   /** 创建快照 */
   async create(projectId: string, userId: string) {
     try {
       const project = await this.projectsRepository.findOne({
-        where: { id: projectId, userId },
+        where: { id: projectId, userId }
       })
 
       const snapshot = new Snapshot()
@@ -39,7 +39,6 @@ export class SnapshotService {
       snapshot.abbrev = project.abbrev
       snapshot.memos = project.memos
       snapshot.bgm = project.bgm
-      snapshot.sidenote = project.sidenote
       snapshot.audio = project.audio
       snapshot.promoterSequence = project.promoterSequence
       snapshot.keyframeSequence = project.keyframeSequence
@@ -68,7 +67,7 @@ export class SnapshotService {
   async findOne(id: string, userId: string) {
     try {
       const snapshot = await this.snapshotsRepository.findOne({
-        where: { id, userId },
+        where: { id, userId }
       })
       return snapshot
     } catch (error) {
@@ -80,16 +79,8 @@ export class SnapshotService {
     try {
       const snapshots = await this.snapshotsRepository.find({
         where: { project: { id: projectId }, userId },
-        select: [
-          'id',
-          'cover',
-          'title',
-          'abbrev',
-          'duration',
-          'detail',
-          'createAt'
-        ],
-        order: { createAt: 'DESC' },
+        select: ['id', 'cover', 'title', 'abbrev', 'duration', 'detail', 'createAt'],
+        order: { createAt: 'DESC' }
       })
       return snapshots
     } catch (error) {
@@ -99,18 +90,17 @@ export class SnapshotService {
 
   async apply(projectId: string, snapshotId: string, userId: string) {
     try {
-      // console.log(projectId, snapshotId, userId)
       const project = await this.projectsRepository.findOne({
-        where: { id: projectId, userId },
+        where: { id: projectId, userId }
       })
       const snapshot = await this.snapshotsRepository.findOne({
         where: { id: snapshotId, userId },
-        relations: ['project'],
+        relations: ['project']
       })
       if (snapshot.project.id !== projectId) {
         throw new Error('快照 id 与项目 id 不匹配')
       }
-      
+
       project.cover = snapshot.cover
       project.coverPosition = snapshot.coverPosition
       project.screenShot = snapshot.screenShot
@@ -124,7 +114,7 @@ export class SnapshotService {
       project.promoterSequence = snapshot.promoterSequence
       project.keyframeSequence = snapshot.keyframeSequence
       project.subtitleSequence = snapshot.subtitleSequence
-      project.subtitleKeyframeSequence = snapshot.subtitleKeyframeSequence 
+      project.subtitleKeyframeSequence = snapshot.subtitleKeyframeSequence
       project.annotations = snapshot.annotations
       project.detail = snapshot.detail
 

@@ -17,7 +17,7 @@ import randomstring from 'randomstring'
 import { UserLoggerModule } from 'src/user-logger/userLogger.module'
 import { UploadModule } from 'src/upload/upload.module'
 import { UserModule } from 'src/user/user.module'
-import { CvmModule } from 'src/cvm/cvm.module'
+import { TencentModule } from 'src/tencent/tencent.module'
 const __rootdirname = process.cwd()
 @Module({
   imports: [
@@ -69,7 +69,7 @@ const __rootdirname = process.cwd()
     SherpaModule,
     UploadModule,
     UserModule,
-    CvmModule
+    TencentModule
   ],
   controllers: [FragmentController],
   providers: [FragmentService],

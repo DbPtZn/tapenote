@@ -10,6 +10,7 @@ import { basename, extname } from 'path'
 import { ConfigService } from '@nestjs/config'
 import { commonConfig } from 'src/config'
 import * as fs from 'fs'
+import { UserLoggerService } from 'src/user-logger/userLogger.service'
 export interface LocalUploadFile extends Partial<Express.Multer.File> {
   filename: string
   path: string
@@ -25,16 +26,11 @@ export class UploadService {
     private uploadFilesRepository: Repository<UploadFile>,
     private readonly storageService: StorageService,
     private readonly configService: ConfigService,
-    private readonly bucketService: BucketService
+    private readonly bucketService: BucketService,
+    private readonly userLoggerService: UserLoggerService
   ) {
     this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
   }
-
-  // async upload(file: any, filename: string, dirname: string) {
-  //   console.log(file)
-  //   console.log(filename)
-  //   return this.bucketService.uploadFile(file, filename, dirname)
-  // }
 
   /**
    * @param file >>>>
@@ -63,7 +59,7 @@ export class UploadService {
     try {
       if (!file.md5) {
         file.md5 = await this.calculateFileStats(file.path).catch(err => {
-          throw new Error('计算文件md5失败')
+          throw new Error(`计算文件md5失败:${err.message}`)
         })
       }
       if (!file.size) {
@@ -72,7 +68,7 @@ export class UploadService {
       if (!ignore) {
         const uploadfile = await this.uploadFilesRepository.findOneBy({ md5: file.md5, userId })
         if (uploadfile) {
-          console.log('用户上传的文件已存在，直接返回文件路径!')
+          // console.log('用户上传的文件已存在，直接返回文件路径!')
           const url = this.storageService.getResponsePath(uploadfile.name, dirname)
           hadExists?.(url)
           return url
@@ -91,55 +87,14 @@ export class UploadService {
       upload.size = file.size
       upload.quote = quoteId ? [quoteId] : []
       await this.uploadFilesRepository.save(upload)
-      // return `${this.common.staticPrefix}/${dirname}/${upload.name}`
+      this.userLoggerService.log(`用户上传文件成功，文件为：${upload.name}`)
       return this.storageService.getResponsePath(upload.name, dirname)
     } catch (error) {
-      console.log(error)
+      // console.log(error)
+      this.userLoggerService.error(`用户上传文件失败，文件为：${file.filename}`, error.message)
       throw error
     }
   }
-
-  
-  
-  // async checkExist(filepath: string, userId: string) {
-  //   const md5 = await this.calculateFileStats(filepath).catch(err => {
-  //     throw new Error('计算文件md5失败')
-  //   })
-  //   const audio = await this.uploadFilesRepository.findOneBy({ md5, userId })
-  //   return isExits ? md5 : null 
-  // }
-
-  
-
-  // async localUpload(file: LocalUploadFile, userId: string, dirname: string) {
-  //   try {
-  //     const md5 = await this.calculateFileStats(file.path).catch(err => {
-  //       throw new Error('计算文件md5失败')
-  //     })
-  //     const size = fs.statSync(file.path).size
-  //     const uploadfile = await this.uploadFilesRepository.findOneBy({ md5, userId })
-  //     if (uploadfile) {
-  //       console.log('用户上传的文件已存在，直接返回文件路径!')
-  //       return uploadfile.path
-  //     }
-  //     const filepath = await this.storageService.save(file, dirname).catch(err => {
-  //       throw new Error('保存文件失败')
-  //     })
-  //     const upload = new UploadFile()
-  //     upload.name = basename(filepath)
-  //     upload.path = filepath
-  //     upload.userId = userId
-  //     upload.mimetype = file.mimetype
-  //     upload.md5 = md5
-  //     upload.size = size
-  //     upload.quote = []
-  //     await this.uploadFilesRepository.save(upload)
-  //     return this.common.enableCOS ? filepath : `${this.common.staticPrefix}/${filepath.split(this.common.publicDir)[1]}`
-  //   } catch (error) {
-  //     console.log(error)
-  //     throw error
-  //   }
-  // }
 
   async calculateFileStats(filePath: string) {
     return new Promise<string>((resolve, reject) => {
@@ -179,36 +134,4 @@ export class UploadService {
       })
     })
   }
-
-  // async calculateFileStats(filePath: string): Promise<{ md5: string; size: number }> {
-  //   return new Promise<{ md5: string; size: number }>((resolve, reject) => {
-  //     const worker = new Worker('./src/upload/workers/md5-worker.mjs', {
-  //       workerData: { filePath }
-  //     })
-
-  //     // 设置超时 (10s)
-  //     const timer = setTimeout(() => {
-  //       worker.terminate()
-  //       clearTimeout(timer)
-  //     }, 10000)
-
-  //     worker.on('message', data => {
-  //       if (data.error) {
-  //         console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:' + filePath)
-  //         reject(new Error(data.error))
-  //       } else {
-  //         resolve(data)
-  //       }
-  //       clearTimeout(timer)
-  //       worker.terminate()
-  //     })
-
-  //     worker.on('error', error => {
-  //       console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:' + filePath)
-  //       worker.terminate()
-  //       clearTimeout(timer)
-  //       reject(error)
-  //     })
-  //   })
-  // }
 }

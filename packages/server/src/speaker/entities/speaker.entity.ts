@@ -20,7 +20,10 @@ type SpeakerType = 'human' | 'machine'
 
 @Entity()
 export class Speaker {
-  @PrimaryColumn('uuid')
+  @PrimaryColumn({
+    type: 'varchar',
+    length: 36
+  })
   id: string
 
   @BeforeInsert()
@@ -30,19 +33,22 @@ export class Speaker {
 
   @Column({
     type: 'varchar',
+    length: 64,
     default: '',
-    // length: 36
   })
-  model: string // 语音模型
+  model: string // 语音模型名称
 
   @Column({
     type: 'varchar',
+    length: 8,
     default: '',
-    length: 36
   })
   type: SpeakerType // 角色类型
 
-  @Column('uuid')
+  @Column({
+    type: 'varchar',
+    length: 36
+  })
   userId: string // 用户 id
 
   @ManyToOne(() => User, user => user.speakers)
@@ -52,14 +58,14 @@ export class Speaker {
   @Column({
     type: 'varchar',
     default: '',
-    length: 255
+    length: 36
   })
   avatar: string // 头像地址
 
   @Column({
     type: 'varchar',
     default: '',
-    length: 255
+    length: 36
   })
   audio: string // 快速测试音频地址 仅在 type 为 mechanic 时生效
 
@@ -74,10 +80,12 @@ export class Speaker {
   @Max(99999, { message: 'role 值不能超过99999' })
   @IsInt({ message: 'role 值必须是整数' })
   @Column({
-    type: 'int'
+    type: 'int',
+    nullable: true,
+    default: 0
   })
-  role: number // 角色值 0~9999 为 AI 语音预留 10000~99999 为用户角色预留
-
+  role: number // 角色值, 合成语音音色 仅在 type 为 machine 时生效
+  
   @Max(99999, { message: 'changer 值不能超过9999' })
   @IsInt({ message: 'changer 值必须是整数' })
   @Column({
@@ -106,22 +114,22 @@ export class Speaker {
   }
 
   // 在插入或更新前执行校验
-  @BeforeInsert()
-  @BeforeUpdate()
-  async validateUser() {
-    const errors: ValidationError[] = await validate(this)
-    if (errors.length > 0) {
-      throw new Error('Validation failed')
-    }
-    if (this.type === 'human') {
-      if (this.role < 10000) {
-        throw new Error('type 为 human 时，role 取值不能小于10000')
-      }
-    }
-    if (this.type === 'machine') {
-      if (this.role > 9999) {
-        throw new Error('type 为 machine 时，role 取值不能大于9999')
-      }
-    }
-  }
+  // @BeforeInsert()
+  // @BeforeUpdate()
+  // async validateUser() {
+  //   const errors: ValidationError[] = await validate(this)
+  //   if (errors.length > 0) {
+  //     throw new Error('Validation failed')
+  //   }
+  //   // if (this.type === 'human') {
+  //   //   if (this.role < 10000) {
+  //   //     throw new Error('type 为 human 时，role 取值不能小于10000')
+  //   //   }
+  //   // }
+  //   // if (this.type === 'machine') {
+  //   //   if (this.role > 9999) {
+  //   //     throw new Error('type 为 machine 时，role 取值不能大于9999')
+  //   //   }
+  //   // }
+  // }
 }

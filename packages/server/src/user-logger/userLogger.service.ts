@@ -58,7 +58,7 @@ export class UserLoggerService implements LoggerService {
     const log: Log = {
       level: 'error',
       message: message,
-      error: error || '',
+      error: typeof error === 'string' ? error : '',
       timestamp: new Date().toTimeString().slice(0, 8)
     }
     fs.appendFileSync(this.getLoggerFilePath(), `${JSON.stringify(log)}\n`)

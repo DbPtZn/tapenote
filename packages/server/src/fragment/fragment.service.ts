@@ -36,7 +36,7 @@ import { SpeakerService } from 'src/speaker/speaker.service'
 import { basename } from 'path'
 import { UploadService } from 'src/upload/upload.service'
 import { UserService } from 'src/user/user.service'
-import { CvmService } from 'src/cvm/cvm.service'
+import { TencentService } from 'src/tencent/tencent.service'
 
 enum AsrModel {
   Local = 'local-base-asr',
@@ -63,7 +63,7 @@ export class FragmentService {
     private readonly ffmpegService: FfmpegService,
     private readonly sherpaService: SherpaService,
     private readonly userlogger: UserLoggerService,
-    private readonly cvmService: CvmService,
+    private readonly tencentService: TencentService,
     private readonly logger: LoggerService
   ) {}
 
@@ -637,7 +637,7 @@ export class FragmentService {
           throw new Error('免费用户无法使用会员语音识别')
         }
         console.log('会员语音识别')
-        const result = await this.cvmService.asr(filepath)
+        const result = await this.tencentService.asr(filepath)
         console.log(result)
         return result
       }
@@ -672,9 +672,9 @@ export class FragmentService {
     }
     if(model === TtsModel.Tencent) {
       if(!isVip) {
-        throw new Error('免费用户无法使用讯飞语音合成')
+        throw new Error('免费用户无法使用付费语音合成')
       }
-      const result = await this.cvmService.tts(txt, timbre, speed)
+      const result = await this.tencentService.tts(txt, timbre, speed)
       const buffer = Buffer.from(result.Audio, 'base64')
       fs.writeFileSync(temppath, buffer)
       // 计算音频时长

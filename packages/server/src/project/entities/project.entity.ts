@@ -71,7 +71,10 @@ export interface Memo {
 
 @Entity()
 export class Project {
-  @PrimaryColumn('uuid')
+  @PrimaryColumn({
+    type: 'varchar',
+    length: 36
+  })
   id: string
 
   @BeforeInsert()
@@ -79,17 +82,24 @@ export class Project {
     if(!this.id) this.id = uuidv7()
   }
 
-  @Column('uuid')
+  @Column({
+    type: 'varchar',
+    length: 36
+  })
   userId: string // 用户 id
 
   @ManyToOne(() => User, user => user.projects)
   @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
   user: User
 
-  @Column('uuid')
+  @Column({
+    type: 'varchar',
+    length: 36
+  })
   folderId: string // 文件夹 id
 
   @ManyToOne(() => Folder, folder => folder.projects)
+  @JoinColumn({ name: 'folderId', referencedColumnName: 'id' })
   folder: Folder
 
   @OneToMany(() => Snapshot, snapshot => snapshot.project)
@@ -97,26 +107,20 @@ export class Project {
 
   @Column({
     type: 'varchar',
-    length: 18
+    length: 10
   })
   lib: LibraryEnum
 
   @Column({
     type: 'varchar',
-    default: '0.0.1',
-    length: 18
+    length: 10,
+    default: ''
   })
   editorVersion: string
 
-  // @Column({
-  //   type: 'varchar',
-  //   length: 18
-  // })
-  // dirname: string // 文件夹路径
-
   @Column({
     type: 'varchar',
-    length: 255,
+    length: 36,
     default: ''
   })
   cover: string // 封面
@@ -129,14 +133,14 @@ export class Project {
 
   @Column({
     type: 'varchar',
-    length: 255,
+    length: 36,
     default: ''
   })
   firstPicture: string // 首图
 
   @Column({
     type: 'varchar',
-    length: 255,
+    length: 36,
     default: ''
   })
   screenShot: string // 截图
@@ -168,7 +172,7 @@ export class Project {
   
   @Column({
     type: 'varchar',
-    length: 12,
+    length: 8,
     default: RemovedEnum.NEVER
   })
   removed: RemovedEnum
@@ -194,7 +198,8 @@ export class Project {
 
   /** ------------------------------------------ Procedure -------------------------------------------- */
   @Column({
-    type: 'uuid',
+    type: 'varchar',
+    length: 36,
     nullable: true
   })
   fromNoteId: string
@@ -213,68 +218,59 @@ export class Project {
 
   /** ------------------------------------------  course  -------------------------------------------- */
   @Column({
-    type: 'uuid',
+    type: 'varchar',
+    length: 36,
     nullable: true
   })
   fromProcedureId: string
 
   @Column({
-    type: 'uuid',
+    type: 'varchar',
+    length: 36,
     nullable: true
   })
   snapshotId: string // 当前版本
 
   @Column({
-    type: 'text',
-    nullable: true
-    // default: ''
-  })
-  sidenote: string
-
-  @Column({
     type: 'varchar',
+    length: 36,
     default: ''
   })
   audio: string // 音频地址
 
   @Column({
-    type: 'int',
+    type: 'float',
     default: 0
   })
-  duration: number // 音频时长
+  duration: number // 音频时长 (按秒计)
 
   @Column({
     type: 'simple-array',
     nullable: true
-    // default: JSON.stringify([])
   })
   promoterSequence: Array<string> // 启动子序列
 
   @Column({
     type: 'simple-array',
     nullable: true
-    // default: JSON.stringify([])
   })
   keyframeSequence: Array<number> // 关键帧序列
 
   @Column({
     type: 'simple-array',
     nullable: true
-    // default: JSON.stringify([])
   })
   subtitleSequence: Array<string> // 字幕序列
 
   @Column({
     type: 'simple-array',
     nullable: true
-    // default: JSON.stringify([])
   })
   subtitleKeyframeSequence: Array<number> // 字幕关键帧序列
 
   @Column({
     type: 'simple-json',
     nullable: true
-    // default: JSON.stringify([])
   })
   annotations: Annotation[]
 
@@ -293,20 +289,13 @@ export class Project {
   @Column({
     type: 'simple-json',
     nullable: true
-    // default: JSON.stringify({
-    //   penname: '',
-    //   homepage: '',
-    //   email: '',
-    //   wordage: 0,
-    //   filesize: 0
-    // })
   })
   detail: {
-    penname: string
-    homepage: string
-    email: string
+    penname: string // 笔名
+    homepage: string // 个人主页
+    email: string // 邮箱
     wordage: number // 字数
-    filesize: number // 文件大小(包含音频文件、文本、图片)
+    filesize: number // 文件大小(包含音频文件、文本、图片) 未使用
   }
 
   @Column({
@@ -320,13 +309,6 @@ export class Project {
     nullable: true
   })
   config: ProjectConfig
-
-  /** 预留字段 */
-  @Column({
-    type: 'varchar',
-    nullable: true
-  })
-  reserved: string
 
   /** 插入实体时设置创建时间 （仅在使用 save 方法进行更新时生效） */
   @BeforeInsert()

@@ -121,7 +121,6 @@ export class ProjectService {
           fragments: note.fragments || [],
           sequence: note.sequence || [],
           removedSequence: note.removedSequence || [],
-          sidenote: note.sidenote || '',
           annotations: note.annotations || []
         }
       }
@@ -172,7 +171,6 @@ export class ProjectService {
           project.speakerHistory = { human: '', machine: '' }
           break
         case LibraryEnum.COURSE:
-          project.sidenote = data.sidenote || ''
           project.annotations = data.annotations || []
           const { fromNoteId, audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } =
             await this.generateCourse(project.id, procedureId, dirname, userId)
@@ -464,40 +462,49 @@ export class ProjectService {
     }
   }
 
-  async findProcudureById(id: string, userId: string, dirname: string) {
-    try {
-      const procedure = await this.projectsRepository.findOneBy({ id, userId })
-      // 补全音频路径
-      if (!dirname) throw new Error('未指定 dirname！')
-      procedure.fragments = procedure.fragments.map(fragment => {
-        fragment.audio = this.storageService.getFilePath(fragment.audio, dirname)
-        return fragment
-      })
-      return procedure
-    } catch (error) {
-      throw error
-    }
-  }
+  /** 查询 procedure 项目，特别针对 fragment 进行路径补全 （该函数似乎未被使用） */
+  // async findProcudureById(id: string, userId: string, dirname: string) {
+  //   try {
+  //     const procedure = await this.projectsRepository.findOneBy({ id, userId })
+  //     // 补全音频路径
+  //     if (!dirname) throw new Error('未指定 dirname！')
+  //     procedure.fragments = procedure.fragments.map(fragment => {
+  //       fragment.audio = this.storageService.getFilePath(fragment.audio, dirname)
+  //       return fragment
+  //     })
+  //     return procedure
+  //   } catch (error) {
+  //     this.userlogger.error(`查询用户${userId}的Procedure项目${id}失败`, error.message)
+  //     throw error
+  //   }
+  // }
 
-  async findCourseById(id: string, userId: string, dirname?: string) {
-    try {
-      const course = await this.projectsRepository.findOneBy({ id, userId })
-      if (!course) throw new NotFoundException(`课程项目于不存在！项目id: ${id}`)
-      if (!dirname) throw new Error('未指定 dirname！')
-      course.audio = this.storageService.getFilePath(course.audio, dirname)
-      return course
-    } catch (error) {
-      throw error
-    }
-  }
+  /** 查询 course 项目，特别针对音频路径补全 （该函数似乎未被使用） */
+  // async findCourseById(id: string, userId: string, dirname?: string) {
+  //   try {
+  //     const course = await this.projectsRepository.findOneBy({ id, userId })
+  //     if (!course) throw new NotFoundException(`Course项目于不存在！项目id: ${id}`)
+  //     if (!dirname) throw new Error('未指定 dirname！')
+  //     course.audio = this.storageService.getFilePath(course.audio, dirname)
+  //     return course
+  //   } catch (error) {
+  //     this.userlogger.error(`查询用户${userId}的Course项目${id}失败`, error.message)
+  //     throw error
+  //   }
+  // }
 
   async findAll(userId: string, lib?: LibraryEnum) {
-    if (lib) {
-      const projects = await this.projectsRepository.findBy({ userId, lib, removed: RemovedEnum.NEVER })
+    try {
+      if (lib) {
+        const projects = await this.projectsRepository.findBy({ userId, lib, removed: RemovedEnum.NEVER })
+        return projects
+      }
+      const projects = await this.projectsRepository.findBy({ userId, removed: RemovedEnum.NEVER })
       return projects
+    } catch (error) {
+      this.userlogger.error(`查询用户${userId}的所有${lib || ''}项目失败`, error.message)
+      throw error
     }
-    const projects = await this.projectsRepository.findBy({ userId, removed: RemovedEnum.NEVER })
-    return projects
   }
 
   async findAllFromTrash(userId: string, lib: LibraryEnum) {
@@ -508,6 +515,7 @@ export class ProjectService {
       })
       return projects
     } catch (error) {
+      this.userlogger.error(`查询用户${userId}的${lib}回收站项目失败`, error.message)
       throw error
     }
   }
@@ -524,13 +532,14 @@ export class ProjectService {
       const projects = await this.projectsRepository.find({
         where: { folderId, userId, removed: RemovedEnum.NEVER }
       })
-      return projects || []
+      return projects
     } catch (error) {
-      console.log(error)
+      this.userlogger.error(`通过文件夹${folderId}查询项目失败`, error.message)
       throw error
     }
   }
 
+  /** 按更新时间顺序进行查询 */
   async findByUpdateAtDESC(skip: number, take: number, lib: LibraryEnum, userId: string) {
     try {
       const projects = await this.projectsRepository.find({
@@ -554,6 +563,7 @@ export class ProjectService {
     }
   }
 
+  /** 查询关联项目 */
   async findRelevantProjectsById(id: string, userId: string) {
     try {
       // const courses = await this.projectsRepository.find({
@@ -589,6 +599,7 @@ export class ProjectService {
     }
   }
 
+  /** 查询父级项目 */
   async findParentProjectsById(id: string, userId: string) {
     try {
       const project = await this.projectsRepository.findOneBy({ id, userId })
@@ -667,7 +678,6 @@ export class ProjectService {
       project.abbrev = txt ? txt.slice(0, 100) : ''
       project.detail.wordage = txt.length
       const newproject = await this.projectsRepository.save(project)
-      // eslint-disable-next-line prettier/prettier
       return {
         updateAt: newproject.updateAt,
         abbrev: newproject.abbrev,
@@ -680,57 +690,68 @@ export class ProjectService {
     }
   }
 
+  /** 更新封面 */
   async updateCover(id: string, url: string, userId: string) {
     try {
       const project = await this.projectsRepository.findOneBy({ id, userId })
       project.cover = url
       const newProject = await this.projectsRepository.save(project)
+      this.userlogger.log(`更新封面成功,项目id:${id}`)
       return {
         updateAt: newProject.updateAt
       }
     } catch (error) {
+      this.userlogger.error(`更新封面失败,项目id:${id}`, error.message)
       throw error
     }
   }
 
+  /** 更新封面位置 */
   async updateCoverPosition(id: string, position: number, userId: string) {
     try {
       const project = await this.projectsRepository.findOneBy({ id, userId })
       project.coverPosition = position
       const newProject = await this.projectsRepository.save(project)
+      this.userlogger.log(`更新封面位置成功,项目id:${id}`)
       return {
         updateAt: newProject.updateAt
       }
     } catch (error) {
+      this.userlogger.error(`更新封面位置失败,项目id:${id}`, error.message)
       throw error
     }
   }
 
+  /** 更新屏幕截图 */
   async updateScreenshot(img: string, projectId: string, userId: string) {
     try {
       const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
       project.screenShot = img
       const newProject = await this.projectsRepository.save(project)
+      this.userlogger.log(`更新屏幕截图成功,项目id:${projectId}`)
       return {
         updateAt: newProject.updateAt
       }
     } catch (error) {
+      this.userlogger.error(`更新屏幕截图失败,项目id:${projectId}`, error.message)
       throw error
     }
   }
 
-  async updateSidenoteContent(updateSidenoteContentDto: UpdateSidenoteContentDto, userId: string) {
-    const { id, content } = updateSidenoteContentDto
-    try {
-      const course = await this.projectsRepository.findOneBy({ id: id, userId })
-      course.sidenote = content
-      const newCourse = await this.projectsRepository.save(course)
-      return { updateAt: newCourse.updateAt, msg: '旁注更新成功！' }
-    } catch (error) {
-      this.userlogger.error(`更新旁注失败,项目id:${id}`)
-      throw error
-    }
-  }
+  // sidenote 暂时弃用了
+  // async updateSidenoteContent(updateSidenoteContentDto: UpdateSidenoteContentDto, userId: string) {
+  //   const { id, content } = updateSidenoteContentDto
+  //   try {
+  //     const course = await this.projectsRepository.findOneBy({ id: id, userId })
+  //     course.sidenote = content
+  //     const newCourse = await this.projectsRepository.save(course)
+  //     return { updateAt: newCourse.updateAt, msg: '旁注更新成功！' }
+  //   } catch (error) {
+  //     this.userlogger.error(`更新旁注失败,项目id:${id}`)
+  //     throw error
+  //   }
+  // }
+  
   async updateSpeakerHistory(updateSpeakerHistoryDto: UpdateSpeakerHistoryDto, userId: string) {
     const { id, type, speakerId } = updateSpeakerHistoryDto
     try {
@@ -745,14 +766,15 @@ export class ProjectService {
       this.userlogger.log(`更新说话人历史记录成功,项目id:${id},${type}说话人id:${speakerId}`)
       return { updateAt: result.updateAt, msg: '更新成功！' }
     } catch (error) {
-      this.userlogger.error(`更新说话人历史记录失败,项目id:${id}`)
+      this.userlogger.error(`更新说话人历史记录失败,项目id:${id}`, error.message)
       throw error
     }
   }
 
+  /** 添加便笺 */
   async addMemo(dto: AddMemoDto, userId: string) {
+    const { projectId, x, y } = dto
     try {
-      const { projectId, x, y } = dto
       const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
       const memo: Memo = {
         id: randomstring.generate(8),
@@ -772,16 +794,19 @@ export class ProjectService {
       : project.memos = [memo]
       
       await this.projectsRepository.save(project)
+      this.userlogger.log(`添加便笺成功,项目id:${projectId},便笺id:${memo.id}`)
       return memo
     } catch (error) {
+      this.userlogger.error(`添加便笺失败,项目id:${projectId}`, error.message)
       throw error
     }
     
   }
   
+  /** 更新便笺内容 */
   async updateMemoContent(dto: UpdateMemoContentDto, userId: string) {
+    const { memoId, projectId, content } = dto
     try {
-      const { memoId, projectId, content } = dto
       const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
       if(!project.memos || project.memos.length === 0) throw new Error('便笺不存在')
       const index = project.memos.findIndex(item => item.id === memoId)
@@ -789,15 +814,18 @@ export class ProjectService {
       project.memos[index].content = content
       project.updateAt = new Date()
       await this.projectsRepository.save(project)
+      this.userlogger.log(`更新便笺内容成功,项目id:${projectId},便笺id:${memoId}`)
       return ''
     } catch (error) {
+      this.userlogger.error(`更新便笺失败,项目id:${projectId},便笺id:${memoId}`, error.message)
       throw error
     }
   }
 
+  /** 更新便笺状态 */
   async updateMemoState(dto: UpdateMemoStateDto, userId: string) {
+    const  { memoId, projectId, isExpanded, bgColor, height, width, x, y } = dto
     try {
-      const  { memoId, projectId, isExpanded, bgColor, height, width, x, y } = dto
       const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
       const index = project.memos.findIndex(item => item.id === memoId)
       if (index === -1) throw new Error('便笺不存在')
@@ -810,22 +838,27 @@ export class ProjectService {
       project.updateAt = new Date()
       await this.projectsRepository.save(project)
       // 出现更新 project.memos[index].isExpanded 后，前端刷新获取的数据依旧是未更新前的情况，原因未知（影响不大）
+      this.userlogger.log(`更新便笺状态成功,项目id:${projectId},便笺id:${memoId}`)
       return { updateAt: project.updateAt }
     } catch (error) {
+      this.userlogger.error(`更新便笺状态失败,项目id:${projectId},便笺id:${memoId}`, error.message)
       throw error
     }
   }
 
+  /** 删除便笺 */
   async deleteMemo(dto: DeleteMemoDto, userId: string) {
+    const { memoId, projectId } = dto
     try {
-      const { memoId, projectId } = dto
       const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
       const index = project.memos.findIndex(item => item.id === memoId)
       if (index === -1) throw new Error('便笺不存在')
       project.memos.splice(index, 1)
       await this.projectsRepository.save(project)
+      this.userlogger.log(`删除便笺成功,项目id:${projectId},便笺id:${memoId}`)
       return { updateAt: project.updateAt }
     } catch (error) {
+      this.userlogger.error(`删除便笺失败,项目id:${projectId},便笺id:${memoId}`, error.message)
       throw error
     }
   }
