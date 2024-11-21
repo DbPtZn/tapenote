@@ -244,8 +244,8 @@ export function getNoteConfig(args: {
       })
       // 上传图片
       const imgToUrlService = injector.get(ImgToUrlService)
-      const { uploadImgFunction } = useUploadImg(account, hostname)
-      imgToUrlService.setup(uploadImgFunction)
+      const { uploadImgBase64 } = useUploadImg(account, hostname)
+      imgToUrlService.setup(uploadImgBase64)
       // imgToUrlService.onFinish.subscribe((value) => {
       //   console.log('上传成功:')
       //   console.log(value)

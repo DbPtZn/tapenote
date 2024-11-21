@@ -1,15 +1,16 @@
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { splitText } from '../_utils/splitText'
 import { useI18n } from 'vue-i18n'
 import { NIcon, NMessageProvider, useDialog, useMessage } from 'naive-ui'
 import useStore from '@/store'
+// import { watchOnce } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
 import { CreateBlankFragment, SpeakerSelectList } from '../private'
 // import { AddReactionSharp } from '@vicons/material'
 import { formatTime } from '../_utils/formatTime'
 import { Bridge } from '../../bridge'
 
-type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
+// type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 export function useInput(id: string, account: string, hostname: string, bridge: Bridge) {
   const { projectStore, speakerStore } = useStore()
   const message = useMessage()
@@ -20,12 +21,14 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
   const ttsSpeed = ref(1)
   const isAudioInputting = ref(false)
   const inputtingDuration = ref('00:00:00')
-
+  
   const speakerId = computed(() =>
     recorderMode.value === 'TTS' ? projectStore.get(id)?.speakerHistory.machine : projectStore.get(id)?.speakerHistory.human
   )
   const speaker = computed(() => {
-    return speakerStore.get(speakerId.value || '', account, hostname, recorderMode.value === 'TTS' ? 'machine' : 'human')
+    const currentSpeaker = speakerStore.get(speakerId.value || '', account, hostname, recorderMode.value === 'TTS' ? 'machine' : 'human')
+    ttsSpeed.value = currentSpeaker?.speed || 1
+    return currentSpeaker
   })
 
   async function handleTextOutput(text: string) {
@@ -153,13 +156,9 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
             dialog.destroyAll()
           },
           onAdd: result => {
+            console.log(result)
             speakerStore.create(
-              {
-                role: result.role,
-                name: result.name,
-                avatar: result.avatar,
-                changer: result.changer
-              },
+              result,
               account,
               hostname
             )

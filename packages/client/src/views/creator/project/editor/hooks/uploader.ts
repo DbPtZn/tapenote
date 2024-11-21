@@ -1,4 +1,4 @@
-import { useUploadImg } from '../../../_utils'
+import { useUploadImg } from '../../../_hooks'
 import { UploadConfig } from '@textbus/editor'
 
 export function uploader(config: UploadConfig, account: string, hostname: string) {

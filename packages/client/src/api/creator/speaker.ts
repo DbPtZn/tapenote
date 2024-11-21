@@ -1,9 +1,12 @@
-import { AxiosInstance } from "axios"
+import { AxiosInstance } from 'axios'
 interface CreateSpeakerDto {
-  role: number
-  name: string
+  type: 'human' | 'machine'
+  model: string
   avatar: string
-  changer?: number
+  name: string
+  role: number
+  speed: number
+  changer: number
 }
 
 export const speaker = (axios: AxiosInstance) => {
@@ -17,12 +20,12 @@ export const speaker = (axios: AxiosInstance) => {
     delete<T>(id: string) {
       return axios.delete<T>(`/speaker/delete/` + id)
     },
-    testTts(role: number, model: string) {
-      console.log(`/speaker/read/test?role=${role}&model=${model}`)
-      return axios.get(`/speaker/read/test?role=${role}&model=${model}`)
+    testTts(role: number, model: string, speed: number) {
+      // console.log(`/speaker/read/test?role=${role}&model=${model}`)
+      return axios.get(`/speaker/read/test?role=${role}&model=${model}&speed=${speed}`)
     },
     clearTemp(url: string) {
-      return axios.post('/speaker/delete/temp',{ url })
+      return axios.post('/speaker/delete/temp', { url })
     }
   }
 }

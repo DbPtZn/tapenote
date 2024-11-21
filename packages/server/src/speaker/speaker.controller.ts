@@ -40,9 +40,14 @@ export class SpeakerController {
   }
 
   @Get(`${REST.R}/test`)
-  async testTts(@Query('role') role: number, @Query('model') model: string, @Req() req, @Res() res) {
+  async testTts(
+    @Query('role') role: number,
+    @Query('model') model: string,
+    @Query('speed') speed: number,
+    @Req() req,
+    @Res() res) {
     try {
-      const filepath = await this.speakerService.testTts(Number(role), model, 1)
+      const filepath = await this.speakerService.testTts(Number(role), model, Number(speed))
       res.status(200).send(filepath)
     } catch (error) {
       res.status(400).send(error.message)

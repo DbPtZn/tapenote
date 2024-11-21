@@ -15,6 +15,51 @@ import { commonConfig } from 'src/config'
 import randomstring from 'randomstring'
 import fsx from 'fs-extra'
 import { TencentService } from 'src/tencent/tencent.service'
+import { AsrModel, TtsModel } from 'src/enum'
+
+const ttsOptions = [
+  { label: '基础语音合成-女声 (免费)', value: TtsModel.Local, msg: '基础女声支持 0 ~ 186 音色值调控' },
+  { label: '腾讯语音合成 (会员)', value: TtsModel.Tencent, msg: '详见腾讯语音合成音色表' }
+    // { label: '讯飞语音合成 (会员)', value: 'xunfei-base-tts' },
+]
+
+const asrOptions = [
+  { label: '基础语音识别 (免费)', value: AsrModel.Local, msg: '' },
+  { label: '腾讯语音识别 (会员)', value: AsrModel.Tencent, msg: '' }
+   // { label: '讯飞语音识别 (会员)', value: 'xunfei-base-asr' },
+]
+
+const tencentTtsTimbreLanguageMap = new Map<number, string[]>([
+  [ 10510000, ["zh-CN"]],
+  [ 1001, ["zh-CN"]],
+  [ 1002, ["zh-CN"]],
+  [ 1003, ["zh-CN"]],
+  [ 1004, ["zh-CN"]],
+  [ 1005, ["zh-CN"]],
+  [ 1008, ["zh-CN"]],
+  [ 1009, ["zh-CN"]],
+  [ 1010, ["zh-CN"]],
+  [ 1017, ["zh-CN"]],
+  [ 1018, ["zh-CN"]],
+  [ 1050, ["en-US"]],
+  [ 1051, ["en-US"]]
+])
+
+function getLanguage(type: 'human' | 'machine', value?: { model: string, role: number }) {
+  if(type === 'human') {
+    return ['zh-CN', 'en-US'] // 目前语音识别的本地模型和付费模型都支持中英文
+  }
+  if(type === 'machine' && value) {
+    if (value.model === AsrModel.Local) {
+      return ['zh-CN'] // 本地语音合成模型只支持中文
+    }
+    if (value.model === AsrModel.Tencent) {
+      const language = tencentTtsTimbreLanguageMap.get(value.role)
+      return language || []
+    }
+  }
+  return []
+}
 
 @Injectable()
 export class SpeakerService {
@@ -34,7 +79,7 @@ export class SpeakerService {
   }
 
   async create(createSpeakerDto: CreateSpeakerDto, userId: string, dirname: string) {
-    const { model, type, role, name, avatar, changer } = createSpeakerDto
+    const { model, type, role, name, speed, avatar, changer } = createSpeakerDto
     // console.log(createSpeakerDto)
     try {
       const user = await this.userService.findOneById(userId)
@@ -43,16 +88,19 @@ export class SpeakerService {
       speaker.user = user
       speaker.model = model
       speaker.type = type === 'human' ? 'human' : 'machine'
-      speaker.role = role
+      speaker.language = getLanguage(type, { model, role })
+      speaker.role = role || 0
       speaker.name = name
       speaker.avatar = basename(avatar)
-      speaker.changer = changer ? changer : 0
+      speaker.changer = changer || 0
+      speaker.speed = speed || 1
       const result = await this.speakersRepository.save(speaker)
       delete result.user
       result.avatar = this.storageService.getResponsePath(result.avatar, dirname)
       this.userLogger.log(`创建 speaker 成功,speaker id:${result.id}`)
       return result
     } catch (error) {
+      console.log(error)
       this.userLogger.error(`创建 speaker 失败`, error.message)
       throw error
     }
@@ -79,7 +127,11 @@ export class SpeakerService {
         arr[index].avatar = this.storageService.getResponsePath(speaker.avatar, dirname)
       })
       this.userLogger.log(`查询 speakers 成功`)
-      return speakers
+      return {
+        speakers,
+        ttsOptions,
+        asrOptions
+      }
     } catch (error) {
       this.userLogger.error(`查询 speakers 失败`, error.message)
       throw error
@@ -100,8 +152,8 @@ export class SpeakerService {
   // TODO 可以使用 redis 存储来缓存优化
   async testTts(speakerId: number, model: string, speed = 1) {
     try {
-      // console.log(speakerId, model)
-      const txt = '哈库拉玛塔塔'
+      console.log(speakerId, model)
+      const txt = '欢迎使用笔记映画工具，祝您生活愉快！'
       const filename = `${randomstring.generate(8)}.wav`
       const filepath= this.storageService.createLocalFilePath(filename ,'temp')
       switch (model) {

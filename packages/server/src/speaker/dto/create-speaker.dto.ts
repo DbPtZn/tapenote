@@ -1,18 +1,25 @@
-import { IsNotEmpty, IsString, Length, Max, Min, IsInt } from 'class-validator'
+import { IsNotEmpty, IsString, Length, Max, Min, IsInt, IsNumber, IsEnum, min, IsOptional } from 'class-validator'
 
 export class CreateSpeakerDto {
   @IsString()
   @Length(0, 255)
   model: string
 
-  @IsString()
+  @IsString({
+    groups: ['human', 'machine']
+  })
   type: 'human' | 'machine'
 
-  @IsNotEmpty({ message: 'role 值不能为空' })
+  @IsOptional()
   @IsInt({ message: 'role 值必须为整数' })
   @Min(0, { message: 'role 值必须不能小于0' })
-  @Max(99999, { message: 'role 值必须不能超过99999' })
   role: number
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Max(3)
+  speed: number
 
   @IsString()
   @Length(0, 36)
@@ -22,10 +29,9 @@ export class CreateSpeakerDto {
   @Length(0, 255)
   avatar: string
 
-  @IsNotEmpty({ message: 'changer 值不能为空' })
+  @IsOptional()
   @IsInt({ message: 'changer 值必须为整数' })
   @Min(0, { message: 'changer 值必须大于0' })
-  @Max(9999, { message: 'changer 值必须小于9999' })
   changer: number
 }
 

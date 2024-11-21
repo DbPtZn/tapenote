@@ -76,8 +76,21 @@ export class Speaker {
   })
   name: string // 角色名称
 
+  // 支持语言 仅在 type 为 machine 时生效
+  @Column({
+    type: 'simple-array',
+    nullable: true
+  })
+  language: string[]
+
+  // 默认语速控制 仅在 type 为 machine 时生效
+  @Column({
+    type: 'float',
+    default: 1
+  })
+  speed: number // 语速
+
   @Min(0, { message: 'role 值不能小于0' })
-  @Max(99999, { message: 'role 值不能超过99999' })
   @IsInt({ message: 'role 值必须是整数' })
   @Column({
     type: 'int',
@@ -86,7 +99,6 @@ export class Speaker {
   })
   role: number // 角色值, 合成语音音色 仅在 type 为 machine 时生效
   
-  @Max(99999, { message: 'changer 值不能超过9999' })
   @IsInt({ message: 'changer 值必须是整数' })
   @Column({
     type: 'int',

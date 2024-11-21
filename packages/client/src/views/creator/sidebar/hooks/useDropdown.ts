@@ -264,7 +264,7 @@ export function useSidebarDropDown() {
                         })
                       }
                     }
-                    console.log(folders)
+                    // console.log(folders)
                     async function traverseOutput(folders: Folder[], basePath: string) {
                       for (let i = 0; i < folders.length; i++) {
                         const fullPath = basePath + folders[i].name
@@ -705,7 +705,7 @@ function renderCustomHeader() {
         h('div', { style: 'font-size: 12px;' }, [
           h(
             NText,
-            { depth: 3, style: { display: 'block', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
+            { depth: 3, style: { display: userStore.vipExpirationAt ? 'block' : 'none', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
             { default: () => `VIP 至 ${dayjs(userStore.vipExpirationAt).format('YYYY-MM-DD')} 结束` } // 用户会员状态
           )
         ])

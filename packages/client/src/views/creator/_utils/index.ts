@@ -1,3 +1,3 @@
 export * from './pack'
-export * from './useUploadImg'
+export * from '../_hooks/useUploadImg'
 export * from './performChunk'

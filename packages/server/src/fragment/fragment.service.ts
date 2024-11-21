@@ -37,16 +37,11 @@ import { basename } from 'path'
 import { UploadService } from 'src/upload/upload.service'
 import { UserService } from 'src/user/user.service'
 import { TencentService } from 'src/tencent/tencent.service'
+import { TtsModel, AsrModel } from 'src/enum'
 
-enum AsrModel {
-  Local = 'local-base-asr',
-  Tencent = 'tencent-base-asr',
-  Xunfei = 'xunfei-base-asr'
-}
-enum TtsModel {
-  Local = 'local-base-tts',
-  Tencent = 'tencent-base-tts',
-  Xunfei = 'xunfei-base-tts'
+/** 根据用户是否为 vip 选择模型 */
+function getModel(isVip: boolean, type: 'human' | 'machine') {
+  return type === 'human' ? (isVip ? AsrModel.Tencent :AsrModel.Local) : (isVip ? TtsModel.Tencent : TtsModel.Local)
 }
 
 @Injectable()
@@ -70,7 +65,6 @@ export class FragmentService {
   async getFragmentSpeaker(speakerId: string, type: 'human' | 'machine', userId: string, dirname: string, isVip: boolean) {
     try {
       let fragmentSpeaker: FragmentSpeaker
-      // 默认用户或默认机器人 speakerId 为空字符串
       if (speakerId) {
         const speaker = await this.speakerService.findOneById(speakerId, userId, dirname)
         if (speaker) {
@@ -86,27 +80,22 @@ export class FragmentService {
           fragmentSpeaker = {
             id: '',
             type,
-            model: getModel(isVip),
+            model: getModel(isVip, type),
             name: '',
             avatar: '',
-            role: type === 'human' ? 10000 : 0
+            role: 0
           }
         }
       } else {
+      // speakerId 为空字符时，即根据 type 属性确定是 默认用户 或 默认机器人
         fragmentSpeaker = {
           id: '',
           type,
-          model: getModel(isVip),
+          model: getModel(isVip, type),
           name: '',
           avatar: '',
-          role: type === 'human' ? 10000 : 0
+          role: 0
         }
-      }
-      function getModel(isVip: boolean) {
-        if (isVip) {
-          return type === 'human' ? AsrModel.Tencent : TtsModel.Tencent
-        }
-        return type === 'human' ? AsrModel.Local : TtsModel.Local
       }
       return fragmentSpeaker
     } catch (error) {
@@ -135,7 +124,6 @@ export class FragmentService {
       for(let i =0; i < dataArray.length; i++) {
         const data = dataArray[i]
         const { audio, duration, speakerId, actions, key } = data
-        this.userlogger.log(`正在为项目${procedureId}创建音频转文本片段...`)
         if (!audio || !procedureId || !dirname) {
           console.log('输入错误, 缺少必要参数!')
           throw new Error('输入错误, 缺少必要参数！')
@@ -180,16 +168,15 @@ export class FragmentService {
           fragment.tags = new Array(length)
           fragment.promoters = new Array(length)
         } catch (error) {
-          console.log(`语音识别失败：${error.message}`)
-          this.userlogger.log(`语音识别失败，错误原因：${error.message} `)
+          // console.log(`语音识别失败：${error.message}`)
+          // this.userlogger.log(`语音识别失败，错误原因：${error.message} `)
           fsx.removeSync(audio)
           await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
-          console.log('正在删除音频文件...', i === dataArray.length - 1)
-          // if(i === dataArray.length - 1) break // 如果是最后一个直接跳出循环
+          // console.log('正在删除音频文件...', i === dataArray.length - 1)
           // 语音识别失败后，跳出当前循环 (不再抛出错误，因为会导致整个过程中断)
           continue // throw error
         }
-        console.log('正在创建音频文件...')
+        // console.log('正在创建音频文件...')
         // 添加动作
         if (actions.length > 0) fragment = addPromoter(fragment, actions)
 
@@ -230,7 +217,7 @@ export class FragmentService {
         // 提交
         await queryRunner.commitTransaction()
       } catch (error) {
-        console.log('创建片段失败：' + error.message)
+        // console.log('创建片段失败：' + error.message)
         await queryRunner.rollbackTransaction()
         await this.projectService.checkAndCorrectFragmentSquence(procedureId)
         throw error
@@ -243,11 +230,8 @@ export class FragmentService {
         fragment.speaker.avatar = this.storageService.getResponsePath(fragment.speaker.avatar, dirname)
       })
       return newFragments
-      // fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
-      // fragment.speaker.avatar = this.storageService.getResponsePath(fragmentSpeaker.avatar, dirname)
-      // return fragment
     } catch (error) {
-      this.userlogger.error(`创建片段失败，错误原因：${error.message} `)
+      this.userlogger.error(`创建片段失败`, error.message)
       throw error
     }
   }
@@ -311,8 +295,6 @@ export class FragmentService {
           // const duration = await this.ffmpegService.calculateDuration(temppath1)
           // this.userlogger.log(`计算时长成功，合成音频时长为：${duration}`)
 
-          //  清理静音
-          // FIXME: 静音清理存在问题，可能会把过短的音频处理掉，比如 “呱” 合成的语音还有 “哈撒给”的“哈”会被裁剪掉
           // this.userlogger.log(`正在清理合成音频中首部的静音段...`)
           // const temppath2 = this.storageService.createTempFilePath('.wav')
           // await this.ffmpegService.clearSilence(temppath1, temppath2)
@@ -437,13 +419,6 @@ export class FragmentService {
       }
       fragment.removed = RemovedEnum.NEVER
 
-      // 指定生成文件的位置
-      // const { filename, filepath } = this.storageService.createFilePath({
-      //   dirname: [dirname, procudure.dirname],
-      //   category: 'audio',
-      //   originalname: fragment.id,
-      //   extname: '.wav'
-      // })
       const filepath = this.storageService.createTempFilePath('.wav')
 
       // 执行FFmpeg命令
@@ -651,10 +626,11 @@ export class FragmentService {
     const { txt, model, timbre, speed, isVip } = args
     if (txt.length === 0) throw '文本为空！'
     const temppath = this.storageService.createTempFilePath('.wav')
+    // 本地合成
     if(model === TtsModel.Local) {
       await this.sherpaService.tts(txt, temppath, timbre, speed)
       const transcript = Array.from(txt)
-      // 清理静音
+      // 清理静音 FIXME: 静音清理存在问题，可能会把过短的音频处理掉，比如 “呱” 合成的语音还有 “哈撒给”的“哈”会被裁剪掉 
       const temppath2 = this.storageService.createTempFilePath('.wav')
       await this.ffmpegService.clearSilence(temppath, temppath2)
       // 计算时长
@@ -670,6 +646,7 @@ export class FragmentService {
       })
       return { duration, data, audio: temppath2 }
     }
+    // 会员语音合成
     if(model === TtsModel.Tencent) {
       if(!isVip) {
         throw new Error('免费用户无法使用付费语音合成')

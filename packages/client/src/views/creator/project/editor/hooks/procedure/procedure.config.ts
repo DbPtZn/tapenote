@@ -193,8 +193,8 @@ export function getProcedureConfig(args: {
       player.setup(injector, scrollerRef)
       // 图片工具
       const imgToUrlService = injector.get(ImgToUrlService)
-      const { uploadImgFunction } = useUploadImg(account, hostname)
-      imgToUrlService.setup(uploadImgFunction)
+      const { uploadImgBase64 } = useUploadImg(account, hostname)
+      imgToUrlService.setup(uploadImgBase64)
     }
   }
   return config

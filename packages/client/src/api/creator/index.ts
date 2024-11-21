@@ -177,7 +177,7 @@ export class CreatorApi {
         const serverToken = resp?.data?.token
         if(serverToken) {
           // 刷新成功，重新设置 server-token
-          console.log('刷新 Token 成功，更新 server-token')
+          // console.log('刷新 Token 成功，更新 server-token')
           sessionStorage.setItem(`Server:${account}&${hostname}`, serverToken)
           // 解析 Token, 获取用户会员信息并更新至 store
           const { userStore } = useStore()

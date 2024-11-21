@@ -552,7 +552,9 @@ onUnmounted(() => {
             <template #trigger>
               <n-button class="toolbar-btn" quaternary size="small" :disabled="state.isReadonly">
                 <template #icon>
-                  <n-icon :component="Interpreter" :size="24" @click="handleSpeakerChange(recorderMode === 'ASR' ? 'human' : 'machine')" />
+                  <div>
+                    <img :src="speaker?.avatar" :alt="speaker?.name" :style="{ width: '24px', height: '24px', objectFit: 'contain' }" @click="handleSpeakerChange(recorderMode === 'ASR' ? 'human' : 'machine')" />
+                  </div>
                 </template>
               </n-button>
             </template>

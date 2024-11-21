@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { computed, h, ref } from 'vue'
 import { NButton, NSpace, useMessage } from 'naive-ui'
-import type { DataTableColumns, FormInst, FormItemRule, FormRules, UploadFileInfo } from 'naive-ui'
+import type { DataTableColumns, FormInst, FormItemRule, FormRules, UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui'
 import { Main, Header } from '@/components'
 import useStore from '@/store'
 import { onMounted } from 'vue'
 import { getServerToken } from '@/api'
+import { useUploadImg } from '../_hooks'
 interface ModelType {
   avatar: string
   nickname: string
@@ -61,15 +62,22 @@ const rules: FormRules = {
 }
 const formRef = ref<FormInst | null>(null)
 
-function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
-  if (args.event) {
-    console.log(args.event.currentTarget)
-    const path = userStore.resourceDomain + (args.event.currentTarget as XMLHttpRequest).response
-    console.log(path)
-    model.value.avatar = path
-  }
+const { uploadImgFile } = useUploadImg(userStore.account, userStore.hostname)
+async function useImgRequest(options: UploadCustomRequestOptions) {
+  if(!options?.file?.file) return
+  const url = await uploadImgFile(options.file.file)
+  model.value.avatar = url
 }
-const accessToken = computed(() => getServerToken(userStore.account, userStore.hostname))
+
+// function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
+//   if (args.event) {
+//     console.log(args.event.currentTarget)
+//     const path = userStore.resourceDomain + (args.event.currentTarget as XMLHttpRequest).response
+//     console.log(path)
+//     model.value.avatar = path
+//   }
+// }
+// const accessToken = computed(() => getServerToken(userStore.account, userStore.hostname))
 /** 提交 */
 function handleSubmit(e: MouseEvent) {
   e.preventDefault()
@@ -99,12 +107,8 @@ function handleError(ev: Event) {
           <!-- 用户头像 -->
           <n-form-item path="avatar" label="头像">
             <n-upload
-              :action="`${userStore.hostname}/upload/img`"
+              :custom-request="useImgRequest"
               :show-file-list="false"
-              :headers="{
-                Authorization: `Bearer ${accessToken}`
-              }"
-              @finish="handleFinish"
             >
               <img class="avatar" :src="model.avatar" style="width: 100%" @error="handleError" />
             </n-upload>

@@ -1,25 +1,34 @@
 <script lang="ts" setup>
 import { computed, onUnmounted, ref } from 'vue'
-import { FormInst, FormItemRule, FormRules, UploadFileInfo, useMessage } from 'naive-ui'
+import { FormInst, FormItemRule, FormRules, UploadCustomRequestOptions, UploadFileInfo, useMessage } from 'naive-ui'
 import useStore from '@/store'
 import { getServerToken } from '@/api'
+import TencentTimbreList from './_utils/TencentTimbreList.vue'
 import { Tip } from '../../../_common'
+import { onMounted } from 'vue'
+import { hostname } from 'os'
+import { useUploadImg } from '@/views/creator/_utils'
+
+type CreateSpeakerDto = Parameters<ReturnType<typeof useStore>['speakerStore']['create']>[0]
 interface ModelType {
   type:  'human' | 'machine'
   model: string
   avatar: string
   name: string
   role: number
-  changer?: number
+  speed: number
+  changer: number
 }
-type Response = ModelType & Record<string, unknown>
+// type Response = ModelType & Record<string, unknown>
 // const message = useMessage()
 const { speakerStore } = useStore()
 const props = defineProps<{
   account: string
   hostname: string
   type:  'human' | 'machine'
-  submit: (res: Response) => void
+}>()
+const emits = defineEmits<{
+  submit: [response: CreateSpeakerDto]
 }>()
 const ResourceDomain = localStorage.getItem(`ResourceDomain:${props.hostname}`) as string
 // console.log('ResourceDomain:', ResourceDomain)
@@ -30,9 +39,15 @@ const model = ref<ModelType>({
   model: '',
   avatar: '',
   name: '',
+  speed: 1,
   role: 0,
   changer: 0
 })
+const showTimbreList = ref(true)
+onMounted(() => {
+  model.value.model = props.type === 'human' ? speakerStore.asrOptions[0].value : speakerStore.ttsOptions[0].value 
+})
+
 /** 表单规则 */
 const rules: FormRules = {
   name: [
@@ -60,48 +75,30 @@ const rules: FormRules = {
         }
       }
     },
-    // {
-    //   message: '扮演角色的角色值不能小于或等于 9999',
-    //   trigger: 'blur',
-    //   validator: (rule: FormItemRule, value: number) => {
-    //     if (props.type === 'human') {
-    //       if (value <= 9999) {
-    //         return false
-    //       }
-    //     }
-    //   }
-    // },
     {
-      message: '扮演角色的角色值不能超过 99999',
-      trigger: 'blur',
-      validator: (rule: FormItemRule, value: number) => {
-        if (props.type === 'human') {
-          if (value > 99999) {
-            return false
-          }
-        }
-      }
-    },
-    {
-      message: '合成语音的音色编号不能大于 9998 或等于 0',
+      message: '合成语音的音色编号不能小于 0',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: number) => {
         if (props.type === 'machine') {
-          if (value >= 9998 || value === 0) {
+          if (value < 0) {
             return false
           }
         }
       }
     },
-    {
-      message: '该角色值已存在！',
+  ],
+  speed: [
+  {
+      message: '语速取值范围是 0 ~ 3',
       trigger: 'blur',
       validator: (rule: FormItemRule, value: number) => {
-        if (speakerStore.data.some(speaker => speaker.role === value)) {
-          return false
+        if (props.type === 'machine') {
+          if (value < 0 || value > 3) {
+            return false
+          }
         }
       }
-    }
+    },
   ]
 }
 const accessToken = computed(() => getServerToken(props.account, props.hostname)) 
@@ -110,20 +107,22 @@ function handleSubmit(e: MouseEvent) {
   e.preventDefault()
   formRef.value?.validate(errors => {
     if (!errors) {
-      props.submit(model.value)
+      console.log('model:', model.value)
+      showTimbreList.value = false
+      emits('submit', model.value)
     } else {
       console.log(errors)
     }
   })
 }
-function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
-  if (args.event) {
-    // console.log(args.event.currentTarget)
-    const path = ResourceDomain + (args.event.currentTarget as XMLHttpRequest).response
-    // console.log(path)
-    model.value.avatar = path
-  }
-}
+// function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
+//   if (args.event) {
+//     // console.log(args.event.currentTarget)
+//     const path = ResourceDomain + (args.event.currentTarget as XMLHttpRequest).response
+//     // console.log(path)
+//     model.value.avatar = path
+//   }
+// }
 function handleError(ev: Event) {
   const target = ev.target as HTMLImageElement
   target.src = './image-add.png'
@@ -131,14 +130,14 @@ function handleError(ev: Event) {
 
 const audioCache = new Map<string, HTMLAudioElement>()
 const isLoading = ref(false)
-function handleTest(role: number, ttsModel: string) {
+function handleTest(role: number, ttsModel: string, speed: number) {
   // 如果存在缓存，直接播放缓存信息
-  if (audioCache.has(`${ttsModel}&${role}`)) {
-    audioCache.get(`${ttsModel}&${role}`)?.play()
+  if (audioCache.has(`${ttsModel}&${role}&${speed}`)) {
+    audioCache.get(`${ttsModel}&${role}&${speed}`)?.play()
     return
   }
   isLoading.value = true
-  speakerStore.testTts(role, ttsModel, props.account, props.hostname).then(res => {
+  speakerStore.testTts(role, ttsModel, speed, props.account, props.hostname).then(res => {
     // const url = ResourceDomain + res.data as string
     const url = props.hostname + res.data as string // 临时音频文件从服务器端读取
     // console.log('url:', url)
@@ -147,35 +146,31 @@ function handleTest(role: number, ttsModel: string) {
     audio.oncanplay =() => {
       audio.play()
       // 如果没有缓存，则缓存，并通知服务端移除临时音频文件
-      if (!audioCache.has(`${ttsModel}&${role}`)) {
-        audioCache.set(`${ttsModel}&${role}`, audio)
+      if (!audioCache.has(`${ttsModel}&${role}&${speed}`)) {
+        audioCache.set(`${ttsModel}&${role}&${speed}`, audio)
         speakerStore.clearTemp(url, props.account, props.hostname)
       }
     }
   })
 }
 
-const ttsOptions = [
-  { label: '基础语音合成 (免费)', value: 'local-base-tts' },
-  { label: '讯飞语音合成 (会员)', value: 'xunfei-base-tts' },
-]
+// function handleSelect(value: string) {
+//   console.log('value:', value)
+//   // model.value.model = value
+// }
 
-const asrOptions = [
-  { label: '基础语音识别 (免费)', value: 'local-base-asr'},
-  { label: '讯飞语音识别 (会员)', value: 'xunfei-base-asr' },
-]
-
-function handleSelect(value: string) {
-  switch (value) {
-    case 'sherpa-onnx-paraformer-zh-2023-09-14':
-      break;
-    case 'xunfei-base':
-      break;
-    default:
-      break;
+const { uploadImgFile } = useUploadImg(props.account, props.hostname)
+async function useImgRequest(options: UploadCustomRequestOptions) {
+  try {
+    if(!options?.file?.file) return
+    const url = await uploadImgFile(options.file.file)
+    model.value.avatar = url
+  } catch (error) {
+    console.log(error)
   }
 }
 
+const roleMsg = computed(() => speakerStore.ttsOptions.find(option => option.value === model.value.model)?.msg || '')
 
 onUnmounted(() => {
   audioCache.forEach((audio, role) => {
@@ -195,12 +190,8 @@ onUnmounted(() => {
       <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
         <n-form-item path="avatar" label="头像">
           <n-upload
-            :action="`${hostname}/upload/img`"
+            :custom-request="useImgRequest"
             :show-file-list="false"
-            :headers="{
-              Authorization: `Bearer ${accessToken}`
-            }"
-            @finish="handleFinish"
           >
             <img class="avatar" :src="model.avatar" style="width: 100%" @error="handleError" />
           </n-upload>
@@ -217,21 +208,22 @@ onUnmounted(() => {
           </div>
         </div>
         <n-form-item path="model" label="来源">
-          <n-select v-model:value="model.model" :options="type === 'human' ? asrOptions : ttsOptions" @update:value="handleSelect" />
+          <n-select v-model:value="model.model" :options="type === 'human' ? speakerStore.asrOptions : speakerStore.ttsOptions" />
         </n-form-item>
-        <div v-if="type === 'machine'" class="tip-wrapper">
+        <div v-if="type === 'machine' && roleMsg" class="tip-wrapper">
           <div class="tip-content">
             <Tip>
-              <p>语音合成音色</p>
-              <p>基础服务： 目前只有女声，支持 0 ~ 99 音色值控制。</p>
-              <p>讯飞语音合成服务音色表： </p>
+              <p>{{  roleMsg  }}</p>
             </Tip>
           </div>
         </div>
         <n-form-item v-if="type === 'machine'" path="role" label="音色值">
           <n-input-number v-model:value="model.role" placeholder="请输入角色值" :precision="0" :show-button="false" />
-          <n-button class="test" @click="handleTest(model.role, model.model)">测试</n-button>
+          <n-button class="test" @click="handleTest(model.role, model.model, model.speed)">测试</n-button>
           <n-spin v-show="isLoading" size="small" />
+        </n-form-item>
+        <n-form-item v-if="type === 'machine'" path="speed" label="默认语速">
+          <n-input-number v-model:value="model.speed" placeholder="请输入默认语速" :show-button="false" :precision="1" />
         </n-form-item>
         <n-form-item v-if="type === 'human'" path="changer" label="变声器编号 (暂不支持)">
           <n-input-number v-model:value="model.changer" placeholder="请输入变身器编号" :show-button="false" disabled />
@@ -239,10 +231,20 @@ onUnmounted(() => {
       </n-form>
       <n-button class="confirm" @click="handleSubmit">添加</n-button>
     </n-space>
+    <div v-if="showTimbreList" v-show="model.model === 'tencent-base-tts'" class="timbre-list">
+      <TencentTimbreList />
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.timbre-list {
+  position: absolute;
+  width: 600px;
+  top: -120px;
+  left: 446px;
+  scale: 0.8;
+}
 .tip-wrapper {
   position: relative;
   // width: 100%;

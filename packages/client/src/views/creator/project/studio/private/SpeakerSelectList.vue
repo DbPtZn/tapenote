@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { NMessageProvider, useDialog, useThemeVars } from 'naive-ui'
 import { computed, h, ref } from 'vue'
-// import { VpnKeyOffOutlined, AddRound, VpnKeyOutlined, CloseRound, RemoveRound } from '@vicons/material'
-import AddSpeaker from './AddSpeaker.vue'
 import useStore from '@/store'
 import { Icon } from '@iconify/vue'
+import AddSpeaker from './AddSpeaker.vue'
+
 type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
+type CreateSpeakerDto = Parameters<ReturnType<typeof useStore>['speakerStore']['create']>[0]
 type SpeakerType = 'human' | 'machine'
 const props = defineProps<{
   account: string
@@ -13,19 +14,23 @@ const props = defineProps<{
   speakerHistory: { human: string; machine: string }
   data: Speaker[]
   type: SpeakerType
-  onSelect: (id: string, type: SpeakerType) => void
-  onAdd: (args: { type: SpeakerType; avatar: string; name: string; role: number; changer?: number }) => void
-  onRemove: (id: string) => void
+}>()
+
+const emits = defineEmits<{
+  select: [id: string, type: SpeakerType]
+  add: [args: CreateSpeakerDto]
+  remove: [id: string]
 }>()
 
 const dialog = useDialog()
 const themeVars = useThemeVars()
-const isShowKey = ref(false)
+const isShowRole = ref(false)
+const speakerType = ref(props.type)
 const humanSpeaker = computed(() => props.data.filter(i => i.type === 'human'))
 const machineSpeaker = computed(() => props.data.filter(i => i.type === 'machine'))
-
+const { speakerStore } = useStore()
 function handleClick(id: string, type: SpeakerType) {
-  props.onSelect(id, type)
+  emits('select', id, type)
 }
 function handleAdd(type: SpeakerType) {
   const d = dialog.create({
@@ -40,8 +45,8 @@ function handleAdd(type: SpeakerType) {
               account: props.account,
               hostname: props.hostname,
               type,
-              submit: result => {
-                props.onAdd(result)
+              onSubmit: result => {
+                emits('add', result)
                 d.destroy()
               }
             })
@@ -51,79 +56,125 @@ function handleAdd(type: SpeakerType) {
 }
 function handleRemove(id: string, type?: SpeakerType) {
   dialog.create({
-      title: '删除',
-      content: `是否删除？`,
-      positiveText: '删除',
-      negativeText: '取消',
-      onPositiveClick: () => {
-        props.onRemove(id)
-      }
-    })
+    title: '删除',
+    content: `是否删除？`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      emits('remove', id)
+    }
+  })
 }
+
+const currentSpeaker = ref<Speaker>()
+function handleMouseEnter(speaker: Speaker) {
+  currentSpeaker.value = speaker
+}
+
+function handleMouseLeave() {
+  currentSpeaker.value = undefined
+}
+
+function getModelName(value?: string) {
+  if(!value) return ''
+  if(speakerType.value === 'machine') {
+    return speakerStore.ttsOptions.find(i => i.value === value)?.label
+  }
+  return speakerStore.asrOptions.find(i => i.value === value)?.label
+}
+
 </script>
 
 <template>
   <div class="speaker-select-list">
-    <n-tabs type="line" animated :default-value="type">
+    <n-tabs type="line" animated :default-value="speakerType" @update:value="speakerType = $event">
       <template #suffix>
-        <n-button text>
-          <!-- <n-icon :component="!isShowKey ? VpnKeyOutlined : VpnKeyOffOutlined" :size="24" @click="isShowKey = !isShowKey" /> -->
-          <Icon :icon="!isShowKey ? 'material-symbols:vpn-key-alert-rounded' : 'material-symbols:vpn-key-off'" height="24px" @click="isShowKey = !isShowKey" />
+        <n-button v-show="speakerType === 'machine'" text>
+          <Icon
+            :icon="!isShowRole ? 'mdi:card-account-details-outline' : 'mdi:card-account-details'"
+            height="24px"
+            @click="isShowRole = !isShowRole"
+          />
         </n-button>
       </template>
       <n-tab-pane name="machine" tab="合成语音">
         <n-flex>
-          <div class="speaker-item" v-for="speaker in machineSpeaker" :key="speaker.id">
-            <div :class="['speaker-wrapper', speakerHistory.machine === speaker.id ? 'active' : '']" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'machine')">
-              <!-- <n-icon v-if="speaker.role !== 0" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'machine')" /> -->
-              <Icon v-if="!speaker.id" class="speaker-close" icon="mdi:close" height="24" @click.stop ="handleRemove(speaker.id, 'machine')" />
+          <div class="speaker-item" v-for="speaker in machineSpeaker" :key="speaker.id" @mouseenter="handleMouseEnter(speaker)" @mouseleave="handleMouseLeave">
+            <div
+              :class="['speaker-wrapper', speakerHistory.machine === speaker.id ? 'active' : '']"
+              :style="{ width: '50px' }"
+              @click="handleClick(speaker.id, 'machine')"
+            >
+              <Icon v-if="speaker.id" class="speaker-close" icon="mdi:close" height="24" @click.stop="handleRemove(speaker.id, 'machine')" />
               <div class="speaker-avatar">
                 <img
                   :src="speaker.avatar"
                   :alt="speaker.name"
                   :style="{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '3px' }"
-                  @error="(e) => (e.target! as HTMLImageElement).src='./default.png'"
+                  @error="e => ((e.target! as HTMLImageElement).src = './default.png')"
                 />
               </div>
-              <span v-if="!isShowKey" class="speaker-name">{{ speaker.name }}</span>
-              <span v-if="isShowKey" class="speaker-name">{{ speaker.role }}</span>
+              <span class="speaker-name">{{ !isShowRole ? speaker.name : speaker.role }}</span>
             </div>
           </div>
           <div class="speaker-add" @click="handleAdd('machine')">
-            <!-- <n-icon :component="AddRound" :size="24" /> -->
             <Icon icon="mdi:plus" height="24" />
           </div>
         </n-flex>
       </n-tab-pane>
       <n-tab-pane name="human" tab="角色扮演">
         <n-flex>
-          <div class="speaker-item" v-for="speaker in humanSpeaker" :key="speaker.id">
-            <div :class="['speaker-wrapper', speakerHistory.human === speaker.id ? 'active' : '']" :style="{ width: '50px' }" @click="handleClick(speaker.id, 'human')">
-              <!-- <n-icon v-if="speaker.role !== 10000" class="speaker-close" :component="CloseRound" @click.stop ="handleRemove(speaker.id, 'human')" /> -->
-              <Icon v-if="!speaker.id" class="speaker-close" icon="mdi:close" height="24" @click.stop ="handleRemove(speaker.id, 'human')" /> 
+          <div class="speaker-item" v-for="speaker in humanSpeaker" :key="speaker.id"  @mouseenter="handleMouseEnter(speaker)" @mouseleave="handleMouseLeave">
+            <div
+              :class="['speaker-wrapper', speakerHistory.human === speaker.id ? 'active' : '']"
+              :style="{ width: '50px' }"
+              @click="handleClick(speaker.id, 'human')"
+            >
+              <Icon v-if="speaker.id" class="speaker-close" icon="mdi:close" height="24" @click.stop="handleRemove(speaker.id, 'human')" />
               <div class="speaker-avatar">
                 <img
                   :src="speaker.avatar"
                   :alt="speaker.name"
                   :style="{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '3px' }"
-                  @error="(e) => (e.target! as HTMLImageElement).src='./default.png'"
+                  @error="e => ((e.target! as HTMLImageElement).src = './default.png')"
                 />
               </div>
-              <span v-if="!isShowKey" class="speaker-name">{{ speaker.name }}</span>
-              <span v-if="isShowKey" class="speaker-name">{{ speaker.role }}</span>
+              <span class="speaker-name">{{ speaker.name }}</span>
             </div>
           </div>
           <div class="speaker-add" @click="handleAdd('human')">
-            <!-- <n-icon :component="AddRound" :size="24" /> -->
             <Icon icon="mdi:plus" height="24" />
           </div>
         </n-flex>
       </n-tab-pane>
     </n-tabs>
+    <div :class="{ detail: true, 'show-detail': !!currentSpeaker }">
+      <h2>详情</h2>
+      <p>名称：{{ currentSpeaker?.name }}</p>
+      <p>模型：{{ getModelName(currentSpeaker?.model) }}</p>
+      <p v-if="speakerType === 'machine'">音色：{{ currentSpeaker?.role }}</p>
+      <p v-if="speakerType === 'machine'">语速：{{ currentSpeaker?.speed }}</p>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.detail {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 446px;
+  background-color: v-bind('themeVars.cardColor');
+  padding: 0px 24px;
+  box-sizing: border-box;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+.show-detail {
+  opacity: 1;
+}
 .speaker-select-list {
   height: 100%;
   width: 100%;

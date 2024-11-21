@@ -16,7 +16,8 @@ export function useUploadImg(account: string, hostname: string) {
   // })
   const creatorApi = creator.getCreatorApi(account, hostname)
 
-  function uploadImgFunction(img: string) {
+  /** 传入 base64 数据 */
+  function uploadImgBase64(img: string) {
     return new Promise<string>((resolve, reject) => {
       const formdata = new FormData()
       const file = base64ImgtoFile(img)
@@ -41,7 +42,9 @@ export function useUploadImg(account: string, hostname: string) {
     })
   }
 
+  /** 传入文件数据 */
   function uploadImgFile(file: File) {
+    // console.log('file:', file)
     return new Promise<string>((resolve, reject) => {
       const formdata = new FormData()
       formdata.append('file', file) //图片文件
@@ -62,7 +65,7 @@ export function useUploadImg(account: string, hostname: string) {
   }
 
   return {
-    uploadImgFunction,
+    uploadImgBase64,
     uploadImgFile
   }
 }

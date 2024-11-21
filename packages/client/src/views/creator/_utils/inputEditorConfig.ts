@@ -1,5 +1,5 @@
 import { Injector, Subscription, debounceTime } from '@textbus/core'
-import { useUploadImg } from './useUploadImg'
+import { useUploadImg } from '../_hooks/useUploadImg'
 import {
   defaultComponentLoaders,
   defaultComponents,
