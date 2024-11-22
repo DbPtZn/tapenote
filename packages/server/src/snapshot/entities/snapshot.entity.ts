@@ -57,7 +57,7 @@ export class Snapshot {
 
   @Column({
     type: 'varchar',
-    length: 36,
+    length: 255,
     default: ''
   })
   firstPicture: string // 首图

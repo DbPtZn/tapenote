@@ -136,7 +136,7 @@ export class StorageService {
     const extWithoutDot = ext.charAt(0) === '.' ? ext.slice(1) : ext
     if(!filename) return join(os.tmpdir(), `${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`)
     const fileNameWithoutExt = basename(filename, extname(filename))
-    console.log('fileNameWithoutExt:', fileNameWithoutExt)
+    // console.log('fileNameWithoutExt:', fileNameWithoutExt)
     return join(os.tmpdir(), `${fileNameWithoutExt}.${extWithoutDot}`)
   }
 

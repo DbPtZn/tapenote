@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import COS from 'cos-nodejs-sdk-v5'
 import { commonConfig } from 'src/config'
 import fsx from 'fs-extra'
+import fs from 'fs'
 import { basename } from 'path'
 import { LocalUploadFile } from 'src/upload/upload.service'
 
@@ -76,11 +77,11 @@ export class BucketService {
           Bucket: this.common.bucket,
           Region: this.common.region,
           Key: `${dirname}/${filename}`,
-          Output: fsx.createWriteStream(output)
+          Output: fs.createWriteStream(output)
         },
         function (err, data) {
-          console.log(err)
           if (err) {
+            // console.log(err)
             reject(err)
           }
           resolve(data)
@@ -127,7 +128,7 @@ export class BucketService {
             console.log(err)
             reject(err)
           } else {
-            console.log(data)
+            // console.log(data)
             resolve(data)
           }
         }

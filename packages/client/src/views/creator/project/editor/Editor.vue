@@ -444,7 +444,7 @@ onUnmounted(() => {
     // background-color: var(--dpz-editor-pgColor);
   }
   .scroller {
-    position: relative;
+    position: relative; // 添加相对定位属性会影响到容器内部的一些绝对定位和元素的 offsetTop 这类属性。
     display: flex;
     flex-direction: column;
     width: 100%;

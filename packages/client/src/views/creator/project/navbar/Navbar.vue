@@ -109,8 +109,8 @@ const { handleCreate, handleDirSelected, handleAutoAnime, handleJumpToFolder } =
       negativeText: '取消',
       onPositiveClick: async () => {
         dialog.destroyAll() // 先关闭对话框，否则会等创建完成后才关闭
+        if (!configure.folderId) throw new Error('目录信息丢失')
         const msg = message.info('正在创建，请稍后...', { duration: 0 })
-        if (!configure.folderId) return
         try {
           const project = await projectStore.createBy({
             folderId: configure.folderId,
@@ -230,9 +230,12 @@ function handleRelevantProjectCardClick(course: RelevantProject) {
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
+      dialog.destroyAll() // 先关闭对话框，否则会等创建完成后才关闭
+      const msg = message.info('正在创建，请稍后...', { duration: 0 })
       try {
         // 后端创建 course 时会自动创建相应的 snapshot
         await projectStore.coverCourse(course.id, props.id, props.account, props.hostname)
+        msg.destroy()
         const n = notification.success({
           title: `创建新版本成功！`,
           duration: 10000,
@@ -254,6 +257,7 @@ function handleRelevantProjectCardClick(course: RelevantProject) {
             )
         })
       } catch (error) {
+        msg.destroy()
         message.error('创建动画新版本时发生错误！')
       }
     },

@@ -3,7 +3,7 @@ import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/commo
 import { CreateProjectDto } from './dto/create-project.dto'
 import { Annotation, Memo, Project, ProjectBGM } from './entities/project.entity'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Not, Repository, DataSource } from 'typeorm'
+import { Not, Repository, DataSource, Brackets } from 'typeorm'
 import { StorageService } from 'src/storage/storage.service'
 import { LibraryEnum, RemovedEnum } from 'src/enum'
 import { Fragment } from 'src/fragment/entities/fragment.entity'
@@ -73,7 +73,7 @@ export class ProjectService {
       project.lib = lib
 
       project.userId = userId
-      
+
       const folder = await this.folderService.findOneById(folderId, userId)
       project.folderId = folderId
       project.folder = folder
@@ -81,8 +81,8 @@ export class ProjectService {
       project.title = ''
       project.content = '<br>'
       project.abbrev = ''
-  
-      project.detail ={
+
+      project.detail = {
         penname: penname || '佚名',
         homepage: homepage || '',
         email: email || '',
@@ -100,8 +100,7 @@ export class ProjectService {
         // 基础数据
         project.title = note.title
         project.content = note.content || '<br>'
-        project.abbrev = note.abbrev || '',
-        project.firstPicture = note.firstPicture
+        ;(project.abbrev = note.abbrev || ''), (project.firstPicture = note.firstPicture)
         project.memos = note.memos
         project.cover = note.cover
         project.coverPosition = note.coverPosition
@@ -116,7 +115,7 @@ export class ProjectService {
         project.removedSequence = []
         project.speakerHistory = { human: '', machine: '' }
       }
-      
+
       if (procedureId && lib === LibraryEnum.COURSE) {
         const procedure = await this.projectsRepository.findOneBy({ id: procedureId })
         if (!procedure) throw new Error('未找到该工程项目，无法创建课程项目')
@@ -134,8 +133,15 @@ export class ProjectService {
         // 专用数据
         project.bgm = procedure.bgm
         project.annotations = []
-        const { fromNoteId, audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } =
-          await this.generateCourse(project.id, procedureId, dirname, userId)
+        const {
+          fromNoteId,
+          audio,
+          duration,
+          promoterSequence,
+          keyframeSequence,
+          subtitleSequence,
+          subtitleKeyframeSequence
+        } = await this.generateCourse(project.id, procedureId, dirname, userId)
         project.fromNoteId = fromNoteId
         project.fromProcedureId = procedureId
         project.audio = basename(audio) || ''
@@ -161,14 +167,13 @@ export class ProjectService {
   }
 
   /** 生成动画数据 */
-  async generateCourse(
-    courseId: string,
-    procedureId: string,
-    dirname: string,
-    userId: string
-  ) {
+  async generateCourse(courseId: string, procedureId: string, dirname: string, userId: string) {
     try {
-      const procedure = await this.projectsRepository.findOne({ where: { id: procedureId, userId }, relations: ['fragments'] })
+      console.log('正在生成微课数据...')
+      const procedure = await this.projectsRepository.findOne({
+        where: { id: procedureId, userId },
+        relations: ['fragments']
+      })
       // 片段排序：string 类型 不支持直接使用 sort 进行排序 map 产生一个新数组，避免修改原数据
       const order = procedure.sequence.map(item => item)
       const fragments = procedure.fragments
@@ -176,19 +181,22 @@ export class ProjectService {
         .sort((a, b) => {
           return order.indexOf(a.id) - order.indexOf(b.id)
         })
-      
+
       // 对音频路径进行处理
-      for(const fragment of fragments) {
+      for (const fragment of fragments) {
         // 对于远程路径，需要先下载到本地
-        if(this.common.enableCOS) {
+        if (this.common.enableCOS) {
+          console.log(`正在下载远程音频文件：${fragment.audio}`)
           const localpath = this.storageService.createTempFilePath('.wav')
           await this.storageService.fetchRemoteFile(fragment.audio, dirname, localpath)
+          console.log(`下载完成，文件保存路径：${localpath}`)
           fragment.audio = localpath
         } else {
           fragment.audio = this.storageService.getFilePath(fragment.audio, dirname)
         }
       }
-      
+
+      console.log('正在进行片段数据拼接...')
       // 准备需要用到的数组
       const group = {
         audioFragments: [] as string[],
@@ -219,6 +227,7 @@ export class ProjectService {
 
       promoterSequence = group.promoterGroup.flat()
       keyframeSequence = group.keyframeGroup.flat()
+      console.log('正在生成字幕数据...')
       const { subtitleGroup, subtitleKeyframeGroup } = subtitleProcessing(
         group.transcriptGroup,
         group.fragmentDurationGroup
@@ -236,9 +245,9 @@ export class ProjectService {
         console.log(error)
         throw new Error('拼接音频失败！')
       }
-        
+
       // 完成拼接后将云存储缓存到本地的音频片段删除
-      if(this.common.enableCOS) {
+      if (this.common.enableCOS) {
         group.audioFragments.forEach(path => fs.unlinkSync(path))
       }
 
@@ -251,19 +260,25 @@ export class ProjectService {
       try {
         await this.ffmpegService.convertToMp3(tempPath, mp3path)
       } catch (error) {
+        this.userlogger.error(`音频文件转换 MP3 失败: ${error.message}`)
         throw new Error(`音频文件转换失败: ${error.message}`)
       }
 
+      console.log('正在上传音频数据...')
       // 注意：这里应该忽略重复文件的检查，否则可能会出现相同文件导致输出路径错误（理论上也可以直接使用已有文件，但鉴于这种情况发生的概率并不是特别多，而处理逻辑可能比较复杂，所以直接忽略检查）
-      // 存储 mp3 文件 
-      await this.uploadService.upload({
-        file: {
-          filename: basename(mp3path),
-          path: mp3path,
-          mimetype: 'audio/mp3',
+      // 存储 mp3 文件
+      await this.uploadService.upload(
+        {
+          file: {
+            filename: basename(mp3path),
+            path: mp3path,
+            mimetype: 'audio/mp3'
+          },
+          ignore: true // 忽略重复文件检查
         },
-        ignore: true // 忽略重复文件检查
-      }, userId, dirname)
+        userId,
+        dirname
+      )
 
       // 存储 ogg 文件
       const filepath = await this.uploadService.upload(
@@ -274,8 +289,12 @@ export class ProjectService {
             mimetype: 'audio/ogg'
           },
           ignore: true // 忽略重复文件检查
-        }, userId, dirname)
+        },
+        userId,
+        dirname
+      )
 
+      console.log('course 数据创建完成...')
       return {
         fromNoteId: procedure.fromNoteId,
         title: procedure.title,
@@ -286,14 +305,15 @@ export class ProjectService {
         promoterSequence,
         keyframeSequence,
         subtitleSequence,
-        subtitleKeyframeSequence,
+        subtitleKeyframeSequence
       }
     } catch (error) {
+      console.log(error)
       throw error
     }
   }
 
-  /** 
+  /**
    * 在指定的 course 上创建新版本时，自动覆盖原 course
    * 因为我们在创建 course 的时候自动创建了快照，所以这里不需要担心旧项目被覆盖导致数据丢失
    */
@@ -386,6 +406,7 @@ export class ProjectService {
         where: { id, userId, removed: RemovedEnum.NEVER },
         relations: ['fragments', 'folder']
       })
+      if (!project) throw new Error(`查询失败,找不到目标项目,项目id:${id}`)
       // 补全路径
       project.cover = project.cover ? this.storageService.getResponsePath(project.cover, dirname) : ''
       switch (project.lib) {
@@ -416,7 +437,7 @@ export class ProjectService {
 
   async findOneById(id: string, userId: string) {
     try {
-      const project = await this.projectsRepository.findOneBy({ id, userId })
+      const project = await this.projectsRepository.findOneBy({ id, userId, removed: RemovedEnum.NEVER })
       return project
     } catch (error) {
       throw new Error(`查询失败,找不到目标项目,项目id:${id}`)
@@ -539,15 +560,20 @@ export class ProjectService {
           'project.duration',
           'project.detail',
           'project.createAt',
+          'project.removed',
           'folder.id',
           'folder.name'
         ])
-        .where('project.fromProcedureId = :id', { id })
-        .orWhere('project.fromNoteId = :id', { id })
-        .andWhere('project.userId = :userId', { userId })
+        .where('project.userId = :userId', { userId })
+        .andWhere('project.removed = :removed', { removed: RemovedEnum.NEVER })
+        .andWhere(
+          new Brackets(qb => {
+            qb.orWhere('project.fromProcedureId = :id', { id }).orWhere('project.fromNoteId = :id', { id })
+          })
+        )
         .getMany()
 
-      // console.log(projects)
+      // console.log(projects.findIndex(item => item.removed !== RemovedEnum.NEVER))
       return projects
     } catch (error) {
       console.log(error)
@@ -559,11 +585,11 @@ export class ProjectService {
   async findParentProjectsById(id: string, userId: string) {
     try {
       const project = await this.projectsRepository.findOneBy({ id, userId })
-      
+
       const parentProjects: ProjectCard[] = []
-      if(project.fromNoteId) {
+      if (project.fromNoteId) {
         const note = await this.projectsRepository.findOne({
-          where: { id: project.fromNoteId, userId },
+          where: { id: project.fromNoteId, userId, removed: RemovedEnum.NEVER },
           relations: ['folder']
         })
         parentProjects.push({
@@ -580,10 +606,10 @@ export class ProjectService {
           }
         })
       }
-      
-      if(project.fromProcedureId) {
+
+      if (project.fromProcedureId) {
         const procedure = await this.projectsRepository.findOne({
-          where: { id: project.fromProcedureId, userId },
+          where: { id: project.fromProcedureId, userId, removed: RemovedEnum.NEVER },
           relations: ['folder']
         })
         parentProjects.push({
@@ -707,7 +733,7 @@ export class ProjectService {
   //     throw error
   //   }
   // }
-  
+
   async updateSpeakerHistory(updateSpeakerHistoryDto: UpdateSpeakerHistoryDto, userId: string) {
     const { id, type, speakerId } = updateSpeakerHistoryDto
     try {
@@ -744,11 +770,9 @@ export class ProjectService {
         updateAt: new Date(),
         createAt: new Date()
       }
-      console.log(memo)
-      project.memos 
-      ? project.memos.push(memo)
-      : project.memos = [memo]
-      
+      // console.log(memo)
+      project.memos ? project.memos.push(memo) : (project.memos = [memo])
+
       await this.projectsRepository.save(project)
       this.userlogger.log(`添加便笺成功,项目id:${projectId},便笺id:${memo.id}`)
       return memo
@@ -756,15 +780,14 @@ export class ProjectService {
       this.userlogger.error(`添加便笺失败,项目id:${projectId}`, error.message)
       throw error
     }
-    
   }
-  
+
   /** 更新便笺内容 */
   async updateMemoContent(dto: UpdateMemoContentDto, userId: string) {
     const { memoId, projectId, content } = dto
     try {
       const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
-      if(!project.memos || project.memos.length === 0) throw new Error('便笺不存在')
+      if (!project.memos || project.memos.length === 0) throw new Error('便笺不存在')
       const index = project.memos.findIndex(item => item.id === memoId)
       if (index === -1) throw new Error('便笺不存在')
       project.memos[index].content = content
@@ -780,17 +803,17 @@ export class ProjectService {
 
   /** 更新便笺状态 */
   async updateMemoState(dto: UpdateMemoStateDto, userId: string) {
-    const  { memoId, projectId, isExpanded, bgColor, height, width, x, y } = dto
+    const { memoId, projectId, isExpanded, bgColor, height, width, x, y } = dto
     try {
       const project = await this.projectsRepository.findOneBy({ id: projectId, userId })
       const index = project.memos.findIndex(item => item.id === memoId)
       if (index === -1) throw new Error('便笺不存在')
-      if(isExpanded !== undefined) project.memos[index].isExpanded = isExpanded
-      if(bgColor !== undefined) project.memos[index].bgColor = bgColor
-      if(height !== undefined) project.memos[index].height = height
-      if(width !== undefined) project.memos[index].width = width
-      if(x !== undefined) project.memos[index].x = x
-      if(y !== undefined) project.memos[index].y = y
+      if (isExpanded !== undefined) project.memos[index].isExpanded = isExpanded
+      if (bgColor !== undefined) project.memos[index].bgColor = bgColor
+      if (height !== undefined) project.memos[index].height = height
+      if (width !== undefined) project.memos[index].width = width
+      if (x !== undefined) project.memos[index].x = x
+      if (y !== undefined) project.memos[index].y = y
       project.updateAt = new Date()
       await this.projectsRepository.save(project)
       // 出现更新 project.memos[index].isExpanded 后，前端刷新获取的数据依旧是未更新前的情况，原因未知（影响不大）
@@ -878,7 +901,7 @@ export class ProjectService {
       } finally {
         await queryRunner.release()
       }
-      
+
       // 删除文件失败不影响删除项目，缺点是可能会产生一些文件残余，但不会影响到用户体验
 
       // 如果是 course，应当删除对应的音频文件
@@ -898,7 +921,10 @@ export class ProjectService {
             await this.storageService.deleteFile(fragment.audio, fragment.id, userId, dirname)
           } catch (error) {
             console.log(`删除片段对应的音频时发送错误` + error)
-            this.userlogger.error(`删除项目[${project.id}]的'fragment.audio':[${fragment.audio}]时发生错误`, error.message)
+            this.userlogger.error(
+              `删除项目[${project.id}]的'fragment.audio':[${fragment.audio}]时发生错误`,
+              error.message
+            )
           }
         }
       }
@@ -927,7 +953,7 @@ export class ProjectService {
     try {
       const source = await this.projectsRepository.findOne({
         where: { id: projectId, userId, removed: RemovedEnum.NEVER },
-        relations: ['folder', 'fragments', 'user'],
+        relations: ['folder', 'fragments', 'user']
       })
 
       if (!source) throw new Error('找不到目标文件！')
@@ -952,7 +978,7 @@ export class ProjectService {
       // 相应的 sequence 和 removeSequence 都要重写
       if (target.lib === LibraryEnum.PROCEDURE) {
         target.fragments = [] // 将 target fragments 清空
-        for(const fragment of source.fragments) {
+        for (const fragment of source.fragments) {
           // 先将全部片段信息复制到新片段上（再修改需要变更的内容）
           const newFragment = Object.assign(new Fragment(), fragment)
           // 赋予新 uuid
@@ -981,7 +1007,7 @@ export class ProjectService {
 
           target.fragments.push(newFragment)
         }
-  
+
         // 校验 sequence 长度和内容是否完成替换
         if (target.sequence.length === source.sequence.length) {
           target.sequence.some(item => source.sequence.includes(item))
@@ -1023,7 +1049,7 @@ export class ProjectService {
 
         // 添加音频文件复制记录
         if (newProject.lib === LibraryEnum.PROCEDURE) {
-          for(const fragment of newProject.fragments) {
+          for (const fragment of newProject.fragments) {
             // 添加片段的 audio 文件引用记录
             try {
               await this.storageService.copyFile(fragment.audio, fragment.id, userId)
@@ -1032,7 +1058,6 @@ export class ProjectService {
             }
           }
         }
-
       } catch (error) {
         await queryRunner.rollbackTransaction()
         this.userlogger.error(`保存克隆实体失败,项目id:${projectId}`, error.message)
@@ -1118,7 +1143,7 @@ export class ProjectService {
             this.userlogger.error(`移除错误片段 [${fragmentId}]出现异常，片段不在项目[${procedureId}]的'sequence'中！`)
             return
           }
-          console.log(`移除错误片段 [${fragmentId}]`, index)
+          // console.log(`移除错误片段 [${fragmentId}]`, index)
           procedure.sequence.splice(index, 1)
           break
         case 'remove':
@@ -1332,8 +1357,8 @@ function subtitleProcessing(transcriptGroup: string[][], fragmentDurationGroup: 
   const tailReg = /[\u3002\uff1b\uff0c\uff1f\uff01\u2026]/ //尾部断句标点符号正则
   let accumDuration = 0 // 每个片段字幕的起始时间
   transcriptGroup.forEach((subtitle, index) => {
-    // a.将 string[] 合并成一个 string
-    let txt = subtitle.join('')
+    // a.将 string[] 合并成一个 string 并清除 # 标记
+    let txt = subtitle.join('').replace(/#/g, '')
     // b.清除句末标点符号
     if (tailReg.test(txt.charAt(txt.length - 1))) {
       txt = txt.substring(0, txt.length - 1)

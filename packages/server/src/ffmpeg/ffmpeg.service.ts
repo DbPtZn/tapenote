@@ -231,7 +231,7 @@ export class FfmpegService {
           reject(err)
         })
         .on('end', () => {
-          console.log('静音部分清理完成')
+          // console.log('静音部分清理完成')
           fs.unlinkSync(inputPath)
           resolve(outputPath)
         })
