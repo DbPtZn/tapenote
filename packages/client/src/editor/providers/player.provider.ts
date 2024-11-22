@@ -518,11 +518,10 @@ export class Player {
       overflowBottomRollSpeed,
       overflowBottomReservedZone
     } = args
+    const scrollerRect = scroller.getBoundingClientRect()
     const Horizon = scroller.clientHeight // 可视窗口的高度
     const Scrolled = scroller.scrollTop // 已滚动高度
-    const Node2Top = getTopDistance(el) - container.offsetTop // 节点距离文档顶部（指节点的上边界至文档顶部）
-    // console.log(getTopDistance(el))
-    // console.log(container.offsetTop)
+    const Node2Top = getTopDistance(el) - scrollerRect.top // 节点距离滚动容器顶部（指节点的上边界至滚动容器顶部）
     const NodeHeight = el.clientHeight // 元素自身的高度
     const Node2HorizonBottom = Horizon + Scrolled - Node2Top - NodeHeight //节点距离可视区间底部
     if (Node2Top < Scrolled) {

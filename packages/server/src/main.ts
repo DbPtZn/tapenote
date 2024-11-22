@@ -8,6 +8,7 @@ import portfinder from 'portfinder'
 import { ConfigService } from '@nestjs/config'
 import { parentPort } from 'worker_threads'
 import { commonConfig } from './config'
+// import { ErrorsInterceptor } from './errors/errors.interceptor'
 async function bootstrap() {
   let dotenvPath = []
   switch (process.env.NODE_ENV) {
@@ -54,9 +55,14 @@ async function bootstrap() {
   /** 数据验证错误的响应 */
   app.useGlobalPipes(new ValidationPipe())
 
+  // app.useGlobalInterceptors(new ErrorsInterceptor())
+  // app.useGlobalFilters(new AllExceptionFilter())
   // 注册 Express 中间件
   // app.use(interceptStaticAssets)
-
+  process.on('uncaughtException', (error) => {
+    console.error('捕获到未处理的异常:', error);
+    // 可以在这里添加更多的错误处理逻辑
+  })
   // 开放静态资源
   // console.log(process.env.NODE_ENV)
   const configService = app.get(ConfigService)

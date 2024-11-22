@@ -31,8 +31,8 @@ import { SpeakerModule } from './speaker/speaker.module'
 import { parentPort } from 'worker_threads'
 import { SnapshotModule } from './snapshot/snapshot.module'
 import { BucketModule } from './bucket/bucket.module'
-import { XunfeiModule } from './xunfei/xunfei.module'
-import { AliModule } from './ali/ali.module'
+// import { XunfeiModule } from './xunfei/xunfei.module'
+// import { AliModule } from './ali/ali.module'
 import { TencentModule } from './tencent/tencent.module'
 
 @Module({

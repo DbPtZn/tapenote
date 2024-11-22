@@ -95,7 +95,7 @@ export class FragmentController {
       const removeSourceFragment = formData.removeSourceFragment === 'true'
       const length = audios.length
       const dataArray = []
-      console.log(formData)
+      // console.log(formData)
       for (let i = 0; i < length; i++) {
         dataArray.push({
           key: formData.key[i],

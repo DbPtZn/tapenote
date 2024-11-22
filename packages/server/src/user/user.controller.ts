@@ -16,15 +16,16 @@ export class UserController {
     private readonly userService: UserService,
     ) {}
 
-  @UseGuards(AuthGuard('jwt'))
-  @Get(`${REST.R}/dir`)
-  async getUserDir(@Req() req, @Res() res) {
-    const dir = await this.userService.getDirById(req.user.id)
-    if (!dir) {
-      return res.status(401).send('权限不足，获取用户目录信息失败！')
-    }
-    return res.status(200).send(dir)
-  }
+  // (弃用)
+  // @UseGuards(AuthGuard('jwt'))
+  // @Get(`${REST.R}/dir`)
+  // async getUserDir(@Req() req, @Res() res) {
+  //   const dir = await this.userService.getDirById(req.user.id)
+  //   if (!dir) {
+  //     return res.status(401).send('权限不足，获取用户目录信息失败！')
+  //   }
+  //   return res.status(200).send(dir)
+  // }
 
   @UseGuards(AuthGuard('jwt'))
   @Get(`${REST.R}/info`)

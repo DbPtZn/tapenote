@@ -47,9 +47,9 @@ export const user = (axios: AxiosInstance) => {
     get<T>() {
       return axios.get<T>('/user/read/info/')
     },
-    getDir<T>() {
-      return axios.get<T>('/user/read/dir/')
-    },
+    // getDir<T>() {
+    //   return axios.get<T>('/user/read/dir/')
+    // },
     update<T>(dto: UpdateUserDto) {
       return axios.patch<T>('/user/update/info', dto)
     },

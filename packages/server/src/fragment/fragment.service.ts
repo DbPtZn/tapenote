@@ -74,7 +74,9 @@ export class FragmentService {
             model: speaker.model,
             name: speaker.name,
             avatar: speaker.avatar,
-            role: speaker.role
+            role: speaker.role,
+            changer: speaker.changer,
+            speed: speaker.speed
           }
         } else {
           fragmentSpeaker = {
@@ -83,7 +85,9 @@ export class FragmentService {
             model: getModel(isVip, type),
             name: '',
             avatar: '',
-            role: 0
+            role: 0,
+            changer: 0,
+            speed: 1
           }
         }
       } else {
@@ -94,7 +98,9 @@ export class FragmentService {
           model: getModel(isVip, type),
           name: '',
           avatar: '',
-          role: 0
+          role: 0,
+          changer: 0,
+          speed: 1
         }
       }
       return fragmentSpeaker
@@ -125,7 +131,7 @@ export class FragmentService {
         const data = dataArray[i]
         const { audio, duration, speakerId, actions, key } = data
         if (!audio || !procedureId || !dirname) {
-          console.log('输入错误, 缺少必要参数!')
+          // console.log('输入错误, 缺少必要参数!')
           throw new Error('输入错误, 缺少必要参数！')
         }
         if (duration === 0 || Number(duration) === 0) {
@@ -157,8 +163,6 @@ export class FragmentService {
 
         try {
           const result = await this.useAsr({ filepath: audio, model: fragmentSpeaker.model, isVip })
-          // const punText = await this.sherpaService.addPunct(result.text)
-          // const alignResult = this.sherpaService.align(punText, result)
           this.userlogger.log(`语音识别成功，转写文本为: ${result.text}`)
 
           fragment.txt = result.text
@@ -168,15 +172,12 @@ export class FragmentService {
           fragment.tags = new Array(length)
           fragment.promoters = new Array(length)
         } catch (error) {
-          // console.log(`语音识别失败：${error.message}`)
-          // this.userlogger.log(`语音识别失败，错误原因：${error.message} `)
+          console.log(`语音识别失败`)
+          this.userlogger.error(`语音识别失败`, error?.message)
           fsx.removeSync(audio)
           await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
-          // console.log('正在删除音频文件...', i === dataArray.length - 1)
-          // 语音识别失败后，跳出当前循环 (不再抛出错误，因为会导致整个过程中断)
           continue // throw error
         }
-        // console.log('正在创建音频文件...')
         // 添加动作
         if (actions.length > 0) fragment = addPromoter(fragment, actions)
 
@@ -255,12 +256,11 @@ export class FragmentService {
         if (!txt) throw new Error('文本不能为空！')
         const text = txt.replace(/\s*/g, '')
         const fragmentId = uuidv7()
-        const filepath = this.storageService.createTempFilePath('.wav')
+        // const filepath = this.storageService.createTempFilePath('.wav')
         const fragment = new Fragment()
         fragment.id = fragmentId
         fragment.userId = userId
         fragment.project = procudure
-        // fragment.audio = basename(filepath)
         fragment.audio = ''
         fragment.duration = 0
         fragment.txt = text
@@ -275,9 +275,6 @@ export class FragmentService {
         this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
         await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
-        // 创建临时文件地址
-        // const temppath1 = this.storageService.createTempFilePath('.wav')
-
         // 文字转音频
         this.userlogger.log(`正在将文字‘${text}’转成音频...`)
         let audio = ''
@@ -291,30 +288,11 @@ export class FragmentService {
           })
           // 合成成功，将正确内容替换回去
           fragment.transcript = result.data.map(item => item.char)
-          // this.userlogger.log(`转化成功，正在计算合成音频时长...`)
-          // const duration = await this.ffmpegService.calculateDuration(temppath1)
-          // this.userlogger.log(`计算时长成功，合成音频时长为：${duration}`)
-
-          // this.userlogger.log(`正在清理合成音频中首部的静音段...`)
-          // const temppath2 = this.storageService.createTempFilePath('.wav')
-          // await this.ffmpegService.clearSilence(temppath1, temppath2)
 
           // 格式化音频文件 (不同语音合成的音频可能具有不同属性，是否有必要格式化？)
           // await this.ffmpegService.audioformat(temppath2, filepath)
           // console.log(filepath)
 
-          /** 计算合成音频的时长 */
-          // fragment.duration = await this.ffmpegService.calculateDuration(filepath)
-          // this.userlogger.log(`清理后音频时长：${fragment.duration}`)
-          // console.log(fragment.duration)
-
-          /** 计算 timestamps */
-          // const section = fragment.duration / fragment.transcript.length
-          // const timestamps = fragment.transcript.map((char, index) => {
-          //   return Number((section * index).toFixed(3))
-          // })
-          // console.log(timestamps)
-          // fragment.timestamps = timestamps
           audio = result.audio
           fragment.audio = basename(result.audio)
           fragment.duration = result.duration
@@ -324,8 +302,8 @@ export class FragmentService {
           await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
           continue // throw error
         }
-        if (filepath && fragment.duration !== 0) {
-          console.log(fragment)
+        if (fragment.audio && fragment.duration !== 0) {
+          // console.log(fragment)
           fragments.push(fragment)
           audios.push(audio)
           keys.push(key)
@@ -415,7 +393,9 @@ export class FragmentService {
         model: '',
         name: '',
         avatar: '',
-        role: 0
+        role: 0,
+        changer: 0,
+        speed: 1
       }
       fragment.removed = RemovedEnum.NEVER
 
@@ -611,9 +591,9 @@ export class FragmentService {
         if(!isVip) {
           throw new Error('免费用户无法使用会员语音识别')
         }
-        console.log('会员语音识别')
+        // console.log('会员语音识别')
         const result = await this.tencentService.asr(filepath)
-        console.log(result)
+        // console.log(result)
         return result
       }
       throw new Error('不支持目标语音服务！')

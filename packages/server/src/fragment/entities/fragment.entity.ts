@@ -7,7 +7,6 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   PrimaryColumn,
   UpdateDateColumn
@@ -21,6 +20,8 @@ export interface FragmentSpeaker {
   avatar: string
   name: string
   role: number
+  changer: number
+  speed: number
 }
 @Entity()
 export class Fragment {

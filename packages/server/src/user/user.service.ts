@@ -165,21 +165,23 @@ export class UserService {
     }
   }
 
-  /** 通过 id 查询用户目录信息 */
-  async getDirById(id: string) {
-    try {
-      const user = await this.usersRepository.findOneBy({ id })
-      if (user) {
-        // this.userLogger.log(`查询到用户 ${user.account} 的目录信息`)
-        return {
-          dir: user.dir
-        }
-      } else throw new Error('查询用户目录信息失败！')
-    } catch (error) {
-      // this.userLogger.warn(`查询不到用户目录信息！原因：${error.message}`)
-      throw error
-    }
-  }
+  /** 通过 id 查询用户目录信息 (弃用) */
+  // async getDirById(id: string) {
+  //   try {
+  //     const user = await this.usersRepository.findOne({
+  //       where: { id }
+  //     })
+  //     if (user) {
+  //       // this.userLogger.log(`查询到用户 ${user.account} 的目录信息`)
+  //       return {
+  //         dir: user.dir
+  //       }
+  //     } else throw new Error('查询用户目录信息失败！')
+  //   } catch (error) {
+  //     // this.userLogger.warn(`查询不到用户目录信息！原因：${error.message}`)
+  //     throw error
+  //   }
+  // }
 
   /** 通过 id 查询用户基本信息 */
   async getInfoById(id: string, dirname: string) {
@@ -260,8 +262,8 @@ export class UserService {
       this.userLogger.log(`更新用户统计信息成功！时间为：${user.countor.date}`)
       return user.countor
     } catch (error) {
-      console.log(error)
-      this.userLogger.warn(`更新用户统计信息失败！`)
+      // console.log(error)
+      this.userLogger.error(`更新用户统计信息失败！`, error.message)
       throw error
     }
   }

@@ -552,8 +552,8 @@ onUnmounted(() => {
             <template #trigger>
               <n-button class="toolbar-btn" quaternary size="small" :disabled="state.isReadonly">
                 <template #icon>
-                  <div>
-                    <img :src="speaker?.avatar" :alt="speaker?.name" :style="{ width: '24px', height: '24px', objectFit: 'contain' }" @click="handleSpeakerChange(recorderMode === 'ASR' ? 'human' : 'machine')" />
+                  <div class="speaker-avatar">
+                    <img :src="speaker?.avatar" :alt="speaker?.name" @click="handleSpeakerChange(recorderMode === 'ASR' ? 'human' : 'machine')" />
                   </div>
                 </template>
               </n-button>
@@ -677,7 +677,16 @@ onUnmounted(() => {
 :deep(.dropdown-option-disabled) {
   opacity: 0.5;
 }
-
+.speaker-avatar {
+  width: 24px;
+  height: 24px;
+  img {
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+    object-fit: fill;
+  }
+}
 .role {
   display: flex;
   flex-direction: column;

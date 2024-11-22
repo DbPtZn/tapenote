@@ -274,7 +274,7 @@ export const useProjectStore = defineStore('projectStore', {
         dirname: data.dirname || '',
         folderId: data.folderId || '',
         folder: data.folder || { id: '', name: '' },
-        cover: data.cover || '',
+        cover: data.cover ? ResourceDomain + data.cover : '',
         coverPosition: data.coverPosition || 50,
         firstPicture: data.firstPicture || '',
         title: data.title || '',

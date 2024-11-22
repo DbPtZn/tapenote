@@ -28,28 +28,6 @@ import { commonConfig } from 'src/config'
 import { ConfigService } from '@nestjs/config'
 import { UploadService } from 'src/upload/upload.service'
 import { AddMemoDto, DeleteMemoDto, UpdateMemoContentDto, UpdateMemoStateDto } from './dto/memo.dto'
-/** 继承数据 */
-interface InheritDto {
-  title?: string
-  content?: string
-  abbrev?: string
-  wordage?: number
-  filesize?: number
-  // procedure
-  fragments?: Fragment[]
-  sequence?: string[]
-  removedSequence?: string[]
-  bgm?: ProjectBGM
-  // course
-  audio?: string
-  duration?: number
-  promoterSequence?: Array<string>
-  keyframeSequence?: Array<number>
-  subtitleSequence?: Array<string>
-  subtitleKeyframeSequence?: Array<number>
-  sidenote?: string
-  annotations?: Annotation[]
-}
 
 interface ProjectCard {
   id: string
@@ -65,7 +43,6 @@ interface ProjectCard {
   }
 }
 
-const __rootdirname = process.cwd()
 @Injectable()
 export class ProjectService {
   private readonly common: ReturnType<typeof commonConfig>
@@ -74,10 +51,6 @@ export class ProjectService {
     private projectsRepository: Repository<Project>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    // @InjectRepository(Fragment)
-    // private fragmentsRepository: Repository<Fragment>,
-    // @Inject(forwardRef(() => FragmentService))
-    // private readonly fragmentService: FragmentService,
     @Inject(forwardRef(() => FolderService))
     private readonly folderService: FolderService,
     private readonly dataSource: DataSource,
@@ -95,107 +68,94 @@ export class ProjectService {
   async create(createDto: CreateProjectDto, userId: string, dirname: string) {
     try {
       const { lib, folderId, noteId, procedureId, penname, email, homepage } = createDto
-      let data: InheritDto = {
-        title: '',
-        content: '',
-        abbrev: '',
-        bgm: null,
-        wordage: 0,
-        filesize: 0,
-        fragments: [],
-        sequence: [],
-        removedSequence: [],
-        sidenote: '',
-        annotations: []
-      }
-      if (noteId && lib === LibraryEnum.PROCEDURE) {
-        const note = await this.projectsRepository.findOneBy({ id: noteId })
-        if (!note) throw new Error('未找到该笔记项目，无法创建工程项目')
-        data = {
-          title: note.title || '',
-          content: note.content || '',
-          abbrev: note.abbrev || '',
-          bgm: note.bgm || null,
-          wordage: note.detail?.wordage || 0,
-          filesize: note.detail?.filesize || 0,
-          fragments: note.fragments || [],
-          sequence: note.sequence || [],
-          removedSequence: note.removedSequence || [],
-          annotations: note.annotations || []
-        }
-      }
-      if (procedureId && lib === LibraryEnum.COURSE) {
-        const procedure = await this.projectsRepository.findOneBy({ id: procedureId })
-        if (!procedure) throw new Error('未找到该工程项目，无法创建课程项目')
-        data = {
-          title: procedure.title || '',
-          content: procedure.content || '',
-          abbrev: procedure.abbrev || '',
-          bgm: procedure.bgm || null,
-          wordage: procedure.detail?.wordage || 0,
-          filesize: procedure.detail?.filesize || 0
-        }
-      }
-
-      const folder = await this.folderService.findOneById(folderId, userId)
       const project = new Project()
       project.id = uuidv7()
       project.lib = lib
+
+      project.userId = userId
+      
+      const folder = await this.folderService.findOneById(folderId, userId)
       project.folderId = folderId
       project.folder = folder
-      project.userId = userId
-      project.title = data.title || ''
-      project.content = data.content || '<br>'
-      project.abbrev = data.abbrev || ''
-      project.memos = []
-      project.removed = RemovedEnum.NEVER
 
-      project.detail = {
+      project.title = ''
+      project.content = '<br>'
+      project.abbrev = ''
+  
+      project.detail ={
         penname: penname || '佚名',
         homepage: homepage || '',
         email: email || '',
-        wordage: data.wordage || 0,
-        filesize: data.filesize || 0
+        wordage: 0,
+        filesize: 0
       }
+
+      project.memos = []
+      project.removed = RemovedEnum.NEVER
       project.submissionHistory = []
 
-      switch (lib) {
-        case LibraryEnum.NOTE:
-          //
-          break
-        case LibraryEnum.PROCEDURE:
-          noteId && (project.fromNoteId = noteId)
-          project.fragments = []
-          project.sequence = data.sequence || []
-          project.removedSequence = data.removedSequence || []
-          project.speakerHistory = { human: '', machine: '' }
-          break
-        case LibraryEnum.COURSE:
-          project.annotations = data.annotations || []
-          const { fromNoteId, audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } =
-            await this.generateCourse(project.id, procedureId, dirname, userId)
-          project.fromNoteId = fromNoteId
-          procedureId && (project.fromProcedureId = procedureId)
-          project.audio = basename(audio) || ''
-          project.duration = duration || 0
-          project.promoterSequence = promoterSequence || []
-          project.keyframeSequence = keyframeSequence || []
-          project.subtitleSequence = subtitleSequence || []
-          project.subtitleKeyframeSequence = subtitleKeyframeSequence || []
-          break
+      if (noteId && lib === LibraryEnum.PROCEDURE) {
+        const note = await this.projectsRepository.findOneBy({ id: noteId })
+        if (!note) throw new Error('未找到该笔记项目，无法创建工程项目')
+        // 基础数据
+        project.title = note.title
+        project.content = note.content || '<br>'
+        project.abbrev = note.abbrev || '',
+        project.firstPicture = note.firstPicture
+        project.memos = note.memos
+        project.cover = note.cover
+        project.coverPosition = note.coverPosition
+        project.screenShot = note.screenShot
+        project.editorVersion = note.editorVersion
+        project.detail = note.detail
+        project.config = note.config
+        // 专用数据
+        project.fromNoteId = noteId
+        project.fragments = []
+        project.sequence = []
+        project.removedSequence = []
+        project.speakerHistory = { human: '', machine: '' }
       }
+      
+      if (procedureId && lib === LibraryEnum.COURSE) {
+        const procedure = await this.projectsRepository.findOneBy({ id: procedureId })
+        if (!procedure) throw new Error('未找到该工程项目，无法创建课程项目')
+        // 基础数据
+        project.title = procedure.title
+        project.content = procedure.content || '<br>'
+        project.abbrev = procedure.abbrev || ''
+        project.firstPicture = procedure.firstPicture
+        project.cover = procedure.cover
+        project.coverPosition = procedure.coverPosition
+        project.screenShot = procedure.screenShot
+        project.editorVersion = procedure.editorVersion
+        project.detail = procedure.detail
+        project.config = procedure.config
+        // 专用数据
+        project.bgm = procedure.bgm
+        project.annotations = []
+        const { fromNoteId, audio, duration, promoterSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } =
+          await this.generateCourse(project.id, procedureId, dirname, userId)
+        project.fromNoteId = fromNoteId
+        project.fromProcedureId = procedureId
+        project.audio = basename(audio) || ''
+        project.duration = duration || 0
+        project.promoterSequence = promoterSequence || []
+        project.keyframeSequence = keyframeSequence || []
+        project.subtitleSequence = subtitleSequence || []
+        project.subtitleKeyframeSequence = subtitleKeyframeSequence || []
+      }
+
       const result = await this.projectsRepository.save(project)
       result.audio = this.storageService.getResponsePath(result.audio, dirname)
-      if (!result) {
-        throw new Error(`创建项目失败！`)
-      }
-      // 创建课程的时候会自动创建一个快照版本
+      this.userlogger.log(`创建 [${lib}] 新项目成功，项目id：${result.id}`)
+      // 创建 Course 的时候会自动创建一个快照版本
       if (lib === LibraryEnum.COURSE) {
         await this.snapshotService.create(result.id, userId)
       }
-      this.userlogger.log(`创建 [${lib}] 新项目成功，项目id：${result.id}`)
       return result
     } catch (error) {
+      this.userlogger.error(`创建 [${createDto.lib}] 新项目失败`, error.message)
       throw error
     }
   }
@@ -209,11 +169,8 @@ export class ProjectService {
   ) {
     try {
       const procedure = await this.projectsRepository.findOne({ where: { id: procedureId, userId }, relations: ['fragments'] })
-      // 片段排序
-      // console.log('procedure', procedure)
-      const order = procedure.sequence.map(item => item) // string 类型 不支持直接使用 sort 进行排序
-      // console.log('order', order)
-      // throw '测试'
+      // 片段排序：string 类型 不支持直接使用 sort 进行排序 map 产生一个新数组，避免修改原数据
+      const order = procedure.sequence.map(item => item)
       const fragments = procedure.fragments
         .filter(fragment => fragment.removed === RemovedEnum.NEVER)
         .sort((a, b) => {
@@ -222,7 +179,7 @@ export class ProjectService {
       
       // 对音频路径进行处理
       for(const fragment of fragments) {
-        // 对于远程路径，先下载到本地后再进行拼接
+        // 对于远程路径，需要先下载到本地
         if(this.common.enableCOS) {
           const localpath = this.storageService.createTempFilePath('.wav')
           await this.storageService.fetchRemoteFile(fragment.audio, dirname, localpath)
@@ -232,7 +189,7 @@ export class ProjectService {
         }
       }
       
-
+      // 准备需要用到的数组
       const group = {
         audioFragments: [] as string[],
         promoterGroup: [] as string[][],
@@ -272,7 +229,7 @@ export class ProjectService {
       // 创建临时地址
       const tempPath = this.storageService.createTempFilePath('.ogg')
 
-      // 拼接音频片段
+      // 拼接音频片段（并以 ogg 格式输出）
       try {
         await this.ffmpegService.concatAudioToOgg(group.audioFragments, tempPath)
       } catch (error) {
@@ -297,6 +254,7 @@ export class ProjectService {
         throw new Error(`音频文件转换失败: ${error.message}`)
       }
 
+      // 注意：这里应该忽略重复文件的检查，否则可能会出现相同文件导致输出路径错误（理论上也可以直接使用已有文件，但鉴于这种情况发生的概率并不是特别多，而处理逻辑可能比较复杂，所以直接忽略检查）
       // 存储 mp3 文件 
       await this.uploadService.upload({
         file: {
@@ -335,11 +293,14 @@ export class ProjectService {
     }
   }
 
-  /** 在制定 course 上创建新版本时，自动覆盖原 course */
+  /** 
+   * 在指定的 course 上创建新版本时，自动覆盖原 course
+   * 因为我们在创建 course 的时候自动创建了快照，所以这里不需要担心旧项目被覆盖导致数据丢失
+   */
   async coverCourse(courseId: string, procedureId: string, userId: string, dirname: string) {
     try {
       const course = await this.projectsRepository.findOne({ where: { id: courseId, userId } })
-      if (!course) throw new Error(`课程项目不存在！`)
+      if (!course) throw new Error(`Course 项目不存在！`)
       const {
         title,
         content,
@@ -360,8 +321,7 @@ export class ProjectService {
       course.keyframeSequence = keyframeSequence || []
       course.subtitleSequence = subtitleSequence || []
       course.subtitleKeyframeSequence = subtitleKeyframeSequence || []
-      // console.log(content)
-      // console.log(course)
+
       const result = await this.projectsRepository.save(course)
       if (result) {
         const snapshot = await this.snapshotService.create(result.id, userId)
@@ -427,6 +387,7 @@ export class ProjectService {
         relations: ['fragments', 'folder']
       })
       // 补全路径
+      project.cover = project.cover ? this.storageService.getResponsePath(project.cover, dirname) : ''
       switch (project.lib) {
         case LibraryEnum.NOTE:
           //
@@ -566,11 +527,6 @@ export class ProjectService {
   /** 查询关联项目 */
   async findRelevantProjectsById(id: string, userId: string) {
     try {
-      // const courses = await this.projectsRepository.find({
-      //   where: { fromProcedureId: id, lib: LibraryEnum.COURSE, userId },
-      //   relations: ['folder'],
-      //   select: {}
-      // })
       const projects = await this.projectsRepository
         .createQueryBuilder('project')
         .leftJoinAndSelect('project.folder', 'folder')
@@ -685,8 +641,8 @@ export class ProjectService {
         msg: '笔记内容更新成功！'
       }
     } catch (error) {
-      this.userlogger.error(`更新笔记内容失败,项目id:${id}`)
-      throw new Error(`内容更新失败,项目于id:${id}`)
+      this.userlogger.error(`更新笔记内容失败,项目id:${id}`, error.message)
+      throw error
     }
   }
 
@@ -694,7 +650,7 @@ export class ProjectService {
   async updateCover(id: string, url: string, userId: string) {
     try {
       const project = await this.projectsRepository.findOneBy({ id, userId })
-      project.cover = url
+      project.cover = basename(url)
       const newProject = await this.projectsRepository.save(project)
       this.userlogger.log(`更新封面成功,项目id:${id}`)
       return {
@@ -863,11 +819,9 @@ export class ProjectService {
     }
   }
 
-  
   /** -------------------------------- 更新 ------------------------------------ */
 
   /** -------------------------------- 移除与恢复 ------------------------------------ */
-
   async remove(id: string, userId: string) {
     try {
       const project = await this.projectsRepository.findOneBy({ id, userId })
@@ -971,7 +925,6 @@ export class ProjectService {
 
   async copy(projectId: string, folderId: string, userId: string, dirname: string) {
     try {
-      // const source = await this.findOne(projectId, userId, dirname, ['folder', 'user'], false)
       const source = await this.projectsRepository.findOne({
         where: { id: projectId, userId, removed: RemovedEnum.NEVER },
         relations: ['folder', 'fragments', 'user'],
@@ -1007,9 +960,9 @@ export class ProjectService {
           // 建立新的实体关系
           // newFragment.project = target
           // 复制文件路径
-          newFragment.audio = fragment.audio
+          // newFragment.audio = fragment.audio
           // 复制移除状态
-          newFragment.removed = fragment.removed
+          // newFragment.removed = fragment.removed
 
           // 处理排序信息
           if (fragment.removed === RemovedEnum.NEVER) {
@@ -1076,15 +1029,7 @@ export class ProjectService {
               await this.storageService.copyFile(fragment.audio, fragment.id, userId)
             } catch (error) {
               this.userlogger.error(`复制音频文件时出错，被复制音频文件[${fragment.audio}]不存在！`)
-              // fragment.transcript.push('该片段音频文件已丢失！')
             }
-            // 添加片段的 speaker 头像文件引用记录 (此类图片永不删除，不需要考虑引用问题)
-            // try {
-            //   this.storageService.copyFile(fragment.speaker.avatar, fragment.id, userId, dirname)
-            // } catch (error) {
-            //   console.log(`复制'speaker'头像文件时发生错误` + error)
-            //   this.userlogger.error(`复制'speaker'头像文件时出错，被复制文件[${fragment.speaker.avatar}]不存在！`)
-            // }
           }
         }
 
@@ -1173,6 +1118,7 @@ export class ProjectService {
             this.userlogger.error(`移除错误片段 [${fragmentId}]出现异常，片段不在项目[${procedureId}]的'sequence'中！`)
             return
           }
+          console.log(`移除错误片段 [${fragmentId}]`, index)
           procedure.sequence.splice(index, 1)
           break
         case 'remove':

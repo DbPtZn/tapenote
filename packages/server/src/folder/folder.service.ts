@@ -194,25 +194,33 @@ export class FolderService {
 
   /** 通过 id 获取祖先文件夹节点组 */
   async findAncestorNode(id: string, userId: string) {
-    const ancestorNode: string[] = []
-    const folder = await this.findOneById(id, userId)
-    const lib = folder.lib
-    const user = await this.userService.getDirById(userId)
-    const root = user.dir[lib]
-    if (!root) throw new Error('无法查询到目标根目录')
-    if (!folder.parentId || folder.id === root) return []
-    const getAncestorNode = async (parentId: string) => {
-      if (parentId === root) return
-      if (parentId) {
-        ancestorNode.unshift(parentId)
-        const parent = await this.findOneById(parentId, userId)
-        await getAncestorNode(parent.parentId)
+    try {
+      const ancestorNode: string[] = []
+      const folder = await this.foldersRepository.findOne({
+        where: { id, userId },
+        relations: ['user']
+      })
+      const lib = folder.lib
+      const root = folder.user.dir[lib]
+      if (!root) throw new Error('无法查询到目标根目录')
+      if (!folder.parentId || folder.id === root) return []
+      const getAncestorNode = async (parentId: string) => {
+        if (parentId === root) return
+        if (parentId) {
+          ancestorNode.unshift(parentId)
+          const parent = await this.findOneById(parentId, userId)
+          await getAncestorNode(parent.parentId)
+        }
       }
+      await getAncestorNode(folder.parentId)
+      return ancestorNode
+    } catch (error) {
+      this.userLogger.error(`获取祖先节点失败,项目id:${id}`, error.message)
+      throw error
     }
-    await getAncestorNode(folder.parentId)
-    return ancestorNode
   }
 
+  /** 获取主动删除的文件夹 */
   async findTrash(userId: string) {
     // where: { userId, removed: Not(RemovedEnum.NEVER) },\
     const folders = await this.foldersRepository.find({
@@ -275,38 +283,48 @@ export class FolderService {
   }
 
   async remove(id: string, userId: string) {
-    // console.log('remove', id)
-    const folder = await this.foldersRepository.findOne({ where: { id, userId } })
-    // { $set: { removed: RemovedEnum.ACTIVE, updateAt: new Date() } }
-    folder.removed = RemovedEnum.ACTIVE
-    await this.foldersRepository.save(folder)
-    if (folder.id) {
-      const removedIds: string[] = []
-      await this.updateRemovedRecursive(folder.id, RemovedEnum.PASSIVE, userId, removedIds)
-      return removedIds
+    try {
+      // console.log('remove', id)
+      const folder = await this.foldersRepository.findOne({ where: { id, userId } })
+      // { $set: { removed: RemovedEnum.ACTIVE, updateAt: new Date() } }
+      folder.removed = RemovedEnum.ACTIVE
+      await this.foldersRepository.save(folder)
+      if (folder.id) {
+        const removedIds: string[] = []
+        await this.updateRemovedRecursive(folder.id, RemovedEnum.PASSIVE, userId, removedIds)
+        return removedIds
+      }
+      return false
+    } catch (error) {
+      this.userLogger.error(`移除文件夹失败,项目id:${id}`, error.message)
+      throw error
     }
-    return false
   }
 
   async restore(id: string, parentId: string, userId: string): Promise<Folder | null> {
-    const folder = await this.findOneById(id, userId)
-    if (folder.removed === RemovedEnum.NEVER) throw 'Is already restore!'
-    folder.parentId = parentId
-    folder.removed = RemovedEnum.NEVER
+    try {
+      const folder = await this.findOneById(id, userId)
+      if (folder.removed === RemovedEnum.NEVER) throw 'Is already restore!'
+      folder.parentId = parentId
+      folder.removed = RemovedEnum.NEVER
 
-    // 递归恢复被动移除的子文件夹
-    await this.updateRemovedRecursive(folder.id, RemovedEnum.NEVER, userId)
+      // 递归恢复被动移除的子文件夹
+      await this.updateRemovedRecursive(folder.id, RemovedEnum.NEVER, userId)
 
-    const newFolder = await this.foldersRepository.save(folder)
-    // 查询恢复文件夹是否有子文件夹
-    const count = await this.foldersRepository.countBy({
-      parentId: newFolder.id,
-      userId,
-      removed: RemovedEnum.NEVER
-    })
-    newFolder['isLeaf'] = !(count > 0)
-    if (newFolder) return newFolder
-    else return null
+      const newFolder = await this.foldersRepository.save(folder)
+      // 查询恢复文件夹是否有子文件夹
+      const count = await this.foldersRepository.countBy({
+        parentId: newFolder.id,
+        userId,
+        removed: RemovedEnum.NEVER
+      })
+      newFolder['isLeaf'] = !(count > 0)
+      if (newFolder) return newFolder
+      else return null
+    } catch (error) {
+      this.userLogger.error(`恢复文件夹失败,项目id:${id}`, error.message)
+      throw error
+    }
   }
 
   async rename(id: string, name: string, userId: string) {
@@ -397,11 +415,15 @@ export class FolderService {
 
   /** 查询根目录 */
   async findRootDir(userId: string, lib: LibraryEnum) {
-    const user = await this.userService.findOneById(userId)
-    if (user) {
-      return user.dir[lib]
-    } else {
-      return null
+    try {
+      const user = await this.userService.findOneById(userId)
+      if (user) {
+        return user.dir[lib]
+      } else {
+        return null
+      }
+    } catch (error) {
+      throw error
     }
   }
 }

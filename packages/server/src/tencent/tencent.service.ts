@@ -22,7 +22,7 @@ export class TencentService {
   ttsClient: any
   constructor(private readonly configService: ConfigService) {
     this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
-    console.log(this.common.secretId, this.common.secretKey)
+    // console.log(this.common.secretId, this.common.secretKey)
     // 实例化要请求产品(以cvm为例)的client对象
     this.asrClient = new AsrClient({
       // 为了保护密钥安全，建议将密钥设置在环境变量中或者配置文件中，请参考本文凭证管理章节。
@@ -80,70 +80,75 @@ export class TencentService {
       VoiceFormat: 'wav'
     }
     return new Promise<{ text: string; tokens: string[]; timestamps: number[] }>((resolve, reject) => {
-      this.asrClient.SentenceRecognition(req, (err, data) => {
-        if (err) {
-          console.log(err)
-          reject(err)
-        } else {
-          console.log(data)
-          if(data.Result === '') return reject('识别结果为空')
-          const list: { char: string; timestamp: number }[] = []
-          let last = 0
-          for (let i = 0; i < data.WordList.length; i++) {
-            const item = data.WordList[i]
-            const length = item.Word.length
-            // 计算间隔值
-            const interval = (item.EndTime - item.StartTime) / length
-
-            // 针对英文单词字符串的处理
-            if (typeof item.Word === 'string' && /[A-Za-z]/.test(item.Word)) {
-              list.push({
-                char: item.Word,
-                timestamp: item.StartTime
-              })
-              // 记录时间戳
-              last = item.StartTime + interval * (length - 1)
-              continue
-            }
-            const chunk = Array.from(item.Word).map((word, index) => {
-              // 对于标点符号
-              if (typeof word === 'string' && word.length === 1 && regex.test(word)) {
-                if (data.WordList[i + 1]) {
+      try {
+        this.asrClient.SentenceRecognition(req, (err, data) => {
+          if (err) {
+            console.error('腾讯语音识别发生错误1', err)
+            reject(err)
+          } else {
+            // console.log(data)
+            if(data.Result === '') return reject('识别结果为空')
+            const list: { char: string; timestamp: number }[] = []
+            let last = 0
+            for (let i = 0; i < data.WordList.length; i++) {
+              const item = data.WordList[i]
+              const length = item.Word.length
+              // 计算间隔值
+              const interval = (item.EndTime - item.StartTime) / length
+  
+              // 针对英文单词字符串的处理
+              if (typeof item.Word === 'string' && /[A-Za-z]/.test(item.Word)) {
+                list.push({
+                  char: item.Word,
+                  timestamp: item.StartTime
+                })
+                // 记录时间戳
+                last = item.StartTime + interval * (length - 1)
+                continue
+              }
+              const chunk = Array.from(item.Word).map((word, index) => {
+                // 对于标点符号
+                if (typeof word === 'string' && word.length === 1 && regex.test(word)) {
+                  if (data.WordList[i + 1]) {
+                    return {
+                      char: word,
+                      timestamp: last + (data.WordList[i + 1].StartTime - last) / 2
+                    }
+                  }
                   return {
                     char: word,
-                    timestamp: last + (data.WordList[i + 1].StartTime - last) / 2
+                    timestamp: item.EndTime
                   }
                 }
+                const timestamp = item.StartTime + interval * index
+                // 记录最后一个字符的时间戳
+                if (index === length - 1) last = timestamp
                 return {
                   char: word,
-                  timestamp: item.EndTime
+                  timestamp: timestamp
                 }
-              }
-              const timestamp = item.StartTime + interval * index
-              // 记录最后一个字符的时间戳
-              if (index === length - 1) last = timestamp
-              return {
-                char: word,
-                timestamp: timestamp
-              }
-            }) as { char: string; timestamp: number }[]
-            list.push(...chunk)
+              }) as { char: string; timestamp: number }[]
+              list.push(...chunk)
+            }
+            const text = data.Result
+            const tokens: string[] = []
+            const timestamps: number[] = []
+            list.forEach(item => {
+              tokens.push(item.char)
+              timestamps.push(parseFloat((item.timestamp / 1000).toFixed(3)))
+            })
+  
+            resolve({
+              text,
+              tokens,
+              timestamps
+            })
           }
-          const text = data.Result
-          const tokens: string[] = []
-          const timestamps: number[] = []
-          list.forEach(item => {
-            tokens.push(item.char)
-            timestamps.push(parseFloat((item.timestamp / 1000).toFixed(3)))
-          })
-
-          resolve({
-            text,
-            tokens,
-            timestamps
-          })
-        }
-      })
+        })
+      } catch (error) {
+        console.error('腾讯语音识别发生错误2', error)
+        reject(error)
+      }
     })
   }
 
@@ -171,15 +176,20 @@ export class TencentService {
         Phoneme: string
       }[]
     }>((resolve, reject) => {
-      this.ttsClient.TextToVoice(req, (err, data) => {
-        if (err) {
-          console.log(err)
-          reject(err)
-        } else {
-          // console.log(data)
-          resolve(data)
-        }
-      })
+      try {
+        this.ttsClient.TextToVoice(req, (err, data) => {
+          if (err) {
+            console.error('腾讯语音合成发生错误1', err)
+            reject(err)
+          } else {
+            // console.log(data)
+            resolve(data)
+          }
+        })
+      } catch (error) {
+        console.error('腾讯语音合成发生错误2', error)
+        reject(error)
+      }
     })
   }
 }
