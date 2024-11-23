@@ -54,21 +54,14 @@ const stopRecorder = async () => {
   // 停止录音
   isRecording.value = false
   emits('inputting', false)
-  console.log('停止录音')
-  // recorder.stop()
+  // console.log('停止录音')
   recorder.stop().then(async (audiobuffer) => {
     // console.log('录音结束')
-    // const wavBlob = await recorder.getWAVBlob()
     const wavData = AudioRecorder.audioBufferToWav(audiobuffer)
     const wavBlob = new Blob([wavData], { type: 'audio/wav' })
     data.audio = wavBlob
     data.duration = audiobuffer.duration
-    // console.log('Recording stopped.', audiobuffer.duration)
     emits('output', data)
-    // 可以在这里处理音频 Blob，比如上传或播放
-    // const audioUrl = URL.createObjectURL(wavBlob!)
-    // const audioElement = new Audio(audioUrl)
-    // audioElement.play()
     recorder.init()
   }).catch(err => {
     recorder.init()
@@ -81,9 +74,6 @@ const keyupEvent: Subscription[] = []
 function useShortcut(state: boolean) {
   if (state) {
     keydownEvent.push(
-      fromEvent<KeyboardEvent>(window, 'keydown').subscribe(e => {
-        console.log(e)
-      }),
       fromEvent<KeyboardEvent>(document, 'keydown')
         .pipe(
           debounceTime(50),
@@ -97,9 +87,9 @@ function useShortcut(state: boolean) {
             if (isPress.value) {
               keyupEvent.push(
                 fromEvent<KeyboardEvent>(document, 'keyup').subscribe(e => {
-                  console.log('松开')
+                  // console.log('松开')
                   if (e.key === '0') {
-                    console.log('停止录音')
+                    // console.log('停止录音')
                     setTimeout(() => {
                       isPress.value = false
                       emits('inputting', isPress.value)
