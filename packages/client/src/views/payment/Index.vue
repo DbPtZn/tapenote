@@ -14,7 +14,7 @@ function handleClick() {
   userStore
     .addVip()
     .then(() => {
-      message.success('订阅成功, 请重新登录')
+      message.success('订阅成功')
     })
     .catch(err => {
       console.error(err)
