@@ -43,8 +43,8 @@ export function getInputEditorConfig(account: string, hostname: string) {
     providers: [ImgToUrlService, ImgService],
     setup(injector: Injector) {
       const imgToUrlService = injector.get(ImgToUrlService)
-      const { uploadImgFunction } = useUploadImg(account, hostname)
-      imgToUrlService.setup(uploadImgFunction)
+      const { uploadImgBase64 } = useUploadImg(account, hostname)
+      imgToUrlService.setup(uploadImgBase64)
     }
   }
   return config

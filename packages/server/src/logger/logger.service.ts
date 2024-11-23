@@ -27,14 +27,14 @@ export class LoggerService {
   }
 
   log(message: string) {
-    this.logger.log('info', message)
+    this.logger.info(message)
   }
 
   error(message: string) {
-    this.logger.log('error', message)
+    this.logger.error(message)
   }
 
   warn(message: string) {
-    this.logger.log('warn', message)
+    this.logger.warn(message)
   }
 }

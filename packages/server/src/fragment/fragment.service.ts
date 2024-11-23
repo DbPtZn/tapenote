@@ -598,6 +598,7 @@ export class FragmentService {
       }
       throw new Error('不支持目标语音服务！')
     } catch (error) {
+      this.logger.error(error.message)
       throw error
     }
   }

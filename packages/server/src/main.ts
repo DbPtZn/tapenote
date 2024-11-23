@@ -29,7 +29,8 @@ async function bootstrap() {
     bufferLogs: process.env.LOG_OPEN === 'true' // 开启后 nest 日志会写入到 LoggerService 中
   })
   // 生产环境下开启自动记录系统日志功能
-  process.env.LOG_OPEN === 'true' && app.useLogger(app.get(LoggerService))
+  const logger = app.get(LoggerService)
+  process.env.LOG_OPEN === 'true' && app.useLogger(logger)
 
   app.enableCors({
     origin: true,
@@ -62,6 +63,7 @@ async function bootstrap() {
   process.on('uncaughtException', (error) => {
     console.error('捕获到未处理的异常:', error);
     // 可以在这里添加更多的错误处理逻辑
+    logger.error(`捕获到未处理的异常:${error.name},${error.message}`)
   })
   // 开放静态资源
   // console.log(process.env.NODE_ENV)
