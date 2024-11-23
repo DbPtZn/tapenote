@@ -205,7 +205,9 @@ export const useUserStore = defineStore('userStore', {
     },
 
     addVip() {
-      return this.creatorApi().user.addVip()
+      return this.creatorApi().user.addVip().then(() => {
+        this.creatorApi().forceRefreshToken()
+      })
     },
     async updateCountor() {
       try {

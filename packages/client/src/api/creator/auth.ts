@@ -37,5 +37,5 @@ export const auth = {
       url: '/auth/login',
       data: data
     })
-  }
+  },
 }

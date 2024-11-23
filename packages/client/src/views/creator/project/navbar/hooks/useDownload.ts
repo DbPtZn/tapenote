@@ -16,7 +16,7 @@ export function useDownloadDialog() {
     if (!id) return
     dialog.create({
       icon: () => h(Icon, { icon: 'material-symbols:download-2', height: 24 }),
-      title: `导出${type === 'course' ? '动画项目' : '笔记项目'}`,
+      title: `导出${type === 'course' ? '动画项目' : '笔记项目'} ( 实验性功能 )`,
       content: () => h(DownloadForm, {
         type: type,
 

@@ -26,12 +26,12 @@ export const paragraphComponent = defineComponent({
       ContentType.InlineComponent
     ])])
 
-    // if (slots.length === 0) {
-    //   slots.push(new Slot([
-    //     ContentType.Text,
-    //     ContentType.InlineComponent
-    //   ]))
-    // }
+    if (!slots.length) {
+      slots.push(new Slot([
+        ContentType.Text,
+        ContentType.InlineComponent
+      ]))
+    }
 
     useEnterBreaking(injector, slots)
     return {

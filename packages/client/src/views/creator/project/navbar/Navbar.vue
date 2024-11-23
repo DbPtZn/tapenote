@@ -64,14 +64,6 @@ const navMethods = {
     state.isToolbarShow = !state.isToolbarShow
     bridge.handleToolbarCollapse()
   },
-  // handleFlip() {
-  //   state.isNoteShow = !state.isNoteShow
-  //   bridge.handleSidenoteShow(state.isNoteShow)
-  // },
-  // handleSidenoteToolbarCollapse() {
-  //   state.isToolbarShow = !state.isToolbarShow
-  //   bridge.handleSidenoteToolbarCollapse(state.isToolbarShow)
-  // },
   handleSubtitle() {
     state.isSubtitleShow = !state.isSubtitleShow
   },
@@ -324,7 +316,6 @@ onUnmounted(() => {
         :disabled="state.isReadonly"
         @click="handleDownloadDialog(props.id)"
       >
-        <!-- <n-icon :component="DownloadRound" :size="22" /> -->
         <Icon icon="material-symbols:download-2-rounded" height="22px" />
       </n-button>
       <!-- 更多 -->
@@ -365,14 +356,6 @@ onUnmounted(() => {
             <n-space :justify="'center'" :align="'center'">
               <n-button @click="handleAutoAnime">自动分配动画</n-button>
             </n-space>
-            <!-- <n-space :justify="'space-between'" :align="'center'">
-              <span>页面主题</span>
-              <n-select v-model:value="eidtorState.editorThemeRef" :options="getEditorThemeOptions()" size="small" :consistent-menu-width="false" />
-            </n-space> -->
-            <!-- <n-space :justify="'space-between'" :align="'center'">
-              <span>大纲视图</span>
-              <n-switch v-model:value="eidtorState.isShowOutline" />
-            </n-space> -->
           </n-space>
           <n-divider />
           <n-space :justify="'space-between'" :align="'center'">

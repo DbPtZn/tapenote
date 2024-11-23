@@ -42,7 +42,7 @@ export class CreatorApi {
 
   private promise: Promise<any> | null = null // 确保当多次请求刷新 token 时，只发起一次请求
   private caxios: AxiosInstance
-  constructor(account: string, hostname: string) {
+  constructor(private account: string, private hostname: string) {
     // 为该用户创建请求体实例
     this.caxios = axios.create({
       baseURL: hostname,
@@ -174,7 +174,7 @@ export class CreatorApi {
         },
         __isRefreshToken: true
       } as any).then(resp => {
-        console.log('resp:', resp)
+        // console.log('resp:', resp)
         const serverToken = resp?.data?.token
         if(serverToken) {
           // 刷新成功，重新设置 server-token
@@ -203,6 +203,10 @@ export class CreatorApi {
     // console.log('config:', config)
     // console.log('isRefreshToken:', config.__isRefreshToken)
     return !!config.__isRefreshToken
+  }
+  // 强制刷新 Token
+  forceRefreshToken() {
+    this.refreshToken(this.account, this.hostname)
   }
 }
 

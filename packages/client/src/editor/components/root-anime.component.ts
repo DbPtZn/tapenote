@@ -22,6 +22,7 @@ import { EditorOptions } from '@textbus/editor'
 import { AddAnimeService } from '../services'
 
 import { paragraphComponent } from './paragraph.component'
+import { useImgDrag } from './_hooks/img-drag'
 
 export const rootAnimeComponent = defineComponent({
   type: ContentType.BlockComponent,
@@ -130,6 +131,8 @@ export const rootAnimeComponent = defineComponent({
         })
       )
     })
+
+    useImgDrag(rootNode, slots)
 
     onDestroy(() => {
       subscription.unsubscribe()

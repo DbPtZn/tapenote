@@ -1,4 +1,4 @@
-import { debounceTime, fromEvent, Subscription } from '@tanbo/stream'
+import { fromEvent, Subscription } from '@tanbo/stream'
 import {
   ContentType,
   defineComponent,
@@ -15,11 +15,12 @@ import {
   onBreak,
   ComponentInstance,
   ComponentInitData,
-  useSelf, onViewInit, onCompositionStart, Renderer, RootComponentRef, History, onCompositionUpdate, Injector
+  useSelf, onViewInit, onCompositionStart, Renderer, RootComponentRef, History, Injector
 } from '@textbus/core'
 import { ComponentLoader, VIEW_DOCUMENT, EDITOR_OPTIONS, SlotParser } from '@textbus/platform-browser'
-import { EditorOptions, paragraphComponent } from '@textbus/editor'
+import { EditorOptions } from '@textbus/editor'
 import { RootEventService } from '../services'
+import { paragraphComponent } from './paragraph.component'
 
 export const rootPlayerComponent = defineComponent({
   type: ContentType.BlockComponent,
@@ -27,11 +28,11 @@ export const rootPlayerComponent = defineComponent({
   setup(data?: ComponentInitData<any>) {
     const injector = useContext()
     const selection = injector.get(Selection)
-    const renderer = injector.get(Renderer)
-    const root = injector.get(RootComponentRef)
+    // const renderer = injector.get(Renderer)
+    // const root = injector.get(RootComponentRef)
     const options = injector.get(EDITOR_OPTIONS) as EditorOptions
-    const docContainer = injector.get(VIEW_DOCUMENT)
-    const history = injector.get(History)
+    // const docContainer = injector.get(VIEW_DOCUMENT)
+    // const history = injector.get(History)
     const self = useSelf()
     const subs: Subscription[] = []
     subs.push(self.onStateChange.subscribe(ev => {
@@ -68,63 +69,17 @@ export const rootPlayerComponent = defineComponent({
     })
 
     const rootNode = useRef<HTMLElement>()
-    // const subscription = new Subscription()
-
     onViewInit(() => {
-      // subscription.add(fromEvent<MouseEvent>(docContainer, 'click').subscribe(ev => {
-      //   const rect = rootNode.current!.getBoundingClientRect()
-      //   const firstSlot = slots.first!
-      //   if (ev.clientY > rect.top + rect.height - 30) {
-      //     const lastContent = firstSlot.getContentAtIndex(firstSlot.length - 1)
-      //     if (!firstSlot.isEmpty && typeof lastContent !== 'string' && lastContent.name !== paragraphComponent.name) {
-      //       const index = firstSlot.index
-      //       firstSlot.retain(firstSlot.length)
-      //       const p = paragraphComponent.createInstance(injector)
-      //       firstSlot.insert(p)
-      //       firstSlot.retain(index)
-      //       selection.setPosition(p.slots.get(0)!, 0)
-      //     }
-      //   } else if (ev.target === rootNode.current) {
-      //     let parentComponent = selection.focusSlot?.parent
-      //     while (parentComponent && parentComponent.parentComponent !== self) {
-      //       parentComponent = parentComponent.parentComponent
-      //     }
-      //     if (!parentComponent) {
-      //       return
-      //     }
-      //     const index = firstSlot.indexOf(parentComponent)
-      //     if (index > -1) {
-      //       if (ev.clientX - rect.left < 4) {
-      //         selection.setPosition(firstSlot, index)
-      //         selection.restore()
-      //       } else if (rect.left + rect.width - ev.clientX < 4) {
-      //         selection.setPosition(firstSlot, index + 1)
-      //         selection.restore()
-      //       }
-      //     }
-      //   }
-      // }))
-
       const rootEventService = injector.get(RootEventService)
       /** 监听在组件上的右击菜单事件 */
       subs.push(
         fromEvent(rootNode.current!, 'contextmenu').subscribe(ev  => {
           rootEventService.handleContextmenu(ev as MouseEvent)
-          // let nativeNode = ev.target as HTMLElement
-          // while (nativeNode) {
-          //   const componentInstance = renderer.getComponentByNativeNode(nativeNode)
-          //   if (componentInstance) {
-          //     rootEventService.handleContextmenu(componentInstance === self ? null : componentInstance)
-          //     break
-          //   }
-          //   nativeNode = nativeNode.parentNode as HTMLElement
-          // }
         })
       )
     })
 
     onDestroy(() => {
-      // subscription.unsubscribe()
       subs.forEach(sub => sub.unsubscribe())
     })
 

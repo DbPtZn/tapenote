@@ -17,7 +17,7 @@ export function useSubmissionDialog() {
     console.log(data)
     dialog.create({
       icon: () => h(Icon, { icon: 'material-symbols:share', height: 24 }),
-      title: '投稿',
+      title: '投稿 （ 实验性功能 ）',
       content: () => h(SubmissionForm, {
         id: id,
         type: type,
