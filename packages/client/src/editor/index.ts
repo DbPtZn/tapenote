@@ -9,4 +9,5 @@ export * from './version'
 export * from './i18n'
 
 export * from './default-components'
+export * from './default-formatter'
 

@@ -179,7 +179,7 @@ export function useItemListDropDown() {
       // },
       // 创建微课编辑文件
       {
-        label: '创建工程项目',
+        label: '创建动画制作项目',
         key: 'create-procedure',
         icon: () => renderIcon('material-symbols:coffee-maker'),
         show: dropdownState.lib && dropdownState.lib === LibraryEnum.NOTE && dropdownState.type === 'file',

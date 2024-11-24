@@ -27,17 +27,16 @@ import {
   ThemeProvider,
   animeFormatter,
   animeFormatLoader,
-  animeIgnoreComponent, animeIgnoreComponentLoader,
-  animeComponent, animeComponentLoader, MemoProvider, MessageService, MemoService, defaultComponents, defaultComponentLoaders, defaultPlayerComponents, defaultPlayerComponentLoaders, blockBackgroundColorFormatterLoader, blockBackgroundColorFormatter
+   MemoProvider, MessageService, MemoService, defaultComponents, defaultComponentLoaders, defaultPlayerComponents, defaultPlayerComponentLoaders, blockBackgroundColorFormatter, defaultAttributeLoaders, defaultAttributes, defaultFormatLoaders, defaultFormatters
 } from '@/editor'
 import { fromEvent, Injector } from '@textbus/core'
 import {
-  defaultAttributeLoaders,
-  defaultAttributes,
+  // defaultAttributeLoaders,
+  // defaultAttributes,
   // defaultComponentLoaders,
   // defaultComponents,
-  defaultFormatLoaders,
-  defaultFormatters,
+  // defaultFormatLoaders,
+  // defaultFormatters,
   EditorOptions,
   LinkJumpTipPlugin
 } from '@textbus/editor'
@@ -65,10 +64,10 @@ export function getCourseConfig(args: {
     rootComponentLoader: rootPlayerComponentLoader,
     components: defaultPlayerComponents,
     componentLoaders: defaultPlayerComponentLoaders,
-    formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
-    formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
-    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
-    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
+    formatters: [animeFormatter, ...defaultFormatters],
+    formatLoaders: [animeFormatLoader, ...defaultFormatLoaders],
+    attributes: defaultAttributes,
+    attributeLoaders: defaultAttributeLoaders,
     styleSheets: [],
     providers: [
       Player,

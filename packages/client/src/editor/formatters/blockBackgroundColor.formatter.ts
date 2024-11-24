@@ -44,7 +44,7 @@ class BlockStyleFormatLoader<T extends FormatValue> extends Matcher<T, Attribute
   }
 }
 
-export const blockBackgroundColorFormatterLoader = new BlockStyleFormatLoader(
+export const blockBackgroundColorFormatLoader = new BlockStyleFormatLoader(
   'backgroundColor',
   blockBackgroundColorFormatter,
   {

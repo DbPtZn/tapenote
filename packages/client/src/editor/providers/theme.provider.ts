@@ -6,7 +6,7 @@ import { Layout } from '@textbus/editor'
 import '../index.scss'
 import '../assets/index.css'
 import 'material-icons/iconfont/material-icons.css'
-import { VIEW_CONTAINER } from '@textbus/platform-browser'
+
 type ThemeState = 'light' | 'dark'
 /**
  * 主题控制器

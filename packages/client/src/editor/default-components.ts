@@ -48,6 +48,7 @@ import {
   imageComponent
 } from '@textbus/editor'
 import { Component } from '@textbus/core'
+import { codeComponentLoader, codeComponent } from './components/code.component'
 
 export const defaultComponentLoaders: ComponentLoader[] = [
   imageCardComponentLoader,
@@ -71,6 +72,7 @@ export const defaultComponentLoaders: ComponentLoader[] = [
   dividerComponentLoader,
   animeIgnoreComponentLoader,
   animeComponentLoader,
+  codeComponentLoader
 ]
 
 export const defaultComponents: Component[] = [
@@ -95,6 +97,7 @@ export const defaultComponents: Component[] = [
   dividerComponent,
   animeIgnoreComponent,
   animeComponent,
+  codeComponent
 ]
 
 

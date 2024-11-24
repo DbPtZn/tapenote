@@ -1,13 +1,13 @@
 import useStore from '@/store'
 import { DropdownOption, useMessage } from 'naive-ui'
-import { Ref, h, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { Ref, ShallowRef, h, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { Bridge } from '../../bridge'
 import { MemoService } from '@/editor'
 import { Subscription } from '@tanbo/stream'
 
 type Memo = ReturnType<typeof useStore>['projectStore']['data'][0]['memos'][0]
-export function useMemo(projectId: string, account: string, hostname: string, container: Ref<HTMLElement>, bridge: Bridge) {
+export function useMemo(projectId: string, account: string, hostname: string, container: Readonly<ShallowRef<HTMLElement | null>>, bridge: Bridge) {
   const { projectStore } = useStore()
   const message = useMessage()
   const add = async (x: number, y: number) => {
@@ -27,7 +27,7 @@ export function useMemo(projectId: string, account: string, hostname: string, co
       subs2.push(
         memoService.onCreateMeno.subscribe(memo => {
           const x = memo.x
-          const y = memo.y + container.value.scrollTop
+          const y = memo.y + container.value!.scrollTop
           add(x, y)
         }),
         memoService.onResize.subscribe(memo => {

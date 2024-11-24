@@ -14,7 +14,7 @@ export class InputProjectDto {
   
   @IsString()
   @IsOptional()
-  firstPictrue
+  firstPictrue: string
 
   @IsString()
   @IsOptional()

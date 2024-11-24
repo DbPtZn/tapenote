@@ -48,7 +48,6 @@ export class UploadService {
       file: LocalUploadFile
       removeLocalFile?: boolean
       quoteId?: string
-      md5?: string
       ignore?: boolean
       hadExists?: (url: string) => void
     },
@@ -114,8 +113,7 @@ export class UploadService {
       child.on('message', (msg: any) => {
         // console.log('child msg' + msg)
         if (msg.error) {
-          // console.log(data.error)
-          console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:' + filePath)
+          console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:', filePath, msg.error)
           reject(msg.error)
         } else {
           resolve(msg)
@@ -126,8 +124,7 @@ export class UploadService {
 
       // 监听子线程的错误
       child.on('error', error => {
-        console.log(error)
-        console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:' + filePath)
+        console.log('警告！计算文件相关信息失败，未能成功创建文件数据对象，文件地址:', filePath, error.message)
         clearTimeout(timer)
         child.kill()
         reject(error)

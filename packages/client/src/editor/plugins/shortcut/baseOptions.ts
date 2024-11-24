@@ -328,7 +328,9 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             ])
           },
           stateFactory() {
-            return 'ol'
+            return {
+              type: 'ol'
+            }
           }
         })
       }
@@ -350,7 +352,9 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             ])
           },
           stateFactory() {
-            return 'ul'
+            return {
+              type: 'ul'
+            }
           }
         })
       }

@@ -30,9 +30,10 @@ export function useEnterBreaking(injector: Injector, slots: Slots) {
     let i = 0
     while (i < delta.length) {
       const item = delta[i]
-      // 动画格式换行不继承
+      // 换行不继承(动画格式、行内代码)
       item.formats = item.formats.filter(format => {
-        return format[0].name !== 'AnimeFormatter'
+        console.log(format[0].name)
+        return !['AnimeFormatter', 'code'].includes(format[0].name)
       })
       if (nextSlot.insert(item.insert, item.formats)) {
         i++
@@ -78,7 +79,7 @@ export function useEnterBreaking(injector: Injector, slots: Slots) {
       i++
       // 动画格式换行不继承
       item.formats = item.formats.filter(format => {
-        return format[0].name !== 'AnimeFormatter'
+        return !['AnimeFormatter', 'code'].includes(format[0].name)
       })
       commander.insert(item.insert, item.formats)
     }

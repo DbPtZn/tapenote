@@ -44,7 +44,7 @@ export class ContextMenu implements Plugin {
     const messageService = injector.get(MessageService)
     const parser = injector.get(Parser)
     const renderer = injector.get(Renderer)
-    // const memoService = injector.get(MemoService)
+    const memoService = injector.get(MemoService)
     const structurer = injector.get(Structurer)
     const layout = injector.get(Layout)
     const scroller = structurer.scrollerRef
@@ -84,18 +84,18 @@ export class ContextMenu implements Plugin {
           })
           const menus = ContextMenu.makeContextmenu(ev.target as HTMLElement, selection, renderer)
           const defaultMenus: ContextMenuConfig[] = [
-            // {
-            //   iconClasses: [`material-icons-outlined-sticky_note_2`],
-            //   label: i18n.get('editor.memo'),
-            //   onClick: () => {
-            //     const target = ev.target as HTMLElement
-            //     const targetRect = target.getBoundingClientRect()
-            //     const middleRect = layout.middle.getBoundingClientRect()
-            //     const scrollerRect = scroller!.getBoundingClientRect()
-            //     //  + containeRect.left - scrollerRect.left
-            //     memoService.createMeno((ev.offsetX / middleRect.width) * 100, ev.offsetY + targetRect.top - scrollerRect.top)
-            //   }
-            // },
+            {
+              iconClasses: [`material-icons-outlined-sticky_note_2`],
+              label: i18n.get('editor.memo'),
+              onClick: () => {
+                const target = ev.target as HTMLElement
+                const targetRect = target.getBoundingClientRect()
+                const middleRect = layout.middle.getBoundingClientRect()
+                const scrollerRect = scroller!.getBoundingClientRect()
+                //  + containeRect.left - scrollerRect.left
+                memoService.createMeno((ev.offsetX / middleRect.width) * 100, ev.offsetY + targetRect.top - scrollerRect.top)
+              }
+            },
             {
               iconClasses: ['textbus-icon-copy'],
               label: i18n.get('editor.copy'),
@@ -213,7 +213,8 @@ export class ContextMenu implements Plugin {
             ev.clientY,
             this.menuSubscriptions
           )
-          ev.preventDefault()
+          // 允许按 ctrl 时查看 DevTools
+          !ev.ctrlKey && ev.preventDefault()
         })
     )
   }

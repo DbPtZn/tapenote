@@ -1,4 +1,4 @@
-const zh = {
+export const zh = {
   "hello": "你好, {name}!",
   "title": "笔记映画",
   "language": "语言",
@@ -6,7 +6,7 @@ const zh = {
   // common
   "note": "笔记",
   "course": "动画",
-  "procedure": "制作",
+  "procedure": "创作",
   "newFile": "新建文档",
   "newFolder": "新建文件夹",
   "open": "打开",
@@ -66,5 +66,3 @@ const zh = {
     }
   }
 }
-
-export default zh

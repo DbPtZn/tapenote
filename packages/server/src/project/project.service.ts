@@ -363,7 +363,6 @@ export class ProjectService {
       const { lib, firstPictrue, title, content, cover, penname, email, homepage } = dto
       const allowTitle = checkTitle(title)
       const user = await this.usersRepository.findOneBy({ id: userId })
-      // console.log(dto.folderId)
       const folderId = dto.folderId ? dto.folderId : user.dir[lib]
       const folder = await this.folderService.findOneById(folderId, userId)
       const project = new Project()

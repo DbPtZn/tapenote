@@ -117,9 +117,8 @@ export class InlineToolbarPlugin implements Plugin {
   }
 
   onDestroy() {
-    // console.log('销毁行内工具条')
-    this.subsA.forEach((i: any) => i.unsubscribe())
     this.subsB.forEach((i: any) => i.unsubscribe())
+    this.subsA.forEach((i: any) => i.unsubscribe())
 
     this.components.length = 0
     this.components = []

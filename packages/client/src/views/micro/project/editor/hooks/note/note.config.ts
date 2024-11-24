@@ -76,7 +76,10 @@ import {
   defaultComponents,
   defaultComponentLoaders,
   blockBackgroundColorFormatter,
-  blockBackgroundColorFormatterLoader
+  defaultFormatters,
+  defaultFormatLoaders,
+  defaultAttributes,
+  defaultAttributeLoaders,
 } from '@/editor'
 import { getResourceDomain } from '@/views/creator/_hooks'
 import { useUploadImg } from '@/views/creator/_utils'
@@ -91,12 +94,12 @@ import {
   blockComponentLoader,
   blockquoteComponent,
   blockquoteComponentLoader,
-  defaultAttributeLoaders,
-  defaultAttributes,
+  // defaultAttributeLoaders,
+  // defaultAttributes,
   // defaultComponentLoaders,
   // defaultComponents,
-  defaultFormatLoaders,
-  defaultFormatters,
+  // defaultFormatLoaders,
+  // defaultFormatters,
   EditorOptions,
   katexComponent,
   katexComponentLoader,
@@ -145,10 +148,10 @@ export function getNoteConfig(args: {
     content: content || '',
     components: defaultComponents,
     componentLoaders: defaultComponentLoaders,
-    formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
-    formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
-    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
-    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
+    formatters: defaultFormatters,
+    formatLoaders: defaultFormatLoaders,
+    attributes: defaultAttributes,
+    attributeLoaders: defaultAttributeLoaders,
     i18n: i18n,
     providers: [
       { provide: Commander, useClass: CustomCommander },

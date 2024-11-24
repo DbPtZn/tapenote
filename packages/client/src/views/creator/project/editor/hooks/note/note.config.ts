@@ -76,7 +76,12 @@ import {
   defaultComponents,
   defaultComponentLoaders,
   blockBackgroundColorFormatter,
-  blockBackgroundColorFormatterLoader
+  blockBackgroundColorFormatLoader,
+  SpecialBehaviorPlugin,
+  defaultAttributeLoaders,
+  defaultAttributes,
+  defaultFormatters,
+  defaultFormatLoaders
 } from '@/editor'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {
@@ -88,12 +93,12 @@ import {
   blockComponentLoader,
   blockquoteComponent,
   blockquoteComponentLoader,
-  defaultAttributeLoaders,
-  defaultAttributes,
+  // defaultAttributeLoaders,
+  // defaultAttributes,
   // defaultComponentLoaders,
   // defaultComponents,
-  defaultFormatLoaders,
-  defaultFormatters,
+  // defaultFormatLoaders,
+  // defaultFormatters,
   EditorOptions,
   katexComponent,
   katexComponentLoader,
@@ -142,10 +147,10 @@ export function getNoteConfig(args: {
     content: content || '',
     components: defaultComponents,
     componentLoaders: defaultComponentLoaders,
-    formatters: [colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
-    formatLoaders: [colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
-    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
-    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
+    formatters: defaultFormatters,
+    formatLoaders: defaultFormatLoaders,
+    attributes: defaultAttributes,
+    attributeLoaders: defaultAttributeLoaders,
     i18n: i18n,
     providers: [
       { provide: Commander, useClass: CustomCommander },
@@ -203,7 +208,8 @@ export function getNoteConfig(args: {
       () => new LinkJumpTipPlugin(),
       () => new OutlinePlugin(),
       () => new ShotcutPlugin(),
-      // () => new ContextMenu()
+      () => new ContextMenu(),
+      () => new SpecialBehaviorPlugin()
     ],
     uploader(config) {
       return uploader(config, account, hostname)

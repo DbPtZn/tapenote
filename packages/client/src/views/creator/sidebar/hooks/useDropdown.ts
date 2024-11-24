@@ -19,6 +19,7 @@ import { useParser } from '../../_utils/parse'
 import { useI18n } from 'vue-i18n'
 import { PaymentView } from '@/views'
 import { NConfig } from '../../_common'
+import { Img2base64Service } from '@/editor'
 type Folder = ReturnType<typeof useStore>['folderStore']['$state']
 const createFolderEvent = new Subject<LibraryEnum>()
 const onCreateFolder = createFolderEvent.asObservable()
@@ -137,22 +138,16 @@ export function useSidebarDropDown() {
                     log.value.push(txt)
                     logRef.value?.scrollTo({ position: 'bottom', silent: true })
                   }
-                  modal.create({
+                  const mod = modal.create({
                     maskClosable: false,
                     title: '正在导入文件,请不要关闭该窗口...',
                     preset: 'dialog',
                     content: () => h(NLog, { ref: logRef, rows: 10, trim: true, log: log.value.join('\n') })
                   })
-                  // default: () => tip.value.map(txt => h(NText, null, { default: () => txt || '' }))
                   const file = input.files[0]
 
                   const reader = new FileReader()
-                  // const decoder = new TextDecoder("gbk")
-                  // , { 
-                  //   decodeFileName: (bytes) => {
-                  //     return iconv.decode(bytes as Buffer, 'UTF-8')
-                  //   }
-                  // }
+
                   reader.onload = e => {
                     const arrayBuffer = e.target?.result as string
                     jszip
@@ -187,22 +182,23 @@ export function useSidebarDropDown() {
 
                               await file.async('string').then(async jsonStr => {
                                 try {
-                                  console.log('jsonStr', jsonStr)
+                                  // console.log('jsonStr', jsonStr)
                                   const jsonObj = JSON.parse(jsonStr)
                                   // console.log('JSON对象:', jsonObj)
                                   addLog(`正在转换文本 :::`)
-                                  const { content, cover } = await parseContent(jsonObj.content)
+                                  const { content, firstPicture } = await parseContent(jsonObj.content)
                                   const data = {
                                     folderId,
                                     lib: jsonObj.lib,
                                     title: jsonObj.title,
                                     content,
-                                    cover
+                                    firstPicture,
+                                    cover: jsonObj.cover || ''
                                   }
                                   addLog(`正在创建文件 ${data.title}`)
                                   await projectStore.input(data, userStore.account, userStore.hostname)
                                 } catch (error) {
-                                  console.log('jsonStr', jsonStr)
+                                  // console.log('jsonStr', jsonStr)
                                   console.error('解析 JSON 时出错:', error)
                                 }
                               })
@@ -213,9 +209,11 @@ export function useSidebarDropDown() {
                         }
 
                         await traverseZipEntries(tree, targetFolderId).then(() => {
-                          message.success('导入成功！')
+                          message.success('导入结束！')
                           addLog('导入完成！')
-                          // modal.destroyAll()
+                          setTimeout(() => {
+                            mod?.destroy()
+                          }, 1000)
                         })
                       })
                       .catch(error => {
@@ -254,7 +252,7 @@ export function useSidebarDropDown() {
                   negativeText: '取消',
                   onPositiveClick: async () => {
                     const zip = new JSZip()
-                    // console.log(userStore.dir)
+                    const ResourceDomain = localStorage.getItem(`ResourceDomain:${userStore.hostname}`) as string
                     const treenodes = await folderTreeStore.fetchFirstLevel(userStore.dir.note, LibraryEnum.NOTE)
                     const folders: Folder[] = []
                     for (let i = 0; i < treenodes.length; i++) {
@@ -264,27 +262,32 @@ export function useSidebarDropDown() {
                         })
                       }
                     }
+                    const errors: string[] = []
                     // console.log(folders)
                     async function traverseOutput(folders: Folder[], basePath: string) {
                       for (let i = 0; i < folders.length; i++) {
                         const fullPath = basePath + folders[i].name
-                        console.log(fullPath)
+                        // console.log(fullPath)
                         if (typeof folders[i].subfiles === 'object') {
                           for (let j = 0; j < folders[i].subfiles!.length; j++) {
                             try {
                               const subfile = folders[i].subfiles![j]
                               const project = await projectStore.fetch(subfile.id, userStore.account, userStore.hostname).then(res => res.data)
                               const content = (await pack.getContent(project.content)).content
-                              // console.log(content)
+                              const cover = project.cover ? (await Img2base64Service.imgUrlToBase64(ResourceDomain + project.cover)) : ''
                               const data = {
+                                cover,
                                 lib: project.lib,
                                 title: project.title,
-                                content: content
+                                content: content,
                               }
                               const jsonString = JSON.stringify(data)
                               zip.folder(basePath)?.file(`${folders[i].name}/${subfile.title}.json`, jsonString, { binary: false }) // 注意 json 数据不能用二进制压缩
-                            } catch (error) {
-                              message.error('项目 folders[i][j] 获取失败')
+                            } catch (error: any) {
+                              console.error('导出笔记时出错:', error)
+                              const msg = `项目 《${folders[i]?.subfiles?.[j]?.title}》 导出失败, 异常原因:${typeof error === 'string' ? error : '未知' }`
+                              errors.push(msg)
+                              message.error(msg)
                             }
                           }
                         }

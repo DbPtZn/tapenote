@@ -11,9 +11,7 @@ import 'vfonts/FiraCode.css'
 import Vue3TouchEvents from 'vue3-touch-events'
 import { createI18n } from 'vue-i18n'
 
-import zh from './assets/locales/zh.ts'
-import en from './assets/locales/en.ts'
-import ja from './assets/locales/ja.ts'
+import { zh, en, ja } from './locales'
 
 /** Pinia */
 const pinia = createPinia()

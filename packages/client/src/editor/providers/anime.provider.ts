@@ -439,7 +439,7 @@ export class AnimeProvider {
     return container.classList.contains('anime-element-hidden')
   }
 
-  /** 如果是动画元素则返回改元素，如果是动画标签元素则返回其父元素 */
+  /** 如果是动画元素则返回该元素，如果是动画标签元素则返回其父元素 */
   static toAnimeElement(target: HTMLElement) {
     if (['anime-component', 'anime'].includes(target.tagName.toLocaleLowerCase())) return target
     if (target.classList.contains('anime-component-tab') && target.parentElement?.dataset.anime === 'true') return target.parentElement

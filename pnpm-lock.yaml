@@ -230,9 +230,6 @@ importers:
       iconv-lite:
         specifier: ^0.6.3
         version: 0.6.3
-      js-audio-recorder:
-        specifier: ^1.0.7
-        version: 1.0.7
       jsrsasign:
         specifier: ^11.1.0
         version: 11.1.0
@@ -345,9 +342,6 @@ importers:
       unplugin-vue-components:
         specifier: ^0.27.0
         version: 0.27.4(@babel/parser@7.25.6)(@nuxt/kit@3.13.1(rollup@2.79.1)(webpack-sources@3.2.3))(rollup@2.79.1)(vue@3.5.10(typescript@5.4.5))(webpack-sources@3.2.3)
-      vconsole:
-        specifier: ^3.15.1
-        version: 3.15.1
       vite:
         specifier: ^5.1.6
         version: 5.4.5(@types/node@20.16.5)(less@4.2.0)(sass@1.78.0)(terser@5.32.0)
@@ -5492,10 +5486,6 @@ packages:
     resolution: {integrity: sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==}
     engines: {node: '>=12.13'}
 
-  copy-text-to-clipboard@3.2.0:
-    resolution: {integrity: sha512-RnJFp1XR/LOBDckxTib5Qjr/PMfkatD0MUCQgdpqS8MdKiNUzBjAQBEN6oUy+jW7LI93BBG3DtMB2KOOKpGs2Q==}
-    engines: {node: '>=12'}
-
   core-js-compat@3.38.1:
     resolution: {integrity: sha512-JRH6gfXxGmrzF3tZ57lFx97YARxCXPaMzPo6jELZhv88pBH5VXpQ+y0znKGlFnzuaihqhLbefxSJxWJMPtfDzw==}
 
@@ -7628,9 +7618,6 @@ packages:
   jpeg-js@0.4.4:
     resolution: {integrity: sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg==}
 
-  js-audio-recorder@1.0.7:
-    resolution: {integrity: sha512-JiDODCElVHGrFyjGYwYyNi7zCbKk9va9C77w+zCPMmi4C6ix7zsX2h3ddHugmo4dOTOTCym9++b/wVW9nC0IaA==}
-
   js-cookie@3.0.5:
     resolution: {integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==}
     engines: {node: '>=14'}
@@ -8346,9 +8333,6 @@ packages:
   multicast-dns@7.2.5:
     resolution: {integrity: sha512-2eznPJP8z2BFLX50tf0LuODrpINqP1RVIm/CObbTcBRITQgmC/TjcREF1NeTBzIcR5XO/ukWo+YHOjBbFwIupg==}
     hasBin: true
-
-  mutation-observer@1.0.3:
-    resolution: {integrity: sha512-M/O/4rF2h776hV7qGMZUH3utZLO/jK7p8rnNgGkjKUw8zCGjRQPxB8z6+5l8+VjRUQ3dNYu4vjqXYLr+U8ZVNA==}
 
   mute-stream@0.0.8:
     resolution: {integrity: sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==}
@@ -11190,9 +11174,6 @@ packages:
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
-
-  vconsole@3.15.1:
-    resolution: {integrity: sha512-KH8XLdrq9T5YHJO/ixrjivHfmF2PC2CdVoK6RWZB4yftMykYIaXY1mxZYAic70vADM54kpMQF+dYmvl5NRNy1g==}
 
   vdirs@0.1.8:
     resolution: {integrity: sha512-H9V1zGRLQZg9b+GdMk8MXDN2Lva0zx72MPahDKc30v+DtwKjfyOSXWRIX4t2mhDubM1H09gPhWeth/BJWPHGUw==}
@@ -17898,8 +17879,6 @@ snapshots:
     dependencies:
       is-what: 4.1.16
 
-  copy-text-to-clipboard@3.2.0: {}
-
   core-js-compat@3.38.1:
     dependencies:
       browserslist: 4.23.3
@@ -20599,8 +20578,6 @@ snapshots:
 
   jpeg-js@0.4.4: {}
 
-  js-audio-recorder@1.0.7: {}
-
   js-cookie@3.0.5: {}
 
   js-tokens@3.0.2: {}
@@ -21332,8 +21309,6 @@ snapshots:
     dependencies:
       dns-packet: 5.6.1
       thunky: 1.1.0
-
-  mutation-observer@1.0.3: {}
 
   mute-stream@0.0.8: {}
 
@@ -24641,13 +24616,6 @@ snapshots:
   validator@13.12.0: {}
 
   vary@1.1.2: {}
-
-  vconsole@3.15.1:
-    dependencies:
-      '@babel/runtime': 7.25.6
-      copy-text-to-clipboard: 3.2.0
-      core-js: 3.38.1
-      mutation-observer: 1.0.3
 
   vdirs@0.1.8(vue@3.5.10(typescript@5.4.5)):
     dependencies:

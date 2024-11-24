@@ -39,3 +39,14 @@
     content: unset;
   }
 }
+
+.player-editor {
+  .anime-box {
+    display: block;
+    outline: 1px dashed #aaaaaa30;
+  }
+  table.anime-box {
+    display: table !important;
+    outline: 1px dashed #aaaaaa30;
+  }
+}

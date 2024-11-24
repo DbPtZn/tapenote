@@ -59,6 +59,7 @@ interface InputDto {
   lib: LibraryEnum
   title: string
   content: string
+  firstPicture: string
   cover: string
 }
 

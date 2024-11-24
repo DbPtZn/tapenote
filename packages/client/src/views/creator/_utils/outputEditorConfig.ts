@@ -15,10 +15,10 @@ import {
   animeFormatter,
   animeFormatLoader,
   animeIgnoreComponent, animeIgnoreComponentLoader, animeComponent, animeComponentLoader,
-  listComponent, listComponentLoader, headingComponent, headingComponentLoader, defaultPlayerComponents, defaultPlayerComponentLoaders, blockBackgroundColorFormatter, blockBackgroundColorFormatterLoader, ImgService
+  listComponent, listComponentLoader, headingComponent, headingComponentLoader, defaultPlayerComponents, defaultPlayerComponentLoaders, blockBackgroundColorFormatter, ImgService, defaultFormatLoaders, defaultFormatters, defaultAttributes, defaultAttributeLoaders
 } from '@/editor'
 import { Injector } from '@textbus/core'
-import { defaultAttributeLoaders, defaultAttributes, defaultComponentLoaders, defaultComponents, defaultFormatLoaders, defaultFormatters, EditorOptions } from '@textbus/editor'
+import { EditorOptions } from '@textbus/editor'
 export function getEditorConfig(content?: string) {
   const config: EditorOptions = {
     rootComponent: rootComponent,
@@ -26,10 +26,10 @@ export function getEditorConfig(content?: string) {
     content: content || '',
     components: [imageU2BComponent, ...defaultPlayerComponents],
     componentLoaders: [imageU2BComponentLoader, ...defaultPlayerComponentLoaders],
-    formatters: [animeFormatter, colorFormatter, textBackgroundColorFormatter, ...defaultFormatters],
-    formatLoaders: [animeFormatLoader, colorFormatLoader, textBackgroundColorFormatLoader, ...defaultFormatLoaders],
-    attributes: [blockBackgroundColorFormatter, ...defaultAttributes],
-    attributeLoaders: [blockBackgroundColorFormatterLoader, ...defaultAttributeLoaders],
+    formatters: [animeFormatter, ...defaultFormatters],
+    formatLoaders: [animeFormatLoader, ...defaultFormatLoaders],
+    attributes: defaultAttributes,
+    attributeLoaders: defaultAttributeLoaders,
     styleSheets: [],
     providers: [
       Img2base64Service, 

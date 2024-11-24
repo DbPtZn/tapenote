@@ -139,6 +139,7 @@ watch(
   }
 )
 
+/** 展开箭头 */
 function openArrowKey() {
   const max = commonOptions.length + baseOptions.length
   let jumpIndex = 0
@@ -235,10 +236,7 @@ function openArrowKey() {
           return true
         }
         // 可展开项
-        if ([14, 15, 16, 17, 20].includes(pointer.value)) {
-          baseOptions[pointer.value - 13].onClick()
-          return true
-        }
+        if(allowExpandOptions()) return true
         pointer.value = _.clamp(pointer.value + 1, 1, max)
         return true
       }
@@ -267,6 +265,7 @@ function openArrowKey() {
             close()
             return true
           }
+          return allowExpandOptions()
         }
         // Popover 的情况
         if ([15, 16, 17, 20].includes(pointer.value)) {
@@ -275,6 +274,13 @@ function openArrowKey() {
             close()
             return true
           }
+          return allowExpandOptions()
+        }
+        // 其它 base 按键的情况
+        if (pointer.value > 12) {
+          baseOptions[pointer.value - 13]?.onClick()
+          close()
+          return true
         }
         close()
         return false
@@ -297,13 +303,25 @@ function openArrowKey() {
   ]
   function close() {
     state.show = false
-    keyEvents.forEach(s => s.remove())
-    subs.forEach(s => s.unsubscribe())
     pointer.value = 1
     secondaryPointer.value = 1
     dropdownState.show = false
     popoverState.show = false
     menuEl.value!.scrollTop = 0
+    nextTick(() => {
+      keyEvents.forEach(s => s?.remove())
+      keyEvents.length = 0
+      subs.forEach(s => s.unsubscribe())
+      subs.length = 0
+    })
+  }
+  // 可展开项
+  function allowExpandOptions() {
+    if ([14, 15, 16, 17, 20].includes(pointer.value)) {
+      baseOptions[pointer.value - 13].onClick()
+      return true
+    }
+    return false
   }
   return keyEvents
 }

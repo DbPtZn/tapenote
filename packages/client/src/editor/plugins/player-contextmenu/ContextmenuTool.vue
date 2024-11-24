@@ -5,27 +5,19 @@ import { DropdownOption } from 'naive-ui'
 import _ from 'lodash'
 import dayjs from 'dayjs'
 import { RootEventService } from '../../services'
-import { UIConfig } from '../..'
+import { AnimeProvider, UIConfig } from '../..'
 import { Player } from '../..'
 
 const injector = inject('injector') as Injector
 const rootEvent = injector.get(RootEventService)
 const player = injector.get(Player)
 const subs: Subscription[] = []
-// const renderer = injector.get(Renderer)
-// const layout = injector.get(Layout)
-// const animeEventService = injector.get(AnimeEventService)
-// const rootComponent = injector.get(RootComponentRef)
-// const container = layout.container
-// const scrollerRef = configProvider.scrollerRef
-// const caretRef = ref()
-// const triggerRef = ref()
-
 // const isPopoverShow = ref(false)
 
+/** 最外层组件元素 */
 let currentElement: HTMLElement | null = null
-// let currentComponent: ComponentInstance | null = null
-let animeElements = ref<string[]>([])
+
+const animeElements = ref<string[]>([])
 const position = reactive({
   x: 0,
   y: 0,
@@ -35,15 +27,8 @@ const position = reactive({
 subs.push(
   rootEvent.onComponentContextmenu.subscribe(ev => {
     if (!ev) return
-    // ev.preventDefault()
-    // console.log(ev)
-    position.show = false
-    nextTick().then(() => {
-      position.show = true
-      position.x = ev.clientX
-      position.y = ev.clientY
-    })
-    
+    animeElements.value = []
+
     let nativeNode = ev.target as HTMLElement
     // 查询动画格式
     while (nativeNode) {
@@ -53,18 +38,23 @@ subs.push(
       if (nativeNode.classList.contains('tb-root')) {
         break
       }
-      if (['anime', 'anime-component'].includes(nativeNode.tagName.toLocaleLowerCase())) {
+      const animeElement = AnimeProvider.toAnimeElement(nativeNode)
+      if (animeElement) {
         const animeId = nativeNode.dataset.id
         if (animeId) animeElements.value.push(animeId)
       }
       nativeNode = nativeNode.parentNode as HTMLElement
     }
 
-    //TODO 测试代码
-    if (animeElements.value.length > 0) {
-      ev.preventDefault()
-    }
-
+    if (animeElements.value.length === 0) return
+    // 允许按 ctrl 时查看 DevTools
+    !ev.ctrlKey && ev.preventDefault()
+    position.show = false
+    nextTick().then(() => {
+      position.show = true
+      position.x = ev.clientX
+      position.y = ev.clientY
+    })
     setActive()
     getOptions()
   })
@@ -73,16 +63,14 @@ subs.push(
 const options = ref<DropdownOption[]>()
 options.value = []
 function getOptions() {
-  // console.log(animeElements.value)
   const sourceData = player.sourceData[0]
-  // console.log(sourceData.promoterSequence)
   const sequence = sourceData.keyframeSequence.map((keyframe, index) => {
     if (animeElements.value.includes(sourceData.promoterSequence[index])) {
       return { keyframe, index }
     }
     return null
   })
-  const points = sequence.filter(i => i !== null) as ({ keyframe: number; index: number })[]
+  const points = sequence.filter(i => i !== null) as { keyframe: number; index: number }[]
   // console.log(dayjs().set('minute', 128.437/60).set('second', 128.437%60).format('mm:ss'))
   // console.log(points)
   options.value = [
@@ -94,7 +82,10 @@ function getOptions() {
         ...points.map(point => {
           return {
             key: _.uniqueId(),
-            label: dayjs().set('minute', point.keyframe/60).set('second', point.keyframe%60).format('mm:ss'),
+            label: dayjs()
+              .set('minute', point.keyframe / 60)
+              .set('second', point.keyframe % 60)
+              .format('mm:ss'),
             props: {
               onClick: () => {
                 player.startHere(point.keyframe, point.index)
@@ -110,52 +101,23 @@ function getOptions() {
           setInactive()
         }
       }
-    },
-    {
-      key: 'quote',
-      label: '引用',
-      props: {
-        onClick: () => {
-          setInactive()
-        }
-      }
     }
   ]
 }
 
-
-let original = {
-  display: '',
-  outline: ''
-}
 function setActive() {
   position.show = true
-  if (currentElement) {
-      original = {
-        display: currentElement.style.display,
-        outline: currentElement.style.outline
-      }
-      currentElement.style.display = 'block'
-      currentElement.style.outline = '1px dashed #aaaaaa30'
-    }
+  if (currentElement) currentElement.classList.add('anime-box')
 }
 function setInactive() {
   position.show = false
-  if (currentElement) {
-    currentElement.style.display = original.display
-    currentElement.style.outline = original.outline
-    original = {
-      display: '',
-      outline: ''
-    }
-  }
+  if (currentElement) currentElement.classList.remove('anime-box')
   animeElements.value = []
 }
 
 function handleClickoutside(ev) {
   setInactive()
 }
-
 
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())

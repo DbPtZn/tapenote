@@ -7,7 +7,7 @@ export function useParser(account: string, hostname: string) {
     const subs: Subscription[] = []
     let editor: Editor | null = null
     const host = document.createElement('div')
-    return new Promise<{ content: string; cover: string }>(async (resolve, reject) => {
+    return new Promise<{ content: string; firstPicture: string }>(async (resolve, reject) => {
       const config = getInputEditorConfig(account, hostname)
       editor = createEditor(config)
       editor.mount(host)
@@ -23,7 +23,7 @@ export function useParser(account: string, hostname: string) {
           // 2s 后如果没有图片转换任务，则说明已经转换完成或者不存在需要替换的图片组件
           if (img2url.tasks === 0) {
             console.log('replace')
-            resolve({ content: editor!.getHTML(), cover: '' })
+            resolve({ content: editor!.getHTML(), firstPicture: '' })
             destroy()
           }
         }),
@@ -32,18 +32,18 @@ export function useParser(account: string, hostname: string) {
           console.log('img replace finish')
           const container = editor!.get(Layout).container
           const firstImg = container.querySelector('img')
-          let cover = ''
+          let firstPicture = ''
           if (firstImg) {
             // 找到最后一个斜杠的索引
             // const lastIndex = imageUrl.lastIndexOf('/')
             // 使用substring方法获取文件名
             // const fileName = imageUrl.substring(lastIndex + 1)
             // console.log(fileName)
-            cover = firstImg.src
+            firstPicture = firstImg.src
           }
           // console.log(editor.getHTML())
           // 导出富文本数据
-          resolve({ content: editor!.getHTML(), cover: cover })
+          resolve({ content: editor!.getHTML(), firstPicture })
           destroy()
           host.remove()
         }),

@@ -1,6 +1,6 @@
 export const i18n = {
   editor: {
-    memo: '便笺',
+    memo: '便笺(实验性功能)',
     tts: '文本转语音'
   },
   plugins: {

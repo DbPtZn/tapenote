@@ -578,7 +578,6 @@ export class FragmentService {
   }
 
   async useAsr(args: { filepath: string; model: string, isVip: boolean }) {
-    // console.log('useAsr', args)
     try {
       const { filepath, model, isVip } = args
       if (model === AsrModel.Local) {
@@ -591,14 +590,11 @@ export class FragmentService {
         if(!isVip) {
           throw new Error('免费用户无法使用会员语音识别')
         }
-        // console.log('会员语音识别')
         const result = await this.tencentService.asr(filepath)
-        // console.log(result)
         return result
       }
       throw new Error('不支持目标语音服务！')
     } catch (error) {
-      this.logger.error(error.message)
       throw error
     }
   }

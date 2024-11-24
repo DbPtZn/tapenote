@@ -43,7 +43,7 @@ inElectron &&
   })
 
 const router = useRouter()
-const { userListStore, settingStore } = useStore()
+const { userListStore, settingStore, microStore } = useStore()
 const message = useMessage()
 // const dialog = useDialog()
 const tip = import.meta.env.VITE_LOGIN_TIP || ''
@@ -405,44 +405,23 @@ function handleHostInputBlur() {
 
 /** ------------------------------- 邮箱 验证 --------------------------- */
 const { codeTxt, sendCode } = useVerificationCode()
-// const codeTxt = ref('获取验证码')
-let hadSendCode = false // 是否已经发出验证码
 function handleSendCode() {
   if (isQuerying.value) return message.loading('正在连接服务器...')
   if (!isHostValid.value) return message.error('服务器地址不可用！')
   sendCode(model.value.account, model.value.hostname)
-  // TODO: 发送验证码
-  // console.log(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
-  // axios
-  //   .get(`${model.value.hostname}/auth/sendCode/${model.value.account}`)
-  //   .then(res => {
-  //     // message.success('验证码已发送！')
-  //     hadSendCode = true
-  //     let count = 60
-  //     const timer = setInterval(() => {
-  //       codeTxt.value = `${--count}秒后重发`
-  //       if (count <= 0) {
-  //         clearInterval(timer)
-  //         codeTxt.value = '获取验证码'
-  //       }
-  //     }, 1000)
-  //   })
-  //   .catch(err => {
-  //     message.error('验证码发送失败！')
-  //   })
 }
 </script>
 
 <template>
   <div ref="loginRef" class="login-container">
+    <p v-if="microStore?.isMobile" style="text-align: center;">{{ microStore?.isMobile ? '移动端尚处在开发阶段，请使用浏览器访问。' : '' }}</p>
     <div class="tip">
-      {{ tip }}
+      <p style="text-align: center;">{{ tip }}</p>
     </div>
     <div class="login">
       <n-tabs :value="loginMode" size="large" animated justify-content="space-evenly" @update:value="loginMode = $event">
         <n-tab-pane name="loginByPass" tab="密码登录">
           <n-space style="paddingtop: 18px" vertical>
-            <!-- <div class="title">登录</div> -->
             <n-form ref="formRef" :model="model" :rules="rules" :show-require-mark="false">
               <n-form-item path="hostname" label="服务器地址">
                 <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
