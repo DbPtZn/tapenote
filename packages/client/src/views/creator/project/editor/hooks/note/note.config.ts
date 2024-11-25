@@ -77,7 +77,6 @@ import {
   defaultComponentLoaders,
   blockBackgroundColorFormatter,
   blockBackgroundColorFormatLoader,
-  SpecialBehaviorPlugin,
   defaultAttributeLoaders,
   defaultAttributes,
   defaultFormatters,
@@ -208,8 +207,7 @@ export function getNoteConfig(args: {
       () => new LinkJumpTipPlugin(),
       () => new OutlinePlugin(),
       () => new ShotcutPlugin(),
-      () => new ContextMenu(),
-      () => new SpecialBehaviorPlugin()
+      () => new ContextMenu()
     ],
     uploader(config) {
       return uploader(config, account, hostname)

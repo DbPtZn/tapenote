@@ -248,7 +248,7 @@ export const useProjectStore = defineStore('projectStore', {
         } else {
           this.creatorApi(account, hostname).project.get(id)
             .then(res => {
-              // console.log(res.data)
+              console.log(res.data)
               const newItem = this.set(res.data, account, hostname)
               resolve(newItem)
             })

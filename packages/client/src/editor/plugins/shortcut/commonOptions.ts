@@ -1,7 +1,17 @@
-import { Structurer, ColorProvider, dividerComponent } from "@/editor"
-import { Commander, ContentType, Injector, Keyboard, Renderer, Slot, Selection, TransformContext } from "@textbus/core"
-import { Layout, blockquoteComponent, boldFormatter, codeFormatter, headingComponent, italicFormatter, paragraphComponent, strikeThroughFormatter, underlineFormatter } from "@textbus/editor"
-import { Input, VIEW_DOCUMENT } from "@textbus/platform-browser"
+import { Structurer, ColorProvider, dividerComponent, codeComponent } from '../..'
+import { Commander, ContentType, Injector, Keyboard, Renderer, Slot, Selection, TransformContext, Query, QueryStateType } from '@textbus/core'
+import {
+  Layout,
+  blockquoteComponent,
+  boldFormatter,
+  codeFormatter,
+  headingComponent,
+  italicFormatter,
+  paragraphComponent,
+  strikeThroughFormatter,
+  underlineFormatter
+} from '@textbus/editor'
+import { Input, VIEW_DOCUMENT } from '@textbus/platform-browser'
 
 export function useCommonOptions(injector: Injector) {
   const structurer = injector.get(Structurer)
@@ -13,11 +23,11 @@ export function useCommonOptions(injector: Injector) {
   const selection = injector.get(Selection)
   const keyboard = injector.get(Keyboard)
   const viewContainer = injector.get(VIEW_DOCUMENT)
-  
+  const query = injector.get(Query)
   function handleClick() {
     commander.delete(true) // 向后删除一位，把 / 删除
   }
-  
+
   function setHeading(value: string) {
     handleClick()
     const isHeading = /h[1-6]/.test(value)
@@ -136,7 +146,41 @@ export function useCommonOptions(injector: Injector) {
       icon: 'ic:round-code',
       onClick: () => {
         handleClick()
-        commander.applyFormat(codeFormatter, true)
+        const state = query.queryComponent(codeComponent)
+        if (state.state === QueryStateType.Enabled) {
+          const current = state.value!
+          const parent = current.parent!
+
+          const index = parent.indexOf(current)
+
+          parent.retain(index)
+
+          commander.removeComponent(current)
+
+          current.slots
+            .get(0)!
+            .sliceContent()
+            .forEach(i => {
+              parent.insert(i)
+            })
+        } else {
+          const commonAncestorSlot = selection.commonAncestorSlot!
+          if (selection.startSlot === selection.endSlot) {
+            if (selection.isCollapsed) {
+              const slot = new Slot([ContentType.Text])
+              slot.insert(' ') // 插入一个空字符占位 否则会默认插入一个 br 换行符
+              const block = codeComponent.createInstance(injector, { slots: [slot] })
+              commander.insert(block)
+              selection.setPosition(slot, 0)
+              return
+            }
+            const slot = selection.focusSlot?.cutTo(new Slot([ContentType.Text]), selection.startOffset!, selection.endOffset!)
+            const block = codeComponent.createInstance(injector, { slots: [slot!] })
+            commonAncestorSlot.insert(block)
+          } else {
+            return
+          }
+        }
       }
     },
     {
@@ -157,9 +201,6 @@ export function useCommonOptions(injector: Injector) {
       }
     }
   ]
-  
+
   return commonOptions
 }
-
-
-

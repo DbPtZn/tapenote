@@ -21,6 +21,7 @@ export * from './animeIgnore.component'
 export * from './root-anime.component'
 export * from './table.component'
 export * from './divider.component'
+export * from './code.component'
 
 // player
 export * from './root-player.component'

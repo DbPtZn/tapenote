@@ -307,7 +307,7 @@ export class ContextMenu implements Plugin {
         y = 20
       }
       Object.assign(container.style, {
-        left: x + 'px',
+        left: (x + 3) + 'px',
         top: y + 'px'
       })
       container.style.maxHeight = clientHeight - y - 20 + 'px'

@@ -25,38 +25,38 @@ export class SpecialBehaviorPlugin implements Plugin {
     const selection = injector.get(Selection)
     const commander = injector.get(Commander)
     const query = injector.get(Query)
-    const keyEvents = [
-      keyboard.addShortcut({
-        keymap: { key: 'ArrowRight' },
-        action: function (): boolean {
-          const result = query.queryFormat(codeFormatter)
-          if(result.value) {
-            if(selection.isCollapsed) {
-              let endIndex = 0
-              const isEnd = selection.anchorSlot?.getFormats().some(formatter => {
-                if(formatter.formatter.name === 'code') {
-                  if(formatter.endIndex === selection.startOffset) {
-                    endIndex = formatter.endIndex
-                    return true
-                  }
-                }
-              })
-              if(isEnd) {
-                if (selection.anchorSlot?.length && selection.startOffset) {
-                  if(selection.anchorSlot?.length > selection.startOffset) {
-                    return false
-                  }
-                }
-                commander.insert(' ')
-                return true
-              }
+    // const keyEvents = [
+    //   keyboard.addShortcut({
+    //     keymap: { key: 'ArrowRight' },
+    //     action: function (): boolean {
+    //       const result = query.queryFormat(codeFormatter)
+    //       if(result.value) {
+    //         if(selection.isCollapsed) {
+    //           let endIndex = 0
+    //           const isEnd = selection.anchorSlot?.getFormats().some(formatter => {
+    //             if(formatter.formatter.name === 'code') {
+    //               if(formatter.endIndex === selection.startOffset) {
+    //                 endIndex = formatter.endIndex
+    //                 return true
+    //               }
+    //             }
+    //           })
+    //           if(isEnd) {
+    //             if (selection.anchorSlot?.length && selection.startOffset) {
+    //               if(selection.anchorSlot?.length > selection.startOffset) {
+    //                 return false
+    //               }
+    //             }
+    //             commander.insert(' ')
+    //             return true
+    //           }
              
-            }
-          }
-          return false
-        }
-      }),
-    ]
+    //         }
+    //       }
+    //       return false
+    //     }
+    //   }),
+    // ]
   }
   
   onDestroy(): void {
