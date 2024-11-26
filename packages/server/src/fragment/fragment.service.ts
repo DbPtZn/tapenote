@@ -151,7 +151,6 @@ export class FragmentService {
         fragment.id = fragmentId
         fragment.userId = userId
         fragment.project = procudure
-        // fragment.audio = basename(audio)
         fragment.duration = Number(duration)
         fragment.txt = ''
         fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
@@ -165,9 +164,6 @@ export class FragmentService {
         this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
         await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
-        if (isVip) {
-
-        }
         const oggPath = this.storageService.createTempFilePath('.ogg')
         const finalAudio = this.storageService.createTempFilePath('.ogg')
         await this.ffmpegService.convertToOgg(audio, oggPath)
