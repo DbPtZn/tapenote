@@ -134,10 +134,10 @@ export class StorageService {
   /** 参数： 拓展名， 如 '.wav' */
   createTempFilePath(ext: string, filename?: string) {
     const extWithoutDot = ext.charAt(0) === '.' ? ext.slice(1) : ext
-    if(!filename) return join(os.tmpdir(), `${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`)
+    if(!filename) return join(this.common.fullTempDir, `${randomstring.generate(5)}-${new Date().getTime()}.${extWithoutDot}`)
     const fileNameWithoutExt = basename(filename, extname(filename))
     // console.log('fileNameWithoutExt:', fileNameWithoutExt)
-    return join(os.tmpdir(), `${fileNameWithoutExt}.${extWithoutDot}`)
+    return join(this.common.fullTempDir, `${fileNameWithoutExt}.${extWithoutDot}`)
   }
 
   createCOSPath(pathOrName: string, dirname: string) {
