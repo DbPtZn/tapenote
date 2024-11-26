@@ -1,11 +1,11 @@
 import { AnimeProvider, OutlineService } from "@/editor"
-import { Observable, Subject } from "@tanbo/stream"
+import { Subject } from "@tanbo/stream"
 import { Editor } from "@textbus/editor"
 import { Habit } from "./habit"
 import { LibraryEnum } from "@/enums"
 import { VIEW_DOCUMENT } from "@textbus/platform-browser"
 import { Renderer } from "@textbus/core"
-import { Ref, nextTick, ref } from "vue"
+import { nextTick } from "vue"
 
 export class Bridge {
   habit: Habit | null = null
