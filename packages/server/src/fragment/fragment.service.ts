@@ -142,6 +142,10 @@ export class FragmentService {
 
         const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'human', userId, dirname, isVip)
 
+        if(fragmentSpeaker.model === AsrModel.Tencent) {
+          if(!isVip) throw new Error('免费用户无法使用会员语音识别')
+        }
+
         const fragmentId = uuidv7()
         let fragment = new Fragment()
         fragment.id = fragmentId
@@ -161,14 +165,19 @@ export class FragmentService {
         this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
         await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
-        const temppath = this.storageService.createTempFilePath('.ogg')
+        if (isVip) {
+
+        }
+        const oggPath = this.storageService.createTempFilePath('.ogg')
         const finalAudio = this.storageService.createTempFilePath('.ogg')
-        await this.ffmpegService.convertToOgg(audio, temppath)
+        await this.ffmpegService.convertToOgg(audio, oggPath)
         try {
-          console.log(`开始语音识别...,音频时长：${duration}`)
-          const result = await this.useAsr({ filepath: temppath, model: fragmentSpeaker.model, isVip })
+          // console.log(`开始语音识别...,音频时长：${duration}`)
+          // 本地语音识别模块只支持 wav 格式，使用 audio; 在线一句话语音识别支持 ogg 且 ogg 文件能确保一分钟音频不超过 3 MB
+          const result = await this.useAsr({ filepath: isVip ? oggPath : audio, model: fragmentSpeaker.model, isVip })
+          fsx.removeSync(audio) // 转写成功后删除本地的 wav 音频文件
           this.userlogger.log(`语音识别成功，转写文本为: ${result.text}`)
-          await this.ffmpegService.audioformat(temppath, finalAudio)
+          await this.ffmpegService.audioformat(oggPath, finalAudio)
           fragment.audio = basename(finalAudio)
           fragment.txt = result.text
           fragment.timestamps = result.timestamps
@@ -253,6 +262,10 @@ export class FragmentService {
       const fragmentSpeaker = await this.getFragmentSpeaker(speakerId, 'machine', userId, dirname, isVip)
       this.userlogger.log(`正在为项目${procedureId}创建文本转音频片段...`)
 
+      if(fragmentSpeaker.model === TtsModel.Tencent) {
+        if(!isVip) throw new Error('免费用户无法使用付费语音合成')
+      }
+
       const fragments: Fragment[] = []
       const audios: string[] = []
       const keys: string[] = []
@@ -281,8 +294,9 @@ export class FragmentService {
         await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
         // 文字转音频
-        this.userlogger.log(`正在将文字‘${text}’转成音频...`)
-        const finalAudio = this.storageService.createTempFilePath('.ogg')
+        this.userlogger.log(`正在将文字[${text}]转成音频...`)
+        // const finalAudio = this.storageService.createTempFilePath('.ogg')
+        let finalAudio = ''
         try {
           const result = await this.useTTS({
             txt: text,
@@ -291,14 +305,12 @@ export class FragmentService {
             speed: speed || 1,
             isVip
           })
+          // 输出的已经是格式化后的 ogg 音频
+          finalAudio = result.audio
+
           // 合成成功，将正确内容替换回去
           fragment.transcript = result.data.map(item => item.char)
-
-
-          // 格式化音频文件 (不同语音合成的音频可能具有不同属性，是否有必要格式化？)
-          await this.ffmpegService.audioformat(result.audio, finalAudio)
-          // console.log(filepath)
-
+   
           fragment.audio = basename(finalAudio)
           fragment.duration = result.duration
           fragment.timestamps = result.data.map(item => item.timestamp)
@@ -307,7 +319,7 @@ export class FragmentService {
           await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
           continue // throw error
         }
-        if (fragment.audio && fragment.duration !== 0) {
+        if (fragment.audio && finalAudio && fragment.duration !== 0) {
           // console.log(fragment)
           fragments.push(fragment)
           audios.push(finalAudio)
@@ -404,19 +416,15 @@ export class FragmentService {
       }
       fragment.removed = RemovedEnum.NEVER
 
-      const filepath = this.storageService.createTempFilePath('.ogg')
       const finalAudio = this.storageService.createTempFilePath('.ogg')
-      // 执行FFmpeg命令
       try {
         // 定义FFmpeg命令
         // const ffmpegCommand = `ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t ${duration} ${filepath}`
         // execSync(ffmpegCommand)
-        await this.ffmpegService.createBlankAudio(duration, filepath)
-        await this.ffmpegService.audioformat(filepath, finalAudio)
+        await this.ffmpegService.createBlankAudio(duration, finalAudio)
       } catch (error) {
         console.error('执行FFmpeg命令出错:', error)
-        // this.storageService.deleteSync(filepath)
-        fsx.removeSync(filepath)
+        fsx.removeSync(finalAudio)
         throw new Error('空白音频生成失败！')
       }
 
@@ -494,10 +502,10 @@ export class FragmentService {
       
       const procudure = await this.projectService.findOneById(procedureId, userId)
 
-      const oggPath = this.storageService.createTempFilePath('.ogg')
+      // const oggPath = this.storageService.createTempFilePath('.ogg')
       const finalAudio = this.storageService.createTempFilePath('.ogg')
-      await this.ffmpegService.convertToOgg(audio, oggPath)
-      await this.ffmpegService.audioformat(oggPath, finalAudio)
+      await this.ffmpegService.convertToOggAndFormat(audio, finalAudio)
+      // await this.ffmpegService.audioformat(oggPath, finalAudio)
 
       const fragment = new Fragment()
       fragment.id = fragmentId
@@ -590,7 +598,7 @@ export class FragmentService {
 
   async useAsr(args: { filepath: string; model: string, isVip: boolean }) {
     try {
-      const { filepath, model, isVip } = args
+      const { filepath, model } = args
       if (model === AsrModel.Local) {
         const result = await this.sherpaService.asr(filepath)
         const punText = await this.sherpaService.addPunct(result.text)
@@ -598,9 +606,6 @@ export class FragmentService {
         return alignResult
       }
       if(model === AsrModel.Tencent) {
-        if(!isVip) {
-          throw new Error('免费用户无法使用会员语音识别')
-        }
         const result = await this.tencentService.asr(filepath)
         return result
       }
@@ -610,20 +615,21 @@ export class FragmentService {
     }
   }
 
+  /** 语音合成：输出格式化后的 ogg 音频文件 */
   async useTTS(args: { txt: string;  model: string, timbre?: number; speed?: number, isVip: boolean }) {
     const { txt, model, timbre, speed, isVip } = args
     if (txt.length === 0) throw '文本为空！'
-    const temppath = this.storageService.createTempFilePath('.wav')
     // 本地合成
     if(model === TtsModel.Local) {
-      await this.sherpaService.tts(txt, temppath, timbre, speed)
+      const outputPath = this.storageService.createTempFilePath('.wav')
+      await this.sherpaService.tts(txt, outputPath, timbre, speed)
       const transcript = Array.from(txt)
       // 清理静音 FIXME: 静音清理存在问题，可能会把过短的音频处理掉，比如 “呱” 合成的语音还有 “哈撒给”的“哈”会被裁剪掉 
-      const temppath2 = this.storageService.createTempFilePath('.wav')
-      await this.ffmpegService.clearSilence(temppath, temppath2)
+      const sliencePath = this.storageService.createTempFilePath('.wav')
+      await this.ffmpegService.clearSilence(outputPath, sliencePath)
       const oggPath = this.storageService.createTempFilePath('.ogg')
-      await this.ffmpegService.convertToOgg(temppath2, oggPath)
-      fsx.removeSync(temppath2)
+      await this.ffmpegService.convertToOggAndFormat(sliencePath, oggPath)
+      // fsx.removeSync(sliencePath)
       // 计算时长
       const duration = await this.ffmpegService.calculateDuration(oggPath)
       /** 计算 timestamps */
@@ -635,18 +641,17 @@ export class FragmentService {
           timestamp,
         }
       })
-      return { duration, data, audio: temppath2 }
+      return { duration, data, audio: oggPath }
     }
     // 会员语音合成
     if(model === TtsModel.Tencent) {
-      if(!isVip) {
-        throw new Error('免费用户无法使用付费语音合成')
-      }
+      const outputPath = this.storageService.createTempFilePath('.wav')
       const result = await this.tencentService.tts(txt, timbre, speed)
       const buffer = Buffer.from(result.Audio, 'base64')
-      fs.writeFileSync(temppath, buffer)
+      fs.writeFileSync(outputPath, buffer)
       const oggPath = this.storageService.createTempFilePath('.ogg')
-      await this.ffmpegService.convertToOgg(temppath, oggPath)
+      await this.ffmpegService.convertToOggAndFormat(outputPath, oggPath)
+      // fsx.removeSync(outputPath)
       // 计算音频时长
       const duration = await this.ffmpegService.calculateDuration(oggPath)
       const data = result.Subtitles.map(item => {

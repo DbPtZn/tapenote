@@ -173,7 +173,7 @@ export class SherpaService {
           }
         })
         worker.on('message', message => {
-          console.log('接收到子线程返回的结果：-----------------------------------------')
+          // console.log('接收到子线程返回的结果：-----------------------------------------')
           if (message.error) {
             console.log('添加标点发生错误：' + message.error)
             reject(message.error)
@@ -256,10 +256,10 @@ export class SherpaService {
       console.log('添加标点后的文本与原文本无法对齐')
       // throw new Error(`添加标点后的文本与原文本无法对齐`)
     }
-    console.log('target tokens:')
-    console.log(tokens)
-    console.log('target timestamps:')
-    console.log(timestamps)
+    // console.log('target tokens:')
+    // console.log(tokens)
+    // console.log('target timestamps:')
+    // console.log(timestamps)
     return {
       text: tokens.join(''),
       tokens,

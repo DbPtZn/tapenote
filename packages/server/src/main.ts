@@ -11,6 +11,7 @@ import { commonConfig } from './config'
 // import { ErrorsInterceptor } from './errors/errors.interceptor'
 async function bootstrap() {
   let dotenvPath = []
+  console.log('NODE_ENV:', process.env.NODE_ENV)
   switch (process.env.NODE_ENV) {
     case 'development':
       dotenvPath = ['.env.development.local', '.env.development']
@@ -70,6 +71,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService)
   const common = configService.get<ReturnType<typeof commonConfig>>('common')
   console.log('common.fullPublicDir:', common.fullPublicDir)
+  console.log('common.fullTempDir:', common.fullTempDir)
   app.useStaticAssets(common.fullPublicDir, { prefix: common.staticResourcePrefix })
 
   /** 接口文档(待完善) */

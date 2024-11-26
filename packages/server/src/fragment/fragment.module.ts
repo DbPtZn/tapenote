@@ -41,15 +41,15 @@ const __rootdirname = process.cwd()
       imports: [ConfigModule], // 导入 ConfigModule，以便在 TypeOrmModule 中使用 ConfigService
       inject: [ConfigService],
       useFactory(configService: ConfigService) {
-        console.log('multer')
+        // console.log('multer')
         const common = configService.get<ReturnType<typeof commonConfig>>('common')
         // const dest = common.appDir ? `${common.appDir}/assets/temp/images` : join(__rootdirname, 'temp', 'audios')
         return {
           storage: diskStorage({
             destination: common.fullTempDir,
             filename: (req, file, cb) => {
-              console.log('上传文件：', file.mimetype)
-              console.log('上传文件：', file)
+              // console.log('上传文件：', file.mimetype)
+              // console.log('上传文件：', file)
               let filename = ''
               const extension = extname(file.originalname)
               if (extension) {

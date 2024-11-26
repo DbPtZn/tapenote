@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import ffmpeg from 'fluent-ffmpeg'
 import fs from 'fs'
+import * as fsx from 'fs-extra'
 import { exec } from 'child_process'
 import { StorageService } from 'src/storage/storage.service'
 import FfmpegModule from '@ffmpeg-installer/ffmpeg'
@@ -20,6 +21,30 @@ export class FfmpegService {
   //   const d2 = await this.calculateDuration(audio)
   //   console.log([d1, d2])
   // }
+
+  /** 转成 ogg 格式并格式化音频，源音频会被删除 */
+  async convertToOggAndFormat(source: string, target: string) {
+    // console.log('转ogg前:', fs.statSync(source).size)
+    return new Promise<string>((resolve, reject) => {
+      ffmpeg(source)
+        .outputOptions('-ac 1')
+        .outputOptions('-ab 64k')
+        .outputOptions('-ar 16000')
+        .outputOptions('-acodec', 'libvorbis') // 设置音频编码器为libvorbis
+        .toFormat('ogg')
+        .save(target)
+        .on('error', function (err) {
+          console.log('An error occurred: ' + err.message)
+          reject(err)
+        })
+        .on('end', function () {
+          // console.log('Processing finished successfully')
+          // console.log('转ogg后:', fs.statSync(target).size)
+          fsx.removeSync(source)
+          resolve(target)
+        })
+    })
+  }
 
   /** 将音频文件转换成 ogg 格式 (转 mp3 格式会出现输出音频时长不一致的问题) */
   async convertToOgg(source: string, target: string) {
@@ -58,16 +83,18 @@ export class FfmpegService {
   }
 
   createBlankAudio(duration: number, outputPath: string) {
-    console.log('创建空白音频')
+    // console.log('创建空白音频')
     return new Promise<string>((resolve, reject) => {
       try {
         ffmpeg()
           // 设置输入源为 anullsrc
-          .input('anullsrc=r=44100:cl=mono')
+          .input('anullsrc=r=16000:cl=mono')
           .inputFormat('lavfi')
           .audioChannels(1) // 设置单声道
-          .audioFrequency(44100) // 设置采样率
+          .audioBitrate(64)
+          .audioFrequency(16000) // 设置采样率
           .duration(duration)
+          .outputOptions('-acodec', 'libvorbis') // 设置音频编码器为libvorbis
           // 设置输出格式为 ogg
           .outputFormat('ogg')
           // 设置持续时间
@@ -96,46 +123,19 @@ export class FfmpegService {
     })
   }
 
-  // audioformat2(inputPath: string, outputPath: string) {
-  //   return new Promise<string>((resolve, reject) => {
-  //     try {
-  //       ffmpeg()
-  //         .input(inputPath)
-  //         .outputOptions('-ac 1')
-  //         .outputOptions('-ab 16k')
-  //         .outputOptions('-ar 16000')
-  //         .save(outputPath)
-  //         .on('end', function () {
-  //           // console.log(outputPath)
-  //           // fs.unlinkSync(inputPath)
-  //           resolve(outputPath)
-  //         })
-  //         .on('error', function (err) {
-  //           console.log(err)
-  //           reject(err)
-  //         })
-  //     } catch (error) {
-  //       console.log('格式化音频文件失败：')
-  //       console.log(error)
-  //       reject(error)
-  //     }
-  //   })
-  // }
-
-
   /**
    * 音频格式化处理
    * @param inputPath 源文件路径（可以是指向资源文件的路径也可以是文件数据），此方法会自动删除源文件 inputPath指向的资源文件
    * @param outputPath 存储目标资源文件的路径 (会在目标路径创建一个资源文件)
    */
   audioformat(inputPath: string, outputPath: string) {
-    console.log('音频格式化处理', inputPath, outputPath)
+    // console.log('音频格式化处理', inputPath, outputPath)
     return new Promise<string>((resolve, reject) => {
       try {
         ffmpeg()
           .input(inputPath)
           .outputOptions('-ac 1')
-          .outputOptions('-ab 16k')
+          .outputOptions('-ab 64k')
           .outputOptions('-ar 16000')
           .outputOptions('-acodec', 'libvorbis') // 设置音频编码器为libvorbis
           // .outputOptions('-acodec pcm_s16le')
