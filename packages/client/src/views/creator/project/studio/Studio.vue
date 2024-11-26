@@ -281,7 +281,7 @@ const options = reactive<Option[]>([
       onClick: (ev: MouseEvent, key?: string) => {
         useSwitchBtn(key)
         isShowName.value = !isShowName.value
-        console.log('active', activeBtns)
+        // console.log('active', activeBtns)
       }
     }
   },
@@ -292,7 +292,7 @@ const options = reactive<Option[]>([
     active: () => activeBtns.includes('showorder'),
     props: {
       onClick: (ev: MouseEvent, key?: string) => {
-        console.log(ev)
+        // console.log(ev)
         useSwitchBtn(key)
         isShowOrder.value = !isShowOrder.value
       }
@@ -632,6 +632,7 @@ onUnmounted(() => {
         <div class="recording-content">
           <Icon class="icon" icon="ic:sharp-settings-voice" height="64px" />
           <span class="text">正在录音</span>
+          <span class="text">（不超过60秒）</span>
         </div>
         <span class="duration"> {{ inputtingDuration }} </span>
       </div>

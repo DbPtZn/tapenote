@@ -8,7 +8,7 @@ import { TextToVoiceRequest } from 'tencentcloud-sdk-nodejs/tencentcloud/service
 import fs, { ReadStream } from 'fs'
 import { ConfigService } from '@nestjs/config'
 import { Client } from 'tencentcloud-sdk-nodejs/tencentcloud/services/asr/v20190614/asr_client'
-import { commonConfig } from 'src/config'
+import { commonConfig, tencentConfig } from 'src/config'
 import randomstring from 'randomstring'
 // 导入对应产品模块的client models。
 const AsrClient = tencentcloud.asr.v20190614.Client
@@ -22,14 +22,17 @@ export class TencentService {
   ttsClient: any
   constructor(private readonly configService: ConfigService) {
     this.common = this.configService.get<ReturnType<typeof commonConfig>>('common')
+    const tencent = this.configService.get<ReturnType<typeof tencentConfig>>('tencent')
     // console.log(this.common.secretId, this.common.secretKey)
     // 实例化要请求产品(以cvm为例)的client对象
     this.asrClient = new AsrClient({
       // 为了保护密钥安全，建议将密钥设置在环境变量中或者配置文件中，请参考本文凭证管理章节。
       // 硬编码密钥到代码中有可能随代码泄露而暴露，有安全隐患，并不推荐。
       credential: {
-        secretId: this.common.secretId,
-        secretKey: this.common.secretKey
+        // secretId: this.common.secretId,
+        // secretKey: this.common.secretKey
+        secretId: tencent.secretId,
+        secretKey: tencent.secretKey
       },
       // 产品地域
       region: 'ap-shanghai',
@@ -77,7 +80,7 @@ export class TencentService {
       DataLen: voice.length,
       WordInfo: 2,
       Data: voiceBase64,
-      VoiceFormat: 'wav'
+      VoiceFormat: 'ogg-opus'
     }
     return new Promise<{ text: string; tokens: string[]; timestamps: number[] }>((resolve, reject) => {
       try {

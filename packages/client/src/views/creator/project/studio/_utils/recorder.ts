@@ -1,4 +1,5 @@
-import { Subject } from "@tanbo/stream"
+// import libopus from 'libopus.js'
+// import ogg from 'ogg.js'
 
 export class AudioRecorder {
   private audioContext: AudioContext
@@ -11,15 +12,14 @@ export class AudioRecorder {
   public totalDuration: number = 0
   private startTime: number = 0
   private audioBlob: Blob | null = null
-  
 
-  constructor(args: { sampleRate?: number; sampleBits?: number; }) {
+  constructor(args: { sampleRate?: number; sampleBits?: number }) {
     const { sampleRate, sampleBits } = args
     this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
     this.sampleRate = sampleRate || 44100
     this.sampleBits = sampleBits || 16
   }
-  
+
   public start(isSilenceEnd?: boolean) {
     return navigator.mediaDevices
       .getUserMedia({
@@ -39,7 +39,7 @@ export class AudioRecorder {
 
         this.mediaRecorder.ondataavailable = async event => {
           if (event.data.size > 0) {
-            console.log('recorded chunk', event)
+            // console.log('recorded chunk', event)
             // console.log('add chunk', event, '音频数据块的大小（MB）:', event.data.size / (1024 * 1024))
             // 计算时长
             const endTime = Date.now()
@@ -75,13 +75,14 @@ export class AudioRecorder {
         this.mediaRecorder.onstop = async () => {
           try {
             const finalBlob = new Blob(this.audioChunks, { type: 'audio/webm' })
+            console.log('finalBlob', finalBlob.size / (1024 * 1024) + 'MB')
             const trimmedBuffer = await this.trimSilence(finalBlob)
             // const duration = trimmedBuffer.duration
-            
+
             // const wavData = AudioRecorder.audioBufferToWav(trimmedBuffer)
             // const wavBlob = new Blob([wavData], { type: 'audio/wav' })
             // this.audioBlob = wavBlob
-          
+
             // console.log('totalDuration', this.totalDuration)
             // console.log('duration:', duration)
             this.totalDuration = 0
@@ -212,6 +213,22 @@ export class AudioRecorder {
     return arrayBuffer
   }
 
+  // static async convertAudioBufferToOgg(audioBuffer: AudioBuffer) {
+  //   // 1. 将 AudioBuffer 转为 PCM 数据
+  //   // const arrayBuffer = audioBufferToArrayBuffer(audioBuffer)
+
+  //   // 2. 将 AudioBuffer 转换为 PCM 数据
+  //   const interleavedData = interleaveAudioBuffer(audioBuffer)
+
+  //   // 3. 使用 libopus.js 编码为 Opus 数据
+  //   const encodedOpusData = await encodeToOpus(interleavedData, audioBuffer.sampleRate, audioBuffer.numberOfChannels)
+
+  //   // 4. 使用 ogg.js 封装为 OGG 格式
+  //   const oggBlob = encodeToOgg(encodedOpusData);
+
+  //   return oggBlob
+  // }
+
   private removeSilence(buffer: AudioBuffer): AudioBuffer {
     const threshold = 0.01 // 静音阈值
     let start = 0
@@ -254,6 +271,60 @@ export class AudioRecorder {
   }
 }
 
+// async function audioBufferToOggBlob(audioBuffer: AudioBuffer) {
+//   // 提取 AudioBuffer 数据
+//   const numberOfChannels = audioBuffer.numberOfChannels
+//   const sampleRate = audioBuffer.sampleRate
+//   const length = audioBuffer.length
+
+//   // 获取每个通道的数据
+//   const interleaved = interleaveAudioBuffer(audioBuffer)
+
+//   // 加载 libopus.js 编码器
+//   const opusEncoder = new libopus.Encoder()
+
+//   // 使用 libopus.js 进行 OGG 编码
+//   const oggData = opusEncoder.encode(interleaved, sampleRate, numberOfChannels)
+
+//   // 创建 Blob
+//   const oggBlob = new Blob([oggData], { type: 'audio/ogg' })
+
+//   return oggBlob
+// }
+
+function interleaveAudioBuffer(audioBuffer: AudioBuffer) {
+  const numberOfChannels = audioBuffer.numberOfChannels
+  const length = audioBuffer.length
+  const interleaved = new Float32Array(length * numberOfChannels)
+
+  for (let channel = 0; channel < numberOfChannels; channel++) {
+    const channelData = audioBuffer.getChannelData(channel)
+    for (let i = 0; i < length; i++) {
+      interleaved[i * numberOfChannels + channel] = channelData[i]
+    }
+  }
+  return interleaved
+}
+
+/** 使用 libopus.js 编码为 Opus 数据 */
+// async function encodeToOpus(interleavedData: Float32Array, sampleRate: number, numberOfChannels: number) {
+//   const opusEncoder = new libopus.Encoder(sampleRate, numberOfChannels)
+
+//   // 设置一些参数（可选）
+//   opusEncoder.setBitrate(64000) // 设置比特率
+//   opusEncoder.setComplexity(10) // 设置复杂度
+
+//   const encodedData = opusEncoder.encode(interleavedData)
+
+//   return encodedData // 返回编码后的 Opus 数据
+// }
+
+/** 使用 ogg.js 封装 Opus 数据为 OGG 格式 */
+// function encodeToOgg(encodedOpusData) {
+//   const oggFile = ogg.encode(encodedOpusData) // 使用 ogg.js 封装 Opus 数据为 OGG 格式
+//   return new Blob([oggFile], { type: 'audio/ogg' })
+// }
+
 // 计算当前帧的均方根 (RMS) 值
 function calculateRMS(dataArray) {
   let sum = 0
@@ -262,6 +333,55 @@ function calculateRMS(dataArray) {
     sum += normalizedSample * normalizedSample // 计算平方和
   }
   return Math.sqrt(sum / dataArray.length) // 均方根 (RMS)
+}
+
+/** 从 AudioBuffer 转换为 PCM ArrayBuffer */
+// function audioBufferToArrayBuffer(audioBuffer: AudioBuffer) {
+//   const numberOfChannels = audioBuffer.numberOfChannels // 通道数
+//   const length = audioBuffer.length // 每通道的采样数
+//   const sampleRate = audioBuffer.sampleRate // 采样率
+//   const bytesPerSample = 2 // 16-bit PCM 每样本2字节
+
+//   // 创建存储音频数据的 ArrayBuffer
+//   const arrayBuffer = new ArrayBuffer(length * numberOfChannels * bytesPerSample)
+//   const view = new DataView(arrayBuffer)
+
+//   // 写入 PCM 数据
+//   let offset = 0
+//   for (let channel = 0; channel < numberOfChannels; channel++) {
+//     const channelData = audioBuffer.getChannelData(channel) // 获取某通道数据
+//     for (let i = 0; i < channelData.length; i++) {
+//       // 将浮点数据（-1 到 1）转换为 16-bit 整数 PCM 数据
+//       const sample = Math.max(-1, Math.min(1, channelData[i])) // 限制范围
+//       view.setInt16(offset, sample * 0x7fff, true) // 小端字节序
+//       offset += bytesPerSample
+//     }
+//   }
+
+//   return arrayBuffer
+// }
+
+// 将 AudioBuffer 转换为 PCM 数据（16-bit）
+function audioBufferToArrayBuffer(audioBuffer) {
+  const numberOfChannels = audioBuffer.numberOfChannels
+  const length = audioBuffer.length
+  const bytesPerSample = 2 // 16-bit PCM 每样本 2 字节
+
+  // 创建存储音频数据的 ArrayBuffer
+  const arrayBuffer = new ArrayBuffer(length * numberOfChannels * bytesPerSample)
+  const view = new DataView(arrayBuffer)
+
+  let offset = 0
+  for (let channel = 0; channel < numberOfChannels; channel++) {
+    const channelData = audioBuffer.getChannelData(channel)
+    for (let i = 0; i < channelData.length; i++) {
+      const sample = channelData[i] * 0x7fff // 映射到 [-32768, 32767]
+      view.setInt16(offset, sample, true) // 小端字节序
+      offset += bytesPerSample
+    }
+  }
+
+  return arrayBuffer
 }
 
 // private removeSilence(buffer: AudioBuffer, silenceDuration: number): AudioBuffer {

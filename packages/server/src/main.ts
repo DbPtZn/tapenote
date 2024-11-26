@@ -48,10 +48,10 @@ async function bootstrap() {
   // app.use(csurf())
 
   /** 版本控制 */
-  app.enableVersioning({
-    // 使用 uri 作为版本标识
-    type: VersioningType.URI
-  })
+  // app.enableVersioning({
+  //   // 使用 uri 作为版本标识
+  //   type: VersioningType.URI
+  // })
 
   /** 数据验证错误的响应 */
   app.useGlobalPipes(new ValidationPipe())

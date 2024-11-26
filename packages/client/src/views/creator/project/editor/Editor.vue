@@ -83,8 +83,8 @@ useEditor({
 }).then(({ editor: edi, content }) => {
   editor = edi
   const messageService = editor.get(MessageService)
-  // const memoProvider = editor.get(MemoProvider)
-  // memoProvider.setup(editor, data.value!.memos) // 传入的数组可以获得响应性更新
+  const memoProvider = editor.get(MemoProvider)
+  memoProvider.setup(editor, data.value!.memos) // 传入的数组可以获得响应性更新
   lastContent = content
   if(props.lib !== LibraryEnum.COURSE) {
     subs.push(
@@ -238,7 +238,7 @@ const methods = {
 
 const { handleContentSave, handleSavingEnd, handleTitleSave, handleSavingStart, handleTitleEnter, handleTitleInput } = methods
 const { isAllowAdjust, handleUpdateCover, handleRemoveCover, handleCoverMousedown, handleUpdateCoverPosition, handleAllowUpdateCoverPosition, handleCancelUpdateCoverPosition } = useCover(props.id, props.account, props.hostname)
-// useMemo(props.id, props.account, props.hostname, scrollerEl, bridge)
+useMemo(props.id, props.account, props.hostname, scrollerEl, bridge)
 
 /** 离开页面前 */
 const debounceB = _.debounce(func => func(), 2000)
@@ -270,7 +270,7 @@ onUnmounted(() => {
     subs.forEach(sub => sub.unsubscribe())
     subs.length = 0
     editor?.destroy()
-    console.log('编辑器是否已经销毁：' + editor.destroyed)
+    // console.log('编辑器是否已经销毁：' + editor.destroyed)
   } catch (error) {
     console.error(error)
     message.error('编辑器销毁失败！')

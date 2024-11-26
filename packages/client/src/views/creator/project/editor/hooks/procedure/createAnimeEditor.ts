@@ -39,7 +39,7 @@ export function createAnimeEditor(args: {
       editor.get(Player).destory()
       editor.get(ImgToUrlService).destory()
       editor.get(MemoProvider).destroy()
-      console.log('销毁依赖')
+      // console.log('销毁依赖')
     } catch (error) {
       console.error(error)
       console.error('依赖销毁失败！')

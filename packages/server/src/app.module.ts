@@ -8,7 +8,8 @@ import {
   sherpaDevConfig,
   sherpaProdConfig,
   xunfeiConfig,
-  aliConfig
+  aliConfig,
+  tencentConfig
 } from './config'
 import { AuthModule } from './auth/auth.module'
 import { BgmModule } from './bgm/bgm.module'
@@ -45,7 +46,8 @@ import { TencentModule } from './tencent/tencent.module'
         commonConfig,
         process.env.NODE_ENV === 'production' ? sherpaProdConfig : sherpaDevConfig,
         xunfeiConfig,
-        aliConfig
+        aliConfig,
+        tencentConfig
       ],
       cache: true,
       isGlobal: true

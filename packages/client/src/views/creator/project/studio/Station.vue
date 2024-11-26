@@ -145,7 +145,7 @@ const subs = [
       if (isCancel) return isCancel = false // 取消
       const actions = getActionSequence()
       const duration = data.duration
-      const interval = 60 // 分段间隔
+      const interval = 59 // 分段间隔 // 因为一句话识别严格限制 60 s，超出会导致识别失败，所以控制为 59s 预留一个秒冗余
       if (!data.isSilence) {
         // 小于 60s 的情况 直接创建片段
         if (duration <= interval) {
@@ -200,7 +200,7 @@ const subs = [
             }
           })
           return projectStore.fragment(props.id).createByAudio(tasks).then(resp => {
-            console.log('创建片段成功')
+            // console.log('创建片段成功')
             emits('output')
           }).catch(err => {
             console.log('创建片段失败')

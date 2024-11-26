@@ -14,7 +14,7 @@ import utils from '@/utils'
 
 const { projectStore, userStore } = useStore()
 const shell = useShell<CreatorShell>()
-const erd = elementResizeDetector()
+// const erd = elementResizeDetector()
 const themeVars = useThemeVars()
 const implementRef = ref()
 const bridge = new Bridge()
@@ -35,7 +35,7 @@ const subs = [
     isReadonly.value = userStore.hostname !== projectStore.get(props.id!)?.hostname || userStore.account !== projectStore.get(props.id!)?.account
   }),
   bridge.onEditorReload.subscribe(() => {
-    console.log('editor reload')
+    // console.log('editor reload')
     key.value = utils.randomString()
     // editor.value!.key = utils.randomString()
   })

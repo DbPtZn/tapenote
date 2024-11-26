@@ -48,6 +48,8 @@ const __rootdirname = process.cwd()
           storage: diskStorage({
             destination: common.fullTempDir,
             filename: (req, file, cb) => {
+              console.log('上传文件：', file.mimetype)
+              console.log('上传文件：', file)
               let filename = ''
               const extension = extname(file.originalname)
               if (extension) {

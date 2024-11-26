@@ -147,7 +147,7 @@ export class FragmentService {
         fragment.id = fragmentId
         fragment.userId = userId
         fragment.project = procudure
-        fragment.audio = basename(audio)
+        // fragment.audio = basename(audio)
         fragment.duration = Number(duration)
         fragment.txt = ''
         fragment.transcript = ['该片段语音识别/合成中因异常跳出而产生的，看见时请将此片段删除'] // Array.from(text)
@@ -161,10 +161,15 @@ export class FragmentService {
         this.userlogger.log(`向 ${procedureId} 项目 'sequence' 中添加 ${fragmentId} 片段...`)
         await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'add' })
 
+        const temppath = this.storageService.createTempFilePath('.ogg')
+        const finalAudio = this.storageService.createTempFilePath('.ogg')
+        await this.ffmpegService.convertToOgg(audio, temppath)
         try {
-          const result = await this.useAsr({ filepath: audio, model: fragmentSpeaker.model, isVip })
+          console.log(`开始语音识别...,音频时长：${duration}`)
+          const result = await this.useAsr({ filepath: temppath, model: fragmentSpeaker.model, isVip })
           this.userlogger.log(`语音识别成功，转写文本为: ${result.text}`)
-
+          await this.ffmpegService.audioformat(temppath, finalAudio)
+          fragment.audio = basename(finalAudio)
           fragment.txt = result.text
           fragment.timestamps = result.timestamps
           const length = result.tokens?.length
@@ -182,7 +187,7 @@ export class FragmentService {
         if (actions.length > 0) fragment = addPromoter(fragment, actions)
 
         fragments.push(fragment)
-        audios.push(audio)
+        audios.push(finalAudio)
         keys.push(key)
       }
 
@@ -201,7 +206,7 @@ export class FragmentService {
               file: {
                 filename: fragment.audio,
                 path: audios[j],
-                mimetype: 'audio/wav'
+                mimetype: 'audio/ogg'
               },
               quoteId: fragment.id,
               hadExists(url) {
@@ -277,7 +282,7 @@ export class FragmentService {
 
         // 文字转音频
         this.userlogger.log(`正在将文字‘${text}’转成音频...`)
-        let audio = ''
+        const finalAudio = this.storageService.createTempFilePath('.ogg')
         try {
           const result = await this.useTTS({
             txt: text,
@@ -289,12 +294,12 @@ export class FragmentService {
           // 合成成功，将正确内容替换回去
           fragment.transcript = result.data.map(item => item.char)
 
+
           // 格式化音频文件 (不同语音合成的音频可能具有不同属性，是否有必要格式化？)
-          // await this.ffmpegService.audioformat(temppath2, filepath)
+          await this.ffmpegService.audioformat(result.audio, finalAudio)
           // console.log(filepath)
 
-          audio = result.audio
-          fragment.audio = basename(result.audio)
+          fragment.audio = basename(finalAudio)
           fragment.duration = result.duration
           fragment.timestamps = result.data.map(item => item.timestamp)
         } catch (error) {
@@ -305,7 +310,7 @@ export class FragmentService {
         if (fragment.audio && fragment.duration !== 0) {
           // console.log(fragment)
           fragments.push(fragment)
-          audios.push(audio)
+          audios.push(finalAudio)
           keys.push(key)
         }
       }
@@ -324,7 +329,7 @@ export class FragmentService {
               file: {
                 filename: fragment.audio,
                 path: audios[j],
-                mimetype: 'audio/wav',
+                mimetype: 'audio/ogg',
               },
               quoteId: fragment.id,
               hadExists(url) {
@@ -399,14 +404,15 @@ export class FragmentService {
       }
       fragment.removed = RemovedEnum.NEVER
 
-      const filepath = this.storageService.createTempFilePath('.wav')
-
+      const filepath = this.storageService.createTempFilePath('.ogg')
+      const finalAudio = this.storageService.createTempFilePath('.ogg')
       // 执行FFmpeg命令
       try {
         // 定义FFmpeg命令
         // const ffmpegCommand = `ffmpeg -f lavfi -i anullsrc=r=44100:cl=mono -t ${duration} ${filepath}`
         // execSync(ffmpegCommand)
         await this.ffmpegService.createBlankAudio(duration, filepath)
+        await this.ffmpegService.audioformat(filepath, finalAudio)
       } catch (error) {
         console.error('执行FFmpeg命令出错:', error)
         // this.storageService.deleteSync(filepath)
@@ -414,7 +420,7 @@ export class FragmentService {
         throw new Error('空白音频生成失败！')
       }
 
-      fragment.audio = basename(filepath)
+      fragment.audio = basename(finalAudio)
 
       if (actions.length > 0) fragment = addPromoter(fragment, actions)
       
@@ -422,8 +428,8 @@ export class FragmentService {
         {
           file: {
             filename: fragment.audio,
-            path: filepath,
-            mimetype: 'audio/wav',
+            path: finalAudio,
+            mimetype: 'audio/ogg',
           },
           quoteId: fragment.id,
           hadExists(url) {
@@ -488,11 +494,16 @@ export class FragmentService {
       
       const procudure = await this.projectService.findOneById(procedureId, userId)
 
+      const oggPath = this.storageService.createTempFilePath('.ogg')
+      const finalAudio = this.storageService.createTempFilePath('.ogg')
+      await this.ffmpegService.convertToOgg(audio, oggPath)
+      await this.ffmpegService.audioformat(oggPath, finalAudio)
+
       const fragment = new Fragment()
       fragment.id = fragmentId
       fragment.userId = userId
       fragment.project = procudure
-      fragment.audio = basename(audio)  // 因为文件名不会改变，所以我们这里直接截取文件名即可
+      fragment.audio = basename(finalAudio)  // 因为文件名不会改变，所以我们这里直接截取文件名即可
       fragment.duration = duration
       fragment.txt = txt
       fragment.transcript = transcript
@@ -502,7 +513,7 @@ export class FragmentService {
       fragment.speaker = sourceFragment.speaker
       fragment.removed = RemovedEnum.NEVER
 
-      audios.push(audio)
+      audios.push(finalAudio)
       fragments.push(fragment)
       keys.push(key)
     }
@@ -518,7 +529,7 @@ export class FragmentService {
               file:  {
                 filename: fragments[i].audio,
                 path: audios[i],
-                mimetype: 'audio/wav'
+                mimetype: 'audio/ogg'
               },
               quoteId: fragments[i].id,
               // 如果文件已经存在，则会返回该文件的 url
@@ -610,8 +621,11 @@ export class FragmentService {
       // 清理静音 FIXME: 静音清理存在问题，可能会把过短的音频处理掉，比如 “呱” 合成的语音还有 “哈撒给”的“哈”会被裁剪掉 
       const temppath2 = this.storageService.createTempFilePath('.wav')
       await this.ffmpegService.clearSilence(temppath, temppath2)
+      const oggPath = this.storageService.createTempFilePath('.ogg')
+      await this.ffmpegService.convertToOgg(temppath2, oggPath)
+      fsx.removeSync(temppath2)
       // 计算时长
-      const duration = await this.ffmpegService.calculateDuration(temppath2)
+      const duration = await this.ffmpegService.calculateDuration(oggPath)
       /** 计算 timestamps */
       const section = duration / transcript.length
       const data = transcript.map((char, index) => {
@@ -631,15 +645,17 @@ export class FragmentService {
       const result = await this.tencentService.tts(txt, timbre, speed)
       const buffer = Buffer.from(result.Audio, 'base64')
       fs.writeFileSync(temppath, buffer)
+      const oggPath = this.storageService.createTempFilePath('.ogg')
+      await this.ffmpegService.convertToOgg(temppath, oggPath)
       // 计算音频时长
-      const duration = await this.ffmpegService.calculateDuration(temppath)
+      const duration = await this.ffmpegService.calculateDuration(oggPath)
       const data = result.Subtitles.map(item => {
         return {
           char: item.Text,
           timestamp: item.BeginTime / 1000
         }
       }).filter(item => item.char !== '')
-      return { duration, data, audio: temppath }
+      return { duration, data, audio: oggPath }
     }
     throw new Error('不支持目标语音服务！')
   }

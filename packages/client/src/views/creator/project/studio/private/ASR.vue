@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import Recorder from 'js-audio-recorder'
 import { useThemeVars } from 'naive-ui'
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 // import { KeyboardOutlined } from '@vicons/material'
@@ -30,6 +29,7 @@ let data = {
   duration: 0
 }
 let isRecording = ref(false)
+let timer
 const startRecorder = () => {
   // 开始录音
   // console.log('开始录音')
@@ -44,6 +44,11 @@ const startRecorder = () => {
         console.log('录音已停止，无法继续录音')
         recorder.init()
       }
+      // 超过一分钟自动停止录音
+      timer = setTimeout(() => {
+        stopRecorder()
+        clearTimeout(timer)
+      }, 60000)
     })
     .catch(err => {
       console.log('启动录音失败', err)
@@ -53,12 +58,15 @@ const startRecorder = () => {
 const stopRecorder = async () => {
   // 停止录音
   isRecording.value = false
+  clearTimeout(timer)
   emits('inputting', false)
   // console.log('停止录音')
   recorder.stop().then(async (audiobuffer) => {
     // console.log('录音结束')
     const wavData = AudioRecorder.audioBufferToWav(audiobuffer)
     const wavBlob = new Blob([wavData], { type: 'audio/wav' })
+    // const wavBlob = await AudioRecorder.convertAudioBufferToOgg(audiobuffer)
+    console.log('blob 大小：', wavBlob.size / (1024 * 1024) + 'MB')
     data.audio = wavBlob
     data.duration = audiobuffer.duration
     emits('output', data)
@@ -89,6 +97,7 @@ function useShortcut(state: boolean) {
                 fromEvent<KeyboardEvent>(document, 'keyup').subscribe(e => {
                   // console.log('松开')
                   if (e.key === '0') {
+                    clearTimeout(timer)
                     // console.log('停止录音')
                     setTimeout(() => {
                       isPress.value = false

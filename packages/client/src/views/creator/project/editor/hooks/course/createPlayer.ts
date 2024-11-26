@@ -36,7 +36,7 @@ export function createPlayer(args: {
       editor.get(Structurer).destory()
       editor.get(ThemeProvider).destory()
       editor.get(RootEventService).destory()
-      console.log('销毁依赖')
+      // console.log('销毁依赖')
     } catch (error) {
       console.error('依赖销毁失败！')
     }

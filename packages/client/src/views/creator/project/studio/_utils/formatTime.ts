@@ -19,3 +19,9 @@ export function formatTimeToMinutesSecondsMilliseconds(sec: number) {
 
   return `${minutes}:${seconds}:${milliseconds}`
 }
+
+export function formatTime2(sec: number): string {
+  const seconds = Math.floor(sec % 60);
+  const centiseconds = Math.floor((sec * 100) % 100); // Get first two digits of milliseconds
+  return [seconds.toString().padStart(2, '0'), centiseconds.toString().padStart(2, '0')].join(':');
+}

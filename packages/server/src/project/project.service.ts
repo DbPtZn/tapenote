@@ -89,10 +89,21 @@ export class ProjectService {
         wordage: 0,
         filesize: 0
       }
-
+  
       project.memos = []
       project.removed = RemovedEnum.NEVER
       project.submissionHistory = []
+
+      // 初始化赋值
+      project.fragments = []
+      project.sequence = []
+      project.removedSequence = []
+      project.speakerHistory = { human: '', machine: '' }
+      project.annotations = []
+      project.promoterSequence = []
+      project.keyframeSequence = []
+      project.subtitleSequence = []
+      project.subtitleKeyframeSequence = []
 
       if (noteId && lib === LibraryEnum.PROCEDURE) {
         const note = await this.projectsRepository.findOneBy({ id: noteId })
@@ -100,7 +111,8 @@ export class ProjectService {
         // 基础数据
         project.title = note.title
         project.content = note.content || '<br>'
-        ;(project.abbrev = note.abbrev || ''), (project.firstPicture = note.firstPicture)
+        project.abbrev = note.abbrev || ''
+        project.firstPicture = note.firstPicture
         project.memos = note.memos
         project.cover = note.cover
         project.coverPosition = note.coverPosition
@@ -182,14 +194,20 @@ export class ProjectService {
           return order.indexOf(a.id) - order.indexOf(b.id)
         })
 
+      const dus: number[] = []
       // 对音频路径进行处理
       for (const fragment of fragments) {
         // 对于远程路径，需要先下载到本地
         if (this.common.enableCOS) {
-          console.log(`正在下载远程音频文件：${fragment.audio}`)
-          const localpath = this.storageService.createTempFilePath('.wav')
+          // console.log(`正在下载远程音频文件：${fragment.audio}`)
+          const localpath = this.storageService.createTempFilePath('.ogg')
+          // const localpath2 = this.storageService.createTempFilePath('.ogg', fragment.audio)
           await this.storageService.fetchRemoteFile(fragment.audio, dirname, localpath)
-          console.log(`下载完成，文件保存路径：${localpath}`)
+          // console.log(`下载完成，文件保存路径：${localpath1}`)
+          // await this.ffmpegService.audioformat(localpath1, localpath2)
+          // const duration = await this.ffmpegService.calculateDuration(localpath1)
+          // dus.push(duration)
+          // console.log(`计算音频时长：${duration}, 记录音频时长为：${fragment.duration}`)
           fragment.audio = localpath
         } else {
           fragment.audio = this.storageService.getFilePath(fragment.audio, dirname)
@@ -253,17 +271,18 @@ export class ProjectService {
 
       /** 计算合成音频的时长 */
       const duration = await this.ffmpegService.calculateDuration(tempPath)
-      console.log(`合成音频时长：${duration}, 片段总时长：${accumDuration}`)
+      console.log(`合成ogg音频时长：${duration}, 片段总时长：${accumDuration}, 计算总时长：${dus.reduce((a, b) => a + b, 0)}`)
 
       // 适配移动浏览器 再生成一份 mp3 格式的音频
       const mp3path = this.storageService.createTempFilePath('.mp3', basename(tempPath))
       try {
         await this.ffmpegService.convertToMp3(tempPath, mp3path)
+        const mp3duration = await this.ffmpegService.calculateDuration(mp3path)
+        console.log(`合成mp3音频时长：${mp3duration }, 片段总时长：${accumDuration}，计算总时长：${dus.reduce((a, b) => a + b, 0)}`)
       } catch (error) {
         this.userlogger.error(`音频文件转换 MP3 失败: ${error.message}`)
         throw new Error(`音频文件转换失败: ${error.message}`)
       }
-
       console.log('正在上传音频数据...')
       // 注意：这里应该忽略重复文件的检查，否则可能会出现相同文件导致输出路径错误（理论上也可以直接使用已有文件，但鉴于这种情况发生的概率并不是特别多，而处理逻辑可能比较复杂，所以直接忽略检查）
       // 存储 mp3 文件

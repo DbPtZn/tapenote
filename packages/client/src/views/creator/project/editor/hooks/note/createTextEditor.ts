@@ -36,10 +36,10 @@ export function createTextEditor(args: {
       editor.get(ThemeProvider).destory()
       editor.get(ImgToUrlService).destory()
       editor.get(MemoProvider).destroy()
-      console.log('销毁依赖')
+      // console.log('销毁依赖')
     } catch (error) {
       console.log(error)
-      console.error('编辑器销毁失败！')
+      console.error('编辑器依赖销毁失败！')
     }
   })
   return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {

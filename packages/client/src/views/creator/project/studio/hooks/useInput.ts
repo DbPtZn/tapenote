@@ -7,7 +7,7 @@ import useStore from '@/store'
 import { Icon } from '@iconify/vue'
 import { CreateBlankFragment, SpeakerSelectList } from '../private'
 // import { AddReactionSharp } from '@vicons/material'
-import { formatTime } from '../_utils/formatTime'
+import { formatTime2 } from '../_utils/formatTime'
 import { Bridge } from '../../bridge'
 
 // type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
@@ -104,7 +104,7 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
     let sec = 0
     const intervalId = setInterval(() => {
       sec += 0.01
-      const formattedTime = formatTime(sec)
+      const formattedTime = formatTime2(sec)
       callback(formattedTime)
       if (sec > remaining) {
         clearInterval(intervalId)
