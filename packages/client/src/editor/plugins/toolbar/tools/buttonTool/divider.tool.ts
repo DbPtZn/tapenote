@@ -9,7 +9,7 @@ export function dividerToolConfigFactory(injector: Injector): ButtonToolConfig {
   const commander = injector.get(Commander)
   const i18n = injector.get(I18n)
   return {
-    iconClasses: [`material-icons-round-horizontal_rule`],
+    iconClasses: [`material-icons-outlined-horizontal_rule`],
     tooltip: i18n.get('plugins.toolbar.dividerTool.tooltip'),
     // keymap: {
     //   altKey: true,

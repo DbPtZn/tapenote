@@ -4,10 +4,13 @@ import {
   ContentType,
   defineComponent,
   Injector,
+  onSlotRemove,
   Slot,
   SlotRender,
   useSlots,
-  VElement
+  VElement,
+  onContentDelete,
+  onSelectionFromEnd
 } from '@textbus/core'
 import { ComponentLoader, SlotParser } from '@textbus/platform-browser'
 
@@ -16,6 +19,19 @@ export const codeComponent = defineComponent({
   name: 'CodeComponent',
   setup(data?: ComponentInitData<any>) {
     const slots = useSlots(data?.slots || [new Slot([ContentType.Text])])
+    
+    // onSlotRemove(() => {
+    //   console.log('remove')
+    // })
+
+    // onContentDelete(() => {
+    //   console.log('delete')
+    // })
+
+    // onSelectionFromEnd(ev => {
+    //   console.log('SelectionFromEnd')
+    // })
+
     return {
       render(slotRender: SlotRender): VElement {
         return slotRender(slots.get(0)!, children => {

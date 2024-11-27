@@ -4,7 +4,7 @@ import _ from 'lodash'
 import utils from '@/utils'
 import { LibraryEnum } from '@/enums'
 import useStore from '..'
-import { fragment } from '@/api/creator/fragment'
+
 interface FragmentSpeaker {
   id: string
   type: 'human' | 'machine'
@@ -16,8 +16,15 @@ interface FragmentSpeaker {
 
 interface Fragment {
   key?: string
+  // 缓存片段音频数据 转写成功后会将该元素置为 null
+  blob?: Blob | null
+  // 错误标记 上传失败的片段会标记为 true
+  error?: boolean
+  // 唯一标识符
   id: string
+  // 音频地址
   audio: string
+  // 片段时长
   duration: number
   // 文本
   txt: string
@@ -27,14 +34,26 @@ interface Fragment {
   tags: Array<string | null>
   // 动画编号
   promoters: Array<string | null>
+  // 时间戳序列
   timestamps: Array<number>
-  // 排序号
-  // sortNum: number
+  // 项目id
   projectId: string
-  // role: number
+  // 说话人
   speaker: FragmentSpeaker
+  // 是否折叠
   collapsed: boolean
+  // 移除
   removed: 'never' | 'active' | 'passive'
+}
+
+/** 上传错误的片段 */
+interface UploadErrorFragment {
+  projectId: string
+  audio: Blob
+  txt: string
+  duration: number
+  speaker: FragmentSpeaker
+  actions: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0][0]['actions']
 }
 
 interface Detial {
@@ -248,7 +267,7 @@ export const useProjectStore = defineStore('projectStore', {
         } else {
           this.creatorApi(account, hostname).project.get(id)
             .then(res => {
-              // console.log(res.data)
+              console.log(res.data)
               const newItem = this.set(res.data, account, hostname)
               resolve(newItem)
             })
@@ -679,6 +698,10 @@ export const useProjectStore = defineStore('projectStore', {
       const removedSequence = this.get(procedureId)?.removedSequence
       const account = this.get(procedureId)?.account
       const hostname = this.get(procedureId)?.hostname
+
+      /** 上传错误记录 <时间戳，错误片段内容> */
+      const uploadErrorMap = new Map<string, UploadErrorFragment>()
+
       /** 获取项目中的所有片段 */
       const get = () => {
         return this.data.find(i => i.id === procedureId && i.account === account && i.hostname === hostname)?.fragments || []
@@ -854,6 +877,7 @@ export const useProjectStore = defineStore('projectStore', {
               get()?.some((item, index, arr) => {
                 if(item.key === fragment.key) {
                   arr[index] = fragment
+                  delete arr[index].blob
                   delete arr[index].key // 会影响到 data, 所以放序列处理后面
                   return true
                 }
@@ -864,22 +888,23 @@ export const useProjectStore = defineStore('projectStore', {
           })
           // 返回片段数量小于上传片段数量，意味着有片段处理失败，应删除掉失败的占位片段（以后可以进行更复杂的重新上传处理）
           if (data.length < params.length) {
-            const keys = data.map(item => item.key)
+            const keys = data.map(item => item.key) // 服务端返回的有效片段的 key
             params.forEach(param => {
               if (!keys.includes(param.key)) {
                 // 片段创建失败的时候，应移除前端的临时片段
                 get()?.some((item, index, arr) => {
                   if(item.key === param.key) {
-                    arr.splice(index, 1)
+                    // arr.splice(index, 1)
+                    item.error = true
                     return true
                   }
                 })
-                sequence?.some((item, index, arr) => {
-                  if(item === param.key) {
-                    arr.splice(index, 1)
-                    return true
-                  }
-                })
+                // sequence?.some((item, index, arr) => {
+                //   if(item === param.key) {
+                //     arr.splice(index, 1)
+                //     return true
+                //   }
+                // })
               }
             })
           }
@@ -889,16 +914,17 @@ export const useProjectStore = defineStore('projectStore', {
             // 片段创建失败的时候，应移除前端的临时片段
             get()?.some((item, index, arr) => {
               if(item.key === param.key) {
-                arr.splice(index, 1)
+                // arr.splice(index, 1)
+                arr[index].error = true
                 return true
               }
             })
-            sequence?.some((item, index, arr) => {
-              if(item === param.key) {
-               arr.splice(index, 1)
-               return true
-              }
-            })
+            // sequence?.some((item, index, arr) => {
+            //   if(item === param.key) {
+            //    arr.splice(index, 1)
+            //    return true
+            //   }
+            // })
           })
         })
       }

@@ -5,7 +5,7 @@ import { MaterialTypeEnum, Player } from '../../..'
 export function speedDownToolConfigFactory(injector: Injector): ButtonToolConfig {
   const player = injector.get(Player)
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}keyboard_double_arrow_up`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}keyboard_double_arrow_up`],
     tooltip: '减速',
     // keymap: {
     //   ctrlKey: true,

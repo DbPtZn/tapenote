@@ -10,7 +10,7 @@ export function animeBadgeVisibleToolConfigFactory(injector: Injector, updateSta
   const layout = injector.get(Layout)
   const container = layout.container
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}bubble_chart`, `${MaterialTypeEnum.OUTLINED}bubble_chart`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}bubble_chart`, `${MaterialTypeEnum.OUTLINED}bubble_chart`],
     // iconClasses: [`textbus-icon-bold`],
     // label: '隐藏标记',
     tooltip: '隐藏动画标记',

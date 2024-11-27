@@ -5,7 +5,7 @@ import { Structurer } from '.'
 import { Layout } from '@textbus/editor'
 import '../index.scss'
 import '../assets/index.css'
-import 'material-icons/iconfont/material-icons.css'
+import 'material-icons/iconfont/outlined.css'
 
 type ThemeState = 'light' | 'dark'
 /**

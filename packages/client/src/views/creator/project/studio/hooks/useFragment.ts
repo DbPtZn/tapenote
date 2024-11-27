@@ -5,7 +5,7 @@ import _ from 'lodash'
 import { useDialog, useMessage } from 'naive-ui'
 import { Player } from '@/editor'
 import { Icon } from '@iconify/vue'
-import { Subject, Subscription } from '@tanbo/stream'
+import { Subject, Subscription, fromEvent } from '@tanbo/stream'
 import { SortableEvent } from 'vue-draggable-plus'
 import { Bridge } from '../../bridge'
 import FragmentEditor from '../FragmentEditor.vue'
@@ -299,6 +299,10 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     ]
   }
 
+  function handleRebuild(fragment: Fragment) {
+    // projectStore.fragment(projectId).rebuild(fragment)
+  }
+
   function handlePreview() {
     player = bridge.editor?.get(Player) // 获取播放器实例
     const fragments = projectStore.fragment(projectId).getBySort()
@@ -306,16 +310,36 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   }
 
   /** 播放音频 */
+  const playingFragmentId = ref('')
+  const playingSub: Subscription[] = []
   let aud: HTMLAudioElement | null = null
   function handlePlay(fragment: Fragment) {
     if (!aud) {
       try {
         aud = new Audio(fragment.audio)
         aud.play()
+        playingFragmentId.value = fragment.id
         aud.addEventListener('ended', () => {
           aud = null
+          playingFragmentId.value = ''
+          playingSub.forEach(s => s.unsubscribe())
+          playingSub.length = 0
         })
+        const fragmentEl = document.getElementById(`${fragment.id}`)
+        if(fragmentEl) {
+          playingSub.length === 0 && playingSub.push(
+            fromEvent(fragmentEl, 'click').subscribe((ev) => {
+              const target = ev.target as HTMLElement
+              const index = target.dataset.index
+              if(index === undefined) return
+              const timestamp = fragment.timestamps[Number(index)]
+              if(timestamp === undefined || !aud) return
+              aud.currentTime = timestamp
+            })
+          )
+        }
       } catch (error) {
+        console.error(error)
         message.error('音频播放失败,请检查音频路径')
       }
       return
@@ -324,6 +348,9 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       aud.pause()
       aud.src = ''
       aud = null
+      playingFragmentId.value = ''
+      playingSub.forEach(s => s.unsubscribe())
+      playingSub.length = 0
     }
   }
   /** 编辑文字 */
@@ -404,6 +431,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     // 1.生成微课数据
     const data = fragments.map(f => {
       return player!.parseData({
+        key: f.id,
         audio: f.audio,
         duration: f.duration,
         promoters: f.promoters,
@@ -419,11 +447,39 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
             parsedata.forEach(item => {
               item.animeElementSequence.forEach(elements => {
                 elements.forEach(element => {
-                  element.style.opacity = '0'
+                  // element.style.opacity = '0'
+                  element.style.visibility = 'hidden'
                 })
               })
             })
           }
+          subs.push(
+            /** 播放结束时 */
+            player!.onPlayOver.subscribe(() => {
+              playerState.isPlaying = false
+              onPlayerStateUpdate.next(false)
+              playerState.currentTime = 0
+              playingFragmentId.value = ''
+              clearInterval(timer)
+              if (isHidden) {
+                parsedata.forEach(item => {
+                  item.animeElementSequence.forEach(elements => {
+                    elements.forEach(element => {
+                      // element.style.opacity = '1'
+                      element.style.visibility = 'visible'
+                    })
+                  })
+                })
+              }
+              resolve('')
+              subs.forEach(sub => sub.unsubscribe())
+            }),
+            /** 播放触发时 */
+            player!.onPlay.subscribe(ev => {
+              if(!ev) return
+              playingFragmentId.value = ev
+            })
+          )
           // 3.加载完成后启动播放
           player!.start(false)
           playerState.isPlaying = true
@@ -431,26 +487,6 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
           const timer = setInterval(() => {
             playerState.currentTime = player!.totalTime
           }, 300)
-          subs.push(
-            player!.onPlayOver.subscribe(() => {
-              // console.log(parsedata)
-              playerState.isPlaying = false
-              onPlayerStateUpdate.next(false)
-              playerState.currentTime = 0
-              clearInterval(timer)
-              if (isHidden) {
-                parsedata.forEach(item => {
-                  item.animeElementSequence.forEach(elements => {
-                    elements.forEach(element => {
-                      element.style.opacity = '1'
-                    })
-                  })
-                })
-              }
-              resolve('')
-              subs.forEach(sub => sub.unsubscribe())
-            })
-          )
         })
         .catch(err => {
           reject(err)
@@ -468,11 +504,9 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     selectedFragments,
     dropdownState,
     playerState,
-    // studioOptions,
-    // isShowName,
+    playingFragmentId,
     onPlayerStateUpdate,
     isShowOrder,
-    // isShowSpeechModeToolbar,
     handlePreview,
     handleContextmenu,
     handleExpand,
@@ -480,6 +514,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     handlePlay,
     handleEdit,
     handleRemove,
-    handleMove
+    handleMove,
+    handleRebuild
   }
 }

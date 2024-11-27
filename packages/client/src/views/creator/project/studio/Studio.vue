@@ -89,6 +89,7 @@ const {
   dropdownState,
   selectedFragments,
   playerState,
+  playingFragmentId,
   isShowOrder,
   onPlayerStateUpdate,
   handlePreview,
@@ -98,7 +99,8 @@ const {
   handlePlay,
   handleEdit,
   handleRemove,
-  handleMove
+  handleMove,
+  handleRebuild
 } = useFragment(props.id, bridge, checkAnimeState, () => isScrollToBottom = false, () => isScrollToBottom = true)
 
 const fragments = ref<Fragment[]>(projectStore.fragment(props.id).getBySort())
@@ -490,11 +492,11 @@ onUnmounted(() => {
             :isShowOrder="isShowOrder"
             :speaker="element.speaker"
             :collapsed="element.collapsed"
-            :is-loading="!!element.key"
+            :is-loading="!!element.key && !element.audio"
+            :is-playing="element.id === playingFragmentId"
             :is-show-name="isShowName"
-            :is-cut="
-              clipboardStore.fragment.length > 0 && clipboardStore.fragment[0].fragmentId === element.id && clipboardStore.fragment[0].type === 'cut'
-            "
+            :is-cut="clipboardStore.fragment.length > 0 && clipboardStore.fragment[0].fragmentId === element.id && clipboardStore.fragment[0].type === 'cut'"
+            :rebuild="!!element.key && !element.audio && !!element.blob && !!element.error"
             :multiple="selectedFragments.length > 1"
             :duration="Number(element.duration)"
             :readonly="state.isReadonly"
@@ -515,19 +517,22 @@ onUnmounted(() => {
               </Character>
             </template>
             <template #loading>
-              <n-spin v-if="element.key" size="small" />
+              <n-spin v-if="!!element.key  && !element.audio" size="small" />
+            </template>
+            <template #rebuild>
+              <Icon v-if="!!element.key  && !element.audio && !!element.blob && !!element.error" icon="material-symbols:sync-rounded" height="24" @click="handleRebuild(element)" />
             </template>
             <!-- 播放音频 -->
             <template #play>
-              <Icon v-if="!element.key" icon="ic:baseline-headset" height="18" @click="handlePlay(element)" />
+              <Icon v-if="!element.key && !playerState.isPlaying" :icon="element.id === playingFragmentId ? 'iconamoon:player-stop-fill' : 'ic:baseline-headset'" height="18" @click="handlePlay(element)" />
             </template>
             <!-- 编辑文字 -->
             <template #edit>
-              <Icon icon="material-symbols:edit-rounded" height="18" @click="handleEdit(element)" />
+              <Icon v-if="!element.key && !playerState.isPlaying" icon="material-symbols:edit-rounded" height="18" @click="handleEdit(element)" />
             </template>
             <!-- 移除片段 （可以优化，不用每个片段都创建一个实例） -->
             <template #delete>
-              <n-popconfirm :positive-text="t('confirm')" :negative-text="t('cancel')" @positive-click="handleRemove(element)">
+              <n-popconfirm v-if="!element.key && !playerState.isPlaying" :positive-text="t('confirm')" :negative-text="t('cancel')" @positive-click="handleRemove(element)">
                 <template #trigger>
                   <Icon icon="material-symbols:delete-rounded" height="18" />
                 </template>

@@ -5,7 +5,7 @@ import { MaterialTypeEnum, Player } from '../../..'
 export function volumeDownToolConfigFactory(injector: Injector): ButtonToolConfig {
   const player = injector.get(Player)
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}volume_down`, `${MaterialTypeEnum.FILLED}volume_off`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}volume_down`, `${MaterialTypeEnum.OUTLINED}volume_off`],
     tooltip: '降低音量',
     // keymap: {
     //   ctrlKey: true,

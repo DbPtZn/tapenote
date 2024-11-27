@@ -559,6 +559,8 @@ export class ProjectService {
       })
       return data
     } catch (error) {
+      console.log('error:', error)
+      this.userlogger.error(`查询用户${userId}的${lib}项目失败`, error.message)
       throw error
     }
   }

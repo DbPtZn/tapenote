@@ -15,6 +15,8 @@ const props = defineProps<{
   order: number
   // 是否显示 order
   isShowOrder: boolean
+  // 是否正在播放
+  isPlaying: boolean
   // 是否折叠
   collapsed: boolean
   // 是否显示名称
@@ -23,6 +25,8 @@ const props = defineProps<{
   isCut: boolean
   // 加载中
   isLoading: boolean
+  // 重新生成
+  rebuild: boolean
   // 只读
   readonly: boolean
 }>()
@@ -87,7 +91,12 @@ onUnmounted(() => {
 <template>
   <div
     ref="fragmentRef"
-    :class="['fragment', isFocus ? 'focus' : '', readonly || isLoading ? 'disabled' : '', isCut ? 'cut' : '']"
+    :class="[
+      'fragment', isFocus ? 'focus' : '', 
+      readonly || isLoading ? 'disabled' : '', 
+      isCut ? 'cut' : '',
+      isPlaying ? 'isPlaying' : ''
+      ]"
     draggable="true"
     @click="handleClick"
     @contextmenu="handleContextmenu"
@@ -115,6 +124,11 @@ onUnmounted(() => {
         <div v-if="isLoading" class="loading">
           <span>
             <slot name="loading" />
+          </span>
+        </div>
+        <div v-if="rebuild" class="rebuild">
+          <span>
+            <slot name="rebuild" />
           </span>
         </div>
         <div v-if="!isFocus && !isLoading" class="toolbar toolbar-left">
@@ -193,6 +207,12 @@ onUnmounted(() => {
   &:hover {
     opacity: 0.8;
   }
+}
+
+.isPlaying {
+  // transition: all 0.3s ease-in-out;
+  background-color: #7c7c7c27;
+  border-radius: 6px;
 }
 
 .disabled {
@@ -312,6 +332,11 @@ onUnmounted(() => {
 }
 
 .loading {
+  display: flex;
+  align-items: center;
+  opacity: 1;
+}
+.rebuild {
   display: flex;
   align-items: center;
   opacity: 1;

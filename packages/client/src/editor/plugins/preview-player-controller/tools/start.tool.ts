@@ -5,7 +5,7 @@ import { MaterialTypeEnum, Player } from '../../..'
 function startToolConfigFactory(injector: Injector): ButtonToolConfig {
   const player = injector.get(Player)
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}play_arrow`, `${MaterialTypeEnum.FILLED}pause`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}play_arrow`, `${MaterialTypeEnum.OUTLINED}pause`],
     tooltip: '开始',
     keymap: {
       ctrlKey: true,

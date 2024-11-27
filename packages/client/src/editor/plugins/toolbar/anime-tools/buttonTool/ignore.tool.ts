@@ -9,7 +9,7 @@ export function animeIgnoreToolConfigFactory(injector: Injector): ButtonToolConf
   const selection = injector.get(Selection)
   return {
     tooltip: '动画忽略',
-    iconClasses: [`${MaterialTypeEnum.FILLED}select_all`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}select_all`],
     size: 24,
     queryState(): QueryState<FormatValue> {
       // console.log('queryState')

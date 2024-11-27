@@ -5,7 +5,7 @@ import { MaterialTypeEnum, Player } from '../../..'
 export function rewindToolConfigFactory(injector: Injector): ButtonToolConfig {
   const player = injector.get(Player)
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}replay_5`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}replay_5`],
     tooltip: '倒退',
     // keymap: {
     //   ctrlKey: true,

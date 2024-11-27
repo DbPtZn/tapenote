@@ -5,7 +5,7 @@ import { MaterialTypeEnum, Player } from '../../..'
 export function volumeUpToolConfigFactory(injector: Injector): ButtonToolConfig {
   const player = injector.get(Player)
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}volume_up`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}volume_up`],
     tooltip: '增大音量',
     // keymap: {
     //   ctrlKey: true,

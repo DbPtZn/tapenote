@@ -147,7 +147,7 @@
   opacity: 0.8;
 }
 
-.material-icons-round-horizontal_rule::before {
+.material-icons-outlined-horizontal_rule::before {
   content: 'horizontal_rule';
   /* font-size: 18px; */
   /* line-height: 18px; */

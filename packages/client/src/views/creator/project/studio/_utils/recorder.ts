@@ -16,7 +16,7 @@ export class AudioRecorder {
   constructor(args: { sampleRate?: number; sampleBits?: number }) {
     const { sampleRate, sampleBits } = args
     this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-    this.sampleRate = sampleRate || 44100
+    this.sampleRate = sampleRate || 16000
     this.sampleBits = sampleBits || 16
   }
 

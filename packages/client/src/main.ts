@@ -7,7 +7,7 @@ import router from './router'
 // import persist from 'pinia-plugin-persistedstate'
 // 等宽字体
 // import 'virtual:uno.css'
-import 'vfonts/FiraCode.css'
+// import 'vfonts/FiraCode.css'
 import Vue3TouchEvents from 'vue3-touch-events'
 import { createI18n } from 'vue-i18n'
 

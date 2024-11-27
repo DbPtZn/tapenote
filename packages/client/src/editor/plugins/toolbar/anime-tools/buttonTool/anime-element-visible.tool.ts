@@ -8,7 +8,7 @@ export function animeElementVisibleToolConfigFactory(injector: Injector, updateS
   const layout = injector.get(Layout)
   const container = layout.container
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}visibility`, `${MaterialTypeEnum.FILLED}visibility_off`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}visibility`, `${MaterialTypeEnum.OUTLINED}visibility_off`],
     // label: '隐藏动画',
     tooltip: '隐藏动画元素',
     onClick() {

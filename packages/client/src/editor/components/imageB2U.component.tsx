@@ -179,7 +179,7 @@ export const imageB2UComponent = defineComponent({
     // console.log('img component init')
     // 若图片为 base64
     if (data && data.state && ImgToUrlService.isBase64(data.state.src)) {
-      console.log('图片为 base64')
+      // console.log('图片为 base64')
       img2Url.addUploadProcess(
         data.state.src, 
         (url) => {

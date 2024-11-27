@@ -7,6 +7,7 @@ import { Layout } from '@textbus/editor'
 // import _ from 'lodash'
 
 export interface CourseData {
+  key?: string // 多片段播放的时候可以用于查询片段
   audio: string
   duration: number
   promoterSequence: Array<string>
@@ -16,6 +17,7 @@ export interface CourseData {
 }
 
 export interface ParseData {
+  key?: string
   audio: HTMLAudioElement
   duration: number
   animeElementSequence: NodeListOf<HTMLElement>[]
@@ -29,7 +31,7 @@ const UpdateState = (target: any, propertyKey: string, descriptor: PropertyDescr
   const fn = descriptor.value
   descriptor.value = function (...args: any[]) {
     const result = fn.apply(this, args)
-    this['stateUpdateEvent'].next(propertyKey)
+    this['onStateUpdate'].next(propertyKey)
     return result
   }
   return descriptor
@@ -37,20 +39,23 @@ const UpdateState = (target: any, propertyKey: string, descriptor: PropertyDescr
 
 @Injectable()
 export class Player {
-  private stateUpdateEvent = new Subject<any>()
-  onStateUpdate: Observable<any> = this.stateUpdateEvent.asObservable()
+  // private stateUpdateEvent = new Subject<any>()
+  onStateUpdate = new Subject()
 
-  private subtitleUpdataEvent: Subject<any> = new Subject()
-  onSubtitleUpdate: Observable<any> = this.subtitleUpdataEvent.asObservable()
+  // private subtitleUpdataEvent: Subject<any> = new Subject()
+  onSubtitleUpdate = new Subject()
 
-  private rateChangeEvent: Subject<any> = new Subject()
-  onRateChange: Observable<any> = this.rateChangeEvent.asObservable()
+  // private rateChangeEvent: Subject<any> = new Subject()
+  onRateChange = new Subject()
 
-  private volumeChangeEvent: Subject<any> = new Subject()
-  onVolumeChange: Observable<any> = this.volumeChangeEvent.asObservable()
+  // private volumeChangeEvent: Subject<any> = new Subject()
+  onVolumeChange = new Subject()
 
-  private playOverEvent: Subject<any> = new Subject()
-  onPlayOver: Observable<any> = this.playOverEvent.asObservable()
+  // private playOverEvent: Subject<any> = new Subject()
+  onPlayOver = new Subject()
+
+  /** 每次播放都会触发一次 */
+  onPlay = new Subject<string | undefined>()
 
   private injector!: Injector
   private anime!: AnimeProvider
@@ -114,6 +119,7 @@ export class Player {
           // 音频全部载入完成的后续操作
           this.data = data.map((item, index) => {
             return {
+              key: item.key,
               audio: audios[index],
               duration: item.duration,
               animeElementSequence: item.promoterSequence.map(item => {
@@ -141,7 +147,7 @@ export class Player {
     startPoint?: { startTime: number, startIndex: number }[] // 起点
   }) {
     const { data, index, startPoint } = args
-  
+    this.onPlay.next(data[index]?.key || '')
     if (index < data.length) {
       const { audio, duration, animeElementSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } = data[index]
       /** 将数据更新至当前播放对象 */
@@ -180,7 +186,7 @@ export class Player {
       this.isPlaying = true
       this.rate = this.audio.playbackRate
       this.volume = this.audio.volume
-      this.stateUpdateEvent.next('') // 触发状态更新
+      this.onStateUpdate.next('') // 触发状态更新
      
       /** 是否包含字幕信息 */
       const hasSubtitle = subtitleSequence && subtitleSequence.length > 0 && subtitleKeyframeSequence && subtitleKeyframeSequence.length > 0
@@ -190,7 +196,7 @@ export class Player {
         if (hasSubtitle) {
           if (this.audio!.currentTime > subtitleKeyframeSequence[this.subtitleCount]) {
             this.subtitle = this.subtitleSequence[this.subtitleCount]
-            this.subtitleUpdataEvent.next(this.subtitle)
+            this.onSubtitleUpdate.next(this.subtitle)
             this.subtitleCount++
           }
         }
@@ -214,12 +220,12 @@ export class Player {
 
       /** 音量改变时 */
       this.audio.onvolumechange = () => {
-        this.volumeChangeEvent.next(this.audio?.volume)
+        this.onVolumeChange.next(this.audio?.volume)
       }
       /** 速率改变时 */
       this.audio.onratechange = () => {
         const rate = Math.floor(this.audio!.playbackRate * 10) / 10
-        this.rateChangeEvent.next(rate)
+        this.onRateChange.next(rate)
       }
 
       // 监听音频播放结束事件，然后递归播放下一个音频
@@ -234,8 +240,8 @@ export class Player {
       this.total = 0
       this.totalTime = 0
       this.setAnimeVisible(true)
-      this.stateUpdateEvent.next('')
-      this.playOverEvent.next('') // 所有音频播放完毕,发布播放结束的订阅
+      this.onStateUpdate.next('')
+      this.onPlayOver.next('') // 所有音频播放完毕,发布播放结束的订阅
       // 播放结束后立即显示忽略组件会导致内容突兀变动，因此设置为在滚动事件发生后再显示
       this.scrollerSub = fromEvent(this.scrollerRef, 'scroll').subscribe(ev => {
         this.showIgnoreComponent()
@@ -382,7 +388,7 @@ export class Player {
   stop() {
     this.init()
     this.setAnimeVisible(true)
-    this.playOverEvent.next('')
+    this.onPlayOver.next('')
     this.scrollerSub = fromEvent(this.scrollerRef, 'scroll').subscribe(ev => {
       this.showIgnoreComponent()
       this.scrollerSub.unsubscribe()
@@ -408,7 +414,7 @@ export class Player {
 
     clearInterval(this.timer)
 
-    this.subtitleUpdataEvent.next(this.subtitle) // 发布字幕更新订阅
+    this.onSubtitleUpdate.next(this.subtitle) // 发布字幕更新订阅
   }
 
   /** 初始化 */
@@ -627,12 +633,13 @@ export class Player {
 
   /** 将片段数据解析成播放所需数据 */
   parseData(data: {
+    key?: string
     audio: string
     duration: number
     promoters: Array<string | null>
     timestamps: Array<number>
   }): CourseData {
-    const { audio, duration, promoters, timestamps } = data
+    const { key, audio, duration, promoters, timestamps } = data
     const keyframeSequence: number[] = []
     let promoterSequence: string[] = []
     // 存在时间戳的情况
@@ -653,7 +660,7 @@ export class Player {
       }) as string[]
     }
 
-    return { audio, duration, promoterSequence, keyframeSequence }
+    return { key, audio, duration, promoterSequence, keyframeSequence }
   }
 
   /** 将音频时长（duration）转化成 HH:MM:SS 格式 */

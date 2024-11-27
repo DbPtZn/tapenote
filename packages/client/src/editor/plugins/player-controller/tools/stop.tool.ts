@@ -5,7 +5,7 @@ import { MaterialTypeEnum, Player } from '../../..'
 export function stopToolConfigFactory(injector: Injector): ButtonToolConfig {
   const player = injector.get(Player)
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}stop`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}stop`],
     tooltip: '停止',
     disabled: true,
     // keymap: {

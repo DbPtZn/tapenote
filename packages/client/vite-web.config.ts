@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import eslintPlugin from 'vite-plugin-eslint'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
-import UnoCSS from 'unocss/vite'
+import viteCompression from 'vite-plugin-compression'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
@@ -21,6 +21,19 @@ export default defineConfig(({ command, mode }) => {
         // 可以指定放置类型声明文件的位置和名称
         dts: 'src/types/components.d.ts'
       }),
+      viteCompression({
+        deleteOriginFile: false,
+      }),
+      // visualizer({
+      //   gzipSize: true,
+      //   brotliSize: true,
+      //   emitFile: false,
+      //   filename: 'stats.html', // 分析图生成的文件名
+      //   open: true // 如果存在本地服务端口，将在打包后自动展示
+      // })
+      // visualizer({
+      //   open: true,
+      // }),
       // VitePWA({
       //   manifest: {
       //     name: '笔记映画',

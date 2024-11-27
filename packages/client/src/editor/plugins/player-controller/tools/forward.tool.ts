@@ -5,7 +5,7 @@ import { MaterialTypeEnum, Player } from '../../..'
 export function forwardToolConfigFactory(injector: Injector): ButtonToolConfig {
   const player = injector.get(Player)
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}forward_5`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}forward_5`],
     tooltip: '快进',
     // keymap: {
     //   ctrlKey: true,

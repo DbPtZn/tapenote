@@ -4,6 +4,8 @@ import {
   // blockBackgroundColorFormatter,
   boldFormatLoader,
   boldFormatter,
+  codeFormatLoader,
+  codeFormatter,
   // codeFormatLoader,
   // codeFormatter,
   // colorFormatLoader,
@@ -54,7 +56,7 @@ export const defaultFormatters: Formatter<any>[] = [
   subscriptFormatter,
   superscriptFormatter,
   underlineFormatter,
-  // codeFormatter,
+  codeFormatter,
   linkFormatter,
   textBackgroundColorFormatter,
   verticalAlignFormatter
@@ -74,7 +76,7 @@ export const defaultFormatLoaders: FormatLoader<any>[] = [
   subscriptFormatLoader,
   superscriptFormatLoader,
   underlineFormatLoader,
-  // codeFormatLoader,
+  codeFormatLoader,
   linkFormatLoader,
   textBackgroundColorFormatLoader,
   verticalAlignFormatLoader

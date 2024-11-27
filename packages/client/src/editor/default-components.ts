@@ -72,7 +72,7 @@ export const defaultComponentLoaders: ComponentLoader[] = [
   dividerComponentLoader,
   animeIgnoreComponentLoader,
   animeComponentLoader,
-  codeComponentLoader
+  // codeComponentLoader
 ]
 
 export const defaultComponents: Component[] = [
@@ -97,7 +97,7 @@ export const defaultComponents: Component[] = [
   dividerComponent,
   animeIgnoreComponent,
   animeComponent,
-  codeComponent
+  // codeComponent
 ]
 
 

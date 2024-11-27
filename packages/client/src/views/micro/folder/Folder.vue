@@ -22,6 +22,9 @@ onMounted(() => {
   folderStore.fetchAndSet(id.value).then(resp => {
     // 获取文件夹后将文件夹 lib 以及 id 记录到 localStorage
     localStorage.setItem(`${folderStore.lib}-folder`, folderStore.id)
+  }).catch(err => {
+    // 如果获取文件夹失败
+    console.log('获取文件夹失败', err)
   })
 })
 

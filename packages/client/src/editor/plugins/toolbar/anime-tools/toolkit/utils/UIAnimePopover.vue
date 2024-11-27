@@ -96,7 +96,7 @@ if (props.keymap) {
           </div>
         </div>
         <div class="lock" @click="isLock =!isLock">
-          <UIIcon :icon="isLock ? `${MaterialTypeEnum.FILLED}lock` : `${MaterialTypeEnum.FILLED}lock_open`" />
+          <UIIcon :icon="isLock ? `${MaterialTypeEnum.OUTLINED}lock` : `${MaterialTypeEnum.OUTLINED}lock_open`" />
         </div>
       </div>
     </n-popover>

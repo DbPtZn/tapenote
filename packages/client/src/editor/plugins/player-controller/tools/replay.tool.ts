@@ -5,7 +5,7 @@ import { MaterialTypeEnum, Player } from '../../..'
 export function replayToolConfigFactory(injector: Injector): ButtonToolConfig {
   const player = injector.get(Player)
   return {
-    iconClasses: [`${MaterialTypeEnum.FILLED}replay`],
+    iconClasses: [`${MaterialTypeEnum.OUTLINED}replay`],
     tooltip: '重播',
     // keymap: {
     //   ctrlKey: true,
