@@ -91,12 +91,7 @@ onUnmounted(() => {
 <template>
   <div
     ref="fragmentRef"
-    :class="[
-      'fragment', isFocus ? 'focus' : '', 
-      readonly || isLoading ? 'disabled' : '', 
-      isCut ? 'cut' : '',
-      isPlaying ? 'isPlaying' : ''
-      ]"
+    :class="['fragment', isFocus ? 'focus' : '', readonly || isLoading ? 'disabled' : '', isCut ? 'cut' : '', isPlaying ? 'isPlaying' : '']"
     draggable="true"
     @click="handleClick"
     @contextmenu="handleContextmenu"
@@ -116,22 +111,28 @@ onUnmounted(() => {
           <div class="name" v-if="isShowName">
             {{ speaker.name }}
           </div>
-          <div :class="['msg', 'msg-left', collapsed && 'collapse']">
+          <div :class="['msg', 'msg-left', collapsed && 'collapse', rebuild && 'error']">
             <slot name="txt" />
             <span v-if="collapsed" class="collapse-btn" @click="emits('expand')">展开</span>
           </div>
         </div>
-        <div v-if="isLoading" class="loading">
-          <span>
-            <slot name="loading" />
-          </span>
-        </div>
-        <div v-if="rebuild" class="rebuild">
+        <!-- 重建 -->
+        <div v-if="rebuild && !isLoading" class="rebuild">
           <span>
             <slot name="rebuild" />
           </span>
+          <span>
+            <slot name="play" />
+          </span>
+          <span>
+            <slot name="delete" />
+          </span>
+          <span>
+            <slot name="download" />
+          </span>
         </div>
-        <div v-if="!isFocus && !isLoading" class="toolbar toolbar-left">
+        <!-- 工具栏 -->
+        <div v-if="!isFocus && !isLoading && !rebuild" class="toolbar toolbar-left">
           <span>
             <slot name="delete" />
           </span>
@@ -142,6 +143,13 @@ onUnmounted(() => {
             <slot name="play" />
           </span>
         </div>
+        <!-- 处理中 -->
+        <div v-if="isLoading" class="loading">
+          <span>
+            <slot name="loading" />
+          </span>
+        </div>
+        <!-- 时长 -->
         <div v-if="isFocus && !isLoading" class="duration">{{ utils.durationFormat(duration || 0) }}</div>
       </div>
       <!-- 右侧 -->
@@ -158,12 +166,14 @@ onUnmounted(() => {
       <!-- 中间 -->
       <div class="middle">
         <div v-if="isFocus && !isLoading" class="duration">{{ utils.durationFormat(duration || 0) }}</div>
+        <!-- 处理中 -->
         <div v-if="isLoading" class="loading">
           <span>
             <slot name="loading" />
           </span>
         </div>
-        <div v-if="!isFocus && !isLoading" class="toolbar toolbar-right">
+        <!-- 工具栏 -->
+        <div v-if="!isFocus && !isLoading && !rebuild" class="toolbar toolbar-right">
           <span>
             <slot name="play" />
           </span>
@@ -174,11 +184,26 @@ onUnmounted(() => {
             <slot name="delete" />
           </span>
         </div>
+        <!-- 重建 -->
+        <div v-if="rebuild && !isLoading" class="rebuild">
+          <span>
+            <slot name="rebuild" />
+          </span>
+          <span>
+            <slot name="play" />
+          </span>
+          <span>
+            <slot name="delete" />
+          </span>
+          <span>
+            <slot name="download" />
+          </span>
+        </div>
         <div class="content">
           <div class="name name-right" v-if="isShowName">
             {{ speaker.name }}
           </div>
-          <div :class="['msg', 'msg-right', collapsed && 'collapse']">
+          <div :class="['msg', 'msg-right', collapsed && 'collapse', rebuild && 'error']">
             <slot name="txt" />
             <span v-if="collapsed" class="collapse-btn" @click="emits('expand')">展开</span>
           </div>
@@ -340,6 +365,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   opacity: 1;
+  box-sizing: border-box;
+  span {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 3px;
+  }
+}
+.error {
+  background-color: #ac4c4c7e;
 }
 
 .toolbar {

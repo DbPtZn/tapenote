@@ -300,7 +300,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   }
 
   function handleRebuild(fragment: Fragment) {
-    // projectStore.fragment(projectId).rebuild(fragment)
+    projectStore.fragment(projectId).rebuild(fragment)
   }
 
   function handlePreview() {
@@ -309,50 +309,62 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     applyPlay(fragments, true)
   }
 
-  /** 播放音频 */
+  /**
+   * 控制片段音频播放
+   * playingFragmentId 控制聚焦正在播放的片段
+   * playingsub 监听片段上的点击事件以控制音频播放的时间
+   * aud 音频实例元素
+   */
   const playingFragmentId = ref('')
   const playingSub: Subscription[] = []
   let aud: HTMLAudioElement | null = null
+  /** 播放音频 */
   function handlePlay(fragment: Fragment) {
-    if (!aud) {
-      try {
-        aud = new Audio(fragment.audio)
-        aud.play()
-        playingFragmentId.value = fragment.id
-        aud.addEventListener('ended', () => {
-          aud = null
-          playingFragmentId.value = ''
-          playingSub.forEach(s => s.unsubscribe())
-          playingSub.length = 0
-        })
-        const fragmentEl = document.getElementById(`${fragment.id}`)
-        if(fragmentEl) {
-          playingSub.length === 0 && playingSub.push(
-            fromEvent(fragmentEl, 'click').subscribe((ev) => {
-              const target = ev.target as HTMLElement
-              const index = target.dataset.index
-              if(index === undefined) return
-              const timestamp = fragment.timestamps[Number(index)]
-              if(timestamp === undefined || !aud) return
-              aud.currentTime = timestamp
-            })
-          )
-        }
-      } catch (error) {
-        console.error(error)
-        message.error('音频播放失败,请检查音频路径')
-      }
-      return
-    }
-    if (aud.played) {
+    let audio = fragment.audio
+    // 正在播放时暂停
+    if (aud && aud.played) {
       aud.pause()
       aud.src = ''
       aud = null
+      fragment.error && URL.revokeObjectURL(audio)
       playingFragmentId.value = ''
       playingSub.forEach(s => s.unsubscribe())
       playingSub.length = 0
+      return
+    }
+    try {
+      if (fragment.error) {
+        const audioUrl = URL.createObjectURL(fragment.error.audio)
+        audio = audioUrl
+      }
+      aud = new Audio(audio)
+      aud.play()
+      playingFragmentId.value = fragment.id
+      aud.addEventListener('ended', () => {
+        aud = null
+        playingFragmentId.value = ''
+        playingSub.forEach(s => s.unsubscribe())
+        playingSub.length = 0
+        fragment.error && URL.revokeObjectURL(audio)
+      })
+      const fragmentEl = document.getElementById(`${fragment.id}`)
+      if(!fragmentEl || !!fragment.error) return
+      playingSub.length === 0 && playingSub.push(
+        fromEvent(fragmentEl, 'click').subscribe((ev) => {
+          const target = ev.target as HTMLElement
+          const index = target.dataset.index
+          if(index === undefined) return
+          const timestamp = fragment.timestamps[Number(index)]
+          if(timestamp === undefined || !aud) return
+          aud.currentTime = timestamp
+        })
+      )
+    } catch (error) {
+      fragment.error && URL.revokeObjectURL(audio)
+      message.error('音频播放失败,请检查音频路径')
     }
   }
+
   /** 编辑文字 */
   function handleEdit(fragment: Fragment) {
     pauseWatch()
@@ -389,6 +401,14 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   }
   /** 移除片段 */
   function handleRemove(fragment: Fragment) {
+    if(fragment.error) {
+      projectStore.fragment(projectId).get().some((f, index, arr) => {
+        if(f.id === fragment.id) {
+          arr.splice(index, 1)
+        }
+      })    
+      return           
+    }
     applyRemove(fragment.id).then(() => checkAnimeState()) // 移除片段之后，进行动画状态校验
   }
   /** 移动片段 */
@@ -405,6 +425,18 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       oldIndex,
       newIndex
     })
+  }
+
+  function handleDownload(fragment: Fragment) {
+    if(fragment.error) {
+      const url = URL.createObjectURL(fragment.error.audio)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${fragment.id}.wav`
+      a.click()
+
+      URL.revokeObjectURL(url)
+    }
   }
 
   function applyRemove(fragmentId: string) {
@@ -507,6 +539,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     playingFragmentId,
     onPlayerStateUpdate,
     isShowOrder,
+    handleDownload,
     handlePreview,
     handleContextmenu,
     handleExpand,

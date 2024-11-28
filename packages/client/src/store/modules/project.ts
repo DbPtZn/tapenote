@@ -14,12 +14,19 @@ interface FragmentSpeaker {
   role: number
 }
 
+
 interface Fragment {
   key?: string
-  // 缓存片段音频数据 转写成功后会将该元素置为 null
-  blob?: Blob | null
+  // 处理中
+  processing?: boolean
   // 错误标记 上传失败的片段会标记为 true
-  error?: boolean
+  error?: {
+    // 缓存片段音频数据 转写成功后会将该元素置为 null
+    audio: Blob
+    actions: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0][0]['actions']
+    duration: number
+    speakerId: string
+  } | undefined,
   // 唯一标识符
   id: string
   // 音频地址
@@ -46,18 +53,12 @@ interface Fragment {
   removed: 'never' | 'active' | 'passive'
 }
 
-/** 上传错误的片段 */
-interface UploadErrorFragment {
-  projectId: string
-  audio: Blob
-  txt: string
-  duration: number
-  speaker: FragmentSpeaker
-  actions: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0][0]['actions']
-}
-
-interface Detial {
-  penname: string; email: string; homepage: string, wordage: number; filesize: number
+class Detial {
+  penname: string = ''
+  email: string = ''
+  homepage: string = ''
+  wordage: number = 0
+  filesize: number = 0
 }
 
 /** 投稿历史 */
@@ -76,7 +77,7 @@ interface SubmissionHistory {
   date: string
 }
 
-interface ProjectConfig {}
+class ProjectConfig {}
 
 interface Snapshot {
   id: string
@@ -130,59 +131,59 @@ interface Memo {
 }
 
 
-interface Folder {
-  id: string
-  name: string
+class Folder {
+  id: string = ''
+  name: string = ''
 }
 
-export interface Project {
-  account: string
-  hostname: string
-  isTitleUpdating: boolean
-  isContentUpdating: boolean
-  isSidenoteUpdating: boolean
+class Project {
+  account: string = ''
+  hostname: string = ''
+  isTitleUpdating: boolean = false
+  isContentUpdating: boolean = false
+  isSidenoteUpdating: boolean = false
 
-  id: string
-  lib: LibraryEnum
-  dirname: string
-  folderId: string
-  folder: Folder
-  cover: string
-  coverPosition: number
-  firstPicture: string
-  title: string
-  content: string
-  abbrev: string
+  id: string = ''
+  lib: LibraryEnum | undefined = undefined
+  dirname: string = ''
+  folderId: string = ''
+  folder: Folder = new Folder()
+  cover: string = ''
+  coverPosition: number = 50
+  firstPicture: string = ''
+  title: string = ''
+  content: string = ''
+  abbrev: string = ''
 
-  fromNoteId?: string
-  fragments: Fragment[]
-  sequence: Array<string>
-  removedSequence: Array<string>
-  speakerRecorder: string[]
-  speakerHistory: { human: string; machine: string }
-  config: ProjectConfig
+  fromNoteId?: string = ''
+  fragments: Fragment[] = []
+  sequence: Array<string> = []
+  removedSequence: Array<string> = []
+  speakerRecorder: string[] = []
+  speakerHistory: { human: string; machine: string } = { human: '', machine: '' }
+  config: ProjectConfig = new ProjectConfig()
 
-  fromProcedureId?: string
-  snapshotId?: string
-  audio: string
-  duration: number
-  promoterSequence: Array<string>
-  keyframeSequence: Array<number>
-  subtitleSequence: Array<string>
-  subtitleKeyframeSequence: Array<number>
-  sidenote: string
-  annotations: Array<any>
-  memos: Memo[]
+  fromProcedureId?: string = ''
+  snapshotId?: string = ''
+  audio: string = ''
+  duration: number = 0
+  promoterSequence: Array<string> = []
+  keyframeSequence: Array<number> = []
+  subtitleSequence: Array<string> = []
+  subtitleKeyframeSequence: Array<number> = []
+  sidenote: string = ''
+  annotations: Array<any> = []
+  memos: Memo[] = []
 
-  detial: Detial
-  submissionHistory: SubmissionHistory[]
+  detial: Detial = new Detial()
+  submissionHistory: SubmissionHistory[] = []
 
-  snapshots?: Snapshot[]
-  relevantProjects?: RelevantProject[]
-  parentProjects?: ParentProject[]
+  snapshots?: Snapshot[] = []
+  relevantProjects?: RelevantProject[] = []
+  parentProjects?: ParentProject[] = []
 
-  createAt: string
-  updateAt: string
+  createAt: string = ''
+  updateAt: string = ''
 }
 
 interface State {
@@ -267,7 +268,7 @@ export const useProjectStore = defineStore('projectStore', {
         } else {
           this.creatorApi(account, hostname).project.get(id)
             .then(res => {
-              console.log(res.data)
+              // console.log(res.data)
               const newItem = this.set(res.data, account, hostname)
               resolve(newItem)
             })
@@ -282,50 +283,61 @@ export const useProjectStore = defineStore('projectStore', {
     },
     set(data: any, account: string, hostname: string) {
       const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
-      const item: Project = {
-        account: account || '',
-        hostname: hostname || '',
-        isTitleUpdating: false,
-        isContentUpdating: false,
-        isSidenoteUpdating: false,
-        id: data.id || '',
-        lib: data.lib || '',
-        dirname: data.dirname || '',
-        folderId: data.folderId || '',
-        folder: data.folder || { id: '', name: '' },
-        cover: data.cover ? ResourceDomain + data.cover : '',
-        coverPosition: data.coverPosition || 50,
-        firstPicture: data.firstPicture || '',
-        title: data.title || '',
-        content: data.content || '',
-        abbrev: data.abbrev || '',
-        fragments: data.fragments?.map(fragment => {
-          fragment.audio = ResourceDomain + fragment.audio
-          fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account, hostname)
-          return fragment
-        }) || [],
-        sequence: data.sequence || [],
-        removedSequence: data.removedSequence || [],
-        speakerRecorder: data.speakerRecorder || [],
-        speakerHistory: data.speakerHistory || { human: '', machine: '' },
-        config: data.config || {},
-        audio: data.audio ? ResourceDomain + data.audio : '',
-        duration: data.duration || 0,
-        promoterSequence: data.promoterSequence || [],
-        keyframeSequence: data.keyframeSequence || [],
-        subtitleSequence: data.subtitleSequence || [],
-        subtitleKeyframeSequence: data.subtitleKeyframeSequence || [],
-        sidenote: data.sidenote || '',
-        annotations: data.annotations || [],
-        detial: data.detial || { penname: '', email: '', homepage: '', wordage: 0, filesize: 0 },
-        submissionHistory: data.submissionHistory || [],
-        fromNoteId: data.fromNoteId || '',
-        fromProcedureId: data.fromProcedureId || '',
-        snapshotId: data.snapshotId || '',
-        createAt: data.createAt || '',
-        updateAt: data.updateAt || '',
-        memos: data.memos || []
-      }
+      const item = new Project()
+      Object.assign(item, data)
+      item.account = account
+      item.hostname = hostname
+      item.cover = data.cover ? ResourceDomain + data.cover : ''
+      item.fragments = data.fragments?.map(fragment => {
+        fragment.audio = ResourceDomain + fragment.audio
+        fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account, hostname)
+        return fragment
+      }) || []
+      item.audio = item.audio ? ResourceDomain + item.audio : ''
+      // const item: Project = {
+      //   account: account || '',
+      //   hostname: hostname || '',
+      //   isTitleUpdating: false,
+      //   isContentUpdating: false,
+      //   isSidenoteUpdating: false,
+      //   id: data.id || '',
+      //   lib: data.lib || '',
+      //   dirname: data.dirname || '',
+      //   folderId: data.folderId || '',
+      //   folder: data.folder || { id: '', name: '' },
+      //   cover: data.cover ? ResourceDomain + data.cover : '',
+      //   coverPosition: data.coverPosition || 50,
+      //   firstPicture: data.firstPicture || '',
+      //   title: data.title || '',
+      //   content: data.content || '',
+      //   abbrev: data.abbrev || '',
+      //   fragments: data.fragments?.map(fragment => {
+      //     fragment.audio = ResourceDomain + fragment.audio
+      //     fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account, hostname)
+      //     return fragment
+      //   }) || [],
+      //   sequence: data.sequence || [],
+      //   removedSequence: data.removedSequence || [],
+      //   speakerRecorder: data.speakerRecorder || [],
+      //   speakerHistory: data.speakerHistory || { human: '', machine: '' },
+      //   config: data.config || {},
+      //   audio: data.audio ? ResourceDomain + data.audio : '',
+      //   duration: data.duration || 0,
+      //   promoterSequence: data.promoterSequence || [],
+      //   keyframeSequence: data.keyframeSequence || [],
+      //   subtitleSequence: data.subtitleSequence || [],
+      //   subtitleKeyframeSequence: data.subtitleKeyframeSequence || [],
+      //   sidenote: data.sidenote || '',
+      //   annotations: data.annotations || [],
+      //   detial: data.detial || { penname: '', email: '', homepage: '', wordage: 0, filesize: 0 },
+      //   submissionHistory: data.submissionHistory || [],
+      //   fromNoteId: data.fromNoteId || '',
+      //   fromProcedureId: data.fromProcedureId || '',
+      //   snapshotId: data.snapshotId || '',
+      //   createAt: data.createAt || '',
+      //   updateAt: data.updateAt || '',
+      //   memos: data.memos || []
+      // }
       // console.log(item.memos[0])
       const index = this.data.findIndex(i => i.id === item.id && i.account === item.account && i.hostname === item.hostname)
       if(index === -1) this.data.push(item)
@@ -336,6 +348,7 @@ export const useProjectStore = defineStore('projectStore', {
       }
       return item
     },
+    /** 片段说话人转译器（对头像进行转换，如果是用户自己或默认机器人，则会依据当前信息） */
     fragmentSpeakerTranslator(speaker: FragmentSpeaker, account: string, hostname: string) {
       const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
       switch(speaker.type) {
@@ -699,9 +712,6 @@ export const useProjectStore = defineStore('projectStore', {
       const account = this.get(procedureId)?.account
       const hostname = this.get(procedureId)?.hostname
 
-      /** 上传错误记录 <时间戳，错误片段内容> */
-      const uploadErrorMap = new Map<string, UploadErrorFragment>()
-
       /** 获取项目中的所有片段 */
       const get = () => {
         return this.data.find(i => i.id === procedureId && i.account === account && i.hostname === hostname)?.fragments || []
@@ -751,6 +761,7 @@ export const useProjectStore = defineStore('projectStore', {
           // 立即创建临时文本片段并插入到片段序列中
           const fragment: Fragment = {
             key,
+            processing: true,
             id: key,
             audio: '',
             duration: 0,
@@ -795,6 +806,7 @@ export const useProjectStore = defineStore('projectStore', {
                 get()?.some((item, index, arr) => {
                   if(item.key === fragment.key) {
                     arr[index] = fragment
+                    arr[index].processing = false
                     delete arr[index].key // 会影响到 data, 所以放序列处理后面
                     return true
                   }
@@ -827,7 +839,6 @@ export const useProjectStore = defineStore('projectStore', {
         const { speakerStore } = useStore()
         const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
         const speaker = speakerStore.get(params[0].speakerId, account!, hostname!, 'human')!
-        // params.procedureId = procedureId
         params.forEach(param => {
           const key = utils.randomString()
           param.key = key
@@ -836,6 +847,8 @@ export const useProjectStore = defineStore('projectStore', {
           const fragment: Fragment = {
             key,
             id: key,
+            processing: true,
+            error: undefined,
             audio: '',
             duration: 0,
             txt: '',
@@ -863,7 +876,6 @@ export const useProjectStore = defineStore('projectStore', {
           const data = res.data
           data.forEach(fragment => {
             fragment.audio = ResourceDomain + fragment.audio
-            // fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account!, hostname!)
             fragment.speaker = speaker
             if(fragment.key) {
               // 用片段 id 替换排序信息中的占位 key
@@ -877,7 +889,7 @@ export const useProjectStore = defineStore('projectStore', {
               get()?.some((item, index, arr) => {
                 if(item.key === fragment.key) {
                   arr[index] = fragment
-                  delete arr[index].blob
+                  arr[index].processing = false
                   delete arr[index].key // 会影响到 data, 所以放序列处理后面
                   return true
                 }
@@ -895,7 +907,8 @@ export const useProjectStore = defineStore('projectStore', {
                 get()?.some((item, index, arr) => {
                   if(item.key === param.key) {
                     // arr.splice(index, 1)
-                    item.error = true
+                    item.error = param
+                    item.processing = false
                     return true
                   }
                 })
@@ -915,7 +928,14 @@ export const useProjectStore = defineStore('projectStore', {
             get()?.some((item, index, arr) => {
               if(item.key === param.key) {
                 // arr.splice(index, 1)
-                arr[index].error = true
+                arr[index].transcript = ['识别失败，请重试'],
+                arr[index].error = {
+                  audio: param.audio,
+                  duration: param.duration,
+                  actions: param.actions,
+                  speakerId: param.speakerId
+                }
+                arr[index].processing = false
                 return true
               }
             })
@@ -926,6 +946,40 @@ export const useProjectStore = defineStore('projectStore', {
             //   }
             // })
           })
+        })
+      }
+      const rebuild = (fragment: Fragment) => {
+        if(!fragment.error) return
+        fragment.processing = true
+        return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment[]>([{ key: fragment.key, ...fragment.error }], procedureId).then(res => {
+          const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
+          const data = res.data
+          data.forEach(f => {
+            f.audio = ResourceDomain + f.audio
+            f.speaker = fragment.speaker  // 直接沿用此前的 speaker 即可
+            if(f.key) {
+              // 用片段 id 替换排序信息中的占位 key
+              sequence?.some((item, index, arr) => {
+                if(item === f.key) {
+                  arr[index] = f.id
+                  return true
+                }
+              })
+              // 替换成完整片段
+              get()?.some((item, index, arr) => {
+                if(item.key === f.key) {
+                  console.log('替换', f)
+                  arr[index] = f
+                  arr[index].processing = false
+                  delete arr[index].error
+                  delete arr[index].key // 会影响到 data, 所以放序列处理后面
+                  return true
+                }
+              })
+            }
+          })
+        }).catch(err => {
+          fragment.processing = false
         })
       }
       /** 创建空白片段 */
@@ -949,6 +1003,7 @@ export const useProjectStore = defineStore('projectStore', {
           const fragment: Fragment = {
             key,
             id: key,
+            processing: true,
             audio: '',
             duration: param.duration,
             txt: param.txt,
@@ -984,6 +1039,7 @@ export const useProjectStore = defineStore('projectStore', {
               get()?.some((item, index, arr) => {
                 if(item.key === segment.key) {
                   arr[index] = segment
+                  arr[index].processing = false
                   delete arr[index].key // 会影响到 data, 所以放序列处理后面
                   return true
                 }
@@ -1012,7 +1068,7 @@ export const useProjectStore = defineStore('projectStore', {
             })
           }
         }).catch(err => {
-          console.error(err)
+          // console.error(err)
           params.forEach(param => {
             // 片段创建失败的时候，应移除前端的临时片段
             get()?.some((item, index, arr) => {
@@ -1173,6 +1229,7 @@ export const useProjectStore = defineStore('projectStore', {
         getRemovedBySort,
         createByText,
         createByAudio,
+        rebuild,
         createBySegment,
         createBlank,
         updateTranscript,

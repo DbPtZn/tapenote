@@ -169,6 +169,7 @@ export class FragmentService {
         await this.ffmpegService.convertToOgg(audio, oggPath)
         try {
           // console.log(`开始语音识别...,音频时长：${duration}`)
+          // throw ''
           // 本地语音识别模块只支持 wav 格式，使用 audio; 在线一句话语音识别支持 ogg 且 ogg 文件能确保一分钟音频不超过 3 MB
           const result = await this.useAsr({ filepath: isVip ? oggPath : audio, model: fragmentSpeaker.model, isVip })
           fsx.removeSync(audio) // 转写成功后删除本地的 wav 音频文件
