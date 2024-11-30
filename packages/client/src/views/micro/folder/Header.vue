@@ -127,7 +127,7 @@ const options = computed<DropdownOption[]>(() => {
               recentStore.add({
                 id,
                 title,
-                lib,
+                lib: lib!,
                 abbrev,
                 updateAt,
                 createAt,

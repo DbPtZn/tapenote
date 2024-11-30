@@ -67,7 +67,7 @@ function handleDragEnd(ev: DragEvent) {
 }
 function handleToFile(item: Project) {
   shell.useWorkbench()
-  shell.workbench.setById({ id: item.id, lib: item.lib, account: item.account, hostname: item.hostname })
+  shell.workbench.setById({ id: item.id, lib: item.lib!, account: item.account, hostname: item.hostname })
 }
 function handleRemove(item: Project) {
   projectStore.cleanCache(item.id, item.account, item.hostname)
@@ -138,7 +138,7 @@ onMounted(() => {
           :date="utils.dateFormat(new Date(item.updateAt))"
           :active="shell.workbench.itemId === item.id"
           draggable="true"
-          @dragstart="handleDragStart($event, item.id, item.lib)"
+          @dragstart="handleDragStart($event, item.id, item.lib!)"
           @dragend="handleDragEnd"
           @click="handleToFile(item)"
           @on-remove="handleRemove(item)"

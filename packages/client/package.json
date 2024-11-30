@@ -16,8 +16,6 @@
     "--postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "@ffmpeg/core": "^0.12.6",
-    "@ffmpeg/ffmpeg": "^0.12.10",
     "@iconify/vue": "^4.1.2",
     "@losting/timeline": "^5.0.0",
     "@tanbo/bezier": "^1.0.1",
