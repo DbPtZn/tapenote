@@ -2,7 +2,7 @@ export function splitText(text: string, maxLength = 48): string[] {
   // 定义常见的中文标点符号 punctuations
   const quotesRegExp = /["”’']/
   const primaryRegExp = /[.?!;。？！；]/ // ['。', '？', '！', '；', '.', '?', '!', ';']
-  const secondaryRegExp = /[,，]/  // ['，', '、', ',', '、']
+  const secondaryRegExp = /[,，]/ // ['，', '、', ',', '、']
   // 如果文本长度小于等于最大长度，直接返回 （不能直接返回字符串文本，因为会被 for let...of 解析为单字符数组）
   if (text.length <= maxLength) return [text]
 
@@ -11,37 +11,37 @@ export function splitText(text: string, maxLength = 48): string[] {
 
   let residue = text // 剩余文本
   while (residue.length > maxLength) {
-    console.log('residue:' + residue)
+    // console.log('residue:' + residue)
     const [front, rear] = splitStringAtPosition(residue, maxLength)
 
     if (primaryRegExp.test(front)) {
-      console.log('front:' + front)
+      // console.log('front:' + front)
       let index = findFirstSentenceBoundaryFromEnd(front, primaryRegExp)
-      if(quotesRegExp.test(residue[index + 1])) {
-        console.log('include quote')
+      if (quotesRegExp.test(residue[index + 1])) {
+        // console.log('include quote')
         index = index + 1
       }
-      const [newFront, newRear] =  splitStringAtPosition(residue, index+1)
+      const [newFront, newRear] = splitStringAtPosition(residue, index + 1)
       segments.push(newFront)
       residue = newRear
     } else if (secondaryRegExp.test(front)) {
-      console.log('转次要标点符号')
-      console.log('front:' + front)
+      // console.log('转次要标点符号')
+      // console.log('front:' + front)
       let index = findFirstSentenceBoundaryFromEnd(front, secondaryRegExp)
-      if(quotesRegExp.test(residue[index + 1])) {
-        console.log('include quote')
+      if (quotesRegExp.test(residue[index + 1])) {
+        // console.log('include quote')
         index = index + 1
       }
-      const [newFront, newRear] =  splitStringAtPosition(residue, index+1)
+      const [newFront, newRear] = splitStringAtPosition(residue, index + 1)
       segments.push(newFront)
       residue = newRear
     } else {
       break
     }
-    if(residue.length <= maxLength) {
+    if (residue.length <= maxLength) {
       console.log('end residue:' + residue)
-       // 如果剩余的字符不超过 24, 则直接与最后一段进行合并
-      if(residue.length < 24) {
+      // 如果剩余的字符不超过 24, 则直接与最后一段进行合并
+      if (residue.length < 24) {
         segments[segments.length - 1] = segments[segments.length - 1] + residue
       } else {
         segments.push(residue)
@@ -71,13 +71,9 @@ function findFirstSentenceBoundaryFromEnd(text: string, boundaryRegex: RegExp) {
   return -1 // 如果没有找到，返回-1
 }
 
-
 // const txt1 = '原本无比忠诚于犹太教的亚伯拉罕，被好友扬诺苦苦规劝他信基督教，劝到最后，他说要去罗马去一遭，瞻仰一下你所谓天主派遣到世上来的‘代表’，然后再决定是否信仰基督教。后面亚伯拉罕看到了这些“代表”荒淫佚乐的腐败生活，反而坚定的想要加入基督教了。因为尽管教皇、红衣主教、主教、以及教廷里其他主教的生活作风腐败，但是无论谁想推翻他们它可还是屹然不动，倒反而日益发扬光大，这使他认为一定有圣灵在给它做支柱、做基石，所以他认为基督教，的确是比其他的宗教更其正大神圣，因此选择了加入。'
 // const result = splitText(txt1)
 // console.log(result)
-
-
-
 
 /** 因目前合成模型不能处理英文,暂不考虑 */
 /** 对齐: 将中英文文本进行对齐处理，使得中文与英文单词分开 */

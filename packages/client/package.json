@@ -60,6 +60,7 @@
     "vue": "^3.5.10",
     "vue-draggable-plus": "^0.5.0",
     "vue-i18n": "^9.13.1",
+    "vue-recaptcha-v3": "^2.0.1",
     "vue-router": "^4.3.2",
     "vue3-touch-events": "^4.2.0",
     "wavesurfer.js": "^7.8.6"

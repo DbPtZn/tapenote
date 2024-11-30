@@ -749,7 +749,7 @@ export const useProjectStore = defineStore('projectStore', {
       // 2. 片段移除（当前没有正确 id，无法完成移除操作）
       // 3. 片段更新（当前没有正确 id，无法完成更新操作, 包括启动子的添加移除等操作均无法完成）
       /** 通过文本创建片段 */
-      const createByText = (params: Parameters<typeof CreatorApi.prototype.fragment.createByText>[0]) => {
+      const createByText = async (params: Parameters<typeof CreatorApi.prototype.fragment.createByText>[0]) => {
         const { speakerStore } = useStore()
         const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
         const speaker = speakerStore.get(params.speakerId, account!, hostname!, 'machine')!
@@ -785,11 +785,11 @@ export const useProjectStore = defineStore('projectStore', {
 
           get()?.push(fragment) // 不完全片段
           sequence?.push(key) // 用 key 占位
-
         })
 
-        return this.creatorApi(account!, hostname!).fragment.createByText<Fragment[]>(params).then(res => {
-          const data = res.data
+        try {
+          const resp = await this.creatorApi(account!, hostname!).fragment.createByText<Fragment[]>(params)
+          const data = resp.data
           data.forEach(fragment => {
             fragment.audio = ResourceDomain + fragment.audio
             fragment.speaker = speaker
@@ -815,8 +815,7 @@ export const useProjectStore = defineStore('projectStore', {
                 console.error('异常，未读取到合成片段返回的 key 值')
               }
           })
-        }).catch(err => {
-          // 片段创建失败的时候，应移除前端的临时片段
+        } catch (error) {
           params.data.forEach(param => {
             // 片段创建失败的时候，应移除前端的临时片段
             get()?.some((item, index, arr) => {
@@ -832,10 +831,11 @@ export const useProjectStore = defineStore('projectStore', {
               }
             })
           })
-        })
+        }
       }
+
       /** 通过音频创建片段 */
-      const createByAudio = (params: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0]) => {
+      const createByAudio = async (params: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0]) => {
         const { speakerStore } = useStore()
         const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
         const speaker = speakerStore.get(params[0].speakerId, account!, hostname!, 'human')!
@@ -872,8 +872,9 @@ export const useProjectStore = defineStore('projectStore', {
           sequence?.push(key) // 用 key 占位
         })
 
-        return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment[]>(params, procedureId).then(res => {
-          const data = res.data
+        try {
+          const resp = await this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment[]>(params, procedureId)
+          const data = resp.data
           data.forEach(fragment => {
             fragment.audio = ResourceDomain + fragment.audio
             fragment.speaker = speaker
@@ -912,22 +913,14 @@ export const useProjectStore = defineStore('projectStore', {
                     return true
                   }
                 })
-                // sequence?.some((item, index, arr) => {
-                //   if(item === param.key) {
-                //     arr.splice(index, 1)
-                //     return true
-                //   }
-                // })
               }
             })
           }
-        }).catch(err => {
-          console.error(err)
+        } catch (error) {
           params.forEach(param => {
             // 片段创建失败的时候，应移除前端的临时片段
             get()?.some((item, index, arr) => {
               if(item.key === param.key) {
-                // arr.splice(index, 1)
                 arr[index].transcript = ['识别失败，请重试'],
                 arr[index].error = {
                   audio: param.audio,
@@ -939,15 +932,11 @@ export const useProjectStore = defineStore('projectStore', {
                 return true
               }
             })
-            // sequence?.some((item, index, arr) => {
-            //   if(item === param.key) {
-            //    arr.splice(index, 1)
-            //    return true
-            //   }
-            // })
           })
-        })
+        }
       }
+
+      /** 针对错误片段的重新创建 */
       const rebuild = (fragment: Fragment) => {
         if(!fragment.error) return
         fragment.processing = true

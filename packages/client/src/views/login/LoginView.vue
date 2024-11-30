@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { VNode, computed, onMounted, onUnmounted, ref } from 'vue'
+import { VNode, computed, onMounted, onUnmounted, ref, h } from 'vue'
 import { useRouter } from 'vue-router'
 import useStore from '@/store'
 import {
@@ -16,16 +16,14 @@ import {
   DropdownGroupOption
 } from 'naive-ui'
 import { Icon } from '@iconify/vue'
-import { RoutePathEnum } from '@/enums'
-import { h } from 'vue'
-// import { KeyboardArrowDownRound, KeyboardArrowUpRound } from '@vicons/material'
-// import ValidateCode from './ValidateCode.vue'
-import LoginInfoCard from './private/LoginInfoCard.vue'
 import { Subscription, fromEvent } from '@tanbo/stream'
-// import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
-import FilingsFooter from '../_common/FilingsFooter.vue'
+import { RoutePathEnum } from '@/enums'
 import axios from 'axios'
+import LoginInfoCard from './private/LoginInfoCard.vue'
+import FilingsFooter from '../_common/FilingsFooter.vue'
 import { useVerificationCode } from './hooks/useVerificationCode'
+import { useReCaptchaVerify } from './hooks/useReCaptchaVerify'
+
 interface ModelType {
   hostname: string
   account: string
@@ -45,7 +43,7 @@ inElectron &&
 const router = useRouter()
 const { userListStore, settingStore, microStore } = useStore()
 const message = useMessage()
-// const dialog = useDialog()
+
 const tip = import.meta.env.VITE_LOGIN_TIP || ''
 const loginMode = ref<'loginByPass' | 'loginByEmail'>('loginByPass')
 const formRef = ref<FormInst | null>(null)
@@ -80,7 +78,7 @@ const rules: FormRules = {
       message: '该账号已登录',
       validator(rule: FormItemRule, value: string) {
         const isLogining = userListStore.data.some(item => item.account === value)
-        if(isLogining) settingStore.isNavbarCollapse = false
+        if (isLogining) settingStore.isNavbarCollapse = false
         return !isLogining
       },
       trigger: ['input', 'blur']
@@ -106,6 +104,7 @@ function handleLogin() {
   submit()
 }
 
+const { getRecaptcha } = useReCaptchaVerify()
 /** 提交登录表单 */
 const submit = () => {
   if (isQuerying.value) return message.loading('正在连接服务器...')
@@ -118,37 +117,35 @@ const submit = () => {
       const result = userListStore.get(model.value.account, model.value.hostname)
       if (result) {
         message.info('该用户已登录')
-        // router.push(RoutePathEnum.HOME)
         return
       }
-      // const isAllow = await validateCode()
-      // if (!isAllow) return
       const loggingMsg = message.loading('正在登录...', { duration: 0 })
-      userListStore
-        .login(
+      try {
+        const token = await getRecaptcha()
+        const avatar = await userListStore.login(
           {
             account: model.value.account,
             password: isLoginByEmail ? ' ' : model.value.password,
-            code: isLoginByEmail ? model.value.code : ''
+            code: isLoginByEmail ? model.value.code : '',
+            captcha: token
           },
           model.value.hostname
         )
-        .then(avatar => {
-          loggingMsg?.destroy()
-          /** In Electron */
-          window.electronAPI && setLoginStorage(avatar)
-          router.push(RoutePathEnum.HOME)
-        })
-        .catch(err => {
-          loggingMsg?.destroy()
-          console.log(err)
-          // console.log(err?.response?.data?.message)
-          const msg = err?.response?.data?.message
-          message.error(msg ? msg : '登录失败！')
-        })
+        loggingMsg?.destroy()
+        /** In Electron */
+        window.electronAPI && setLoginStorage(avatar)
+        router.push(RoutePathEnum.HOME)
+      } catch (error: any) {
+        loggingMsg?.destroy()
+        // console.log(error)
+        const msg = error?.response?.data?.message
+        // console.log('msg', msg)
+        if(msg) message.error(typeof msg === 'string' ? msg : JSON.stringify(msg))
+        else message.error('登录失败！')
+      }
     } else {
-      console.log(errors)
-      if(Array.isArray(errors) ) {
+      // console.log(errors)
+      if (Array.isArray(errors)) {
         errors.forEach(error => {
           error.forEach(item => {
             item.message && message.error(item.message)
@@ -158,38 +155,17 @@ const submit = () => {
     }
   })
 }
+
 const loginRef = ref()
 let sub: Subscription
 onMounted(() => {
   sub = fromEvent<KeyboardEvent>(loginRef.value, 'keypress').subscribe(ev => {
-    // console.log(ev)
-    if (ev.key === 'Enter') {
-      submit()
-    }
+    ev.key === 'Enter' && submit()
   })
 })
 onUnmounted(() => {
   sub.unsubscribe()
 })
-
-// function validateCode() {
-//   return new Promise<boolean>((resolve, reject) => {
-//     const dia = dialog.create({
-//       title: '验证码',
-//       content: () =>
-//         h(ValidateCode, {
-//           onConfirm: result => {
-//             dia.destroy()
-//             resolve(result)
-//           }
-//         }),
-//       onMaskClick: () => {
-//         dia.destroy()
-//         resolve(false)
-//       }
-//     })
-//   })
-// }
 
 function handleToRegister() {
   router.push(RoutePathEnum.REGISTER)
@@ -325,7 +301,7 @@ function renderOption(props: { node: VNode; option: DropdownOption | DropdownGro
 
 /** ------------------------------- 桌面客户端 --------------------------- */
 const autoCompleteOptions = computed(() => {
-  if(inElectron) {
+  if (inElectron) {
     return loginData.value
       .filter(item => {
         if (item.account.startsWith(model.value.account)) {
@@ -414,9 +390,9 @@ function handleSendCode() {
 
 <template>
   <div ref="loginRef" class="login-container">
-    <p v-if="microStore?.isMobile" style="text-align: center;">{{ microStore?.isMobile ? '移动端尚处在开发阶段，请使用浏览器访问。' : '' }}</p>
+    <p v-if="microStore?.isMobile" style="text-align: center">{{ microStore?.isMobile ? '移动端尚处在开发阶段，请使用浏览器访问。' : '' }}</p>
     <div class="tip">
-      <p style="text-align: center;">{{ tip }}</p>
+      <p style="text-align: center">{{ tip }}</p>
     </div>
     <div class="login">
       <n-tabs :value="loginMode" size="large" animated justify-content="space-evenly" @update:value="loginMode = $event">
@@ -426,7 +402,11 @@ function handleSendCode() {
               <n-form-item path="hostname" label="服务器地址">
                 <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
                   <template #suffix>
-                    <Icon :style="{ color: isHostValid ? 'greenyellow' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
+                    <Icon
+                      :style="{ color: isHostValid ? 'greenyellow' : 'red' }"
+                      :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'"
+                      height="18"
+                    />
                   </template>
                 </n-input>
               </n-form-item>
@@ -485,7 +465,11 @@ function handleSendCode() {
               <n-form-item path="hostname" label="服务器地址">
                 <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
                   <template #suffix>
-                    <Icon :style="{ color: isHostValid ? 'greenyellow' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
+                    <Icon
+                      :style="{ color: isHostValid ? 'greenyellow' : 'red' }"
+                      :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'"
+                      height="18"
+                    />
                   </template>
                 </n-input>
               </n-form-item>

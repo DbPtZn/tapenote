@@ -76,7 +76,7 @@ export class CreatorApi {
         return response
       },
       async (err: AxiosError<any>) => {
-        console.log('err:', err)
+        console.log('请求失败:', err)
         if (err.code === 'ERR_NETWORK') return alert('无法连接到服务器')
         if (err.response?.status) {
           switch (err.response?.status) {
@@ -109,7 +109,6 @@ export class CreatorApi {
               console.log('服务器禁止请求')
           }
         }
-        console.log(err)
         return Promise.reject(err)
       }
     )
@@ -213,7 +212,6 @@ export class CreatorApi {
 const creatorApiMap = new Map<string, CreatorApi>()
 // 为用户创建一个请求实例并保存起来
 function createCreatorApi(account: string, hostname: string) {
-  // console.log(1)
   const key = account + '&' + hostname
   if (creatorApiMap.has(key)) return
   const creatorApi = new CreatorApi(account, hostname)
@@ -228,7 +226,6 @@ function removeCreatorApi(account: string, hostname: string) {
 // 根据用户账号和host名获取请求实例
 function getCreatorApi(account: string, hostname: string) {
   const key = account + '&' + hostname
-  // console.log(key)
   const creatorApi = creatorApiMap.get(key)
   return creatorApi
 }

@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import useStore from '@/store'
 import { RoutePathEnum } from '@/enums'
 import { FormInst, FormItemRule, FormRules, useMessage } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import { useVerificationCode } from './hooks/useVerificationCode'
-// import { CheckCircleOutlineOutlined, DoNotDisturbAltOutlined } from '@vicons/material'
 import axios from 'axios'
 import FilingsFooter from '../_common/FilingsFooter.vue'
+import { useReCaptchaVerify } from './hooks/useReCaptchaVerify'
 interface ModelType {
   hostname: string
   nickname: string
@@ -23,12 +23,12 @@ window.electronAPI &&
     console.log('当前本地服务监听的端口：' + port)
     model.value.hostname = `http://localhost:${port}`
   })
-
 const router = useRouter()
 const { userListStore } = useStore()
 const formRef = ref<FormInst | null>(null)
 const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true'
 const message = useMessage()
+
 /** 表单数据 */
 const model = ref<ModelType>({
   hostname: import.meta.env.VITE_BASE_URL || '',
@@ -79,45 +79,46 @@ const autoCompleteOptions = computed(() => {
     }
   })
 })
+
+const { getRecaptcha } = useReCaptchaVerify()
 /** 提交注册 */
 function handleRegister(e: MouseEvent) {
   e.preventDefault()
   if (isQuerying.value) return message.loading('正在连接服务器...')
   if (!isHostValid.value) return message.error('服务器地址不可用！')
-  formRef.value?.validate(errors => {
+  formRef.value?.validate(async errors => {
     if (!errors) {
       const registerMsg = message.loading('正在注册...', { duration: 0 })
-      userListStore
-        .register(
+      try {
+        const captcha = await getRecaptcha()
+        await userListStore.register(
           {
             account: model.value.account,
             password: model.value.password,
             code: model.value.code,
-            nickname: model.value.nickname
+            nickname: model.value.nickname,
+            captcha: captcha
           },
           model.value.hostname
         )
-        .then(res => {
-          console.log(res)
-          registerMsg.destroy()
-          message.success('注册成功！')
-          router.push(RoutePathEnum.LOGIN)
-        })
-        .catch(err => {
-          registerMsg.destroy()
-          const data = err?.response?.data || '注册失败！'
-          console.log(data.message)
-          if (data) {
-            if (typeof data === 'string') return message.error(data)
-            if (Array.isArray(data.message)) return data.message.forEach(msg => message.error(msg))
-            message.error('注册失败！')
-          }
-
-          // console.log(err)
-        })
+        registerMsg.destroy()
+        message.success('注册成功！')
+        router.push(RoutePathEnum.LOGIN)
+      } catch (error: any) {
+        registerMsg?.destroy()
+        const msg = error?.response?.data?.message || '注册失败！'
+        console.log(msg)
+        if(msg) message.error(typeof msg === 'string' ? msg : JSON.stringify(msg))
+        else message.error('注册失败！')
+      }
     } else {
-      message.error('表单校验失败！')
-      console.log(errors)
+      if (Array.isArray(errors)) {
+        errors.forEach(error => {
+          error.forEach(item => {
+            item.message && message.error(item.message)
+          })
+        })
+      }
     }
   })
 }
@@ -180,7 +181,11 @@ function handleHostInputBlur() {
           <n-form-item path="hostname" label="服务器地址">
             <n-input class="form-input" v-model:value="model.hostname" type="text" placeholder="https://" @blur="handleHostInputBlur">
               <template #suffix>
-                <Icon :style="{ color: isHostValid ? 'greenyellow' : 'red' }" :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'" height="18" />
+                <Icon
+                  :style="{ color: isHostValid ? 'greenyellow' : 'red' }"
+                  :icon="isHostValid ? 'material-symbols:check-circle-outline' : 'ic:baseline-do-not-disturb'"
+                  height="18"
+                />
               </template>
             </n-input>
           </n-form-item>

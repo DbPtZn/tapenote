@@ -644,6 +644,7 @@ export class FragmentService {
     if(model === TtsModel.Tencent) {
       const outputPath = this.storageService.createTempFilePath('.wav')
       const result = await this.tencentService.tts(txt, timbre, speed)
+      console.log(result)
       const buffer = Buffer.from(result.Audio, 'base64')
       fs.writeFileSync(outputPath, buffer)
       const oggPath = this.storageService.createTempFilePath('.ogg')
@@ -657,6 +658,7 @@ export class FragmentService {
           timestamp: item.BeginTime / 1000
         }
       }).filter(item => item.char !== '')
+      console.log(data)
       return { duration, data, audio: oggPath }
     }
     throw new Error('不支持目标语音服务！')

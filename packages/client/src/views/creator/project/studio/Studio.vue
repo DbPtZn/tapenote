@@ -129,10 +129,6 @@ const subscription = bridge.onEditorReady.pipe(auditTime(100)).subscribe(editor 
   const studioService = editor.get(StudioService)
   subs.push(
     studioService.onTextToSpeech.subscribe(txt => {
-      if (containsEnglish(txt)) {
-        message.warning('目前语音合成模型暂不支持英文！')
-        return
-      }
       handleTextOutput(txt)
     })
   )
@@ -615,7 +611,7 @@ onUnmounted(() => {
       </StudioToolbar>
       <!-- 输入区 -->
       <div class="input-area" v-show="recorderMode === 'TTS' && !isStartedRecorder">
-        <TTS :readonly="state.isReadonly" @on-text-output="handleTextOutput" />
+        <TTS :readonly="state.isReadonly" @output="handleTextOutput" />
       </div>
       <div class="input-area" v-show="recorderMode === 'ASR' && !isStartedRecorder">
         <ASR

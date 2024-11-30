@@ -8,9 +8,9 @@ import router from './router'
 // 等宽字体
 // import 'virtual:uno.css'
 // import 'vfonts/FiraCode.css'
-import Vue3TouchEvents from 'vue3-touch-events'
+// import Vue3TouchEvents from 'vue3-touch-events'
 import { createI18n } from 'vue-i18n'
-
+import { VueReCaptcha } from 'vue-recaptcha-v3'
 import { zh, en, ja } from './locales'
 
 /** Pinia */
@@ -37,6 +37,14 @@ const i18n = createI18n({
 app.use(router)
 app.use(pinia)
 app.use(i18n)
-app.use(Vue3TouchEvents as ObjectPlugin)
+const isReCaptchaOpen = import.meta.env.VITE_GOOGLE_ACTION_CAPTCHA_OPEN === 'true' 
+isReCaptchaOpen && app.use(VueReCaptcha, { 
+  siteKey: import.meta.env.VITE_GOOGLE_CAPTCHA_SITE_KEY || '',
+  loaderOptions: {
+    useRecaptchaNet: true, // 在某些国家可能需要使用 recaptcha.net 代替
+    autoHideBadge: true, // 自动隐藏 reCAPTCHA 徽章
+  } 
+})
+// app.use(Vue3TouchEvents as ObjectPlugin)
 app.mount('#app')
 

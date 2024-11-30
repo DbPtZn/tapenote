@@ -1,16 +1,13 @@
-import { computed, h, onMounted, ref, watch } from 'vue'
-import { splitText } from '../_utils/splitText'
+import { computed, h, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NIcon, NMessageProvider, useDialog, useMessage } from 'naive-ui'
-import useStore from '@/store'
-// import { watchOnce } from '@vueuse/core'
+import { NMessageProvider, useDialog, useMessage } from 'naive-ui'
+import useStore, { TtsModel } from '@/store'
 import { Icon } from '@iconify/vue'
 import { CreateBlankFragment, SpeakerSelectList } from '../private'
-// import { AddReactionSharp } from '@vicons/material'
 import { formatTime2 } from '../_utils/formatTime'
 import { Bridge } from '../../bridge'
+import { containsEnglish, splitText } from '../_utils'
 
-// type Speaker = ReturnType<typeof useStore>['speakerStore']['data'][0]
 export function useInput(id: string, account: string, hostname: string, bridge: Bridge) {
   const { projectStore, speakerStore } = useStore()
   const message = useMessage()
@@ -22,24 +19,50 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
   const isAudioInputting = ref(false)
   const inputtingDuration = ref('00:00:00')
   
+  // 当前选择角色 ID
   const speakerId = computed(() =>
     recorderMode.value === 'TTS' ? projectStore.get(id)?.speakerHistory.machine : projectStore.get(id)?.speakerHistory.human
   )
+  // 当前选择角色
   const speaker = computed(() => {
     const currentSpeaker = speakerStore.get(speakerId.value || '', account, hostname, recorderMode.value === 'TTS' ? 'machine' : 'human')
     ttsSpeed.value = currentSpeaker?.speed || 1
     return currentSpeaker
   })
 
-  async function handleTextOutput(text: string) {
+  /** 输出文本片段 */
+  async function handleTextOutput(text: string, cb?: (txt: string) => void) {
+    // 清除换行的符号
+    const txt = text.replace(/(\r\n|\n|\r|\s)/gm, "")
+    if (txt.length === 0) return
+    if (txt.length > 150) {
+      message.error('一次合成不能超过 150 个字')
+      cb?.(txt)
+      return
+    }
     try {
-      if (text.length === 0) return
-      if (text.length > 32) {
-        const chunks = splitText(text)
+      // 某些特定付费 TTS 模型，输出会包含时间戳，可以全部上传
+      if([`${TtsModel.Tencent}`].includes(speaker.value!.model)) {
+        await projectStore.fragment(id).createByText({
+          data: [{ txt: txt }],
+          speakerId: speakerId.value || '',
+          speed: ttsSpeed.value
+        })
+        return
+      }
+      // 免费本地语音模型的处理
+      if (containsEnglish(txt)) {
+        message.warning('目前免费语音合成模型仅支持中文！')
+        cb?.(txt)
+        return
+      }
+      // 免费本地语音模型，输入大于 32 个字符时要进行文本分割（因为当前免费模型不返回时间戳，时间戳通过逻辑计算获得，文本太长时不精确。）
+      if (txt.length > 32) {
+        const chunks = splitText(txt)
         if (typeof chunks === 'string') {
-          // console.log(chunks)
           // 防御：避免字符串文本，因为会被 for let...of 解析为单字符数组
           message.error(t('studio.msg.input_error'))
+          cb?.(txt)
           return
         }
         projectStore.fragment(id).createByText({
@@ -50,14 +73,17 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
         return
       }
       await projectStore.fragment(id).createByText({
-        data: [{ txt: text }],
+        data: [{ txt: txt }],
         speakerId: speakerId.value || '',
         speed: ttsSpeed.value
       })
     } catch (error) {
+      cb?.(txt)
       message.error(t('studio.msg.create_fragment_error'))
     }
   }
+
+  /** 输出音频片段 */
   function handleAudioOutput(data: { audio: Blob | undefined; duration: number }) {
     if (!data.audio) return
     projectStore
@@ -72,6 +98,7 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
         message.error(t('studio.msg.create_fragment_error'))
       })
   }
+
   /** 添加空白音频过渡 */
   function handleAddBlank() {
     dialog.create({

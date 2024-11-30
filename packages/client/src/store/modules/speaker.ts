@@ -1,14 +1,13 @@
 import { creator, CreatorApi } from '@/api'
 import { defineStore } from 'pinia'
 import useStore from '..'
-enum AsrModel {
+
+export enum AsrModel {
   Local = 'local-base-asr',
-  // Xunfei = 'xunfei-base-asr',
   Tencent = 'tencent-base-asr'
 }
-enum TtsModel {
+export enum TtsModel {
   Local = 'local-base-tts',
-  // Xunfei = 'xunfei-base-tts',
   Tencent = 'tencent-base-tts'
 }
 /**
@@ -29,6 +28,7 @@ interface Speaker {
   role: number // 角色值 0~9999 为 AI 语音预留 10000~99999 为用户角色预留
   changer: number // 变声器 仅在 type 为 human 时生效 (暂未实现)
 }
+
 // 语音模型选项应该由后端提供，这样才能保持前后端的一致性
 interface ModelOption {
   label: string

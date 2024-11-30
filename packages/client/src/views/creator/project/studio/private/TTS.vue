@@ -1,24 +1,30 @@
 <script lang="ts" setup>
 import { useMessage, useThemeVars } from 'naive-ui'
 import { ref } from 'vue'
-import { containsEnglish } from '../_utils';
-const props = defineProps<{
+import { computed } from 'vue'
+defineProps<{
   readonly: boolean
 }>()
-const emits = defineEmits(['onTextOutput'])
+const emits = defineEmits<{
+  output: [ txt: string, cb: (txt: string) => void ]
+}>()
 const themeVars = useThemeVars()
 const inputValue = ref('')
 const message = useMessage()
-const output = (ev) => {
-  if (containsEnglish(inputValue.value)) {
-    message.warning('目前语音合成模型暂不支持英文！')
+const txtNum = computed(() => inputValue.value.length)
+function output() {
+  // 清除换行\空字符
+  inputValue.value = inputValue.value.replace(/(\r\n|\n|\r|\s)/gm, "")
+  if (inputValue.value.length > 150) {
+    message.error('语音合成一次不能超过 150 个字')
     return
   }
-  if (ev.key === 'Enter') {
-    // 清除换行的符号
-    inputValue.value = inputValue.value.replace(/(\r\n|\n|\r)/gm, "")
-  }
-  emits('onTextOutput', inputValue.value)
+  // 输出后输入框会置空，如果输出失败可以通过回调函数将用户输入内容恢复到输入框中
+  emits('output', inputValue.value, (txt) => {
+    setTimeout(() => {
+      inputValue.value = txt
+    }, 0)
+  })
   inputValue.value = ''
 }
 </script>
@@ -37,6 +43,9 @@ const output = (ev) => {
     <div class="btn-wrapper">
       <button :class="['btn', readonly ? 'disabled' :'']" @click="output" :disabled="readonly">合成</button>
     </div>
+    <div class="txt-num" >
+      <span>{{ txtNum }} / 150</span>
+    </div>
   </div>
 </template>
 
@@ -45,7 +54,11 @@ const output = (ev) => {
   opacity: 0.8;
   cursor: not-allowed!important;
 }
-
+.txt-num {
+  position: absolute;
+  bottom: 24px;
+  left: 20px;
+}
 .TTS {
   display: flex;
   flex-direction: column;

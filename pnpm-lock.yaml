@@ -302,6 +302,9 @@ importers:
       vue-i18n:
         specifier: ^9.13.1
         version: 9.14.0(vue@3.5.10(typescript@5.4.5))
+      vue-recaptcha-v3:
+        specifier: ^2.0.1
+        version: 2.0.1(vue@3.5.10(typescript@5.4.5))
       vue-router:
         specifier: ^4.3.2
         version: 4.4.5(vue@3.5.10(typescript@5.4.5))
@@ -8051,6 +8054,9 @@ packages:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
 
+  recaptcha-v3@1.11.3:
+    resolution: {integrity: sha512-sEE6J0RzUkS+sKEBpgCD/AqCU0ffrAVOADGjvAx9vcttN+VLK42SWMkj/J/I6vHu3Kew+xcfbBqDVb65N0QGDw==}
+
   rechoir@0.7.1:
     resolution: {integrity: sha512-/njmZ8s1wVeR6pjTZ+0nCnv8SpZNRMT2D1RLOJQESlYFDBvwpTA4KWJpZ+sBJ4+vhjILRcK7JIFdGCdxEAAitg==}
     engines: {node: '>= 0.10'}
@@ -9519,6 +9525,11 @@ packages:
     engines: {node: '>= 16'}
     peerDependencies:
       vue: ^3.0.0
+
+  vue-recaptcha-v3@2.0.1:
+    resolution: {integrity: sha512-isEDtOfHU4wWRrZZuxciAELtQmPOeEEdicPNa0f1AOyLPy3sCcBEcpFt+FOcO3RQv5unJ3Yn5NlsWtXv9rXqjg==}
+    peerDependencies:
+      vue: ^3.0.11
 
   vue-router@4.4.5:
     resolution: {integrity: sha512-4fKZygS8cH1yCyuabAXGUAsyi1b2/o/OKgu/RUb+znIYOxPRxdkytJEx+0wGcpBE1pX6vUgh5jwWOKRGvuA/7Q==}
@@ -18767,6 +18778,8 @@ snapshots:
     dependencies:
       picomatch: 2.3.1
 
+  recaptcha-v3@1.11.3: {}
+
   rechoir@0.7.1:
     dependencies:
       resolve: 1.22.8
@@ -20375,6 +20388,11 @@ snapshots:
       '@intlify/core-base': 9.14.0
       '@intlify/shared': 9.14.0
       '@vue/devtools-api': 6.6.4
+      vue: 3.5.10(typescript@5.4.5)
+
+  vue-recaptcha-v3@2.0.1(vue@3.5.10(typescript@5.4.5)):
+    dependencies:
+      recaptcha-v3: 1.11.3
       vue: 3.5.10(typescript@5.4.5)
 
   vue-router@4.4.5(vue@3.5.10(typescript@5.4.5)):

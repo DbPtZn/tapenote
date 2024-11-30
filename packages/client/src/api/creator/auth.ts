@@ -4,6 +4,7 @@ interface LoginDto {
   account: string
   password: string
   code: string
+  captcha?: string
 }
 
 interface CreateUserDto {
@@ -11,6 +12,7 @@ interface CreateUserDto {
   account: string
   password: string
   code: string
+  captcha?: string
 }
 
 export const auth = {
