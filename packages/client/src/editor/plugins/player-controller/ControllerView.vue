@@ -4,8 +4,10 @@ import { useMessage } from 'naive-ui'
 import { Injector, Subscription, auditTime, fromEvent } from '@textbus/core'
 import _ from 'lodash'
 import { useDraggable } from '@vueuse/core'
+import { Icon } from '@iconify/vue'
 import { Player, Structurer, generateRandomString } from '../..'
 import { DragHandle } from './toolkit/_utils/_index'
+
 const injector = inject<Injector>('injector')!
 // const player = injector.get(Player)
 const structurer = injector.get(Structurer)
@@ -72,6 +74,19 @@ function handleHideController() {
   }
 }
 
+const silderPosition = ref(0)
+function handleSliderMousedown() {
+  const move = fromEvent<MouseEvent>(document, 'mousemove').subscribe(ev => {
+    silderPosition.value += ev.movementY / 2.5
+    if(silderPosition.value < 0) return silderPosition.value = 0
+    if(silderPosition.value > 100) return silderPosition.value = 100
+  })
+  const up = fromEvent(document, 'mouseup').subscribe(() => {
+    move.unsubscribe()
+    up.unsubscribe()
+  })
+}
+
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
   controllerData.value = []
@@ -89,9 +104,34 @@ onUnmounted(() => {
     </div>
     <div class="footer" @dblclick="handleHideController"></div>
   </div>
+  <div class="time-line">
+    <div class="slider" :style="{ top: `${silderPosition}%` }" @mousedown="handleSliderMousedown()"></div>
+  </div>
 </template>
 
 <style lang="scss" scoped>
+.time-line {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 120px;
+  width: 1px;
+  height: 250px;
+  background-color: aliceblue;
+  .slider {
+    position: absolute;
+    margin-top: -6.5px;
+    // transform: translateY(12px);
+    top: 0%;
+    left: -12.5px;
+    width: 25px;
+    height: 12px;
+    background-color: aliceblue;
+    border-radius: 3px;
+    user-select: none;
+    cursor: pointer;
+  }
+}
 .wrapper {
   position: relative;
 }

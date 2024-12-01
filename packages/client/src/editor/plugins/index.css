@@ -1,1 +1,6 @@
 @import './inline-toolbar/index.css';
+
+/* 修正 icon 的位置 */
+.textbus-icon-code {
+  transform: translateX(-2px);
+}

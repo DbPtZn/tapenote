@@ -1,12 +1,11 @@
 <script lang="ts" setup>
-import { h, inject, nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef } from 'vue'
-import { DropdownOption, useDialog, useMessage, useThemeVars } from 'naive-ui'
-import { Layout, textAlignFormatter } from '@textbus/editor'
-import { ComponentInstance, Selection, Injector, Renderer, fromEvent, Commander, Keyboard, Subscription } from '@textbus/core'
+import { inject, nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef } from 'vue'
+import { useDialog, useMessage, useThemeVars } from 'naive-ui'
+import { Layout } from '@textbus/editor'
+import { Selection, Injector, Renderer, fromEvent, Commander, Keyboard, Subscription } from '@textbus/core'
 import _ from 'lodash'
-import { Input, VIEW_CONTAINER, VIEW_DOCUMENT } from '@textbus/platform-browser'
+import { Input, VIEW_DOCUMENT } from '@textbus/platform-browser'
 import { ColorProvider, Structurer } from '../../providers'
-import { stat } from 'fs'
 import { Icon } from '@iconify/vue'
 import TipBtn from './TipBtn.vue'
 import { isTargetKey } from './key'
@@ -16,16 +15,16 @@ import { watch } from 'vue'
 
 const injector = inject('injector') as Injector
 const themeVars = useThemeVars()
-const dialog = useDialog()
-const message = useMessage()
+// const dialog = useDialog()
+// const message = useMessage()
 
 const structurer = injector.get(Structurer)
-const colorProvider = injector.get(ColorProvider)
-const renderer = injector.get(Renderer)
-const viewContainer = injector.get(VIEW_DOCUMENT)
+// const colorProvider = injector.get(ColorProvider)
+// const renderer = injector.get(Renderer)
+// const viewContainer = injector.get(VIEW_DOCUMENT)
 const input = injector.get(Input)
 const layout = injector.get(Layout)
-const commander = injector.get(Commander)
+// const commander = injector.get(Commander)
 const selection = injector.get(Selection)
 const keyboard = injector.get(Keyboard)
 

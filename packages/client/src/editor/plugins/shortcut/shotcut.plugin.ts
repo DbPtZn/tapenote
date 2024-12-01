@@ -1,19 +1,9 @@
 import {
   Injector,
-  makeError,
-  NativeSelectionBridge,
-  Renderer,
-  Selection,
-  Slot,
-  Subscription,
   Plugin
 } from '@textbus/core'
-import { Editor, Layout } from '@textbus/editor'
-import { auditTime, fromEvent } from '@tanbo/stream'
-import { createElement, SelectionBridge, VIEW_CONTAINER } from '@textbus/platform-browser'
-import { App, VNode, createApp, h } from 'vue'
-import ImgToolbarView from './ImgToolbarView.vue'
-import { Tool } from '../toolbar/types'
+import { VIEW_CONTAINER } from '@textbus/platform-browser'
+import { App, createApp, h } from 'vue'
 import { UIConfig } from '../../common'
 import ShotcutMenu from './ShotcutMenu.vue'
 
