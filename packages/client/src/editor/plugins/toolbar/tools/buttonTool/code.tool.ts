@@ -9,7 +9,7 @@ export function codeToolConfigFactory(injector: Injector): ButtonToolConfig {
   const commander = injector.get(Commander)
   const selection = injector.get(Selection)
   return {
-    iconClasses: ['textbus-icon-code'],
+    iconClasses: ['material-icons-outlined-code'],
     tooltip: i18n.get('plugins.toolbar.codeTool.tooltip'),
     keymap: {
       key: ';',

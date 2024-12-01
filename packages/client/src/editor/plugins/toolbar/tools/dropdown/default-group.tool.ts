@@ -67,11 +67,11 @@ export function defaultGroupToolFactory(injector: Injector): DropdownToolConfig 
         type: ToolType.Button,
         label: i18n.get('plugins.toolbar.insertObjectTool.subscript')
       },
-      {
-        ...codeToolConfigFactory(injector),
-        type: ToolType.Button,
-        label: i18n.get('plugins.toolbar.insertObjectTool.code')
-      },
+      // {
+      //   ...codeToolConfigFactory(injector),
+      //   type: ToolType.Button,
+      //   label: i18n.get('plugins.toolbar.insertObjectTool.code')
+      // },
       {
         ...blockquoteToolConfigFactory(injector),
         type: ToolType.Button,

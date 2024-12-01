@@ -38,6 +38,7 @@ import {
   imageB2UComponentLoader,
   outlineTool,
   Clipboard,
+  codeTool,
   ContextMenu,
   CustomCommander,
   ColorProvider,
@@ -173,7 +174,7 @@ export function getNoteConfig(args: {
             [defaultGroupTool],
             [componentsTool],
             [headingTool],
-            [boldTool, italicTool, strikeThroughTool, underlineTool],
+            [boldTool, italicTool, strikeThroughTool, underlineTool, codeTool],
             [olTool, ulTool],
             [fontSizeTool, textIndentTool],
             [colorTool, textBackgroundTool],
@@ -195,10 +196,10 @@ export function getNoteConfig(args: {
           [
             [headingTool],
             [textAlignTool],
-            [boldTool, italicTool, strikeThroughTool, underlineTool],
+            [boldTool, italicTool, strikeThroughTool, underlineTool, codeTool],
             [colorTool, textBackgroundTool],
             [fontSizeTool],
-            [olTool, ulTool],
+            // [olTool, ulTool],
             [cleanTool]
           ],
           scrollerRef

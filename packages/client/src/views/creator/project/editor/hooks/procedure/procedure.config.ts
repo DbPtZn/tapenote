@@ -35,7 +35,7 @@ import {
   animeComponent, animeComponentLoader, animeIgnoreComponent, animeIgnoreComponentLoader,
   headingTool, olTool, ulTool, insertParagraphAfterTool, insertParagraphBeforeTool, 
   tableComponent, tableComponentLoader, blockquoteComponent, blockquoteComponentLoader,
-  dividerTool, dividerComponent, dividerComponentLoader, Memo, ImgToolbarPlugin, ShotcutPlugin, MemoProvider, stepComponent, stepComponentLoader, timelineComponent, timelineComponentLoader, todolistComponent, todolistComponentLoader, wordExplainComponent, wordExplainComponentLoader, defaultComponents, defaultComponentLoaders, blockBackgroundColorFormatter, defaultAttributeLoaders, defaultAttributes, defaultFormatters, defaultFormatLoaders,
+  dividerTool, dividerComponent, dividerComponentLoader, Memo, ImgToolbarPlugin, ShotcutPlugin, MemoProvider, stepComponent, stepComponentLoader, timelineComponent, timelineComponentLoader, todolistComponent, todolistComponentLoader, wordExplainComponent, wordExplainComponentLoader, defaultComponents, defaultComponentLoaders, blockBackgroundColorFormatter, defaultAttributeLoaders, defaultAttributes, defaultFormatters, defaultFormatLoaders, codeTool,
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
@@ -118,7 +118,7 @@ export function getProcedureConfig(args: {
         [componentsTool],
         [headingTool],
         [animeTool, animeIgnoreTool],
-        [boldTool, italicTool, strikeThroughTool, underlineTool],
+        [boldTool, italicTool, strikeThroughTool, underlineTool, codeTool],
         [olTool, ulTool],
         [fontSizeTool, textIndentTool],
         [colorTool, textBackgroundTool],
@@ -136,7 +136,7 @@ export function getProcedureConfig(args: {
           [headingTool],
           [animeTool, animeIgnoreTool],
           [textAlignTool],
-          [boldTool, italicTool, strikeThroughTool, underlineTool],
+          [boldTool, italicTool, strikeThroughTool, underlineTool, codeTool],
           [colorTool, textBackgroundTool],
           [fontSizeTool],
           [animeBadgeVisibleTool, animeElementVisibleTool],
