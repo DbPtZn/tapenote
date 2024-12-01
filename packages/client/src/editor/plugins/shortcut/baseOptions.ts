@@ -1,12 +1,29 @@
-import { Structurer, ColorProvider, dividerComponent, colorFormatter, textBackgroundColorFormatter, listComponent, } from "../../"
-import { Commander, ContentType, Injector, Keyboard, Renderer, Slot, Selection, fromEvent } from "@textbus/core"
-import { Layout, blockquoteComponent, boldFormatter, codeFormatter, fontSizeFormatter, headingComponent, italicFormatter, paragraphComponent, strikeThroughFormatter, textAlignFormatter, underlineFormatter } from "@textbus/editor"
-import { Input, VIEW_DOCUMENT } from "@textbus/platform-browser"
-import { Ref, ShallowRef, h, nextTick, reactive, ref } from "vue"
+import { Structurer, ColorProvider, dividerComponent, colorFormatter, textBackgroundColorFormatter, listComponent, preComponent, createCodeSlot } from '../../'
+import { Commander, ContentType, Injector, Keyboard, Renderer, Slot, Selection, fromEvent } from '@textbus/core'
+import {
+  Layout,
+  blockquoteComponent,
+  boldFormatter,
+  codeFormatter,
+  fontSizeFormatter,
+  headingComponent,
+  italicFormatter,
+  paragraphComponent,
+  strikeThroughFormatter,
+  textAlignFormatter,
+  underlineFormatter
+} from '@textbus/editor'
+import { Input, VIEW_DOCUMENT } from '@textbus/platform-browser'
+import { Ref, ShallowRef, h, nextTick, reactive, ref } from 'vue'
 import { emojis, createEmoji } from './emoji'
-import { getComponents } from "./components"
+import { getComponents } from './components'
 
-export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<HTMLElement | null>>, dropdownEl: Readonly<ShallowRef<HTMLElement | null>>, popoverEl: Readonly<ShallowRef<HTMLElement | null>>) {
+export function useBaseOptions(
+  injector: Injector,
+  menuEl: Readonly<ShallowRef<HTMLElement | null>>,
+  dropdownEl: Readonly<ShallowRef<HTMLElement | null>>,
+  popoverEl: Readonly<ShallowRef<HTMLElement | null>>
+) {
   const structurer = injector.get(Structurer)
   const colorProvider = injector.get(ColorProvider)
   const input = injector.get(Input)
@@ -21,7 +38,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
   // const scrollerRect = scrollerEl.getBoundingClientRect()
   // const middleRect = layout.middle.getBoundingClientRect()
   const secondaryPointer = ref(1)
-  
+
   const dropdownState = reactive({
     xRef: 0,
     yRef: 0,
@@ -29,7 +46,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
     optionCount: 0 // 选项个数
   })
   const dropdownOptions = ref<any[]>([])
-  
+
   const popoverState = reactive({
     xRef: 0,
     yRef: 0,
@@ -45,7 +62,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
   function handleClick() {
     commander.delete(true) // 向后删除一位，把 / 删除
   }
-  
+
   function onClickoutside() {
     const s = fromEvent(document, 'click', true).subscribe(ev => {
       dropdownState.show = false
@@ -53,7 +70,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
       s.unsubscribe()
     })
   }
-  
+
   const baseOptions = [
     {
       key: 'algin-center',
@@ -74,7 +91,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
       onClick: (ev?: MouseEvent) => {
         const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
         if (!target) return
-  
+
         dropdownOptions.value = [12, 13, 14, 15, 16, 18, 20, 24, 36, 48].map(size => {
           return {
             key: `${size}px`,
@@ -90,7 +107,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             }
           }
         })
-  
+
         const rect = target.getBoundingClientRect()
         // console.log(rect)
         nextTick().then(() => {
@@ -99,13 +116,13 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           dropdownState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          dropdownState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
+          dropdownState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
           dropdownState.optionCount = dropdownOptions.value.length
           onClickoutside()
           nextTick().then(() => {
             const dropdownRect = dropdownEl.value!.getBoundingClientRect()
             const scrollerRect = scrollerEl.getBoundingClientRect()
-            if(dropdownRect.bottom > scrollerRect.bottom) {
+            if (dropdownRect.bottom > scrollerRect.bottom) {
               dropdownState.yRef -= dropdownRect.bottom - scrollerRect.bottom
             }
           })
@@ -122,7 +139,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
         const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
         if (!target) return
         const rect = target.getBoundingClientRect()
-  
+
         popoverOptions.value = colorOptions.map(color => {
           return {
             key: color,
@@ -142,7 +159,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             }
           }
         })
-  
+
         renderOption.value = () => {
           return h(
             'div',
@@ -152,14 +169,14 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             })
           )
         }
-  
+
         nextTick().then(() => {
           popoverState.show = true
           const menuRect = menuEl.value!.getBoundingClientRect()
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
+          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 4
           popoverState.edge = []
@@ -170,7 +187,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
           nextTick().then(() => {
             const popoverRect = popoverEl.value!.getBoundingClientRect()
             const scrollerRect = scrollerEl.getBoundingClientRect()
-            if(popoverRect.bottom > scrollerRect.bottom) {
+            if (popoverRect.bottom > scrollerRect.bottom) {
               popoverState.yRef -= popoverRect.bottom - scrollerRect.bottom
             }
           })
@@ -187,7 +204,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
         const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
         if (!target) return
         const rect = target.getBoundingClientRect()
-  
+
         popoverOptions.value = colorOptions.map(color => {
           return {
             key: color,
@@ -207,7 +224,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             }
           }
         })
-  
+
         renderOption.value = () => {
           return h(
             'div',
@@ -217,14 +234,14 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             })
           )
         }
-  
+
         nextTick().then(() => {
           popoverState.show = true
           const menuRect = menuEl.value!.getBoundingClientRect()
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
+          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 4
           popoverState.edge = []
@@ -235,7 +252,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
           nextTick().then(() => {
             const popoverRect = popoverEl.value!.getBoundingClientRect()
             const scrollerRect = scrollerEl.getBoundingClientRect()
-            if(popoverRect.bottom > scrollerRect.bottom) {
+            if (popoverRect.bottom > scrollerRect.bottom) {
               popoverState.yRef -= popoverRect.bottom - scrollerRect.bottom
             }
           })
@@ -252,13 +269,13 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
         const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
         if (!target) return
         const rect = target.getBoundingClientRect()
-  
+
         popoverOptions.value = emojis.map(emoji => {
           return {
             key: emoji,
             label: emoji,
             icon: '',
-  
+
             props: {
               innerHTML: createEmoji(emoji),
               style: {
@@ -276,7 +293,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             }
           }
         })
-  
+
         renderOption.value = () => {
           return h(
             'div',
@@ -286,14 +303,14 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             })
           )
         }
-  
+
         nextTick().then(() => {
           popoverState.show = true
           const menuRect = menuEl.value!.getBoundingClientRect()
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
+          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 10
           popoverState.edge = []
@@ -304,7 +321,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
           nextTick().then(() => {
             const popoverRect = popoverEl.value!.getBoundingClientRect()
             const scrollerRect = scrollerEl.getBoundingClientRect()
-            if(popoverRect.bottom > scrollerRect.bottom) {
+            if (popoverRect.bottom > scrollerRect.bottom) {
               popoverState.yRef -= popoverRect.bottom - scrollerRect.bottom
             }
           })
@@ -322,10 +339,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
           target: listComponent,
           multipleSlot: true,
           slotFactory(): Slot {
-            return new Slot([
-              ContentType.Text,
-              ContentType.InlineComponent
-            ])
+            return new Slot([ContentType.Text, ContentType.InlineComponent])
           },
           stateFactory() {
             return {
@@ -346,16 +360,132 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
           target: listComponent,
           multipleSlot: true,
           slotFactory(): Slot {
-            return new Slot([
-              ContentType.Text,
-              ContentType.InlineComponent
-            ])
+            return new Slot([ContentType.Text, ContentType.InlineComponent])
           },
           stateFactory() {
             return {
               type: 'ul'
             }
           }
+        })
+      }
+    },
+    {
+      key: 'pre',
+      label: '代码块',
+      icon: 'ant-design:font-size-outlined',
+      deployable: true,
+      keymap: '',
+      onClick: (ev?: MouseEvent) => {
+        const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
+        if (!target) return
+
+        dropdownOptions.value = [
+          {
+            label: 'JavaScript',
+            value: 'JavaScript'
+          },
+          {
+            label: 'HTML',
+            value: 'HTML'
+          },
+          {
+            label: 'CSS',
+            value: 'CSS'
+          },
+          {
+            label: 'TypeScript',
+            value: 'TypeScript'
+          },
+          {
+            label: 'Java',
+            value: 'Java'
+          },
+          {
+            label: 'C',
+            value: 'C'
+          },
+          {
+            label: 'C++',
+            value: 'CPP'
+          },
+          {
+            label: 'C#',
+            value: 'CSharp'
+          },
+          {
+            label: 'Swift',
+            value: 'Swift'
+          },
+          {
+            label: 'Go',
+            value: 'Go'
+          },
+          {
+            label: 'JSON',
+            value: 'JSON'
+          },
+          {
+            label: 'Less',
+            value: 'Less'
+          },
+          {
+            label: 'SCSS',
+            value: 'SCSS'
+          },
+          {
+            label: 'Stylus',
+            value: 'Stylus'
+          },
+          {
+            label: 'Jsx',
+            value: 'Jsx'
+          },
+          {
+            label: 'Tsx',
+            value: 'Tsx'
+          }
+        ].map(option => {
+          return {
+            key: option.label,
+            label: option.label,
+            icon: '',
+            props: {
+              onClick: () => {
+                // console.log(`${size}px`)
+                handleClick()
+                const component = preComponent.createInstance(injector, {
+                  state: {
+                    lang: option.value,
+                    theme: 'dark'
+                  },
+                  slots: [createCodeSlot()]
+                })
+                commander.insert(component)
+                selection.setPosition(component.slots.get(0)!, 0)
+              }
+            }
+          }
+        })
+
+        const rect = target.getBoundingClientRect()
+        // console.log(rect)
+        nextTick().then(() => {
+          dropdownState.show = true
+          const menuRect = menuEl.value!.getBoundingClientRect()
+          const caretRect = input.caret.rect
+          const middleRect = layout.middle.getBoundingClientRect()
+          dropdownState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
+          dropdownState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
+          dropdownState.optionCount = dropdownOptions.value.length
+          onClickoutside()
+          nextTick().then(() => {
+            const dropdownRect = dropdownEl.value!.getBoundingClientRect()
+            const scrollerRect = scrollerEl.getBoundingClientRect()
+            if (dropdownRect.bottom > scrollerRect.bottom) {
+              dropdownState.yRef -= dropdownRect.bottom - scrollerRect.bottom
+            }
+          })
         })
       }
     },
@@ -369,13 +499,13 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
         const target = ev ? (ev.target as HTMLElement) : menuEl.value?.querySelector<HTMLElement>('.selected')
         if (!target) return
         const rect = target.getBoundingClientRect()
-  
+
         popoverOptions.value = getComponents(injector).map(component => {
           return {
             key: component.key,
             label: component.name,
             icon: '',
-  
+
             props: {
               innerHTML: component.example,
               style: {
@@ -390,7 +520,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             }
           }
         })
-  
+
         renderOption.value = () => {
           return h(
             'div',
@@ -400,14 +530,14 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
             })
           )
         }
-  
+
         nextTick().then(() => {
           popoverState.show = true
           const menuRect = menuEl.value!.getBoundingClientRect()
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top 
+          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 4
           popoverState.edge = []
@@ -418,7 +548,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
           nextTick().then(() => {
             const popoverRect = popoverEl.value!.getBoundingClientRect()
             const scrollerRect = scrollerEl.getBoundingClientRect()
-            if(popoverRect.bottom > scrollerRect.bottom) {
+            if (popoverRect.bottom > scrollerRect.bottom) {
               popoverState.yRef -= popoverRect.bottom - scrollerRect.bottom
             }
           })
@@ -426,7 +556,7 @@ export function useBaseOptions(injector: Injector,  menuEl: Readonly<ShallowRef<
       }
     }
   ]
-  
+
   return {
     secondaryPointer,
     baseOptions,

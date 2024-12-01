@@ -182,13 +182,13 @@ const options = reactive<Option[]>([
   {
     key: 'autofit',
     icon: () => h(Icon, { icon: 'tabler:arrow-autofit-down' }),
-    label: '自动切换动画块',
+    label: '自动指针模式',
     active: () => activeBtns.includes('autofit'),
     props: {
       onClick: (ev: MouseEvent, key?: string) => {
         if (playerState.isPlaying) message.warning('播放中请尽量不要进行其它操作')
         const isOpen = useSwitchBtn(key)
-        message.info(isOpen ? '已开启自动切换动画块' : '已关闭自动切换动画块')
+        message.info(isOpen ? '已开启自动指针模式' : '已关闭自动指针模式')
         bridge.handleAutoMoveAnimePointer(isOpen)
       }
     }

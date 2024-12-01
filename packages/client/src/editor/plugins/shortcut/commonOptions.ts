@@ -1,4 +1,4 @@
-import { Structurer, ColorProvider, dividerComponent, codeComponent } from '../..'
+import { Structurer, ColorProvider, dividerComponent, codeComponent, preComponent, createCodeSlot } from '../..'
 import { Commander, ContentType, Injector, Keyboard, Renderer, Slot, Selection, TransformContext, Query, QueryStateType } from '@textbus/core'
 import {
   Layout,
@@ -46,6 +46,20 @@ export function useCommonOptions(injector: Injector) {
   }
 
   const commonOptions = [
+    {
+      key: 'paragraph',
+      label: '段落',
+      icon: 'ci:paragraph',
+      onClick: () => {
+        commander.transform({
+          target: paragraphComponent,
+          multipleSlot: false,
+          slotFactory() {
+            return new Slot([ContentType.Text, ContentType.InlineComponent])
+          }
+        })
+      }
+    },
     {
       key: 'title-1',
       label: '标题1',
@@ -110,7 +124,9 @@ export function useCommonOptions(injector: Injector) {
       icon: 'ic:round-format-bold',
       onClick: () => {
         handleClick()
-        commander.applyFormat(boldFormatter, '')
+        const state = query.queryFormat(boldFormatter)
+        const b = state.state === QueryStateType.Enabled
+        b ? commander.unApplyFormat(boldFormatter) : commander.applyFormat(boldFormatter, '')
       }
     },
     {
@@ -119,7 +135,9 @@ export function useCommonOptions(injector: Injector) {
       icon: 'ic:round-format-italic',
       onClick: () => {
         handleClick()
-        commander.applyFormat(italicFormatter, true)
+        const state = query.queryFormat(italicFormatter)
+        const b = state.state === QueryStateType.Enabled
+        b ? commander.unApplyFormat(italicFormatter) : commander.applyFormat(italicFormatter, true)
       }
     },
     {
@@ -128,7 +146,9 @@ export function useCommonOptions(injector: Injector) {
       icon: 'ic:round-format-strikethrough',
       onClick: () => {
         handleClick()
-        commander.applyFormat(strikeThroughFormatter, true)
+        const state = query.queryFormat(strikeThroughFormatter)
+        const b = state.state === QueryStateType.Enabled
+        b ? commander.unApplyFormat(strikeThroughFormatter) : commander.applyFormat(strikeThroughFormatter, true)
       }
     },
     {
@@ -137,52 +157,28 @@ export function useCommonOptions(injector: Injector) {
       icon: 'ic:round-format-underlined',
       onClick: () => {
         handleClick()
-        commander.applyFormat(underlineFormatter, true)
+        const state = query.queryFormat(underlineFormatter)
+        const b = state.state === QueryStateType.Enabled
+        b ? commander.unApplyFormat(underlineFormatter) : commander.applyFormat(underlineFormatter, true)
       }
     },
-    {
-      key: 'code',
-      label: '行内代码块',
-      icon: 'ic:round-code',
-      onClick: () => {
-        handleClick()
-        const state = query.queryComponent(codeComponent)
-        if (state.state === QueryStateType.Enabled) {
-          const current = state.value!
-          const parent = current.parent!
-
-          const index = parent.indexOf(current)
-
-          parent.retain(index)
-
-          commander.removeComponent(current)
-
-          current.slots
-            .get(0)!
-            .sliceContent()
-            .forEach(i => {
-              parent.insert(i)
-            })
-        } else {
-          const commonAncestorSlot = selection.commonAncestorSlot!
-          if (selection.startSlot === selection.endSlot) {
-            if (selection.isCollapsed) {
-              const slot = new Slot([ContentType.Text])
-              slot.insert(' ') // 插入一个空字符占位 否则会默认插入一个 br 换行符
-              const block = codeComponent.createInstance(injector, { slots: [slot] })
-              commander.insert(block)
-              selection.setPosition(slot, 0)
-              return
-            }
-            const slot = selection.focusSlot?.cutTo(new Slot([ContentType.Text]), selection.startOffset!, selection.endOffset!)
-            const block = codeComponent.createInstance(injector, { slots: [slot!] })
-            commonAncestorSlot.insert(block)
-          } else {
-            return
-          }
-        }
-      }
-    },
+    // {
+    //   key: 'code',
+    //   label: '代码块',
+    //   icon: 'ic:round-code',
+    //   onClick: () => {
+    //     handleClick()
+    //     const component = preComponent.createInstance(injector, {
+    //       state: {
+    //         lang: 'JavaScript',
+    //         theme: 'dark'
+    //       },
+    //       slots: [createCodeSlot()]
+    //     })
+    //     commander.insert(component)
+    //     selection.setPosition(component.slots.get(0)!, 0)
+    //   }
+    // },
     {
       key: 'divider',
       label: '分割线',

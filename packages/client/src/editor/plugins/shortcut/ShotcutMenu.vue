@@ -259,7 +259,7 @@ function openArrowKey() {
           return true
         }
         // Dropdown 的情况
-        if ([14].includes(pointer.value)) {
+        if ([14, 20].includes(pointer.value)) {
           if (dropdownState.show) {
             dropdownOptions.value[secondaryPointer.value - 1].props.onClick()
             close()
@@ -268,7 +268,7 @@ function openArrowKey() {
           return allowExpandOptions()
         }
         // Popover 的情况
-        if ([15, 16, 17, 20].includes(pointer.value)) {
+        if ([15, 16, 17, 21].includes(pointer.value)) {
           if (popoverState.show) {
             popoverOptions.value[secondaryPointer.value - 1].props.onClick()
             close()
@@ -317,7 +317,7 @@ function openArrowKey() {
   }
   // 可展开项
   function allowExpandOptions() {
-    if ([14, 15, 16, 17, 20].includes(pointer.value)) {
+    if ([14, 15, 16, 17, 20, 21].includes(pointer.value)) {
       baseOptions[pointer.value - 13].onClick()
       return true
     }

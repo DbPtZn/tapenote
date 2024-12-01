@@ -55,7 +55,7 @@ export function useSpeech(bridge: Bridge, getCurrentDuration: () => number, hand
       txt: '演讲'
     },
     {
-      label: '解读模式',
+      label: '讲解模式',
       value: 'interpretation',
       txt: '解读'
     }
