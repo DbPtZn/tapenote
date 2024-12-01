@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
+import { Subscription, auditTime, debounceTime, fromEvent } from '@tanbo/stream'
 import { computed, inject, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
 // import { ArrowDownwardFilled } from '@vicons/material'
 import { usePromoter } from './hooks'
@@ -8,7 +8,8 @@ import useStore from '@/store'
 import { useMessage, useThemeVars } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
-import { AnimeProvider } from '@/editor'
+import { AnimeProvider, AnimeService } from '@/editor'
+import { watch } from 'vue'
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
   id: string
@@ -27,12 +28,36 @@ const pointerRef = ref<HTMLElement>()
 const editorRef = ref<HTMLElement | null>(null)
 const scrollerRef = ref<HTMLElement | null>(null)
 let animeMap: HTMLElement[] = []
-const pointerIndex = ref(-1)
-
 const isAutoMoveAnimePointer = ref(false)
 let lastPointerTarget: HTMLElement | null = null
 
-const pointerTarget = computed(() => animeMap[pointerIndex.value])
+const pointerIndex = ref(-1)
+let isArrowUp = false // 标记用户是否按下了键盘向上键
+const pointerTarget = ref<HTMLElement | null>(null)
+watch(() => pointerIndex.value, () => {
+  if (pointerIndex.value === -1) {
+    pointerTarget.value = null
+    return
+  }
+  pointerTarget.value = getCurrentAnime()
+})
+// 通过指针获取当前的动画元素
+function getCurrentAnime() {
+  let index = pointerIndex.value // 使用一个局部变量来存储新的索引值，避免直接修改 pointerIndex 导致递归调用
+  while(animeMap[index] && ((editorRef.value && !editorRef.value.contains(animeMap[index])) || !animeMap[index].dataset.id)) {
+    animeMap.splice(index, 1)
+    isArrowUp && index > 0 && index-- // 如果是向上操作，则删除一个元素后指针索引减一 (同时对上边界的情况进行处理)
+  }
+  // 针对下边界的情况进行处理(达到下边界时，指针可能指向数组中不存在的元素（或溢出数组），控制指针减一)
+  if (!isArrowUp && !animeMap[index]) {
+    index--
+  }
+  isArrowUp = false
+  const anime = animeMap[index]
+  pointerIndex.value = index  // 更新指针位置（这里会导致 watch 再调用一次，但因为下一次 index 不会改变，所以只会重复一次，且没有产生影响）
+  return anime
+}
+
 const pointerPositon = computed(() => {
   let x = 0
   let y = 0
@@ -50,12 +75,12 @@ const pointerPositon = computed(() => {
       pointerTarget.value?.classList.add('anime-img') // 添加 'inline-block' 属性帮助定位
       pointerTargetRect = pointerTarget.value.getBoundingClientRect()
       // 包含图片的情况, 动画标记一般位于图片文字所在的盒子右上角
-      x = pointerTargetRect.x + pointerTargetRect.width - pointerRect.width/2
+      x = pointerTargetRect.x + pointerTargetRect.width - pointerRect.width/2 - scrollerRect.left
       y = pointerTargetRect.top - pointerRect.height - scrollerRect.top + scrollerRef.value!.scrollTop
     } else {
       // 不包含图片的情况
       const lastTextChildRect = getTextNodeEndPosition(pointerTarget.value)
-      x = lastTextChildRect.x - pointerRect.width/2
+      x = lastTextChildRect.x - pointerRect.width / 2 - scrollerRect.left
       y = lastTextChildRect.y - pointerRect.height - scrollerRect.top + scrollerRef.value!.scrollTop
     }
   }
@@ -64,7 +89,7 @@ const pointerPositon = computed(() => {
     pointerTarget.value?.classList.add('anime-component-box') // 添加 'block' 'outline' 属性帮助提示范围\定位
     pointerTargetRect = pointerTarget.value.getBoundingClientRect()
     const pointerRect = pointerRef.value.getBoundingClientRect()
-    x = pointerTargetRect.x + pointerTargetRect.width - pointerRect.width/2
+    x = pointerTargetRect.x + pointerTargetRect.width - pointerRect.width/2 - scrollerRect.left
     y = pointerTargetRect.y - pointerRect.height - scrollerRect.top + scrollerRef.value!.scrollTop
   } 
   lastPointerTarget = pointerTarget.value
@@ -109,6 +134,7 @@ onMounted(() => {
     fromEvent(scroller, 'scroll').subscribe(e => {
       popoverState.showPopover = false
     }),
+    // 自动动画指针功能状态变更时触发
     bridge.onAutoMoveAnimePointerChange.subscribe(isOpen => {
       isAutoMoveAnimePointer.value = isOpen
       if(isOpen && bridge.editorEl && bridge.scrollerEl) {
@@ -125,7 +151,10 @@ onMounted(() => {
               else message.info(`到底啦!`)
             }
             if(e.code === 'ArrowUp') {
-              if(pointerIndex.value > 0) pointerIndex.value--
+              if(pointerIndex.value > 0) {
+                isArrowUp = true
+                pointerIndex.value--
+              }
             }
           }),
           fromEvent<PointerEvent>(bridge.editorEl, 'click').subscribe(e => {
@@ -135,6 +164,7 @@ onMounted(() => {
             if (!animeElement) return
             const index = animeMap.findIndex(element => element === animeElement)
             if(index !== -1) pointerIndex.value = index
+            bridge.handleBlur() // 移除焦点
           })
         )
       } else {
@@ -146,9 +176,16 @@ onMounted(() => {
         pointerIndex.value = 0
       }
     }),
-    bridge.onEditorReady.subscribe(() => {
+    bridge.onEditorReady.subscribe((editor) => {
       editorRef.value = bridge.editorEl
+      const animeService = editor.get(AnimeService)
       subs5.push(
+        animeService.onAnimeAdd.pipe(debounceTime(100)).subscribe(() => {
+          if(!isAutoMoveAnimePointer.value) return
+          console.log('anime add')
+          const elements = bridge.editorEl!.querySelectorAll<HTMLElement>(`[data-id]:not([data-id=""])`)
+          animeMap = Array.from(elements)
+        }),
         fromEvent(editorRef.value!, 'click').pipe(auditTime(5)).subscribe(e => {
           // 延迟 5ms , 与 s 错开时间，这样在动画块之间切换的时候 selectAnimeElement 不会被 s 事件覆盖消除
           if(!props.allowSelectAnime) return
@@ -211,6 +248,7 @@ const handleClick = (e: MouseEvent) => {
               }))
               return
             }
+            if(!pointerTarget.value) return
             const id = pointerTarget.value.dataset.id
             const serial = pointerTarget.value.dataset.serial
             handlePromoterSelect(fragment.id, index, id, serial)

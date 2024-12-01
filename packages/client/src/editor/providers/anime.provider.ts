@@ -3,6 +3,7 @@ import { Commander, ComponentInstance, ContentType, Injectable, Injector, Render
 import anime from 'animejs'
 import { animeFormatter } from '../formatters'
 import { animeComponent } from '../components'
+import { AnimeService } from '../services'
 
 type AnimeMap = Map<string, { name: string; play: (target: Element) => anime.AnimeInstance }>
 
@@ -31,6 +32,7 @@ export class AnimeProvider {
   private selection!: Selection
   private renderer!: Renderer
   private commander!: Commander
+  private animeService!: AnimeService
   private rootComponentRef!: RootComponentRef
   private injector!: Injector
 
@@ -57,6 +59,7 @@ export class AnimeProvider {
     this.renderer = injector.get(Renderer)
     this.commander = injector.get(Commander)
     this.selection = injector.get(Selection)
+    this.animeService = injector.get(AnimeService)
     this.rootComponentRef = injector.get(RootComponentRef)
     this.scroller = scroller
     this.animesMap = customMap || this.animesMap
@@ -224,7 +227,7 @@ export class AnimeProvider {
     if (!componentInstance) return
     const id = this.generateAnimeId()
     const serial = customSerial || this.generateAnimeSerial().toString()
-    console.log(componentInstance.state)
+    // console.log(componentInstance.state)
     if (componentInstance.state.dataAnime === false) {
       // 将光标聚焦到目标组件内（当组件状态更新的时候会将页面滚动到光标所在的位置）
       this.selection.selectFirstPosition(componentInstance)
@@ -237,6 +240,7 @@ export class AnimeProvider {
         draft.dataTitle = title
         draft.range = false
       })
+      this.animeService.handleAnimeAdd()
       return
     }
     if (componentInstance.state.dataAnime === true) return // 如果为 true, 直接跳出，自动添加动画的时候会遇到这个情况
@@ -254,6 +258,7 @@ export class AnimeProvider {
     this.commander.replaceComponent(componentInstance, anime)
     // 可以在插入组件后再把内容插入插槽
     slot.insert(componentInstance)
+    this.animeService.handleAnimeAdd()
   }
 
   removeAnime(componentInstance: ComponentInstance | null) {
@@ -389,6 +394,7 @@ export class AnimeProvider {
           }
         })
       }
+      this.animeService.handleAnimeAdd()
     } catch (error) {
       console.log(error)
     }
@@ -406,6 +412,7 @@ export class AnimeProvider {
       dataTitle: title,
       dataRange: false
     })
+    this.animeService.handleAnimeAdd()
   }
 
   /**

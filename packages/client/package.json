@@ -13,7 +13,7 @@
     "build:editor": "vite build --config build-editor.config.ts",
     "build:container": "vite build --config build-container.config.ts",
     "preview": "vite preview",
-    "--postinstall": "electron-builder install-app-deps"
+    "-x-postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "@iconify/vue": "^4.1.2",

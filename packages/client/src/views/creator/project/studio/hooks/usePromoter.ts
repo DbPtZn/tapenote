@@ -77,6 +77,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
       })
     )
   }
+
   /** 预设进程结束 */
   function makePresetEnd() {
     // 完成预设后，取消之前的订阅并清空 subs
@@ -85,6 +86,7 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
       subs.length = 0
     }
   }
+
   /** 预设启动子  */
   function makePreset(fragmentId: string, subscript: number, id: string, serial: string) {
     addPromoter(fragmentId, subscript, serial, id)
@@ -99,9 +101,8 @@ export function usePromoter(procedureId: string, bridge: Bridge) {
       promoterId: aniId
     }).then(aniId => {
       setAnimeToActive(aniId)
-      console.log('移除焦点')
       setTimeout(() => {
-        bridge.handleBlur()
+        bridge.handleBlur() // 移除焦点
       }, 10)
     })
   }

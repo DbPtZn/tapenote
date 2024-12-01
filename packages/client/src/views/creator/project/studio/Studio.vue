@@ -188,6 +188,7 @@ const options = reactive<Option[]>([
       onClick: (ev: MouseEvent, key?: string) => {
         if (playerState.isPlaying) message.warning('播放中请尽量不要进行其它操作')
         const isOpen = useSwitchBtn(key)
+        message.info(isOpen ? '已开启自动切换动画块' : '已关闭自动切换动画块')
         bridge.handleAutoMoveAnimePointer(isOpen)
       }
     }

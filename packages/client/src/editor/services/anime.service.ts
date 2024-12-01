@@ -4,12 +4,13 @@ import { Observable, Subject } from '@textbus/core'
 
 @Injectable()
 export class AnimeService {
-  onAnimeUpdate = new Subject<void>()
+  onAnimeAdd = new Subject<void>()
   onAnimeContextmenu = new Subject<void>()
   onComponentActive = new Subject<ComponentInstance | null>()
 
-  handleAnimeUpdate() {
-    this.onAnimeUpdate.next()
+  handleAnimeAdd() {
+    console.log('handleAnimeAdd')
+    this.onAnimeAdd.next()
   }
 
   handleAnimeContextmenu() {

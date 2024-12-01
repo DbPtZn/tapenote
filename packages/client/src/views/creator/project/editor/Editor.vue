@@ -2,19 +2,19 @@
 import '@textbus/editor/bundles/textbus.min.css'
 import '@/editor/anime.scss'
 import { useThemeVars, useMessage, useDialog } from 'naive-ui'
-import { TitleInput } from './private'
-import { useToolbarResize } from '../../_hooks'
 import { computed, h, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue'
-import { useCover, useEditor, useMemo } from './hooks/_index'
 import _ from 'lodash'
-import useStore from '@/store'
 import { Editor } from '@textbus/editor'
 import { Icon } from '@iconify/vue'
-import { Bridge } from '../bridge'
 import { LibraryEnum } from '@/enums'
-import { MemoProvider, MessageService, Player } from '@/editor'
-import { Subscription, debounceTime } from '@textbus/core'
+import { Subscription, debounceTime, fromEvent } from '@tanbo/stream'
 import { VIEW_CONTAINER } from '@textbus/platform-browser'
+import { MemoProvider, MessageService, Player } from '@/editor'
+import useStore from '@/store'
+import { useCover, useEditor, useMemo } from './hooks/_index'
+import { Bridge } from '../bridge'
+import { TitleInput } from './private'
+import { useToolbarResize } from '../../_hooks'
 
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
@@ -42,6 +42,11 @@ onMounted(() => {
   bridge.editorEl = editorEl.value
   bridge.scrollerEl = scrollerEl.value
   bridge.coverEl = coverEl.value
+
+  // 大多数显示器的刷新率是60Hz，即每帧大约16.67ms。将防抖设置为17ms可以确保你的事件处理逻辑与显示器的刷新率相匹配，从而在每次显示器刷新时更新滚动百分比，提供更连贯的视觉体验
+  fromEvent(scrollerEl.value!, 'scroll').pipe(debounceTime(17)).subscribe(() => {
+    state.scrollTopPercent = scrollerEl.value!.scrollTop / (scrollerEl.value!.scrollHeight - scrollerEl.value!.clientHeight)
+  })
 })
 
 const subs: Subscription[] = []
@@ -50,19 +55,19 @@ const state = reactive({
   isToolbarShow: true,
   isChangeByReadonly1: false,
   isChangeByReadonly2: false,
-  isReadonly: computed(() => props.readonly),
   isDrawShow: false,
   isSaving: false,
   toolbarHeight: 50, // 基于顶部固定工具条的高度调整滚动区的高度
   editorWidth: computed(() => bridge?.habit!.state.platform.width),
   isSubtitleShow: true, //computed(() => bridge.habit.state.subtitle.isShow),
+  scrollTopPercent: 0,
   subtitle: ''
 })
 const autosave = computed(() => userStore.config.autosave) // 自动保存
 const saveInterval = computed(() => userStore.config.saveInterval) // 自动保存的间隔
 
 // 当 readonly 状态改变时，editor onChange 也会监听到，设置 isChangeByReadonly1/2 为 true, 阻止两个 editor onChange 的事务
-watch(() => state.isReadonly, (is) => {
+watch(() => props.readonly, (is) => {
   state.isChangeByReadonly1 = true
   state.isChangeByReadonly2 = true
 })
@@ -112,7 +117,7 @@ useEditor({
     )
     autosave.value && subs.push(
       editor.onChange.pipe(debounceTime(saveInterval.value)).subscribe(() => {
-        if(state.isReadonly) return
+        if(props.readonly) return
         if(state.isChangeByReadonly2) return state.isChangeByReadonly2 = false
         const content = editor.getHTML()
         if(lastContent === content) {
@@ -150,8 +155,7 @@ useEditor({
   message.error('项目打开失败！')
 })
 
-
-
+// 工具条缩放和折叠会影响编辑器工作区高度，需手动调整
 if (props.lib !== LibraryEnum.COURSE) {
   subs.push(
     /** 工具条缩放 */
@@ -309,14 +313,12 @@ onUnmounted(() => {
             @mousedown="handleCoverMousedown"
           >
           <div v-if="data?.cover" class="action">
-
             <div v-if="isAllowAdjust" class="btn txt-btn" @click="handleUpdateCoverPosition">
               确定
             </div>
             <div v-if="isAllowAdjust" class="btn txt-btn" @click="handleCancelUpdateCoverPosition">
               取消
             </div>
-            
             <div v-if="!isAllowAdjust" class="btn" @click="handleUpdateCover">
               <Icon icon="mdi:image-refresh-outline" height="18" />
             </div>
@@ -345,10 +347,18 @@ onUnmounted(() => {
     <div v-if="lib === LibraryEnum.COURSE && state.isSubtitleShow" class="subtitle">
       {{ state.subtitle }}
     </div>
+    <div class="scroll-top-percent">
+      <div class="scroll-top-percent-text">{{ Math.floor(state.scrollTopPercent * 100) + '%' }}</div>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.scroll-top-percent {
+  position: absolute;
+  bottom: 12px;
+  right: 24px;
+}
 
 .procedure-controller {
   width: 100%;
