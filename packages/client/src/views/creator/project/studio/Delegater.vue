@@ -41,9 +41,11 @@ watch(() => pointerIndex.value, () => {
   }
   pointerTarget.value = getCurrentAnime()
 })
+
 // 通过指针获取当前的动画元素
 function getCurrentAnime() {
   let index = pointerIndex.value // 使用一个局部变量来存储新的索引值，避免直接修改 pointerIndex 导致递归调用
+  // 可能遇到多个元素不存在的问题，得循环处理
   while(animeMap[index] && ((editorRef.value && !editorRef.value.contains(animeMap[index])) || !animeMap[index].dataset.id)) {
     animeMap.splice(index, 1)
     isArrowUp && index > 0 && index-- // 如果是向上操作，则删除一个元素后指针索引减一 (同时对上边界的情况进行处理)

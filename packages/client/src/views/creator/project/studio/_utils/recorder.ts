@@ -11,7 +11,7 @@ export class AudioRecorder {
 
   public totalDuration: number = 0
   private startTime: number = 0
-  private audioBlob: Blob | null = null
+  // private audioBlob: Blob | null = null
 
   constructor(args: { sampleRate?: number; sampleBits?: number }) {
     const { sampleRate, sampleBits } = args
@@ -75,7 +75,7 @@ export class AudioRecorder {
         this.mediaRecorder.onstop = async () => {
           try {
             const finalBlob = new Blob(this.audioChunks, { type: 'audio/webm' })
-            console.log('finalBlob', finalBlob.size / (1024 * 1024) + 'MB')
+            // console.log('finalBlob', finalBlob.size / (1024 * 1024) + 'MB')
             const trimmedBuffer = await this.trimSilence(finalBlob)
             // const duration = trimmedBuffer.duration
 
@@ -86,12 +86,12 @@ export class AudioRecorder {
             // console.log('totalDuration', this.totalDuration)
             // console.log('duration:', duration)
             this.totalDuration = 0
+            this.mediaRecorder && (this.mediaRecorder.onstop = null)
             resolve(trimmedBuffer)
           } catch (error) {
             reject(new Error('音频数据样本太小，生成音频失败'))
           }
         }
-
         this.mediaRecorder.stop()
         this.mediaStream?.getTracks().forEach(track => track.stop())
       } else {
@@ -108,7 +108,10 @@ export class AudioRecorder {
   }
 
   destroy() {
-    this.mediaRecorder?.stop()
+    if(this.mediaRecorder) {
+      this.mediaRecorder.stop()
+      this.mediaRecorder.onstop = null
+    }
     this.mediaStream?.getTracks().forEach(track => track.stop())
     this.mediaStream = null
     this.mediaRecorder = null

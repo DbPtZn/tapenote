@@ -1,5 +1,4 @@
 import { LibraryEnum } from '@/enums'
-import { ComponentLiteral } from '@textbus/core'
 import { AxiosInstance } from 'axios'
 
 interface CreateProjectDto {
@@ -63,24 +62,24 @@ interface InputDto {
   cover: string
 }
 
-export interface AddMemoDto {
+interface AddMemoDto {
   projectId: string
   x: number
   y: number
 }
 
-export interface DeleteMemoDto {
+interface DeleteMemoDto {
   projectId: string
   memoId: string
 }
 
-export interface UpdateMemoContentDto {
+interface UpdateMemoContentDto {
   projectId: string
   memoId: string
   content: string
 }
 
-export interface UpdateMemoStateDto {
+interface UpdateMemoStateDto {
   projectId: string
   memoId: string
   isExpanded?: boolean

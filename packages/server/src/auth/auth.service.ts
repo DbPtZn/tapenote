@@ -36,7 +36,7 @@ export class AuthService {
 
   /** 登录：生成 token */
   async login(user: User) {
-    console.log('login')
+    // console.log('login')
     try {
       if (!user) {
         this.logger.error('用户登录失败！邮箱或密码错误！')
@@ -78,15 +78,18 @@ export class AuthService {
                 password: randomstring.generate(12)
               })
               this.logger.log(`为 ${account} 创建新用户成功！`)
-              this.httpService.axiosRef.patch(`${this.common.ssoDomain}/user/register/note`, {
+              // 注意，除 get、delete 外，其它请求方法第三个参数才是 config
+              this.httpService.axiosRef.patch(`${this.common.ssoDomain}/user/register/note`, {}, {
                 headers: {
                   Authorization: `Bearer ${token}`
                 }
               }).catch(err => {
+                // console.log(err)
                 // note 注册状态只为记录用户使用情况，不影响用户实际使用，错误不做处理
                 this.logger.error(`通知 sso 系统更新 ${account} 的 note 注册状态失败！`)
               })
             } catch (error) {
+              console.log(error)
               this.logger.error(`为 ${account} 创建新用户失败, ${error.message}`)
               throw new Error('首次登录, 创建新用户失败!')
             }

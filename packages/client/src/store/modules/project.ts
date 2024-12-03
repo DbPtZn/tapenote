@@ -253,9 +253,6 @@ export const useProjectStore = defineStore('projectStore', {
       })
 
     },
-    input(params: Parameters<typeof CreatorApi.prototype.project.input>[0], account: string, hostname: string) {
-      return this.creatorApi(account, hostname).project.input(params)
-    },
     fetchAndSet(id: string, account: string, hostname: string) {
       // console.log('fetchAndSet')
       // console.log([id, account, hostname])
@@ -268,7 +265,7 @@ export const useProjectStore = defineStore('projectStore', {
         } else {
           this.creatorApi(account, hostname).project.get(id)
             .then(res => {
-              // console.log(res.data)
+              console.log(res.data)
               const newItem = this.set(res.data, account, hostname)
               resolve(newItem)
             })
@@ -406,6 +403,9 @@ export const useProjectStore = defineStore('projectStore', {
     },
     copy(id: string, folderId: string, account: string, hostname: string) {
       return this.creatorApi(account, hostname).project.copy(id, folderId)
+    },
+    input(params: Parameters<typeof CreatorApi.prototype.project.input>[0], account: string, hostname: string) {
+      return this.creatorApi(account, hostname).project.input(params)
     },
     /** 更新标题 */
     updateTitle(params: Parameters<typeof CreatorApi.prototype.project.updateTitle>[0], savingcb: () => void, account: string, hostname: string) {

@@ -12,7 +12,7 @@ import {
   useSpeakerStore,
   useMicroStore,
   useRecentStore,
-  useStudioStore
+  // useStudioStore
 } from './modules/_api'
 
 const useStore = () => ({
@@ -28,7 +28,7 @@ const useStore = () => ({
   speakerStore: useSpeakerStore(),
   microStore: useMicroStore(),
   recentStore: useRecentStore(),
-  studioStore: useStudioStore()
+  // studioStore: useStudioStore()
 })
 
 

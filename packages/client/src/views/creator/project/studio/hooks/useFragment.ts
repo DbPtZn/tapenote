@@ -340,11 +340,12 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       aud = new Audio(audio)
       aud.play()
       playingFragmentId.value = fragment.id
-      aud.addEventListener('ended', () => {
+      const audioEnd = fromEvent(aud, 'ended').subscribe(() => {
         aud = null
         playingFragmentId.value = ''
         playingSub.forEach(s => s.unsubscribe())
         playingSub.length = 0
+        audioEnd.unsubscribe()
         fragment.error && URL.revokeObjectURL(audio)
       })
       const fragmentEl = document.getElementById(`${fragment.id}`)
@@ -399,6 +400,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       }
     })
   }
+
   /** 移除片段 */
   function handleRemove(fragment: Fragment) {
     if(fragment.error) {
@@ -411,6 +413,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     }
     applyRemove(fragment.id).then(() => checkAnimeState()) // 移除片段之后，进行动画状态校验
   }
+
   /** 移动片段 */
   function handleMove(event: SortableEvent) {
     // console.log(event)
@@ -530,6 +533,9 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
 
   onUnmounted(() => {
     subs.forEach(s => s.unsubscribe())
+    subs.length = 0
+    playingSub.forEach(s => s.unsubscribe())
+    playingSub.length = 0
   })
 
   return {

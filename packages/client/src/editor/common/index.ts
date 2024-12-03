@@ -1,6 +1,7 @@
 import UIConfig from './UIConfig.vue'
 import UIIcon from './UIIcon.vue'
-export { UIIcon, UIConfig }
+import UITip from './UITip.vue'
+export { UIIcon, UIConfig, UITip }
 
 export * from './MaterialTypeEnum'
 export * from './randomstring'

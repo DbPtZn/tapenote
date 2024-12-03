@@ -1,4 +1,4 @@
-import { Subject } from '@tanbo/stream'
+import { Subject, Subscription, fromEvent } from '@tanbo/stream'
 import { useMessage } from 'naive-ui'
 import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 // import WaveSurfer from 'wavesurfer.js'
@@ -158,13 +158,20 @@ export function useRecorder(args: {
     // }
     // 开始绘制
     // renderFrame()
-
-    mediaRecorder.addEventListener('stop', () => {
+    mediaRecorder.stop = () => {
       const finalBlob = new Blob(audioChunks, { type: 'audio/webm' })
       ondataavailable.next({ blob: finalBlob, duration: currentDuration, isSilence: isNewRecorder })
+      removeEventListener()
       // const { width, height } = cvs
       // ctx.clearRect(0, 0, width, height)
-    })
+    }
+    
+    // mediaRecorder.addEventListener('stop', () => {
+    //   const finalBlob = new Blob(audioChunks, { type: 'audio/webm' })
+    //   ondataavailable.next({ blob: finalBlob, duration: currentDuration, isSilence: isNewRecorder })
+    //   // const { width, height } = cvs
+    //   // ctx.clearRect(0, 0, width, height)
+    // })
 
     checkSilence() // 开启静音检测
 
@@ -225,6 +232,7 @@ export function useRecorder(args: {
   function handleStopRecord() {
     if(!isStarted.value) return
     mediaRecorder?.stop()
+    // removeEventListener() 已经在 stop 中调用
     isRecording.value = false
     isStarted.value = false
     mediaRecorder = null
@@ -245,6 +253,17 @@ export function useRecorder(args: {
     stream = null
     audioCtx?.close()
     audioCtx = null
+  }
+
+  /** 移除 mediaRecorder 上监听器（注意在 mediaRecorder 销毁前使用） */
+  function removeEventListener() {
+    if (!mediaRecorder) return
+    mediaRecorder.ondataavailable = null
+    mediaRecorder.onstop = null
+    mediaRecorder.onerror = null
+    mediaRecorder.onpause = null
+    mediaRecorder.onresume = null
+    mediaRecorder.onstart = null
   }
 
   onUnmounted(() => {

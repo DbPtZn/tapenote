@@ -102,7 +102,12 @@
   --tb-boxShadow2: 0 3px 6px -4px rgba(0, 0, 0, .12), 0 6px 16px 0 rgba(0, 0, 0, .08), 0 9px 28px 8px rgba(0, 0, 0, .05);
   --tb-boxShadow3: 0 6px 16px -9px rgba(0, 0, 0, .08), 0 9px 28px 0 rgba(0, 0, 0, .05), 0 12px 48px 16px rgba(0, 0, 0, .03);
   --tb-boxShadow4: 1px 2px 3px #{$dark-opacity-10};
-  // 新增
+  // 新增插件
+  --tb-timelineBgColor: rgba(146, 146, 146, 0.562);
+  --tb-timelineDotColor: rgb(126, 126, 126);
+  --ta-timelineSliderColor: rgba(55, 64, 71, 0.959);
+  
+  // 新增组件
   --tb-preBgColor: #fefefe;
   --tb-preTextColor: inherit;
   --tb-preBorderColor: #efefef;

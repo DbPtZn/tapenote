@@ -227,7 +227,7 @@ export class UserService {
       if (user?.countor?.date) {
         const now = new Date()
         const interval = now.getTime() - (new Date(user.countor.date)).getTime()
-        console.log(interval)
+        // console.log(interval)
         if (interval < 86400000) {
           throw new Error('今天已经统计过啦！')
         }
@@ -316,7 +316,6 @@ export class UserService {
   async updateConfig(updateConfigDto: UpdateUserConfigDto, id: string) {
     try {
       const { autosave, saveInterval } = updateConfigDto
-      // console.log(updateConfigDto)
       const user = await this.usersRepository.findOneBy({ id })
       user.config = {
         autosave: autosave,

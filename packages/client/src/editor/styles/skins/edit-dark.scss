@@ -1,6 +1,7 @@
-// 应该与 src\editor\common\plugins\toolbar\toolkit\_utils\ColorOptions.ts 对应
+// 应该与 src\editor\providers\color.provider.ts 对应
 // 必须是大写
 $colors:(
+// 一般字体、背景颜色 
 '#000000': #FFFFFF, 
 '#FF5A5F': #FF0000,
 '#FFA500': #FF8C00,
@@ -9,11 +10,14 @@ $colors:(
 '#00CED1': #00FFFF,
 '#007FFF': #0000FF,
 '#8A2BE2': #8B008B,
+// 表格单元格背景色
 '#F0F0F0': #333333,
 '#F4F4F4': #1F1F1F,
 '#F9F9F9': #292929,
 '#E0E7FF': #3D3D5C,
-'#D1E7DD': #264653
+'#D1E7DD': #264653,
+// 其它颜色
+'#333639': #FFFFFFD1, // 标题文字颜色（考虑到从标题将文本复制到编辑器中是个常见的操作）
 );
 
 @each $source, $target in $colors {
@@ -28,3 +32,12 @@ $colors:(
   }
 }
 
+// 对亮色模式下的强制转换
+$lightcolors:(
+  '#FFFFFFD1': #333639  // 标题文字颜色
+);
+@each $source, $target in $lightcolors {
+  [data-theme="light-theme"] [data-color="#{''+$source}"] {
+    color: #{$target}!important;
+  }
+}

@@ -30,7 +30,7 @@ import { AuthMiddleware } from './auth.middleware'
             secret: configService.get('jwt.secret') // 加密密钥
           }
         }
-        console.log(configService.get('jwt.expiresIn'))
+        // console.log(configService.get('jwt.expiresIn'))
         return {
           secret: configService.get('jwt.secret'), // 加密密钥
           signOptions: { expiresIn: configService.get('jwt.expiresIn') } // 配置： 保存时间

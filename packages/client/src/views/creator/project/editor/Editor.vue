@@ -547,6 +547,7 @@ onUnmounted(() => {
 }
 
 .subtitle {
+  text-align: center;
   position: fixed;
   bottom: 50px;
   left: 50%;
