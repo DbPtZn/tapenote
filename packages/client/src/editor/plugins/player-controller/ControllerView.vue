@@ -102,7 +102,7 @@ function handleSliderMousedown() {
     // console.log('player.duration', player.duration)
     // console.log('timenode', timenode, player.duration * timenode / 100)
     timeFrame = Number(((player.duration * timenode) / 100).toFixed(2))
-    console.log(timeFrame)
+    // console.log(timeFrame)
     player.seek(timeFrame)
     move.unsubscribe()
     up.unsubscribe()
@@ -134,15 +134,6 @@ onMounted(() => {
   )
 })
 
-const speedMarks = {
-  0.5: '0.5X',
-  0.75: '0.75X',
-  1: '1.0X',
-  1.25: '1.25X',
-  1.5: '1.5X',
-  1.75: '1.75X',
-  2: '2.0X'
-}
 const state = reactive({
   isPlaying: false,
   isPause: false,
@@ -203,7 +194,7 @@ onUnmounted(() => {
   controllerData.value = []
   window.onresize = function () {}
 })
-// TODO 解决计时器能否暂停的问题
+
 </script>
 
 <template>
@@ -238,7 +229,7 @@ onUnmounted(() => {
       </div>
       <!-- 开始暂停继续 -->
       <div class="option">
-        <UITip :tip="!player.isPlaying && !player.isPause ? '开始' : player.isPlaying && !player.isPause ? '暂停' : '继续'">
+        <UITip :tip="(!state.isPlaying && !state.isPause) ? '开始' : ((state.isPlaying && !state.isPause) ? '暂停' : '继续')">
           <n-button class="btn" block text :size="'large'" @click="methods.playpause">
             <Icon :icon="state.isPlaying ? 'material-symbols:pause-rounded' : 'material-symbols:play-arrow-rounded'" height="24" />
           </n-button>
@@ -271,7 +262,7 @@ onUnmounted(() => {
       <!-- 重播 -->
       <div class="option">
         <UITip :tip="'重播'">
-          <n-button class="btn" block text :size="'large'" @click="methods.replay()">
+          <n-button class="btn" block text :size="'large'" @click="methods.replay()" :disabled="currentTime === 0">
             <Icon icon="material-symbols:replay" height="24" />
           </n-button>
         </UITip>
@@ -279,7 +270,7 @@ onUnmounted(() => {
       <!-- 停止 -->
       <div class="option">
         <UITip :tip="'停止'">
-          <n-button class="btn" block text :size="'large'" @click="methods.stop()">
+          <n-button class="btn" block text :size="'large'" @click="methods.stop()" :disabled="!state.isPlaying && !state.isPause">
             <Icon icon="material-symbols:stop-rounded" height="24" />
           </n-button>
         </UITip>
@@ -341,6 +332,9 @@ onUnmounted(() => {
     cursor: pointer;
     &:hover {
       background-color: var(--tb-buttonColor2Hover);
+    }
+    .btn {
+      height: 100%;
     }
   }
 }

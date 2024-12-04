@@ -143,10 +143,10 @@ useEditor({
     subs.push(
       player.onSubtitleUpdate.subscribe(() => {
         state.subtitle = player.subtitle
-      }),
-      player.onRateChange.subscribe((rate) => {
-        message.info(`当前播放速度：${rate}x`)
       })
+      // player.onRateChange.subscribe((rate) => {
+      //   message.info(`当前播放速度：${rate}x`)
+      // })
     )
   }
   bridge?.setup(editor, props.lib)

@@ -3,6 +3,7 @@ import { Observable, Subject } from '@textbus/core'
 import { AnimeProvider, Structurer } from '.'
 import { VIEW_CONTAINER } from '@textbus/platform-browser'
 import { Layout } from '@textbus/editor'
+import { createPausableInterval } from './_utils'
 // import { Howl, Howler } from 'howler'
 // import _ from 'lodash'
 
@@ -71,7 +72,8 @@ export class Player {
   private subs: Subscription[] = []
   private scrollerSub!: Subscription
   private audioSubs: Subscription[] = []
-  private timer!: NodeJS.Timeout
+  // private timer!: NodeJS.Timeout
+  private pausableIntervalInstance: ReturnType<typeof createPausableInterval> | undefined
   private scrollTimer!: NodeJS.Timeout
   get data() {
     return this._data
@@ -199,27 +201,27 @@ export class Player {
       this.keyframeSequence = keyframeSequence
       this.subtitleSequence = subtitleSequence || []
       this.subtitleKeyframeSequence = subtitleKeyframeSequence || []
-      console.log('数据已经更新到当前播放对象上', duration)
+      // console.log('数据已经更新到当前播放对象上', duration)
       if (!this.audio) return console.warn('音频未加载完成或已失效')
       if (this._isPlaying) return console.warn('正在播放中')
 
       /** 设置起始播放点  */
       if (startPoint) {
         if (startPoint[index].startIndex) {
-          this.setAnimeVisible(false, startPoint[index].startIndex)
+          this.setAllAnimeVisible(false, startPoint[index].startIndex)
           this.animeCount = startPoint[index].startIndex
           this.subtitleCount = startPoint[index].startIndex
         }
         if (startPoint[index].startTime) {
           if (this._duration < startPoint[index].startTime) {
             this.clear()
-            this.setAnimeVisible(true)
+            this.setAllAnimeVisible(true)
             return console.warn('设置时长溢出！')
           }
           this.audio.currentTime = startPoint[index].startTime
         }
       } else {
-        this.setAnimeVisible(false)
+        this.setAllAnimeVisible(false)
         this.animeCount = 0
         this.subtitleCount = 0
       }
@@ -235,14 +237,16 @@ export class Player {
 
       const keyframeSequenceLength = this.keyframeSequence.length
       const subtitleSequenceLength = this.subtitleSequence.length
-      this.timer = setInterval(() => {
+
+      this.pausableIntervalInstance = createPausableInterval(() => {
+        // console.log('播放中')
         if (!this.isPlaying) return
         this.onTimeUpdate.next(this._currentTime)
         // 处理字幕
         if (hasSubtitle) {
           const currentSubtitleKeyframe = subtitleKeyframeSequence[this.subtitleCount]
           if (currentSubtitleKeyframe && this.audio!.currentTime > currentSubtitleKeyframe) {
-            console.log('播放字幕')
+            // console.log('播放字幕')
             this._subtitle = this.subtitleSequence[this.subtitleCount]
             this.onSubtitleUpdate.next(this.subtitle)
             if (this.subtitleCount < subtitleSequenceLength - 1) this.subtitleCount++
@@ -258,9 +262,9 @@ export class Player {
         //   this.keyframeHistory[this.animeCount] = this.keyframeSequence[this.animeCount] // 记录播放历史
         //   this.animeCount++
         // }
-        console.log('this.animeCount: ', this.animeCount, keyframeSequence[this.animeCount])
+        // console.log('this.animeCount: ', this.animeCount, keyframeSequence[this.animeCount])
         while (keyframeSequence[this.animeCount] && this.audio!.currentTime > keyframeSequence[this.animeCount]) {
-          console.log('播放动画')
+          // console.log('播放动画')
           animeElementSequence[this.animeCount]?.forEach(el => {
             // 播放动画
             this.applyPlay(el, this.containerRef, this.scrollerRef)
@@ -276,7 +280,7 @@ export class Player {
 
       // 播放当前音频
       this.audio.play()
-      console.log('音频开始播放')
+      // console.log('音频开始播放')
 
       this.audioSubs.push(
         /** 音量改变时 */
@@ -290,12 +294,13 @@ export class Player {
         }),
         // 监听音频播放结束事件，然后递归播放下一个音频
         fromEvent(this.audio, 'ended').subscribe(() => {
-          console.log('播放结束')
+          // console.log('播放结束')
           this.clear()
-          clearInterval(this.timer)
+          // clearInterval(this.timer)
+          this.pausableIntervalInstance?.stop()
           this.audioSubs.forEach(sub => sub.unsubscribe())
           this.audioSubs.length = 0
-          console.log('播放结束，销毁 subs', this.audioSubs)
+          // console.log('播放结束，销毁 subs', this.audioSubs)
           this.total += duration
           this.playMulti({ data, index: index + 1, startPoint })
         })
@@ -305,7 +310,7 @@ export class Player {
       this.clear()
       this.total = 0
       this._totalTime = 0
-      this.setAnimeVisible(true)
+      this.setAllAnimeVisible(true)
       this.onStateUpdate.next('')
       this.onPlayOver.next('') // 所有音频播放完毕,发布播放结束的订阅
       // 播放结束后立即显示忽略组件会导致内容突兀变动，因此设置为在滚动事件发生后再显示
@@ -326,10 +331,10 @@ export class Player {
   /** 启动播放 */
   @UpdateState
   start(isInitScrollTop = true) {
-    console.log('开始播放')
+    // console.log('开始播放')
     this.hideIgnoreComponent()
     this.init(isInitScrollTop)
-    console.log('初始化完成')
+    // console.log('初始化完成')
     this.playMulti({ data: this._data, index: 0 })
   }
 
@@ -346,6 +351,7 @@ export class Player {
   pause() {
     if (this._isPlaying) {
       this.audio?.pause() //暂停音频
+      this.pausableIntervalInstance?.pause()
       this._scrollTop = this.scrollerRef.scrollTop //记录滚动条位置
       this._isPlaying = false
       this._isPause = true
@@ -358,6 +364,7 @@ export class Player {
     // console.log('继续播放')
     if (!this._isPlaying && this._isPause) {
       this.audio?.play()
+      this.pausableIntervalInstance?.resume()
       this._isPlaying = true
       this._isPause = false
       this.scrollerRef.scrollTop = this._scrollTop
@@ -367,7 +374,7 @@ export class Player {
   /** 跳转至指定时间(秒) */
   @UpdateState
   seek(time: number) {
-    console.log('seek')
+    // console.log('seek')
     if (!this.audio) return
     this.audio.currentTime = time
     this._currentTime = this.audio!.currentTime // 记录当前播放时间
@@ -380,9 +387,10 @@ export class Player {
     if (!this.audio) return
     let animeIndex = this.animeCount
     while (this.keyframeSequence[animeIndex] > this.audio.currentTime) {
-      console.log('动画未播放')
+      // console.log('动画未播放')
       this.animeElementSequence[animeIndex]?.forEach((el: HTMLElement) => {
-        el.style.visibility = 'hidden'
+        // el.style.visibility = 'hidden'
+        hiddenElement(el)
       })
       animeIndex--
     }
@@ -391,7 +399,7 @@ export class Player {
     let subtitleIndex = this.subtitleCount
     // 字幕关键帧 > 当前播放时间时，说明该字幕未播放，指针继续向前移
     while (this.subtitleKeyframeSequence[subtitleIndex] > this.audio.currentTime) {
-      console.log('字幕未播放')
+      // console.log('字幕未播放')
       subtitleIndex--
     }
     this.subtitleCount = subtitleIndex === -1 ? 0 : subtitleIndex
@@ -490,7 +498,7 @@ export class Player {
   @UpdateState
   stop() {
     this.init()
-    this.setAnimeVisible(true)
+    this.setAllAnimeVisible(true)
     this.onStop.next()
     this.onPlayOver.next('')
     this.scrollerSub = fromEvent(this.scrollerRef, 'scroll').subscribe(ev => {
@@ -502,7 +510,7 @@ export class Player {
   /** 清理播放器数据状态 */
   @UpdateState
   private clear() {
-    console.log('播放结束 clear')
+    // console.log('播放结束 clear')
     if (this.audio) {
       this.audio.pause()
       this.audio.currentTime = 0
@@ -517,7 +525,9 @@ export class Player {
 
     this._scrollTop = this.scrollerRef.scrollTop
 
-    clearInterval(this.timer)
+    // clearInterval(this.timer)
+    this.pausableIntervalInstance?.stop()
+    this.pausableIntervalInstance = undefined
 
     this.onSubtitleUpdate.next(this.subtitle) // 发布字幕更新订阅
   }
@@ -549,13 +559,14 @@ export class Player {
     })
   }
 
-  /** 设置动画可见状态 */
-  private setAnimeVisible(visible: boolean, startPoint = 0) {
+  /** 设置所有动画可见状态 */
+  private setAllAnimeVisible(visible: boolean, startPoint = 0) {
     this.animeElementSequence.forEach((item, index) => {
       if (index >= startPoint) {
         item.forEach(el => {
           // el.style.opacity = visible ? '1' : '0'
-          el.style.visibility = visible ? 'visible' : 'hidden'
+          // el.style.visibility = visible ? 'visible' : 'hidden'
+          visible ? showElement(el) : hiddenElement(el)
         })
       }
     })
@@ -564,7 +575,6 @@ export class Player {
   /** 动画播放函数 */
   private applyPlay(el: HTMLElement, container: HTMLElement, scroller: HTMLElement) {
     this.applyAnime(el.dataset.effect!, el)
-    // console.log(el)
     this.applyScroll({
       el: el,
       scroller: scroller,
@@ -584,15 +594,16 @@ export class Player {
   private applyAnime(effectValue: string, el: HTMLElement) {
     const style = window.getComputedStyle(el)
     const isInline = style.display === 'inline'
-    isInline && el.classList.add('anime-playing')
-    el.style.visibility = 'visible'
+    isInline && el.classList.add('player-anime-playing')
+    // el.style.visibility = 'visible'
+    showElement(el)
     const anime = this.anime.getAnime(effectValue)
     if (anime) {
       anime.play(el).finished.then(() => {
-        isInline && el.classList.remove('anime-playing')
+        isInline && el.classList.remove('player-anime-playing')
       })
     } else {
-      isInline && el.classList.remove('anime-playing')
+      isInline && el.classList.remove('player-anime-playing')
     }
   }
 
@@ -682,35 +693,6 @@ export class Player {
       this.clearInterval()
       return
     }
-    /* 对特定动画元素的测试代码
-    if (el.dataset.serial === '12') {
-      console.log(el)
-      console.log(Node2HorizonBottomAbs)
-      console.log(rollSpeed)
-    }
-    */
-  }
-
-  /** 翻页播放模式（待开发） */
-  private applyFilpPlay(el: HTMLElement, container: HTMLElement, scroller: HTMLElement) {
-    this.applyAnime(el.dataset.effect!, el)
-  }
-
-  /** 应用翻页（待开发） */
-  private applyFlip(args: {
-    /** 播放中的动画元素 */
-    el: HTMLElement
-    /** 滚动层 */
-    scroller: HTMLElement
-    /** 容器层 */
-    container: HTMLElement
-  }) {
-    const { el, scroller, container } = args
-    const Horizon = scroller.clientHeight // 可视窗口的高度
-    const Scrolled = scroller.scrollTop // 已滚动高度
-    const Node2Top = getTopDistance(el) - container.offsetTop // 节点距离文档顶部（指节点的上边界至文档顶部
-    const NodeHeight = el.clientHeight // 元素自身的高度
-    const Node2HorizonBottom = Horizon + Scrolled - Node2Top - NodeHeight //节点距离可视区间底部
   }
 
   /** 立即取消当前滚动事务 */
@@ -775,7 +757,7 @@ export class Player {
   }
 
   destory() {
-    console.log('播放结束 destory')
+    // console.log('播放结束 destory')
     this.init()
     this.subs.forEach(sub => sub.unsubscribe())
     this.audioSubs.forEach(sub => sub.unsubscribe())
@@ -817,6 +799,15 @@ export class Player {
     }
   }
 }
+
+function hiddenElement(el: HTMLElement) {
+  el.classList.add('player-anime-hidden')
+}
+
+function showElement(el: HTMLElement) {
+  el.classList.remove('player-anime-hidden')
+}
+
 /**
  * 获取最外层（祖先）元素到顶部的距离（部分组件中的元素offsetTop可能是相对于组件）
  * @param el 目标元素
@@ -858,68 +849,24 @@ function loadAudio(src: string) {
   })
 }
 
-// private play(startTime = 0) {
-//   const { audio, duration, animeElementSequence, keyframeSequence, subtitleSequence, subtitleKeyframeSequence } = this._data[0]
-//     /** 将数据更新至当前播放对象 */
-//     this.audio = audio
-//     this.audio.currentTime = startTime // 设置播放起始时间，默认为 0
-//     this.duration = duration
-//     this.animeElementSequence = animeElementSequence
-//     this.keyframeSequence = keyframeSequence
-//     this.subtitleSequence = subtitleSequence || []
-//     this.subtitleKeyframeSequence = subtitleKeyframeSequence || []
+/** 翻页播放模式（待开发） */
+// private applyFilpPlay(el: HTMLElement, container: HTMLElement, scroller: HTMLElement) {
+//   this.applyAnime(el.dataset.effect!, el)
+// }
 
-//     if (!this.audio) return console.warn('音频未加载完成或已失效')
-//     if (this._isPlaying) return console.warn('正在播放中')
-
-//     /** 将状态更新至当前播放对象 */
-//     this._isPlaying = true
-//     this._rate = this.audio.playbackRate
-//     this._volume = this.audio.volume
-
-//     // 是否包含字幕信息
-//     const hasSubtitle = subtitleSequence && subtitleSequence.length > 0 && subtitleKeyframeSequence && subtitleKeyframeSequence.length > 0
-//     this.animeCount = 0
-//     this.subtitleCount = 0
-//     this.timer = setInterval(() => {
-
-//       // 处理字幕
-//       if (hasSubtitle) {
-//         if (this.audio!.currentTime > subtitleKeyframeSequence[this.subtitleCount]) {
-//           this._subtitle = this.subtitleSequence[this.subtitleCount]
-//           this.subtitleUpdataEvent.next(this.subtitle)
-//           this.subtitleCount++
-//         }
-//       }
-
-//       // 处理动画
-//       if (this.audio!.currentTime > keyframeSequence[this.animeCount]) {
-//         this.animeElementSequence[this.animeCount].forEach(el => {
-//           // 播放动画
-//           this.applyPlay(el, this.containerRef, this.scrollerRef)
-//         })
-//         this.keyframeHistory[this.animeCount] = this.keyframeSequence[this.animeCount] // 记录播放历史
-//         this.animeCount++
-//       }
-
-//       this._currentTime = this.audio!.currentTime // 记录当前播放时间
-//     }, 50)
-
-//     // 播放当前音频
-//     this.audio.play()
-
-//     /** 音量改变时 */
-//     this.audio.onvolumechange = () => {
-//       this._volumeChangeEvent.next(this.audio?.volume)
-//     }
-//     /** 速率改变时 */
-//     this.audio.onratechange = () => {
-//       this._rateChangeEvent.next(this.audio?.playbackRate)
-//     }
-
-//     // 监听音频播放结束事件，然后递归播放下一个音频
-//     this.audio.addEventListener('ended', () => {
-//       this.clear()
-//       clearInterval(this.timer)
-//     })
+/** 应用翻页（待开发） */
+// private applyFlip(args: {
+//   /** 播放中的动画元素 */
+//   el: HTMLElement
+//   /** 滚动层 */
+//   scroller: HTMLElement
+//   /** 容器层 */
+//   container: HTMLElement
+// }) {
+//   const { el, scroller, container } = args
+//   const Horizon = scroller.clientHeight // 可视窗口的高度
+//   const Scrolled = scroller.scrollTop // 已滚动高度
+//   const Node2Top = getTopDistance(el) - container.offsetTop // 节点距离文档顶部（指节点的上边界至文档顶部
+//   const NodeHeight = el.clientHeight // 元素自身的高度
+//   const Node2HorizonBottom = Horizon + Scrolled - Node2Top - NodeHeight //节点距离可视区间底部
 // }
