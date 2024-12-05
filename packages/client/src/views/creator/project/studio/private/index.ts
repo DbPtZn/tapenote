@@ -10,4 +10,5 @@ import TxtEdit from './TxtEditor.vue'
 import AudioEditor from './AudioEditor.vue'
 import FragmentTrash from './FragmentTrash.vue'
 import CreateBlankFragment from './CreateBlankFragment.vue'
-export { AudioFragment, Character, TTS, ASR, TipBtn, StudioToolbar, ToolbarButton, SpeakerSelectList, TxtEdit, FragmentTrash, CreateBlankFragment, AudioEditor }
+import AudioUploader from './AudioUploader.vue'
+export { AudioFragment, Character, TTS, ASR, TipBtn, StudioToolbar, ToolbarButton, SpeakerSelectList, TxtEdit, FragmentTrash, CreateBlankFragment, AudioEditor, AudioUploader }

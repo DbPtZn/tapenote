@@ -2,14 +2,14 @@
 import '@textbus/editor/bundles/textbus.min.css'
 import '@/editor/anime.scss'
 import { useThemeVars, useMessage, useDialog } from 'naive-ui'
-import { computed, h, inject, onBeforeMount, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, useTemplateRef, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, onUnmounted, reactive, useTemplateRef, watch } from 'vue'
 import _ from 'lodash'
 import { Editor } from '@textbus/editor'
 import { Icon } from '@iconify/vue'
 import { LibraryEnum } from '@/enums'
 import { Subscription, debounceTime, fromEvent } from '@tanbo/stream'
 import { VIEW_CONTAINER } from '@textbus/platform-browser'
-import { MemoProvider, MessageService, Player } from '@/editor'
+import { MemoProvider, MessageService } from '@/editor'
 import useStore from '@/store'
 import { useCover, useEditor, useMemo } from './hooks/_index'
 import { Bridge } from '../bridge'
@@ -59,9 +59,9 @@ const state = reactive({
   isSaving: false,
   toolbarHeight: 50, // 基于顶部固定工具条的高度调整滚动区的高度
   editorWidth: computed(() => bridge?.habit!.state.platform.width),
-  isSubtitleShow: true, //computed(() => bridge.habit.state.subtitle.isShow),
+  // isSubtitleShow: true, //computed(() => bridge.habit.state.subtitle.isShow),
   scrollTopPercent: 0,
-  subtitle: ''
+  // subtitle: ''
 })
 const autosave = computed(() => userStore.config.autosave) // 自动保存
 const saveInterval = computed(() => userStore.config.saveInterval) // 自动保存的间隔
@@ -71,7 +71,7 @@ watch(() => props.readonly, (is) => {
   state.isChangeByReadonly1 = true
   state.isChangeByReadonly2 = true
 })
-let player: Player
+// let player: Player
 let editor: Editor
 let lastContent = ''
 useEditor({
@@ -138,17 +138,18 @@ useEditor({
       })
     )
   }
-  if(props.lib === LibraryEnum.COURSE) {
-    player = edi.get(Player)
-    subs.push(
-      player.onSubtitleUpdate.subscribe(() => {
-        state.subtitle = player.subtitle
-      })
-      // player.onRateChange.subscribe((rate) => {
-      //   message.info(`当前播放速度：${rate}x`)
-      // })
-    )
-  }
+  // 这部分代码移至控制器插件中
+  // if(props.lib === LibraryEnum.COURSE) {
+  //   player = edi.get(Player)
+  //   subs.push(
+  //     player.onSubtitleUpdate.subscribe(() => {
+  //       state.subtitle = player.subtitle
+  //     })
+  //     player.onRateChange.subscribe((rate) => {
+  //       message.info(`当前播放速度：${rate}x`)
+  //     })
+  //   )
+  // }
   bridge?.setup(editor, props.lib)
 }).catch(err => {
   console.error(err)
@@ -344,9 +345,9 @@ onUnmounted(() => {
         readonly ? 'controller-disabled' : ''
       ]" 
       />
-    <div v-if="lib === LibraryEnum.COURSE && state.isSubtitleShow" class="subtitle">
+    <!-- <div v-if="lib === LibraryEnum.COURSE && state.isSubtitleShow" class="subtitle">
       {{ state.subtitle }}
-    </div>
+    </div> -->
     <div class="scroll-top-percent">
       <div class="scroll-top-percent-text">{{ Math.floor(state.scrollTopPercent * 100) + '%' }}</div>
     </div>
@@ -546,16 +547,16 @@ onUnmounted(() => {
   }
 }
 
-.subtitle {
-  text-align: center;
-  position: fixed;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
+// .subtitle {
+//   text-align: center;
+//   position: fixed;
+//   bottom: 50px;
+//   left: 50%;
+//   transform: translateX(-50%);
 
-  color: v-bind('themeVars.textColor1');
-  font-size: 24px;
-}
+//   color: v-bind('themeVars.textColor1');
+//   font-size: 24px;
+// }
 
 /** 定制滚动条 */
 /*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/

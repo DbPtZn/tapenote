@@ -1,50 +1,69 @@
 <script lang="ts" setup>
-import { VNode, inject, onBeforeMount, onMounted, onUnmounted, ref } from 'vue'
-import { useThemeVars } from 'naive-ui'
+import { inject, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { Injector, Subscription } from '@textbus/core'
 import _ from 'lodash'
-import * as UUID from 'uuid'
-import elementResizeDetector from 'element-resize-detector'
-import { Player } from '../..'
+import { Icon } from '@iconify/vue'
+import { Player, UITip } from '../..'
+
 const injector = inject('injector') as Injector
 const player = injector.get(Player)
-const props = defineProps<{
-  cmpts: VNode[]
-}>()
-const erd = elementResizeDetector()
-const themeVars = useThemeVars()
-const controllerData = ref<VNode[]>([])
 const controllerRef = ref<HTMLElement | null>(null)
-onBeforeMount(() => {
-  controllerData.value = props.cmpts.map(vnode => {
-    vnode.key = UUID.v4()
-    return vnode
-  })
-})
 const subs: Subscription[] = []
-const isPlaying = ref(false)
 onMounted(() => {
   subs.push(
     player.onStateUpdate.subscribe(() => {
-      if (player.isPlaying || player.isPause) {
-        isPlaying.value = true
+      state.isPlaying = player.isPlaying
+      state.isPause = player.isPause
+      state.isShowTool = true
+      if (!state.isPause && !state.isPlaying) {
+        state.isShowTool = false
       }
-    }),
-    player.onPlayOver.subscribe(() => {
-      isPlaying.value = false
     })
   )
 })
+
+const state = reactive({
+  isShowTool: false,
+  isPlaying: false,
+  isPause: false
+})
+const methods = {
+  playpause() {
+    if (!player.isPlaying && !player.isPause) {
+      player.start()
+      return
+    }
+    if (player.isPlaying && !player.isPause) return player.pause()
+    if (!player.isPlaying && player.isPause) return player.resume()
+  },
+  stop() {
+    player.stop()
+  }
+}
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
-  controllerData.value = []
 })
 </script>
 
 <template>
-  <div v-if="isPlaying" ref="controllerRef" class="controller">
+  <div v-if="state.isShowTool" ref="controllerRef" class="controller">
     <div class="tools">
-      <component class="tool-item" v-for="node in controllerData" :key="(node.key as string)" :is="node" />
+      <!-- 开始暂停继续 -->
+      <div class="option">
+        <UITip :tip="(!state.isPlaying && !state.isPause) ? '开始' : ((state.isPlaying && !state.isPause) ? '暂停' : '继续')">
+          <n-button class="btn" block text :size="'large'" @click="methods.playpause">
+            <Icon :icon="state.isPlaying ? 'material-symbols:pause-rounded' : 'material-symbols:play-arrow-rounded'" height="24" />
+          </n-button>
+        </UITip>
+      </div>
+      <!-- 停止 -->
+      <div class="option">
+        <UITip :tip="'停止'">
+          <n-button class="btn" block text :size="'large'" @click="methods.stop()" :disabled="!state.isPlaying && !state.isPause">
+            <Icon icon="material-symbols:stop-rounded" height="24" />
+          </n-button>
+        </UITip>
+      </div>
     </div>
   </div>
 </template>

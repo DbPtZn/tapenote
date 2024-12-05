@@ -46,9 +46,6 @@ const state = reactive({
   isSaving: false,
   isToolbarShow: false,
   isDrawShow: false,
-  // course
-  isSubtitleShow: false,
-  isNoteShow: false
 })
 
 watch(
@@ -64,9 +61,9 @@ const navMethods = {
     state.isToolbarShow = !state.isToolbarShow
     bridge.handleToolbarCollapse()
   },
-  handleSubtitle() {
-    state.isSubtitleShow = !state.isSubtitleShow
-  },
+  // handleSubtitle() {
+  //   state.isSubtitleShow = !state.isSubtitleShow
+  // },
   handleMore() {
     if (props.lib !== LibraryEnum.NOTE && !data.value?.parentProjects) {
       projectStore.getParentProjects(props.id, props.account, props.hostname)
@@ -285,14 +282,14 @@ onUnmounted(() => {
         <!-- <n-icon v-if="state.isSaving" class="rotate" :component="AutorenewOutlined" :size="22" /> -->
         <Icon v-if="state.isSaving" class="rotate" icon="material-symbols:autorenew-rounded" height="22" />
       </div>
-      <TooltipButton
+      <!-- <TooltipButton
         v-if="lib === LibraryEnum.COURSE"
         class="top-nav-btn"
         :icon="state.isSubtitleShow ? Subtitles : SubtitlesOff"
         :disabled="state.isReadonly"
         :tip="'字幕'"
         @click="navMethods.handleSubtitle"
-      />
+      /> -->
       <!-- 投稿 -->
       <n-button
         v-if="lib !== LibraryEnum.PROCEDURE"
@@ -340,10 +337,10 @@ onUnmounted(() => {
                 :consistent-menu-width="false"
               />
             </n-space>
-            <n-space v-if="lib === LibraryEnum.COURSE" :justify="'space-between'" :align="'center'">
+            <!-- <n-space v-if="lib === LibraryEnum.COURSE" :justify="'space-between'" :align="'center'">
               <span>字幕</span>
               <n-switch v-model:value="bridge.habit.state.subtitle.show" />
-            </n-space>
+            </n-space> -->
             <n-space :justify="'space-between'" :align="'center'">
               <span>大纲视图</span>
               <n-switch v-model:value="bridge.habit.state.platform.isOutlineShow" @update:value="bridge.handleOutlineShow()" />

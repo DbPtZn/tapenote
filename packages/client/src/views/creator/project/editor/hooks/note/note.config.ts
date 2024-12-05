@@ -115,7 +115,7 @@ import {
   wordExplainComponentLoader
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
-import { useUploadImg } from '../../../../_utils'
+import { useUploadImg } from '../../../../_hooks'
 import { getResourceDomain } from '../../../../_hooks'
 import { resolve } from 'path'
 import { uploader } from '../uploader'

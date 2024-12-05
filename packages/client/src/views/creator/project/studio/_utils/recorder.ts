@@ -108,7 +108,7 @@ export class AudioRecorder {
   }
 
   destroy() {
-    if(this.mediaRecorder) {
+    if (this.mediaRecorder) {
       this.mediaRecorder.stop()
       this.mediaRecorder.onstop = null
     }
@@ -159,78 +159,75 @@ export class AudioRecorder {
   static audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
     const numChannels = buffer.numberOfChannels
     const sampleRate = buffer.sampleRate
-    const format = 1 // PCM
     const bitsPerSample = 16
-
     const bytesPerSample = bitsPerSample / 8
+
+    const format = 1 // PCM
     const blockAlign = numChannels * bytesPerSample
     const byteRate = sampleRate * blockAlign
-    const dataLength = buffer.length * bytesPerSample
-
+    const dataLength = buffer.length * numChannels * bytesPerSample
     const bufferLength = 44 + dataLength
+
     const arrayBuffer = new ArrayBuffer(bufferLength)
     const dataView = new DataView(arrayBuffer)
 
     let offset = 0
+
+    // Helper function to write strings
     const writeString = (str: string) => {
       for (let i = 0; i < str.length; i++) {
         dataView.setUint8(offset++, str.charCodeAt(i))
       }
     }
 
-    // RIFF identifier
-    writeString('RIFF')
-    dataView.setUint32(offset, bufferLength - 8, true)
-    offset += 4
-    // RIFF type
-    writeString('WAVE')
-    // format chunk identifier
-    writeString('fmt ')
-    dataView.setUint32(offset, 16, true)
-    offset += 4
-    dataView.setUint16(offset, format, true)
-    offset += 2
-    dataView.setUint16(offset, numChannels, true)
-    offset += 2
-    dataView.setUint32(offset, sampleRate, true)
-    offset += 4
-    dataView.setUint32(offset, byteRate, true)
-    offset += 4
-    dataView.setUint16(offset, blockAlign, true)
-    offset += 2
-    dataView.setUint16(offset, bitsPerSample, true)
-    offset += 2
-    // data chunk identifier
-    writeString('data')
-    dataView.setUint32(offset, dataLength, true)
-    offset += 4
+    // Helper function to convert floating-point sample to PCM16
+    const convertToPCM16 = (sample: number): number => {
+      const clippedSample = Math.max(-1, Math.min(1, sample))
+      return clippedSample < 0 ? clippedSample * 0x8000 : clippedSample * 0x7fff
+    }
 
-    for (let channel = 0; channel < numChannels; channel++) {
-      const channelData = buffer.getChannelData(channel)
-      for (let i = 0; i < channelData.length; i++) {
-        const sample = Math.max(-1, Math.min(1, channelData[i]))
-        dataView.setInt16(44 + channel * bytesPerSample + i * bytesPerSample, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true)
+    // Write WAV header
+    const writeWavHeader = () => {
+      writeString('RIFF') // ChunkID
+      dataView.setUint32(offset, bufferLength - 8, true) // ChunkSize
+      offset += 4
+      writeString('WAVE') // Format
+
+      writeString('fmt ') // Subchunk1ID
+      dataView.setUint32(offset, 16, true) // Subchunk1Size
+      offset += 4
+      dataView.setUint16(offset, format, true) // AudioFormat
+      offset += 2
+      dataView.setUint16(offset, numChannels, true) // NumChannels
+      offset += 2
+      dataView.setUint32(offset, sampleRate, true) // SampleRate
+      offset += 4
+      dataView.setUint32(offset, byteRate, true) // ByteRate
+      offset += 4
+      dataView.setUint16(offset, blockAlign, true) // BlockAlign
+      offset += 2
+      dataView.setUint16(offset, bitsPerSample, true) // BitsPerSample
+      offset += 2
+
+      writeString('data') // Subchunk2ID
+      dataView.setUint32(offset, dataLength, true) // Subchunk2Size
+      offset += 4
+    }
+
+    writeWavHeader()
+
+    // Interleave and write sample data
+    for (let i = 0; i < buffer.length; i++) {
+      for (let channel = 0; channel < numChannels; channel++) {
+        const channelData = buffer.getChannelData(channel)
+        const sample = convertToPCM16(channelData[i])
+        const outputIndex = 44 + i * numChannels * bytesPerSample + channel * bytesPerSample
+        dataView.setInt16(outputIndex, sample, true)
       }
     }
 
     return arrayBuffer
   }
-
-  // static async convertAudioBufferToOgg(audioBuffer: AudioBuffer) {
-  //   // 1. 将 AudioBuffer 转为 PCM 数据
-  //   // const arrayBuffer = audioBufferToArrayBuffer(audioBuffer)
-
-  //   // 2. 将 AudioBuffer 转换为 PCM 数据
-  //   const interleavedData = interleaveAudioBuffer(audioBuffer)
-
-  //   // 3. 使用 libopus.js 编码为 Opus 数据
-  //   const encodedOpusData = await encodeToOpus(interleavedData, audioBuffer.sampleRate, audioBuffer.numberOfChannels)
-
-  //   // 4. 使用 ogg.js 封装为 OGG 格式
-  //   const oggBlob = encodeToOgg(encodedOpusData);
-
-  //   return oggBlob
-  // }
 
   private removeSilence(buffer: AudioBuffer): AudioBuffer {
     const threshold = 0.01 // 静音阈值
@@ -422,4 +419,155 @@ function audioBufferToArrayBuffer(audioBuffer) {
 //   }
 
 //   return trimmedBuffer
+// }
+
+// static audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
+//   const numChannels = buffer.numberOfChannels
+//   const sampleRate = buffer.sampleRate
+//   const format = 1 // PCM
+//   const bitsPerSample = 16
+
+//   const bytesPerSample = bitsPerSample / 8
+//   const blockAlign = numChannels * bytesPerSample
+//   const byteRate = sampleRate * blockAlign
+//   const dataLength = buffer.length * numChannels * bytesPerSample
+
+//   const bufferLength = 44 + dataLength
+//   const arrayBuffer = new ArrayBuffer(bufferLength)
+//   const dataView = new DataView(arrayBuffer)
+
+//   let offset = 0
+//   const writeString = (str: string) => {
+//     for (let i = 0; i < str.length; i++) {
+//       dataView.setUint8(offset++, str.charCodeAt(i))
+//     }
+//   }
+
+//   const writeWavHeader = () => {
+//     writeString('RIFF')
+//     dataView.setUint32(offset, bufferLength - 8, true)
+//     offset += 4
+//     writeString('WAVE')
+
+//     writeString('fmt ')
+//     dataView.setUint32(offset, 16, true)
+//     offset += 4
+//     dataView.setUint16(offset, format, true)
+//     offset += 2
+//     dataView.setUint16(offset, numChannels, true)
+//     offset += 2
+//     dataView.setUint32(offset, sampleRate, true)
+//     offset += 4
+//     dataView.setUint32(offset, byteRate, true)
+//     offset += 4
+//     dataView.setUint16(offset, blockAlign, true)
+//     offset += 2
+//     dataView.setUint16(offset, bitsPerSample, true)
+//     offset += 2
+
+//     writeString('data')
+//     dataView.setUint32(offset, dataLength, true)
+//     offset += 4
+//   }
+
+//   writeWavHeader()
+
+//   for (let i = 0; i < buffer.length; i++) {
+//     for (let channel = 0; channel < numChannels; channel++) {
+//       const channelData = buffer.getChannelData(channel)
+//       const sample = channelData[i]
+//       const clippedSample = Math.max(-1, Math.min(1, sample))
+//       const intSample = clippedSample < 0 ? clippedSample * 0x8000 : clippedSample * 0x7fff
+
+//       const outputIndex = 44 + (i * numChannels + channel) * bytesPerSample
+//       dataView.setInt16(outputIndex, intSample, true)
+//     }
+//   }
+
+//   return arrayBuffer
+// }
+
+// static audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
+//   const numChannels = buffer.numberOfChannels
+//   const sampleRate = buffer.sampleRate
+//   const format = 1 // PCM
+//   const bitsPerSample = 16
+
+//   const bytesPerSample = bitsPerSample / 8
+//   const blockAlign = numChannels * bytesPerSample
+//   const byteRate = sampleRate * blockAlign
+//   const dataLength = buffer.length * bytesPerSample
+
+//   const bufferLength = 44 + dataLength
+//   const arrayBuffer = new ArrayBuffer(bufferLength)
+//   const dataView = new DataView(arrayBuffer)
+
+//   let offset = 0
+//   const writeString = (str: string) => {
+//     for (let i = 0; i < str.length; i++) {
+//       dataView.setUint8(offset++, str.charCodeAt(i))
+//     }
+//   }
+
+//   // RIFF identifier
+//   writeString('RIFF')
+//   dataView.setUint32(offset, bufferLength - 8, true)
+//   offset += 4
+//   // RIFF type
+//   writeString('WAVE')
+//   // format chunk identifier
+//   writeString('fmt ')
+//   dataView.setUint32(offset, 16, true)
+//   offset += 4
+//   dataView.setUint16(offset, format, true)
+//   offset += 2
+//   dataView.setUint16(offset, numChannels, true)
+//   offset += 2
+//   dataView.setUint32(offset, sampleRate, true)
+//   offset += 4
+//   dataView.setUint32(offset, byteRate, true)
+//   offset += 4
+//   dataView.setUint16(offset, blockAlign, true)
+//   offset += 2
+//   dataView.setUint16(offset, bitsPerSample, true)
+//   offset += 2
+//   // data chunk identifier
+//   writeString('data')
+//   dataView.setUint32(offset, dataLength, true)
+//   offset += 4
+
+//   for (let i = 0; i < buffer.length; i++) {
+//     for (let channel = 0; channel < numChannels; channel++) {
+//       const channelData = buffer.getChannelData(channel);
+//       const sample = Math.max(-1, Math.min(1, channelData[i]));
+//       const outputIndex = 44 + (i * numChannels + channel) * bytesPerSample; // 按通道连续写入
+//       dataView.setInt16(outputIndex, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+//     }
+//   }
+
+//   // for (let channel = 0; channel < numChannels; channel++) {
+//   //   const channelData = buffer.getChannelData(channel)
+//   //   for (let i = 0; i < channelData.length; i++) {
+//   //     const sample = Math.max(-1, Math.min(1, channelData[i]))
+//   //     dataView.setInt16(44 + channel * bytesPerSample + i * bytesPerSample, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true)
+//   //   }
+//   // }
+
+//   return arrayBuffer
+// }
+
+// static async convertAudioBufferToOgg(audioBuffer: AudioBuffer) {
+//   // 1. 将 AudioBuffer 转为 PCM 数据
+//   // const arrayBuffer = audioBufferToArrayBuffer(audioBuffer)
+
+//   // 2. 将 AudioBuffer 转换为 PCM 数据
+//   const interleavedData = interleaveAudioBuffer(audioBuffer)
+
+//   // 3. 使用 libopus.js 编码为 Opus 数据
+//   const encodedOpusData = await encodeToOpus(interleavedData, audioBuffer.sampleRate, audioBuffer.numberOfChannels)
+
+//   // 4. 使用 ogg.js 封装为 OGG 格式
+//   const oggBlob = encodeToOgg(encodedOpusData);
+
+//   return oggBlob
 // }

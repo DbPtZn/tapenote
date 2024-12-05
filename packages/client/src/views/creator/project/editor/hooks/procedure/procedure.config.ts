@@ -1,26 +1,42 @@
-import { 
-  InlineToolbarPlugin, Toolbar, boldTool,
-  historyBackTool, historyForwardTool,
-  italicTool, strikeThroughTool, underlineTool,
-  fontSizeTool, textIndentTool, colorTool, textBackgroundTool,
-  linkTool, fontFamilyTool, unlinkTool, imageTool, textAlignTool, tableRemoveTool,
-  formatPainterTool, tableAddTool, cleanTool,
-  colorFormatLoader, colorFormatter, textBackgroundColorFormatter,
-  textBackgroundColorFormatLoader, animeFormatter, animeFormatLoader,
-  AddAnimeService, AnimeComponentSupport,
-  defaultGroupTool, DialogProvider, componentsTool,
+import {
+  InlineToolbarPlugin,
+  Toolbar,
+  boldTool,
+  historyBackTool,
+  historyForwardTool,
+  italicTool,
+  strikeThroughTool,
+  underlineTool,
+  fontSizeTool,
+  textIndentTool,
+  colorTool,
+  textBackgroundTool,
+  linkTool,
+  fontFamilyTool,
+  unlinkTool,
+  imageTool,
+  textAlignTool,
+  tableRemoveTool,
+  tableAddTool,
+  cleanTool,
+  animeFormatter,
+  animeFormatLoader,
+  AddAnimeService,
+  AnimeComponentSupport,
+  defaultGroupTool,
+  DialogProvider,
+  componentsTool,
   AnimeContextmenuPlugin,
-  OutlinePlugin, outlineTool, OutlineService, PreviewPlayerController,
-  preview_startTool, preview_stopTool,
-  imageB2UComponent, imageB2UComponentLoader,  CustomCommander,
-  ColorProvider, Structurer, ThemeProvider, Player, ImgToUrlService,
+  OutlinePlugin,
+  OutlineService,
+  PreviewPlayerController,
+  CustomCommander,
+  ColorProvider,
+  Structurer,
+  ThemeProvider,
+  Player,
+  ImgToUrlService,
   AnimeService,
-  preComponent,
-  imageCardComponent,
-  jumbotronComponent,
-  imageCardComponentLoader,
-  jumbotronComponentLoader,
-  preComponentLoader,
   ContextMenu,
   MemoService,
   MessageService,
@@ -29,58 +45,49 @@ import {
   i18n,
   rootAnimeComponent,
   rootAnimeComponentLoader,
-  animeTool, animeBadgeVisibleTool, animeIgnoreTool, animeElementVisibleTool, AnimeProvider,
-  listComponent, listComponentLoader, headingComponent, headingComponentLoader,
-  paragraphComponent, paragraphComponentLoader,
-  animeComponent, animeComponentLoader, animeIgnoreComponent, animeIgnoreComponentLoader,
-  headingTool, olTool, ulTool, insertParagraphAfterTool, insertParagraphBeforeTool, 
-  tableComponent, tableComponentLoader, blockquoteComponent, blockquoteComponentLoader,
-  dividerTool, dividerComponent, dividerComponentLoader, Memo, ImgToolbarPlugin, ShotcutPlugin, MemoProvider, stepComponent, stepComponentLoader, timelineComponent, timelineComponentLoader, todolistComponent, todolistComponentLoader, wordExplainComponent, wordExplainComponentLoader, defaultComponents, defaultComponentLoaders, blockBackgroundColorFormatter, defaultAttributeLoaders, defaultAttributes, defaultFormatters, defaultFormatLoaders, codeTool,
+  animeTool,
+  animeBadgeVisibleTool,
+  animeIgnoreTool,
+  animeElementVisibleTool,
+  AnimeProvider,
+  headingTool,
+  olTool,
+  ulTool,
+  insertParagraphAfterTool,
+  insertParagraphBeforeTool,
+  dividerTool,
+  Memo,
+  ImgToolbarPlugin,
+  ShotcutPlugin,
+  MemoProvider,
+  defaultComponents,
+  defaultComponentLoaders,
+  defaultAttributeLoaders,
+  defaultAttributes,
+  defaultFormatters,
+  defaultFormatLoaders,
+  codeTool
 } from '@/editor'
 import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
-  alertComponent,
-  alertComponentLoader,
-  audioComponent,
-  audioComponentLoader,
-  blockComponent,
-  blockComponentLoader,
-  // defaultAttributeLoaders,
-  // defaultAttributes,
-  // defaultComponentLoaders,
-  // defaultComponents,
-  // defaultFormatLoaders,
-  // defaultFormatters,
   EditorOptions,
-  katexComponent,
-  katexComponentLoader,
-  LinkJumpTipPlugin,
-  // stepComponent,
-  // stepComponentLoader,
-  // timelineComponent,
-  // timelineComponentLoader,
-  // todolistComponent,
-  // todolistComponentLoader,
-  videoComponent,
-  videoComponentLoader,
-  // wordExplainComponent,
-  // wordExplainComponentLoader
+  LinkJumpTipPlugin
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
-import { useUploadImg } from '../../../../_utils'
+import { useUploadImg } from '../../../../_hooks'
 import { uploader } from '../uploader'
 import { getResourceDomain } from '@/views/creator/_hooks'
 
 export function getProcedureConfig(args: {
-  account: string,
-  hostname: string,
-  dirname: string,
-  rootRef: HTMLElement,
-  editorRef: HTMLElement,
-  scrollerRef: HTMLElement,
-  memos: Memo[],
-  toolbarRef?: HTMLElement,
-  controllerRef?: HTMLElement,
+  account: string
+  hostname: string
+  dirname: string
+  rootRef: HTMLElement
+  editorRef: HTMLElement
+  scrollerRef: HTMLElement
+  memos: Memo[]
+  toolbarRef?: HTMLElement
+  controllerRef?: HTMLElement
   content?: string
 }) {
   const { account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, memos, content } = args
@@ -105,43 +112,60 @@ export function getProcedureConfig(args: {
     attributeLoaders: defaultAttributeLoaders,
     providers: [
       { provide: Commander, useClass: CustomCommander },
-      AnimeProvider, AddAnimeService, DialogProvider, 
-      OutlineService, ColorProvider, AnimeService,
-      Structurer, ThemeProvider, Player, ImgToUrlService,
-      MessageService, StudioService,ImgService,
-      MemoService, MemoProvider
+      AnimeProvider,
+      AddAnimeService,
+      DialogProvider,
+      OutlineService,
+      ColorProvider,
+      AnimeService,
+      Structurer,
+      ThemeProvider,
+      Player,
+      ImgToUrlService,
+      MessageService,
+      StudioService,
+      ImgService,
+      MemoService,
+      MemoProvider
     ],
     plugins: [
-      () => new Toolbar([
-        [historyBackTool, historyForwardTool],
-        [defaultGroupTool],
-        [componentsTool],
-        [headingTool],
-        [animeTool, animeIgnoreTool],
-        [boldTool, italicTool, strikeThroughTool, underlineTool, codeTool],
-        [olTool, ulTool],
-        [fontSizeTool, textIndentTool],
-        [colorTool, textBackgroundTool],
-        [insertParagraphBeforeTool, insertParagraphAfterTool],
-        [fontFamilyTool],
-        [linkTool, unlinkTool],
-        [imageTool],
-        [tableAddTool, tableRemoveTool],
-        // [formatPainterTool],
-        [dividerTool],
-        [cleanTool],
-      ], toolbarRef!),
       () =>
-        new InlineToolbarPlugin([
-          [headingTool],
-          [animeTool, animeIgnoreTool],
-          [textAlignTool],
-          [boldTool, italicTool, strikeThroughTool, underlineTool, codeTool],
-          [colorTool, textBackgroundTool],
-          [fontSizeTool],
-          [animeBadgeVisibleTool, animeElementVisibleTool],
-          [cleanTool]
-        ], scrollerRef),
+        new Toolbar(
+          [
+            [historyBackTool, historyForwardTool],
+            [defaultGroupTool],
+            [componentsTool],
+            [headingTool],
+            [animeTool, animeIgnoreTool],
+            [boldTool, italicTool, strikeThroughTool, underlineTool, codeTool],
+            [olTool, ulTool],
+            [fontSizeTool, textIndentTool],
+            [colorTool, textBackgroundTool],
+            [insertParagraphBeforeTool, insertParagraphAfterTool],
+            [fontFamilyTool],
+            [linkTool, unlinkTool],
+            [imageTool],
+            [tableAddTool, tableRemoveTool],
+            // [formatPainterTool],
+            [dividerTool],
+            [cleanTool]
+          ],
+          toolbarRef!
+        ),
+      () =>
+        new InlineToolbarPlugin(
+          [
+            [headingTool],
+            [animeTool, animeIgnoreTool],
+            [textAlignTool],
+            [boldTool, italicTool, strikeThroughTool, underlineTool, codeTool],
+            [colorTool, textBackgroundTool],
+            [fontSizeTool],
+            [animeBadgeVisibleTool, animeElementVisibleTool],
+            [cleanTool]
+          ],
+          scrollerRef
+        ),
       () => new ImgToolbarPlugin([`${ResourceDomain}`]),
       () => new LinkJumpTipPlugin(),
       () => new OutlinePlugin(),
@@ -149,10 +173,7 @@ export function getProcedureConfig(args: {
       () => new ContextMenu(),
       () => new AnimeContextmenuPlugin(),
       () => new AnimeComponentSupport(),
-      () => new PreviewPlayerController([
-        preview_startTool,
-        preview_stopTool
-      ],controllerRef!),
+      () => new PreviewPlayerController(controllerRef!)
     ],
     uploader(config) {
       return uploader(config, account, hostname)

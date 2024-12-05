@@ -1,24 +1,34 @@
 <script lang="ts" setup>
 import useStore from '@/store'
 import { Icon } from '@iconify/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { getServerToken } from '@/api'
-import { UploadFileInfo } from 'naive-ui'
-
+import { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui'
+import { useUploadImg } from '../../../_hooks'
 const { userStore } = useStore()
-const accessToken = computed(() => getServerToken(userStore.account, userStore.hostname))
+// const accessToken = computed(() => getServerToken(userStore.account, userStore.hostname))
 const emits = defineEmits<{
   finish: [url: string]
   error: []
 }>()
-function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
-  if (args.event) {
-    const path = userStore.resourceDomain + (args.event.currentTarget as XMLHttpRequest).response
-    emits('finish', path)
-  }
-}
+
+// function handleFinish(args: { file: UploadFileInfo; event?: ProgressEvent }) {
+//   if (args.event) {
+//     const path = userStore.resourceDomain + (args.event.currentTarget as XMLHttpRequest).response
+//     emits('finish', path)
+//   }
+// }
 const handleError = () => {
   emits('error')
+}
+// const cover = ref<string>('')
+const { uploadImgFile } = useUploadImg(userStore.account, userStore.hostname)
+async function useImgRequest(options: UploadCustomRequestOptions) {
+  if(!options?.file?.file) return
+  const url = await uploadImgFile(options.file.file)
+  // model.value.avatar = url
+  // cover.value = url
+  emits('finish', url)
 }
 
 </script>
@@ -26,11 +36,7 @@ const handleError = () => {
 <template>
   <n-upload
     class="uploader"
-    :action="`${userStore.hostname}/upload/img`"
-    :headers="{
-      Authorization: `Bearer ${accessToken}`
-    }"
-    @finish="handleFinish"
+    :custom-request="useImgRequest"
     @error="handleError"
   >
     <n-upload-dragger>

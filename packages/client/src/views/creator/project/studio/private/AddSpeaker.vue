@@ -7,7 +7,7 @@ import TencentTimbreList from './_utils/TencentTimbreList.vue'
 import { Tip } from '../../../_common'
 import { onMounted } from 'vue'
 import { hostname } from 'os'
-import { useUploadImg } from '@/views/creator/_utils'
+import { useUploadImg } from '../../../_hooks'
 
 type CreateSpeakerDto = Parameters<ReturnType<typeof useStore>['speakerStore']['create']>[0]
 interface ModelType {

@@ -9,17 +9,8 @@ import {
   Controller,
   rootPlayerComponentLoader,
   rootPlayerComponent,
-  startTool,
-  rewindTool,
-  forwardTool,
-  speedUpTool,
-  speedDownTool,
-  replayTool,
-  stopTool,
   Player,
   CourseData,
-  volumeUpTool,
-  volumeDownTool,
   RootEventService,
   PlayerContextMenuPlugin,
   AnimeProvider,
@@ -82,11 +73,7 @@ export function getCourseConfig(args: {
       MemoService
     ],
     plugins: [
-      () =>
-        new Controller(
-          [speedDownTool, rewindTool, startTool, forwardTool, speedUpTool, replayTool, stopTool, volumeUpTool, volumeDownTool],
-          controllerRef!
-        ),
+      () => new Controller(controllerRef!),
       () => new PlayerContextMenuPlugin(),
       () => new OutlinePlugin(),
       () => new LinkJumpTipPlugin()

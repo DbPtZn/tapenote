@@ -87,7 +87,7 @@ function handleClick() {
           <div class="option-title">年付</div>
           <div class="option-price">
             <span class="price-yuan">¥</span>
-            <span>64</span>
+            <span>79</span>
           </div>
           <div class="option-desc">
             <div class="desc-title">增值服务</div>

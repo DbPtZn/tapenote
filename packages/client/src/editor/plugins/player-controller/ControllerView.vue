@@ -7,18 +7,13 @@ import { useDraggable } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
 import { formatTime } from './formatTime'
 import { Player, Structurer, generateRandomString } from '../..'
-import { DragHandle } from './toolkit/_utils/_index'
 import { UITip } from '../..'
 import { reactive } from 'vue'
-import { stat } from 'fs'
 
 const injector = inject<Injector>('injector')!
 const player = injector.get(Player)
 const structurer = injector.get(Structurer)
 const rootRef = structurer.rootRef as HTMLElement
-const props = defineProps<{
-  cmpts: VNode[]
-}>()
 const message = useMessage()
 const subs: Subscription[] = []
 const controllerData = ref<VNode[]>([])
@@ -26,12 +21,7 @@ const controllerRef = ref<HTMLElement | null>(null)
 const isFixed = ref(false)
 const isAutoHide = ref(false)
 const isControllerShow = ref(true)
-onBeforeMount(() => {
-  controllerData.value = props.cmpts.map(vnode => {
-    vnode.key = generateRandomString(8)
-    return vnode
-  })
-})
+
 const draggerRef = ref<HTMLElement | null>(null)
 const rect = rootRef.getBoundingClientRect()
 const { x, y, style } = useDraggable(controllerRef, {
@@ -130,6 +120,9 @@ onMounted(() => {
     player.onStateUpdate.subscribe(() => {
       state.isPlaying = player.isPlaying
       state.isPause = player.isPause
+    }),
+    player.onSubtitleUpdate.subscribe(() => {
+      state.subtitle = player.subtitle
     })
   )
 })
@@ -138,6 +131,8 @@ const state = reactive({
   isPlaying: false,
   isPause: false,
   isSilence: false,
+  subtitle: '',
+  isSubtitleShow: true,
   isShowTimeline: true,
   recordVolume: 100, // 记录静音前的音量
   volume: 100,
@@ -186,7 +181,10 @@ const methods = {
   },
   handleTimeline: () => {
     state.isShowTimeline = !state.isShowTimeline
-  }
+  },
+  handleSubtitle() {
+    state.isSubtitleShow = !state.isSubtitleShow
+  },
 }
 
 onUnmounted(() => {
@@ -200,7 +198,7 @@ onUnmounted(() => {
 <template>
   <div v-show="isControllerShow" ref="controllerRef" :class="['controller', isFixed ? 'fixed' : '']" :style="style">
     <div ref="draggerRef" class="dragger" :style="{ cursor: isFixed ? 'move' : 'pointer' }" @dblclick="handleChange">
-      <n-icon :component="DragHandle" :size="24" />
+      <Icon icon="material-symbols:drag-handle-rounded" height="24" />
     </div>
     <div class="tools">
       <!-- 播放速度 -->
@@ -283,6 +281,14 @@ onUnmounted(() => {
           </n-button>
         </UITip>
       </div>
+      <!-- 字幕开关 -->
+      <div class="option">
+        <UITip :tip="state.isSubtitleShow ? '关闭字幕' : '开启字幕'">
+          <n-button class="btn" block text :size="'large'" @click="methods.handleSubtitle()">
+            <Icon :icon="state.isSubtitleShow ? 'material-symbols:subtitles' : 'material-symbols:subtitles-off'" height="24" />
+          </n-button>
+        </UITip>
+      </div>
     </div>
     <div class="footer" @dblclick="handleHideController"></div>
   </div>
@@ -296,9 +302,22 @@ onUnmounted(() => {
       {{ formatTime(duration) }}
     </div>
   </div>
+  <div v-if="state.isSubtitleShow" class="subtitle">
+    {{ state.subtitle }}
+  </div>
 </template>
 
 <style lang="scss" scoped>
+.subtitle {
+  text-align: center;
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  color: var(--tb-textColor1);
+  font-size: 24px;
+}
 .speed-slider {
   display: flex;
   flex-direction: row;

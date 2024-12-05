@@ -35,7 +35,7 @@ const props = defineProps<{
   focus: boolean
   readonly: boolean
 }>()
-const { projectStore, clipboardStore } = useStore()
+const { projectStore, clipboardStore, userStore } = useStore()
 const message = useMessage()
 const dialog = useDialog()
 const themeVars = useThemeVars()
@@ -81,7 +81,8 @@ const {
   handleInputting,
   handleAddBlank,
   handleModeSwitch,
-  handleSpeakerChange
+  handleSpeakerChange,
+  handleImportAudio
 } = useInput(props.id, props.account, props.hostname, bridge)
 const { removedFragments, handleTrashManage } = useTrash(props.id, props.account, props.hostname)
 const { checkAnimeState, checkPromoter, handleReorder } = usePromoter(props.id, bridge)
@@ -462,20 +463,6 @@ onUnmounted(() => {
           </div>
         </n-dropdown>
       </div>
-
-      <!-- <div style="width: 24px;" /> -->
-      <!-- <strong :class="[state.isReadonly ? 'disabled' : '']" style="white-space: nowrap; user-select: none;" @click="isTotalDurationShow = !isTotalDurationShow">
-        <span v-if="!isTotalDurationShow && !playerState.isPlaying" style="display: inline-block; min-width: 72px;">录音台</span>
-        <span v-if="isTotalDurationShow && !playerState.isPlaying" style="display: inline-block; min-width: 72px;">{{ utils.durationFormat(totalDuration) }}</span>
-        <span v-if="playerState.isPlaying" style="display: inline-block; min-width: 72px;">{{ utils.durationFormat(playerState.currentTime) }}</span>
-      </strong> -->
-      <!-- <n-dropdown trigger="click" :options="studioOptions" :disabled="state.isReadonly">
-        <n-button class="arrow" text size="small" :disabled="state.isReadonly">
-          <template #icon>
-            <n-icon :component="ArrowDropDown" :size="24"/>
-          </template>
-        </n-button>
-      </n-dropdown> -->
     </div>
     <!-- 主展示区 -->
     <div ref="scrollerEl" class="main" @contextmenu="handleContextmenu">
@@ -585,7 +572,7 @@ onUnmounted(() => {
             </n-button>
           </n-popselect>
           <!-- 导入音频文件 -->
-          <n-button class="toolbar-btn" quaternary size="small" :disabled="true">
+          <n-button class="toolbar-btn" quaternary size="small" :disabled="!userStore.isVip" @click="handleImportAudio">
             <template #icon>
               <n-icon :component="FileImport" :size="24" />
             </template>

@@ -7,9 +7,6 @@ import {
   defaultFormatters,
   rootComponent,
   rootComponentLoader,
-  type Editor,
-  createEditor,
-  Layout
 } from '@textbus/editor'
 import {
   ImgToUrlService,

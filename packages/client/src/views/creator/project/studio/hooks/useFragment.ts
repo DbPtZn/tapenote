@@ -1,4 +1,4 @@
-import useStore from '@/store'
+                        import useStore from '@/store'
 import { DropdownOption } from 'naive-ui'
 import { h, onUnmounted, reactive, ref } from 'vue'
 import _ from 'lodash'
@@ -333,7 +333,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
       return
     }
     try {
-      if (fragment.error) {
+      if (fragment.error && fragment.error.audio) {
         const audioUrl = URL.createObjectURL(fragment.error.audio)
         audio = audioUrl
       }
@@ -431,7 +431,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
   }
 
   function handleDownload(fragment: Fragment) {
-    if(fragment.error) {
+    if(fragment.error && fragment.error.audio) {
       const url = URL.createObjectURL(fragment.error.audio)
       const a = document.createElement('a')
       a.href = url

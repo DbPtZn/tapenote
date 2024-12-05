@@ -121,15 +121,15 @@ onUnmounted(() => {
           <span>
             <slot name="rebuild" />
           </span>
-          <span>
+          <!-- <span>
             <slot name="play" />
-          </span>
+          </span> -->
           <span>
             <slot name="delete" />
           </span>
-          <span>
+          <!-- <span>
             <slot name="download" />
-          </span>
+          </span> -->
         </div>
         <!-- 工具栏 -->
         <div v-if="!isFocus && !isLoading && !rebuild" class="toolbar toolbar-left">

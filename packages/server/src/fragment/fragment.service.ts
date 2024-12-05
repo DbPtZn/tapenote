@@ -295,6 +295,7 @@ export class FragmentService {
         // const finalAudio = this.storageService.createTempFilePath('.ogg')
         let finalAudio = ''
         try {
+          // throw ''
           const result = await this.useTTS({
             txt: text,
             model: fragmentSpeaker.model,
@@ -312,7 +313,7 @@ export class FragmentService {
           fragment.duration = result.duration
           fragment.timestamps = result.data.map(item => item.timestamp)
         } catch (error) {
-          console.log(`语音合成失败：${error.message}`)
+          console.log(`语音合成失败`, error.message)
           await this.projectService.updateSequence({ procedureId, fragmentId, userId, type: 'error' })
           continue // throw error
         }
@@ -323,6 +324,8 @@ export class FragmentService {
           keys.push(key)
         }
       }
+
+      if(fragments.length === 0) throw new Error('片段数据为空')
 
       const queryRunner = this.dataSource.createQueryRunner()
       await queryRunner.connect()

@@ -186,9 +186,8 @@ const subs = [
               })
             )
           })
-
-          // TODO 设置最大上传限制(防止文件过大导致上传失败)
-          // TODO 多片段并发上传会出现排序更新冲突问题，需改成多片段统一上传的方式
+          
+          // 由于多片段并发上传会出现排序更新冲突问题，所以采用多片段统一上传的方式
           const tasks = audioChunks.map((audiobuffer, index) => {
             const wavData = AudioRecorder.audioBufferToWav(audiobuffer)
             const blob = new Blob([wavData], { type: 'audio/wav' })

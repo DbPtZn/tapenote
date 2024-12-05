@@ -22,9 +22,11 @@ interface Fragment {
   // 错误标记 上传失败的片段会标记为 true
   error?: {
     // 缓存片段音频数据 转写成功后会将该元素置为 null
-    audio: Blob
-    actions: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0][0]['actions']
-    duration: number
+    audio?: Blob
+    actions?: Parameters<typeof CreatorApi.prototype.fragment.createByAudio>[0][0]['actions']
+    duration?: number
+    txt?: string
+    speed?: number
     speakerId: string
   } | undefined,
   // 唯一标识符
@@ -516,31 +518,6 @@ export const useProjectStore = defineStore('projectStore', {
         })
       })
     },
-    // updateSidenoteContent(params: Parameters<typeof CreatorApi.prototype.project.updateSidenoteContent>[0], savingcb: () => void, account: string, hostname: string) {
-    //   return new Promise((resolve, reject) => {
-    //     const index = this.data.findIndex(i => i.id === params.id)
-    //     const account = this.data[index].account
-    //     const hostname = this.data[index].hostname
-    //     if (utils.isDiff(this.data[index].content, params.content)) {
-    //       savingcb && savingcb()
-    //       this.creatorApi(account, hostname).project
-    //         .updateSidenoteContent<{ updateAt: string }>(params)
-    //         .then(res => {
-    //           // 有可能在异步代码执行前切换了项目，所以需要确保 id 一致才进行 store 数据更新
-    //           if (this.data[index].id === params.id) {
-    //             this.data[index].updateAt = res.data.updateAt
-    //             this.data[index].sidenote = params.content
-    //           }
-    //           resolve(true)
-    //         })
-    //         .catch(err => {
-    //           resolve(false)
-    //         })
-    //     } else {
-    //       resolve(true)
-    //     }
-    //   })
-    // },
     updateSpeakerHistory(params: Parameters<typeof CreatorApi.prototype.project.updateSpeakerHistory>[0], account: string, hostname: string) {
       const { id, speakerId, type } = params
       // console.log(params)
@@ -793,41 +770,55 @@ export const useProjectStore = defineStore('projectStore', {
           data.forEach(fragment => {
             fragment.audio = ResourceDomain + fragment.audio
             fragment.speaker = speaker
-
-            if(fragment.key) {
-                // 用片段 id 替换排序信息中的占位 key
-                sequence?.some((item, index, arr) => {
-                  if(item === fragment.key) {
-                    arr[index] = fragment.id
-                    return true
-                  }
-                })
-                // 替换成完整片段
-                get()?.some((item, index, arr) => {
-                  if(item.key === fragment.key) {
-                    arr[index] = fragment
-                    arr[index].processing = false
-                    delete arr[index].key // 会影响到 data, 所以放序列处理后面
-                    return true
-                  }
-                })
-              } else {
-                console.error('异常，未读取到合成片段返回的 key 值')
-              }
-          })
-        } catch (error) {
-          params.data.forEach(param => {
-            // 片段创建失败的时候，应移除前端的临时片段
-            get()?.some((item, index, arr) => {
-              if(item.key === param.key) {
-                arr.splice(index, 1)
+            if(!fragment.key) return console.error('异常，未读取到合成片段返回的 key 值')
+            // 用片段 id 替换排序信息中的占位 key
+            sequence?.some((item, index, arr) => {
+              if(item === fragment.key) {
+                arr[index] = fragment.id
                 return true
               }
             })
-            sequence?.some((item, index, arr) => {
-              if(item === param.key) {
-               arr.splice(index, 1)
-               return true
+            // 替换成完整片段
+            get()?.some((item, index, arr) => {
+              if(item.key === fragment.key) {
+                arr[index] = fragment
+                arr[index].processing = false
+                delete arr[index].key // 会影响到 data, 所以放序列处理后面
+                return true
+              }
+            })
+          })
+          if (data.length < params.data.length) {
+            const keys = data.map(item => item.key) // 服务端返回的有效片段的 key
+            params.data.forEach(param => {
+              if (!keys.includes(param.key)) {
+                // 片段创建失败的时候, 标记失败片段
+                get()?.some((item, index, arr) => {
+                  if(item.key === param.key) {
+                    item.error = {
+                      txt: param.txt,
+                      speed: params.speed,
+                      speakerId: params.speakerId
+                    } 
+                    item.processing = false
+                    return true
+                  }
+                })
+              }
+            })
+          }
+        } catch (error) {
+          params.data.forEach(param => {
+            // 片段创建失败的时候, 标记失败片段
+            get()?.some((item, index, arr) => {
+              if(item.key === param.key) {
+                arr[index].error = {
+                  txt: param.txt,
+                  speed: params.speed,
+                  speakerId: params.speakerId
+                }
+                arr[index].processing = false
+                return true
               }
             })
           })
@@ -842,7 +833,6 @@ export const useProjectStore = defineStore('projectStore', {
         params.forEach(param => {
           const key = utils.randomString()
           param.key = key
-
           // 立即创建临时文本片段并插入到片段序列中
           const fragment: Fragment = {
             key,
@@ -871,43 +861,38 @@ export const useProjectStore = defineStore('projectStore', {
           get()?.push(fragment) // 不完全片段
           sequence?.push(key) // 用 key 占位
         })
-
         try {
           const resp = await this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment[]>(params, procedureId)
           const data = resp.data
           data.forEach(fragment => {
             fragment.audio = ResourceDomain + fragment.audio
             fragment.speaker = speaker
-            if(fragment.key) {
-              // 用片段 id 替换排序信息中的占位 key
-              sequence?.some((item, index, arr) => {
-                if(item === fragment.key) {
-                  arr[index] = fragment.id
-                  return true
-                }
-              })
-              // 替换成完整片段
-              get()?.some((item, index, arr) => {
-                if(item.key === fragment.key) {
-                  arr[index] = fragment
-                  arr[index].processing = false
-                  delete arr[index].key // 会影响到 data, 所以放序列处理后面
-                  return true
-                }
-              })
-            } else {
-              console.error('异常，未读取到合成片段返回的 key 值')
-            }
+            if(!fragment.key) return console.error('异常，未读取到合成片段返回的 key 值')
+            // 用片段 id 替换排序信息中的占位 key
+            sequence?.some((item, index, arr) => {
+              if(item === fragment.key) {
+                arr[index] = fragment.id
+                return true
+              }
+            })
+            // 替换成完整片段
+            get()?.some((item, index, arr) => {
+              if(item.key === fragment.key) {
+                arr[index] = fragment
+                arr[index].processing = false
+                delete arr[index].key // 会影响到 data, 所以放序列处理后面
+                return true
+              }
+            })
           })
           // 返回片段数量小于上传片段数量，意味着有片段处理失败，应删除掉失败的占位片段（以后可以进行更复杂的重新上传处理）
           if (data.length < params.length) {
             const keys = data.map(item => item.key) // 服务端返回的有效片段的 key
             params.forEach(param => {
               if (!keys.includes(param.key)) {
-                // 片段创建失败的时候，应移除前端的临时片段
+                // 片段创建失败的时候, 标记失败片段
                 get()?.some((item, index, arr) => {
                   if(item.key === param.key) {
-                    // arr.splice(index, 1)
                     item.error = param
                     item.processing = false
                     return true
@@ -918,7 +903,7 @@ export const useProjectStore = defineStore('projectStore', {
           }
         } catch (error) {
           params.forEach(param => {
-            // 片段创建失败的时候，应移除前端的临时片段
+            // 片段创建失败的时候, 标记失败片段
             get()?.some((item, index, arr) => {
               if(item.key === param.key) {
                 arr[index].transcript = ['识别失败，请重试'],
@@ -937,40 +922,48 @@ export const useProjectStore = defineStore('projectStore', {
       }
 
       /** 针对错误片段的重新创建 */
-      const rebuild = (fragment: Fragment) => {
+      const rebuild = async (fragment: Fragment) => {
         if(!fragment.error) return
         fragment.processing = true
-        return this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment[]>([{ key: fragment.key, ...fragment.error }], procedureId).then(res => {
-          const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
-          const data = res.data
-          data.forEach(f => {
-            f.audio = ResourceDomain + f.audio
-            f.speaker = fragment.speaker  // 直接沿用此前的 speaker 即可
-            if(f.key) {
-              // 用片段 id 替换排序信息中的占位 key
-              sequence?.some((item, index, arr) => {
-                if(item === f.key) {
-                  arr[index] = f.id
-                  return true
-                }
-              })
-              // 替换成完整片段
-              get()?.some((item, index, arr) => {
-                if(item.key === f.key) {
-                  console.log('替换', f)
-                  arr[index] = f
-                  arr[index].processing = false
-                  delete arr[index].error
-                  delete arr[index].key // 会影响到 data, 所以放序列处理后面
-                  return true
-                }
-              })
+        const { audio, duration, actions, txt, speakerId, speed } = fragment.error
+        let data: Fragment[] = []
+        try {
+          if (audio && duration && actions) {
+            const resp = await this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment[]>([{ key: fragment.key, audio, duration, actions, speakerId }], procedureId)
+            data = resp.data
+          } else if (txt) {
+            const resp = await this.creatorApi(account!, hostname!).fragment.createByText<Fragment[]>({ data: [{ key: fragment.key, txt }], procedureId, speakerId, speed: speed || 1 })
+            data = resp.data
+          }
+        } catch (error) {
+          fragment.processing = false
+        }
+        if(!data || data.length === 0) return
+        const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
+        data.forEach(f => {
+          f.audio = ResourceDomain + f.audio
+          f.speaker = fragment.speaker  // 直接沿用此前的 speaker 即可
+          if(!f.key) return
+          // 用片段 id 替换排序信息中的占位 key
+          sequence?.some((item, index, arr) => {
+            if(item === f.key) {
+              arr[index] = f.id
+              return true
             }
           })
-        }).catch(err => {
-          fragment.processing = false
+          // 替换成完整片段
+          get()?.some((item, index, arr) => {
+            if(item.key === f.key) {
+              arr[index] = f
+              arr[index].processing = false
+              delete arr[index].error
+              delete arr[index].key // 会影响到 data, 所以放序列处理后面
+              return true
+            }
+          })
         })
       }
+
       /** 创建空白片段 */
       const createBlank = (params: Parameters<typeof CreatorApi.prototype.fragment.createBlank>[0]) => {
         const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
@@ -982,6 +975,7 @@ export const useProjectStore = defineStore('projectStore', {
           sequence?.push(data.id)
         })
       }
+
       /** 通过分段创建片段 */
       const createBySegment = (params: Parameters<typeof CreatorApi.prototype.fragment.createBySegment>[0], sourceFragmentId: string, removeSourceFragment?: boolean) => {
         const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
@@ -1075,6 +1069,7 @@ export const useProjectStore = defineStore('projectStore', {
           })
         })
       }
+      
       /** 更新转写文字 */
       const updateTranscript = (params: Parameters<typeof CreatorApi.prototype.fragment.updateTranscript>[0]) => {
         params.procedureId = procedureId

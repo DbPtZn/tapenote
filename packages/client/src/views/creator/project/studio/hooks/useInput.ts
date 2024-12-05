@@ -3,10 +3,12 @@ import { useI18n } from 'vue-i18n'
 import { NMessageProvider, useDialog, useMessage } from 'naive-ui'
 import useStore, { TtsModel } from '@/store'
 import { Icon } from '@iconify/vue'
-import { CreateBlankFragment, SpeakerSelectList } from '../private'
+import { AudioUploader, CreateBlankFragment, SpeakerSelectList } from '../private'
 import { formatTime2 } from '../_utils/formatTime'
 import { Bridge } from '../../bridge'
-import { containsEnglish, splitText } from '../_utils'
+import { containsEnglish, findLowPoints, splitAudio, splitText } from '../_utils'
+import { NConfig } from '../../../_common'
+import { AudioRecorder } from '../_utils/recorder'
 
 export function useInput(id: string, account: string, hostname: string, bridge: Bridge) {
   const { projectStore, speakerStore } = useStore()
@@ -18,7 +20,7 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
   const ttsSpeed = ref(1)
   const isAudioInputting = ref(false)
   const inputtingDuration = ref('00:00:00')
-  
+
   // 当前选择角色 ID
   const speakerId = computed(() =>
     recorderMode.value === 'TTS' ? projectStore.get(id)?.speakerHistory.machine : projectStore.get(id)?.speakerHistory.human
@@ -33,7 +35,7 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
   /** 输出文本片段 */
   async function handleTextOutput(text: string, cb?: (txt: string) => void) {
     // 清除换行的符号
-    const txt = text.replace(/(\r\n|\n|\r|\s)/gm, "")
+    const txt = text.replace(/(\r\n|\n|\r|\s)/gm, '')
     if (txt.length === 0) return
     if (txt.length > 150) {
       message.error('一次合成不能超过 150 个字')
@@ -42,7 +44,7 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
     }
     try {
       // 某些特定付费 TTS 模型，输出会包含时间戳，可以全部上传
-      if([`${TtsModel.Tencent}`].includes(speaker.value!.model)) {
+      if ([`${TtsModel.Tencent}`].includes(speaker.value!.model)) {
         await projectStore.fragment(id).createByText({
           data: [{ txt: txt }],
           speakerId: speakerId.value || '',
@@ -66,7 +68,9 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
           return
         }
         projectStore.fragment(id).createByText({
-          data: chunks.map(chunk => { return { txt: chunk } }),
+          data: chunks.map(chunk => {
+            return { txt: chunk }
+          }),
           speakerId: speakerId.value || '',
           speed: ttsSpeed.value
         })
@@ -88,12 +92,14 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
     if (!data.audio) return
     projectStore
       .fragment(id)
-      .createByAudio([{
-        audio: data.audio,
-        duration: data.duration,
-        speakerId: speakerId.value || '',
-        actions: []
-      }])
+      .createByAudio([
+        {
+          audio: data.audio,
+          duration: data.duration,
+          speakerId: speakerId.value || '',
+          actions: []
+        }
+      ])
       .catch(e => {
         message.error(t('studio.msg.create_fragment_error'))
       })
@@ -139,11 +145,11 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
     }, 10)
     return () => clearInterval(intervalId)
   }
-  
+
   let timer: (() => void) | null = null
   function handleInputting(is: boolean) {
     isAudioInputting.value = is
-    if(is) timer = setTimer(t => inputtingDuration.value = t, 60)
+    if (is) timer = setTimer(t => (inputtingDuration.value = t), 60)
     else {
       timer?.()
       inputtingDuration.value = '00:00:00'
@@ -184,16 +190,75 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
           },
           onAdd: result => {
             console.log(result)
-            speakerStore.create(
-              result,
-              account,
-              hostname
-            )
+            speakerStore.create(result, account, hostname)
           },
           onRemove: (id: string) => {
             speakerStore.delete(id, account, hostname)
           }
         })
+    })
+  }
+
+  function handleImportAudio() {
+    dialog.create({
+      title: `导入音频文件`,
+      icon: () => h(Icon, { icon: 'line-md:upload-loop', height: 24 }),
+      content: () =>
+        h(
+          NConfig,
+          {},
+          {
+            default: () =>
+              h(AudioUploader, {
+                onFinish: async (file: File) => {
+                  try {
+                    const arrayBuffer = await file.arrayBuffer()
+                    // 分段处理（每约60s（不超过60s）分一段）
+                    const audioCtx = new AudioContext()
+                    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+                    // console.log('音频时长：', audioBuffer.duration)
+                    if (audioBuffer.duration > 60 * 20) {
+                      message.error('音频文件时长过长，目前仅允许上传小于 20 分钟的音频文件', {
+                        closable: true,
+                        duration: 5000
+                      })
+                      return
+                    }
+                    const sampleRate = audioBuffer.sampleRate
+                    const segmentDuration = 59 // 每 59 秒一个分割点（由于目前主要采用一句话语音识别的模型，所以暂时只考虑不超过 60s，以后可以考虑使用长语音模型来处理上传文件的情况）
+                    const windowSize = 1 // 在±1秒的窗口中查找低音点
+                    const threshold = 0.01 // 定义静音/低音的阈值
+                    const audioData = audioBuffer.getChannelData(0)
+
+                    const lowPoints = findLowPoints(audioData, sampleRate, segmentDuration, windowSize, threshold)
+                    const cutPoints = lowPoints.map(point => Number((point / sampleRate).toFixed(3)))
+                    // 重新计算
+                    const audioChunks = await splitAudio(audioBuffer, cutPoints)
+                    // console.log(audioChunks)
+                    const tasks = audioChunks.map((audiobuffer, index) => {
+                      const wavData = AudioRecorder.audioBufferToWav(audiobuffer)
+                      const blob = new Blob([wavData], { type: 'audio/wav' })
+                      return {
+                        audio: blob,
+                        duration: audiobuffer.duration,
+                        speakerId: speakerId.value || '',
+                        actions: []
+                      }
+                    })
+                    await projectStore.fragment(id).createByAudio(tasks)
+                  } catch (error) {
+                    console.error(error)
+                    message.error('创建片段失败！')
+                  }
+                  dialog.destroyAll()
+                },
+                onError: () => {
+                  message.error('上传音频文件失败！')
+                  dialog.destroyAll()
+                }
+              })
+          }
+        )
     })
   }
 
@@ -215,6 +280,7 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
     handleAddBlank,
     handleInputting,
     handleModeSwitch,
-    handleSpeakerChange
+    handleSpeakerChange,
+    handleImportAudio
   }
 }
