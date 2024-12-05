@@ -235,9 +235,6 @@ export class Player {
       /** 是否包含字幕信息 */
       const hasSubtitle = subtitleSequence && subtitleSequence.length > 0 && subtitleKeyframeSequence && subtitleKeyframeSequence.length > 0
 
-      const keyframeSequenceLength = this.keyframeSequence.length
-      const subtitleSequenceLength = this.subtitleSequence.length
-
       this.pausableIntervalInstance = createPausableInterval(() => {
         // console.log('播放中')
         if (!this.isPlaying) return
@@ -246,33 +243,37 @@ export class Player {
         if (hasSubtitle) {
           const currentSubtitleKeyframe = subtitleKeyframeSequence[this.subtitleCount]
           if (currentSubtitleKeyframe && this.audio!.currentTime > currentSubtitleKeyframe) {
-            // console.log('播放字幕')
+            // 播放字幕
             this._subtitle = this.subtitleSequence[this.subtitleCount]
             this.onSubtitleUpdate.next(this.subtitle)
-            if (this.subtitleCount < subtitleSequenceLength - 1) this.subtitleCount++
+            // if (this.subtitleCount < subtitleCountLimit) this.subtitleCount++ // 必须允许溢出，否则达到终点后会不断重复
+            this.subtitleCount++
           }
         }
 
         // 处理动画
-        // if (this.audio!.currentTime > keyframeSequence[this.animeCount]) {
-        //   animeElementSequence[this.animeCount].forEach(el => {
+        // console.log(this.animeCount, animeCountLimit)
+        if (this.audio!.currentTime > keyframeSequence[this.animeCount]) {
+          // console.log('播放动画', this.audio!.currentTime, keyframeSequence[this.animeCount])
+          animeElementSequence[this.animeCount].forEach(el => {
+            // 播放动画
+            this.applyPlay(el, this.containerRef, this.scrollerRef)
+          })
+          // if(this.animeCount < animeCountLimit) this.animeCount++ // 必须允许溢出，否则达到终点后会不断重复
+          this.animeCount++
+        }
+
+        // 弃用：在这个环境中每 50ms 运行一次 这个不应该使用循环（会创建多个循环）
+        // while (keyframeSequence[this.animeCount] && this.audio!.currentTime > keyframeSequence[this.animeCount]) {
+        //   // console.log('播放动画')
+        //   animeElementSequence[this.animeCount]?.forEach(el => {
         //     // 播放动画
         //     this.applyPlay(el, this.containerRef, this.scrollerRef)
         //   })
         //   this.keyframeHistory[this.animeCount] = this.keyframeSequence[this.animeCount] // 记录播放历史
-        //   this.animeCount++
+        //   if (this.animeCount < keyframeSequenceLength - 1) this.animeCount++
+        //   else break // break
         // }
-        // console.log('this.animeCount: ', this.animeCount, keyframeSequence[this.animeCount])
-        while (keyframeSequence[this.animeCount] && this.audio!.currentTime > keyframeSequence[this.animeCount]) {
-          // console.log('播放动画')
-          animeElementSequence[this.animeCount]?.forEach(el => {
-            // 播放动画
-            this.applyPlay(el, this.containerRef, this.scrollerRef)
-          })
-          this.keyframeHistory[this.animeCount] = this.keyframeSequence[this.animeCount] // 记录播放历史
-          if (this.animeCount < keyframeSequenceLength - 1) this.animeCount++
-          else break // break
-        }
 
         this._currentTime = this.audio!.currentTime // 记录当前播放时间
         this._totalTime = this.total + this.audio!.currentTime // 记录当前总播放时间
@@ -306,7 +307,7 @@ export class Player {
         })
       )
     } else {
-      console.log('播放完毕')
+      // console.log('播放完毕')
       this.clear()
       this.total = 0
       this._totalTime = 0
@@ -376,33 +377,65 @@ export class Player {
   seek(time: number) {
     // console.log('seek')
     if (!this.audio) return
+    const isForward = time > this.audio.currentTime
+    // console.log(isForward ? '快进' : '快退')
     this.audio.currentTime = time
     this._currentTime = this.audio!.currentTime // 记录当前播放时间
+
     // 重新计算 animeCount, 之所以需要一个个遍历，是因为我们需要把已经播放的内容重新隐藏掉
-    this.recalculate()
+    this.recalculate(isForward)
   }
 
   /** 重新计算动画和字幕的计数器 */
-  recalculate() {
+  recalculate(isForward: boolean) {
     if (!this.audio) return
-    let animeIndex = this.animeCount
-    while (this.keyframeSequence[animeIndex] > this.audio.currentTime) {
-      // console.log('动画未播放')
+    // 由于播放到终点的时候，count 可能会溢出序列帧范围，因此这里针对这种情况使用 limit 进行处理，确保 count 在序列帧范围内, 否则 if 判断会一直为 false
+    const animeCountLimit = this.keyframeSequence.length - 1
+    const subtitleCountLimit = this.subtitleKeyframeSequence.length - 1
+    if (!isForward) {
+      let animeIndex = this.animeCount > animeCountLimit ? animeCountLimit : this.animeCount
+      // 动画关键帧 > 当前播放时间时，说明该动画应处于未播放状态，将动画设置为隐藏
+      while (this.keyframeSequence[animeIndex] > this.audio.currentTime) {
+        this.animeElementSequence[animeIndex]?.forEach((el: HTMLElement) => {
+          // Ⅰ这里会遇到一个问题，就是如果后面的关键帧重复了前面的动画，那么通过后面的关键帧进行隐藏会导致前面的动画被隐藏
+          Player.hiddenElement(el)
+        })
+        animeIndex--
+      }
+      this.animeCount = animeIndex === -1 ? 0 : animeIndex
+      // Ⅱ 再从 0 到 animeIndex 循环一遍，把 animeIndex 之前的动画设置为显示 (因为有可能在上面的循环中被隐藏了)
+      for(let i = 0; i < animeIndex; i++) {
+        this.animeElementSequence[i]?.forEach((el: HTMLElement) => {
+          Player.showElement(el)
+        })
+      }
+  
+      let subtitleIndex = this.subtitleCount > subtitleCountLimit ? subtitleCountLimit : this.subtitleCount
+      // 字幕关键帧 > 当前播放时间时，说明该字幕未播放，指针继续向前移
+      while (this.subtitleKeyframeSequence[subtitleIndex] > this.audio.currentTime) {
+        // console.log('字幕未播放')
+        subtitleIndex--
+      }
+      this.subtitleCount = subtitleIndex === -1 ? 0 : subtitleIndex
+      return
+    }
+    let animeIndex = this.animeCount > animeCountLimit ? animeCountLimit : this.animeCount
+    while (this.keyframeSequence[animeIndex] < this.audio.currentTime) {
+      // console.log('动画已播放')
       this.animeElementSequence[animeIndex]?.forEach((el: HTMLElement) => {
-        // el.style.visibility = 'hidden'
-        hiddenElement(el)
+        // el.style.visibility = 'visible'
+        Player.showElement(el)
       })
-      animeIndex--
+      animeIndex++
     }
-    this.animeCount = animeIndex === -1 ? 0 : animeIndex
+    this.animeCount = animeIndex <= this.keyframeSequence.length - 1 ? animeIndex : this.keyframeSequence.length - 1
 
-    let subtitleIndex = this.subtitleCount
-    // 字幕关键帧 > 当前播放时间时，说明该字幕未播放，指针继续向前移
-    while (this.subtitleKeyframeSequence[subtitleIndex] > this.audio.currentTime) {
-      // console.log('字幕未播放')
-      subtitleIndex--
+    let subtitleIndex = this.subtitleCount > subtitleCountLimit ? subtitleCountLimit : this.subtitleCount
+    while (this.subtitleKeyframeSequence[subtitleIndex] < this.audio.currentTime) {
+      // console.log('字幕已播放')
+      subtitleIndex++
     }
-    this.subtitleCount = subtitleIndex === -1 ? 0 : subtitleIndex
+    this.subtitleCount = subtitleIndex <= this.subtitleKeyframeSequence.length - 1 ? subtitleIndex : this.subtitleKeyframeSequence.length - 1
   }
 
   /** 倒回 */
@@ -412,7 +445,7 @@ export class Player {
     if (this.audio.currentTime > 2) {
       this.audio.currentTime -= 2 // 回跳 2 秒
       this._currentTime = this.audio.currentTime
-      this.recalculate()
+      this.recalculate(false)
     }
   }
 
@@ -423,6 +456,7 @@ export class Player {
     if (this.audio.currentTime < this.audio.duration - 2) {
       this.audio.currentTime += 2 //后跳 2 秒
       this._currentTime = this.audio.currentTime
+      this.recalculate(true)
     }
   }
 
@@ -566,7 +600,7 @@ export class Player {
         item.forEach(el => {
           // el.style.opacity = visible ? '1' : '0'
           // el.style.visibility = visible ? 'visible' : 'hidden'
-          visible ? showElement(el) : hiddenElement(el)
+          visible ? Player.showElement(el) : Player.hiddenElement(el)
         })
       }
     })
@@ -592,11 +626,12 @@ export class Player {
 
   /** 应用动画播放控制 */
   private applyAnime(effectValue: string, el: HTMLElement) {
+    // console.log('applyAnime')
     const style = window.getComputedStyle(el)
     const isInline = style.display === 'inline'
     isInline && el.classList.add('player-anime-playing')
     // el.style.visibility = 'visible'
-    showElement(el)
+    Player.showElement(el)
     const anime = this.anime.getAnime(effectValue)
     if (anime) {
       anime.play(el).finished.then(() => {
@@ -744,16 +779,24 @@ export class Player {
   }
 
   /** 将音频时长（duration）转化成 HH:MM:SS 格式 */
-  durationFormat(duration: number) {
-    const hours = Math.floor(duration / 3600)
-    const minutes = Math.floor((duration % 3600) / 60)
-    const seconds = Math.floor(duration % 60)
+  // durationFormat(duration: number) {
+  //   const hours = Math.floor(duration / 3600)
+  //   const minutes = Math.floor((duration % 3600) / 60)
+  //   const seconds = Math.floor(duration % 60)
 
-    const formattedHours = String(hours).padStart(2, '0')
-    const formattedMinutes = String(minutes).padStart(2, '0')
-    const formattedSeconds = String(seconds).padStart(2, '0')
+  //   const formattedHours = String(hours).padStart(2, '0')
+  //   const formattedMinutes = String(minutes).padStart(2, '0')
+  //   const formattedSeconds = String(seconds).padStart(2, '0')
 
-    return `${hours ? formattedHours + ':' : ''}${formattedMinutes}:${formattedSeconds}`
+  //   return `${hours ? formattedHours + ':' : ''}${formattedMinutes}:${formattedSeconds}`
+  // }
+
+  static hiddenElement(el: HTMLElement) {
+    el.classList.add('player-anime-hidden')
+  }
+  
+  static showElement(el: HTMLElement) {
+    el.classList.remove('player-anime-hidden')
   }
 
   destory() {
@@ -800,13 +843,6 @@ export class Player {
   }
 }
 
-function hiddenElement(el: HTMLElement) {
-  el.classList.add('player-anime-hidden')
-}
-
-function showElement(el: HTMLElement) {
-  el.classList.remove('player-anime-hidden')
-}
 
 /**
  * 获取最外层（祖先）元素到顶部的距离（部分组件中的元素offsetTop可能是相对于组件）

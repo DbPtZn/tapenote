@@ -93,6 +93,7 @@ function handleSliderMousedown() {
     // console.log('timenode', timenode, player.duration * timenode / 100)
     timeFrame = Number(((player.duration * timenode) / 100).toFixed(2))
     // console.log(timeFrame)
+    if(timeFrame > duration.value) timeFrame = duration.value
     player.seek(timeFrame)
     move.unsubscribe()
     up.unsubscribe()

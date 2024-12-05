@@ -1,11 +1,16 @@
 <script lang="ts" setup>
-import { CollapseButton } from './private'
-import { useThemeVars } from 'naive-ui'
+import { useDialog, useMessage, useThemeVars } from 'naive-ui'
 import useStore from '@/store'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useShell } from '@/renderer'
+import { Icon } from '@iconify/vue'
+import { h } from 'vue'
+import { CollapseButton } from './private'
 import { CreatorShell } from '../shell'
+import { GuideVideo } from './private'
 const themeVars = useThemeVars()
+const dialog = useDialog()
+const message = useMessage()
 const shell = useShell<CreatorShell>()
 const { settingStore } = useStore()
 const collapseVisible = ref(false) /** 控制容器展开/折叠按钮显示 */
@@ -14,6 +19,26 @@ const methods = {
     settingStore.isSidebarCollapse ? shell.expandSidebar() : shell.collapseSidebar()
   }
 }
+
+onMounted(() => {
+  if (localStorage.getItem('is-guide-video-played') === 'true') return
+  dialog.create({
+    title: '产品使用指南',
+    icon: () => h(Icon, { icon: 'ep:guide', height: 24 }),
+    content: () => h(GuideVideo),
+    style: 'width: 50%;height: 50%;',
+    positiveText: '跳过',
+    maskClosable: false, 
+    onPositiveClick: () => {
+      message.success('感谢您的使用')
+      localStorage.setItem('is-guide-video-played', 'true')
+    },
+    onClose() {
+      message.success('感谢您的使用')
+      localStorage.setItem('is-guide-video-played', 'true')
+    },
+  })
+})
 
 </script>
 <template>

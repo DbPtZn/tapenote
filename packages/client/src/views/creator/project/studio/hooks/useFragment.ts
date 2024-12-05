@@ -482,8 +482,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
             parsedata.forEach(item => {
               item.animeElementSequence.forEach(elements => {
                 elements.forEach(element => {
-                  // element.style.opacity = '0'
-                  element.style.visibility = 'hidden'
+                  Player.hiddenElement(element)
                 })
               })
             })
@@ -500,8 +499,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
                 parsedata.forEach(item => {
                   item.animeElementSequence.forEach(elements => {
                     elements.forEach(element => {
-                      // element.style.opacity = '1'
-                      element.style.visibility = 'visible'
+                      Player.showElement(element)
                     })
                   })
                 })

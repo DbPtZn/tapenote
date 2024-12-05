@@ -20,6 +20,7 @@ import { useI18n } from 'vue-i18n'
 import { PaymentView } from '@/views'
 import { NConfig } from '../../_common'
 import { Img2base64Service } from '@/editor'
+import { GuideVideo } from '../private'
 type Folder = ReturnType<typeof useStore>['folderStore']['$state']
 const createFolderEvent = new Subject<LibraryEnum>()
 const onCreateFolder = createFolderEvent.asObservable()
@@ -104,13 +105,18 @@ export function useSidebarDropDown() {
             }
           },
           {
-            label: '统计',
-            key: 'count',
-            show: false,
-            icon: () => h(Icon, { icon: 'mingcute:counter-2-line', height: 24 }),
+            label: '使用指南',
+            key: 'guide',
+            icon: () => h(Icon, { icon: 'ep:guide', height: 24 }),
             props: {
               onClick: () => {
-                shell.workbench.useDefault()
+                dialog.create({
+                  title: '产品使用指南',
+                  icon: () => h(Icon, { icon: 'ep:guide', height: 24 }),
+                  content: () => h(GuideVideo),
+                  style: 'width: 50%;height: 50%;',
+                  positiveText: '完成'
+                })
               }
             }
           },
@@ -358,18 +364,18 @@ export function useSidebarDropDown() {
               }
             }
           },
-          {
-            label: '检查与更新',
-            disabled: true,
-            show: false,
-            key: 'checkAndUpdate',
-            icon: () => h(Icon, { icon: 'material-symbols:browser-updated', height: 24 }),
-            props: {
-              onClick: () => {
-                //
-              }
-            }
-          },
+          // {
+          //   label: '检查与更新',
+          //   disabled: true,
+          //   show: false,
+          //   key: 'checkAndUpdate',
+          //   icon: () => h(Icon, { icon: 'material-symbols:browser-updated', height: 24 }),
+          //   props: {
+          //     onClick: () => {
+          //       //
+          //     }
+          //   }
+          // },
           {
             label: t('sidebar.logout'),
             key: 'logout',

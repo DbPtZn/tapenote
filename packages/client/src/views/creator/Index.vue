@@ -3,9 +3,8 @@ import { ContainerTypeEnum, FractalContainerConfig, InsertType, useRenderer, use
 import { h, onMounted, onUnmounted, ref } from 'vue'
 import useStore from '@/store'
 import { CreatorShell, creatorShell } from './shell'
-import { NButton, NIcon, useThemeVars } from 'naive-ui'
+import { NButton, useThemeVars } from 'naive-ui'
 import { LibraryEnum } from '@/enums'
-// import { MenuFilled } from '@vicons/material'
 import { Icon } from '@iconify/vue'
 import { CacheListView } from './cache'
 import { onBeforeMount } from 'vue'
@@ -15,8 +14,6 @@ const renderer = useRenderer()
 renderer.set(creatorShell)
 const shell = useShell<CreatorShell>()
 const implementRef = ref<HTMLElement>()
-onBeforeMount(() => {
-})
 onMounted(() => {
   implementRef.value && renderer.setImplementRef(implementRef.value) // 注入实现层
   console.log('--- --- Strat container rendering --- ---')
@@ -45,10 +42,9 @@ function handleContainerFocus(event, node: FractalContainerConfig) {
   }
 }
 function handleContainerRemove() {
-  console.log('handleContainerRemove', dragStore.dragging && dragStore.isFile)
+  // console.log('handleContainerRemove', dragStore.dragging && dragStore.isFile)
   const firstContainer = shell.workbench.findFirstNodeByType(ContainerTypeEnum.CMPT)
   firstContainer ? shell.workbench.setFocus({ node: firstContainer }) : shell.workbench.clearFocus()
-  // shell.workbench.setPersist(shell.workbench.data)
 }
 function handleContextmenu(ev: MouseEvent, node: FractalContainerConfig) {
   if(ev.altKey) {
