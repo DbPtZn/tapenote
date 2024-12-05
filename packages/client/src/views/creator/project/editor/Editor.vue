@@ -43,10 +43,12 @@ onMounted(() => {
   bridge.scrollerEl = scrollerEl.value
   bridge.coverEl = coverEl.value
 
-  // 大多数显示器的刷新率是60Hz，即每帧大约16.67ms。将防抖设置为17ms可以确保你的事件处理逻辑与显示器的刷新率相匹配，从而在每次显示器刷新时更新滚动百分比，提供更连贯的视觉体验
-  fromEvent(scrollerEl.value!, 'scroll').pipe(debounceTime(17)).subscribe(() => {
-    state.scrollTopPercent = scrollerEl.value!.scrollTop / (scrollerEl.value!.scrollHeight - scrollerEl.value!.clientHeight)
-  })
+  if(scrollerEl.value) {
+    // 大多数显示器的刷新率是60Hz，即每帧大约16.67ms。将防抖设置为17ms可以确保你的事件处理逻辑与显示器的刷新率相匹配，从而在每次显示器刷新时更新滚动百分比，提供更连贯的视觉体验
+    fromEvent(scrollerEl.value, 'scroll').pipe(debounceTime(17)).subscribe(() => {
+      if(scrollerEl.value?.scrollTop) state.scrollTopPercent = scrollerEl.value.scrollTop / (scrollerEl.value!.scrollHeight - scrollerEl.value!.clientHeight)
+    })
+  }
 })
 
 const subs: Subscription[] = []

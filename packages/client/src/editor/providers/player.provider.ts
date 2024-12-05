@@ -1,11 +1,9 @@
 import { Injectable, Injector, Subscription, fromEvent } from '@textbus/core'
-import { Observable, Subject } from '@textbus/core'
+import { Subject } from '@textbus/core'
 import { AnimeProvider, Structurer } from '.'
 import { VIEW_CONTAINER } from '@textbus/platform-browser'
 import { Layout } from '@textbus/editor'
 import { createPausableInterval } from './_utils'
-// import { Howl, Howler } from 'howler'
-// import _ from 'lodash'
 
 export interface CourseData {
   key?: string // 多片段播放的时候可以用于查询片段
@@ -149,18 +147,19 @@ export class Player {
   }
 
   loadData(data: CourseData[]) {
-    this._sourceData = data
-    this.onSourceDataLoaded.next(data)
+    // 对载入的数据进行深拷贝（数据可能在过程中发生修改, 不可以使用源数据（具体到本项目中，源数据可能是 pinia 中管理的，直接使用源数据会把数据中的数组直接引用进来）
+    this._sourceData = JSON.parse(JSON.stringify(data))
+    this.onSourceDataLoaded.next(this._sourceData)
     return new Promise<ParseData[]>((resolve, reject) => {
       // 导入音频数据（在 preview 模式下是多个音频片段）
-      const audioSequence = data.map(item => {
+      const audioSequence = this._sourceData.map(item => {
         return loadAudio(item.audio)
       })
       /** 预加载音频文件 */
       return Promise.all(audioSequence)
         .then(audios => {
           // 音频全部载入完成的后续操作
-          this._data = data.map((item, index) => {
+          this._data = this._sourceData.map((item, index) => {
             return {
               key: item.key,
               audio: audios[index],
@@ -236,9 +235,12 @@ export class Player {
       const hasSubtitle = subtitleSequence && subtitleSequence.length > 0 && subtitleKeyframeSequence && subtitleKeyframeSequence.length > 0
 
       this.pausableIntervalInstance = createPausableInterval(() => {
-        // console.log('播放中')
+        // console.log('播放中', this.isPlaying)
         if (!this.isPlaying) return
         this.onTimeUpdate.next(this._currentTime)
+        // console.log('当前时间', this.audio!.currentTime)
+        // console.log(this.animeCount, this.subtitleCount)
+        // console.log(keyframeSequence, keyframeSequence[this.animeCount], this.audio!.currentTime > keyframeSequence[this.animeCount])
         // 处理字幕
         if (hasSubtitle) {
           const currentSubtitleKeyframe = subtitleKeyframeSequence[this.subtitleCount]
@@ -754,7 +756,8 @@ export class Player {
 
   /** 将片段数据解析成播放所需数据 */
   parseData(data: { key?: string; audio: string; duration: number; promoters: Array<string | null>; timestamps: Array<number> }): CourseData {
-    const { key, audio, duration, promoters, timestamps } = data
+    const course = JSON.parse(JSON.stringify(data)) // 深拷贝
+    const { key, audio, duration, promoters, timestamps } = course
     const keyframeSequence: number[] = []
     let promoterSequence: string[] = []
     // 存在时间戳的情况
@@ -793,10 +796,12 @@ export class Player {
 
   static hiddenElement(el: HTMLElement) {
     el.classList.add('player-anime-hidden')
+    // console.log('隐藏元素', el)
   }
   
   static showElement(el: HTMLElement) {
     el.classList.remove('player-anime-hidden')
+    // console.log('显示元素', el)
   }
 
   destory() {

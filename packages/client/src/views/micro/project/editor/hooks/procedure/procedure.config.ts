@@ -71,7 +71,7 @@ import { CaretLimit, Input } from '@textbus/platform-browser'
 // import { uploader } from '../uploader'
 import { getResourceDomain } from '@/views/creator/_hooks'
 import { uploader } from '@/views/creator/project/editor/hooks/uploader'
-import { useUploadImg } from '@/views/creator/_utils'
+import { useUploadImg } from '@/views/creator/_hooks'
 
 export function getProcedureConfig(args: {
   account: string,
@@ -151,10 +151,7 @@ export function getProcedureConfig(args: {
       () => new ContextMenu(),
       () => new AnimeContextmenuPlugin(),
       () => new AnimeComponentSupport(),
-      () => new PreviewPlayerController([
-        preview_startTool,
-        preview_stopTool
-      ],controllerRef!),
+      () => new PreviewPlayerController(controllerRef!),
     ],
     uploader(config) {
       return uploader(config, account, hostname)

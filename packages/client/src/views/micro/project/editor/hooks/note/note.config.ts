@@ -82,7 +82,7 @@ import {
   defaultAttributeLoaders,
 } from '@/editor'
 import { getResourceDomain } from '@/views/creator/_hooks'
-import { useUploadImg } from '@/views/creator/_utils'
+import { useUploadImg } from '@/views/creator/_hooks'
 import { uploader } from '@/views/creator/project/editor/hooks/uploader'
 import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
 import {

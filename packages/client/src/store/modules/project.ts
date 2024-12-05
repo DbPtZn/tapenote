@@ -262,12 +262,12 @@ export const useProjectStore = defineStore('projectStore', {
         // console.log('fetchAndset')
         const index = this.data.findIndex(i => i.id === id)
         if (index !== -1) {
-          // console.log(this.data[index])
+          // console.log('found', this.data[index])
           resolve(this.data[index])
         } else {
           this.creatorApi(account, hostname).project.get(id)
             .then(res => {
-              console.log(res.data)
+              // console.log(res.data)
               const newItem = this.set(res.data, account, hostname)
               resolve(newItem)
             })
@@ -282,8 +282,9 @@ export const useProjectStore = defineStore('projectStore', {
     },
     set(data: any, account: string, hostname: string) {
       const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
-      const item = new Project()
-      Object.assign(item, data)
+      let item = new Project()
+      // Object.assign(item, data)
+      item = _.cloneDeep(data)
       item.account = account
       item.hostname = hostname
       item.cover = data.cover ? ResourceDomain + data.cover : ''
