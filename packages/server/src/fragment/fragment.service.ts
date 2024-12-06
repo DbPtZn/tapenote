@@ -647,7 +647,7 @@ export class FragmentService {
     if(model === TtsModel.Tencent) {
       const outputPath = this.storageService.createTempFilePath('.wav')
       const result = await this.tencentService.tts(txt, timbre, speed)
-      console.log(result)
+      // console.log(result)
       const buffer = Buffer.from(result.Audio, 'base64')
       fs.writeFileSync(outputPath, buffer)
       const oggPath = this.storageService.createTempFilePath('.ogg')

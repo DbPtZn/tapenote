@@ -428,6 +428,7 @@ export const useProjectStore = defineStore('projectStore', {
               resolve(true)
             })
             .catch(err => {
+              console.error(err)
               resolve(false)
             })
         } else {
@@ -457,6 +458,7 @@ export const useProjectStore = defineStore('projectStore', {
               resolve(true)
             })
             .catch(err => {
+              console.error(err)
               resolve(false)
             })
         } else {

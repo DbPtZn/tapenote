@@ -181,7 +181,7 @@ export class ProjectService {
   /** 生成动画数据 */
   async generateCourse(courseId: string, procedureId: string, dirname: string, userId: string) {
     try {
-      console.log('正在生成微课数据...')
+      // console.log('正在生成微课数据...')
       const procedure = await this.projectsRepository.findOne({
         where: { id: procedureId, userId },
         relations: ['fragments']
@@ -214,7 +214,7 @@ export class ProjectService {
         }
       }
 
-      console.log('正在进行片段数据拼接...')
+      // console.log('正在进行片段数据拼接...')
       // 准备需要用到的数组
       const group = {
         audioFragments: [] as string[],

@@ -546,7 +546,6 @@ export class Player {
   /** 清理播放器数据状态 */
   @UpdateState
   private clear() {
-    // console.log('播放结束 clear')
     if (this.audio) {
       this.audio.pause()
       this.audio.currentTime = 0
@@ -558,32 +557,25 @@ export class Player {
     this._isPlaying = false
     this._isPause = false
     this._currentTime = 0
-
     this._scrollTop = this.scrollerRef.scrollTop
-
-    // clearInterval(this.timer)
     this.pausableIntervalInstance?.stop()
     this.pausableIntervalInstance = undefined
-
     this.onSubtitleUpdate.next(this.subtitle) // 发布字幕更新订阅
   }
 
   /** 初始化 */
   private init(isInitScrollTop = true) {
-    // 初始化滚动区
-    isInitScrollTop && (this.scrollerRef.scrollTop = 0)
-    // 初始化
+    isInitScrollTop && (this.scrollerRef.scrollTop = 0)  // 初始化滚动区
     this.total = 0
     this._totalTime = 0
-    // 初始化播放器数据状态
-    this.clear()
+    this.clear() // 初始化播放器数据状态
   }
 
   private hideIgnoreComponent() {
     const container = this.injector.get(VIEW_CONTAINER)
     const elements = container.querySelectorAll<HTMLElement>('anime-ignore')
     elements.forEach(el => {
-      el.style.display = 'none'
+      el.classList.add('ignore-component-hidden')
     })
   }
 
@@ -591,7 +583,7 @@ export class Player {
     const container = this.injector.get(VIEW_CONTAINER)
     const elements = container.querySelectorAll<HTMLElement>('anime-ignore')
     elements.forEach(el => {
-      el.style.display = 'block'
+      el.classList.remove('ignore-component-hidden')
     })
   }
 
@@ -600,8 +592,6 @@ export class Player {
     this.animeElementSequence.forEach((item, index) => {
       if (index >= startPoint) {
         item.forEach(el => {
-          // el.style.opacity = visible ? '1' : '0'
-          // el.style.visibility = visible ? 'visible' : 'hidden'
           visible ? Player.showElement(el) : Player.hiddenElement(el)
         })
       }
@@ -628,11 +618,9 @@ export class Player {
 
   /** 应用动画播放控制 */
   private applyAnime(effectValue: string, el: HTMLElement) {
-    // console.log('applyAnime')
     const style = window.getComputedStyle(el)
     const isInline = style.display === 'inline'
     isInline && el.classList.add('player-anime-playing')
-    // el.style.visibility = 'visible'
     Player.showElement(el)
     const anime = this.anime.getAnime(effectValue)
     if (anime) {
@@ -732,9 +720,8 @@ export class Player {
     }
   }
 
-  /** 立即取消当前滚动事务 */
+  /** 立即取消当前滚动事务: 当两个滚动事务同时存在的时候可能会出现相互拉扯的情况，所以要确保同一时间只有一个事务 */
   private clearInterval() {
-    // 当两个滚动事务同时存在的时候可能会出现相互拉扯的情况，所以要确保同一时间只有一个事务
     clearInterval(this.scrollTimer)
   }
 
@@ -756,7 +743,7 @@ export class Player {
 
   /** 将片段数据解析成播放所需数据 */
   parseData(data: { key?: string; audio: string; duration: number; promoters: Array<string | null>; timestamps: Array<number> }): CourseData {
-    const course = JSON.parse(JSON.stringify(data)) // 深拷贝
+    const course = JSON.parse(JSON.stringify(data)) as typeof data // 深拷贝
     const { key, audio, duration, promoters, timestamps } = course
     const keyframeSequence: number[] = []
     let promoterSequence: string[] = []
@@ -780,19 +767,6 @@ export class Player {
 
     return { key, audio, duration, promoterSequence, keyframeSequence }
   }
-
-  /** 将音频时长（duration）转化成 HH:MM:SS 格式 */
-  // durationFormat(duration: number) {
-  //   const hours = Math.floor(duration / 3600)
-  //   const minutes = Math.floor((duration % 3600) / 60)
-  //   const seconds = Math.floor(duration % 60)
-
-  //   const formattedHours = String(hours).padStart(2, '0')
-  //   const formattedMinutes = String(minutes).padStart(2, '0')
-  //   const formattedSeconds = String(seconds).padStart(2, '0')
-
-  //   return `${hours ? formattedHours + ':' : ''}${formattedMinutes}:${formattedSeconds}`
-  // }
 
   static hiddenElement(el: HTMLElement) {
     el.classList.add('player-anime-hidden')
@@ -889,6 +863,18 @@ function loadAudio(src: string) {
     audio.load()
   })
 }
+/** 将音频时长（duration）转化成 HH:MM:SS 格式 */
+// durationFormat(duration: number) {
+//   const hours = Math.floor(duration / 3600)
+//   const minutes = Math.floor((duration % 3600) / 60)
+//   const seconds = Math.floor(duration % 60)
+
+//   const formattedHours = String(hours).padStart(2, '0')
+//   const formattedMinutes = String(minutes).padStart(2, '0')
+//   const formattedSeconds = String(seconds).padStart(2, '0')
+
+//   return `${hours ? formattedHours + ':' : ''}${formattedMinutes}:${formattedSeconds}`
+// }
 
 /** 翻页播放模式（待开发） */
 // private applyFilpPlay(el: HTMLElement, container: HTMLElement, scroller: HTMLElement) {

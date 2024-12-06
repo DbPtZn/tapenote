@@ -337,10 +337,6 @@ onUnmounted(() => {
                 :consistent-menu-width="false"
               />
             </n-space>
-            <!-- <n-space v-if="lib === LibraryEnum.COURSE" :justify="'space-between'" :align="'center'">
-              <span>字幕</span>
-              <n-switch v-model:value="bridge.habit.state.subtitle.show" />
-            </n-space> -->
             <n-space :justify="'space-between'" :align="'center'">
               <span>大纲视图</span>
               <n-switch v-model:value="bridge.habit.state.platform.isOutlineShow" @update:value="bridge.handleOutlineShow()" />
@@ -378,12 +374,12 @@ onUnmounted(() => {
           <n-divider />
           <!-- 文章详情 -->
           <n-descriptions label-style="white-space: nowrap;" label-placement="left" label-align="center" :column="1" :bordered="true" title="详情">
-            <n-descriptions-item label="作者"> {{ data?.detial.penname }} </n-descriptions-item>
-            <n-descriptions-item label="邮箱"> {{ data?.detial.email }} </n-descriptions-item>
-            <n-descriptions-item label="作者主页"> {{ data?.detial.homepage }} </n-descriptions-item>
+            <n-descriptions-item label="作者"> {{ data?.detial?.penname || '' }} </n-descriptions-item>
+            <n-descriptions-item label="邮箱"> {{ data?.detial?.email || '' }} </n-descriptions-item>
+            <n-descriptions-item label="作者主页"> {{ data?.detial?.homepage || ''}} </n-descriptions-item>
             <n-descriptions-item label="创建时间"> {{ dayjs(data?.createAt).format('YYYY-MM-DD HH:mm:ss') }} </n-descriptions-item>
             <n-descriptions-item label="更新时间"> {{ dayjs(data?.updateAt).format('YYYY-MM-DD HH:mm:ss') }} </n-descriptions-item>
-            <n-descriptions-item label="字数"> {{ data?.detial.wordage }} </n-descriptions-item>
+            <n-descriptions-item label="字数"> {{ data?.detial?.wordage || '' }} </n-descriptions-item>
           </n-descriptions>
         </n-tab-pane>
         <!-- 创建工程/课程 -->

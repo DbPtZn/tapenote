@@ -208,12 +208,13 @@ const methods = {
         folderStore.updateCard(value, id, 'title', data.value?.folderId)
       } else {
         handleSavingEnd()
-          .then(() => message.error('更新失败！'))
+          .then(() => message.error('标题更新失败！'))
           .catch()
       }
     }).catch(err => {
       data.value!.isTitleUpdating = false
-      message.error('更新失败:' + err)
+      message.error('标题更新失败')
+      console.log(err)
     })
   },
   handleContentSave(value: string, id: string, account: string, hostname: string) {
@@ -229,12 +230,13 @@ const methods = {
         folderStore.updateCard(value, id, 'content', data.value?.folderId)
       } else {
         handleSavingEnd()
-          .then(() => message.error('更新失败！'))
+          .then(() => message.error('内容更新失败！'))
           .catch()
       }
     }).catch(err => {
       data.value!.isContentUpdating = false
-      message.error('更新失败:' + err)
+      message.error('内容更新失败')
+      console.log(err)
     })
   },
   /** 标题输入时按下 enter 将焦点切换到编辑器 */
