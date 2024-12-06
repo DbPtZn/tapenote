@@ -10,22 +10,21 @@ export function useEditor(args: {
   lib: LibraryEnum
   account: string
   hostname: string
-  rootRef: Readonly<ShallowRef<HTMLElement | null>>
+  editorWrapperRef: Readonly<ShallowRef<HTMLElement | null>>
   editorRef: Readonly<ShallowRef<HTMLElement | null>>
   scrollerRef: ShallowRef<HTMLElement | null>
   controllerRef: Readonly<ShallowRef<HTMLElement | null>>
   toolbarRef: Readonly<ShallowRef<HTMLElement | null>>
-  bridge: Bridge
 }) {
-  const { id, lib, account, hostname, editorRef, scrollerRef, controllerRef, toolbarRef, rootRef, bridge } = args
+  const { id, lib, account, hostname, editorRef, editorWrapperRef, scrollerRef, controllerRef, toolbarRef } = args
   return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {
     switch (lib) {
       case LibraryEnum.NOTE:
         createTextEditor({
           id, 
           account, 
-          hostname, 
-          rootRef, 
+          hostname,
+          editorWrapperRef, 
           editorRef, 
           scrollerRef, 
           toolbarRef
@@ -41,7 +40,7 @@ export function useEditor(args: {
           id, 
           account, 
           hostname, 
-          rootRef, 
+          editorWrapperRef,  
           editorRef, 
           scrollerRef, 
           toolbarRef,
@@ -58,7 +57,7 @@ export function useEditor(args: {
           id,
           account,
           hostname,
-          rootRef,
+          editorWrapperRef, 
           editorRef,
           scrollerRef,
           controllerRef

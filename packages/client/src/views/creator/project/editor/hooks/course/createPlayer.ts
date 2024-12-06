@@ -1,22 +1,24 @@
-import { AnimeProvider, ColorProvider, CourseData, DialogProvider, ImgToUrlService, MemoProvider, OutlineService, Player, ResizeService, RootEventService, Structurer, ThemeProvider } from '@/editor'
+import { AnimeProvider, CourseData, DialogProvider, MemoProvider, OutlineService, Player, RootEventService, Structurer, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
-import { Ref, ShallowRef, onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
+import { ShallowRef, inject, onBeforeUnmount, onMounted, watch } from 'vue'
 import { getCourseConfig } from './player.config'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../../../../shell'
+import { Bridge } from '../../../bridge'
 
 export function createPlayer(args: {
   id: string
   account: string
   hostname: string
-  rootRef: Readonly<ShallowRef<HTMLElement | null>>
+  editorWrapperRef: Readonly<ShallowRef<HTMLElement | null>>
   editorRef: Readonly<ShallowRef<HTMLElement | null>>
   scrollerRef: Readonly<ShallowRef<HTMLElement | null>>
   controllerRef: Readonly<ShallowRef<HTMLElement | null>>
 }) {
-  const { id, account, hostname, rootRef, editorRef, scrollerRef, controllerRef } = args
+  const { id, account, hostname, editorWrapperRef, editorRef, scrollerRef, controllerRef } = args
   const { projectStore, settingStore } = useStore()
+  const bridge = inject('bridge') as Bridge
   const shell = useShell<CreatorShell>()
   let editor: Editor
   watch(
@@ -60,10 +62,11 @@ export function createPlayer(args: {
           try {
             editor = createEditor(
               getCourseConfig({
-                rootRef: rootRef.value!,
-                editorRef: editorRef.value!,
-                scrollerRef: scrollerRef.value!,
-                controllerRef: controllerRef.value!,
+                projectEl: bridge.projectEl!,
+                editorWrapperEl: editorWrapperRef.value!,
+                editorEl: editorRef.value!,
+                scrollerEl: scrollerRef.value!,
+                controllerEl: controllerRef.value!,
                 content
               })
             )

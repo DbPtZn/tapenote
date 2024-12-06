@@ -36,7 +36,7 @@ export class OutlinePlugin implements Plugin {
     this.rootComponentRef = injector.get(RootComponentRef) // 获取根组件
     this.renderer = injector.get(Renderer)
     this.outlineService = injector.get(OutlineService)
-    this.scrollerRef = structurer.scrollerRef
+    this.scrollerRef = structurer.scrollerEl
     this.outlineData = ref<OutlineItem[]>([]) // 大纲视图数据
     this.activeIndex = ref<number>(0)
     this.scrollTop = ref<number>(0)

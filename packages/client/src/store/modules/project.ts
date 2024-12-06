@@ -284,60 +284,60 @@ export const useProjectStore = defineStore('projectStore', {
       const ResourceDomain = localStorage.getItem(`ResourceDomain:${hostname}`) as string
       let item = new Project()
       // Object.assign(item, data)
-      item = _.cloneDeep(data)
-      item.account = account
-      item.hostname = hostname
-      item.cover = data.cover ? ResourceDomain + data.cover : ''
-      item.fragments = data.fragments?.map(fragment => {
-        fragment.audio = ResourceDomain + fragment.audio
-        fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account, hostname)
-        return fragment
-      }) || []
-      item.audio = item.audio ? ResourceDomain + item.audio : ''
-      // const item: Project = {
-      //   account: account || '',
-      //   hostname: hostname || '',
-      //   isTitleUpdating: false,
-      //   isContentUpdating: false,
-      //   isSidenoteUpdating: false,
-      //   id: data.id || '',
-      //   lib: data.lib || '',
-      //   dirname: data.dirname || '',
-      //   folderId: data.folderId || '',
-      //   folder: data.folder || { id: '', name: '' },
-      //   cover: data.cover ? ResourceDomain + data.cover : '',
-      //   coverPosition: data.coverPosition || 50,
-      //   firstPicture: data.firstPicture || '',
-      //   title: data.title || '',
-      //   content: data.content || '',
-      //   abbrev: data.abbrev || '',
-      //   fragments: data.fragments?.map(fragment => {
-      //     fragment.audio = ResourceDomain + fragment.audio
-      //     fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account, hostname)
-      //     return fragment
-      //   }) || [],
-      //   sequence: data.sequence || [],
-      //   removedSequence: data.removedSequence || [],
-      //   speakerRecorder: data.speakerRecorder || [],
-      //   speakerHistory: data.speakerHistory || { human: '', machine: '' },
-      //   config: data.config || {},
-      //   audio: data.audio ? ResourceDomain + data.audio : '',
-      //   duration: data.duration || 0,
-      //   promoterSequence: data.promoterSequence || [],
-      //   keyframeSequence: data.keyframeSequence || [],
-      //   subtitleSequence: data.subtitleSequence || [],
-      //   subtitleKeyframeSequence: data.subtitleKeyframeSequence || [],
-      //   sidenote: data.sidenote || '',
-      //   annotations: data.annotations || [],
-      //   detial: data.detial || { penname: '', email: '', homepage: '', wordage: 0, filesize: 0 },
-      //   submissionHistory: data.submissionHistory || [],
-      //   fromNoteId: data.fromNoteId || '',
-      //   fromProcedureId: data.fromProcedureId || '',
-      //   snapshotId: data.snapshotId || '',
-      //   createAt: data.createAt || '',
-      //   updateAt: data.updateAt || '',
-      //   memos: data.memos || []
-      // }
+      // item.account = account
+      // item.hostname = hostname
+      // item.cover = data.cover ? ResourceDomain + data.cover : ''
+      // item.fragments = data.fragments?.map(fragment => {
+      //   fragment.audio = ResourceDomain + fragment.audio
+      //   fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account, hostname)
+      //   return fragment
+      // }) || []
+      // item.audio = item.audio ? ResourceDomain + item.audio : ''
+      // 由于后端返回的 data 的不确定性，使用 Object.assign() 可能会导致某些属性被意外覆盖、某些属性确实，所以这里综合考虑之后还是先采用一项项赋值的方式
+      item = {
+        account: account || '',
+        hostname: hostname || '',
+        isTitleUpdating: false,
+        isContentUpdating: false,
+        isSidenoteUpdating: false,
+        id: data.id || '',
+        lib: data.lib || '',
+        dirname: data.dirname || '',
+        folderId: data.folderId || '',
+        folder: data.folder || new Folder(),
+        cover: data.cover ? ResourceDomain + data.cover : '',
+        coverPosition: data.coverPosition || 50,
+        firstPicture: data.firstPicture || '',
+        title: data.title || '',
+        content: data.content || '',
+        abbrev: data.abbrev || '',
+        fragments: data.fragments?.map(fragment => {
+          fragment.audio = ResourceDomain + fragment.audio
+          fragment.speaker = this.fragmentSpeakerTranslator(fragment.speaker, account, hostname)
+          return fragment
+        }) || [],
+        sequence: data.sequence || [],
+        removedSequence: data.removedSequence || [],
+        speakerRecorder: data.speakerRecorder || [],
+        speakerHistory: data.speakerHistory || { human: '', machine: '' },
+        config: data.config || {},
+        audio: data.audio ? ResourceDomain + data.audio : '',
+        duration: data.duration || 0,
+        promoterSequence: data.promoterSequence || [],
+        keyframeSequence: data.keyframeSequence || [],
+        subtitleSequence: data.subtitleSequence || [],
+        subtitleKeyframeSequence: data.subtitleKeyframeSequence || [],
+        sidenote: data.sidenote || '',
+        annotations: data.annotations || [],
+        detial: data.detial || new Detial(),
+        submissionHistory: data.submissionHistory || [],
+        fromNoteId: data.fromNoteId || '',
+        fromProcedureId: data.fromProcedureId || '',
+        snapshotId: data.snapshotId || '',
+        createAt: data.createAt || '',
+        updateAt: data.updateAt || '',
+        memos: data.memos || []
+      }
       // console.log(item.memos[0])
       const index = this.data.findIndex(i => i.id === item.id && i.account === item.account && i.hostname === item.hostname)
       if(index === -1) this.data.push(item)
@@ -422,7 +422,7 @@ export const useProjectStore = defineStore('projectStore', {
             .updateTitle<{ updateAt: string }>(params)
             .then(res => {
               if (this.data[index].id === params.id) {
-                this.data[index].updateAt = res.data.updateAt
+                this.data[index].updateAt = res.data?.updateAt || ''
                 this.data[index].title = params.title
               }
               resolve(true)
@@ -451,9 +451,9 @@ export const useProjectStore = defineStore('projectStore', {
               if (this.data[index].id === params.id) {
                 this.data[index].firstPicture = params.firstPicture || ''
                 this.data[index].content = params.content
-                this.data[index].updateAt = res.data.updateAt
-                this.data[index].detial.wordage = res.data.wordage
-                this.data[index].abbrev = res.data.abbrev
+                this.data[index].updateAt = res.data?.updateAt || ''
+                this.data[index].detial && (this.data[index].detial.wordage = res.data?.wordage || 0)
+                this.data[index].abbrev = res.data?.abbrev || ''
               }
               resolve(true)
             })

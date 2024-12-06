@@ -3,22 +3,20 @@
 <template>
   <div class="guide">
     <!-- <iframe
-      src="https://www.bilibili.com/video/BV1Cz4y1e7Hn"
+      src="//player.bilibili.com/player.html?isOutside=true&aid=113605894805981&bvid=BV1sViBYLEmQ&cid=25723802129&p=1"
       scrolling="no"
       border="0"
       frameborder="no"
       framespacing="0"
       allowfullscreen="true"
-    >
-    </iframe> -->
+    ></iframe> -->
     <iframe
-      src="https://player.bilibili.com/player.html?isOutside=true&aid=997303708&bvid=BV1vs4y1y767&cid=1164001990&p=1&autoplay=0&high_quality=1"
+      src="https://player.bilibili.com/player.html?isOutside=true&aid=113605894805981&bvid=BV1sViBYLEmQ&cid=25723802129&p=1"
       scrolling="no"
       border="0"
       frameborder="no"
       framespacing="0"
       allowfullscreen="true"
-      allow="autoplay"
     ></iframe>
   </div>
 </template>

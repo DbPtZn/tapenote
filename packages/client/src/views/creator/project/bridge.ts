@@ -36,6 +36,10 @@ export class Bridge {
   onAutoMoveAnimePointerChange = new Subject<boolean>()
   onAddPromoter = new Subject<HTMLElement>()
 
+  // 移动端
+  onEditable = new Subject<boolean>()
+  onSave = new Subject<void>()
+
   constructor() {
     this.habit = new Habit()
 
@@ -48,7 +52,6 @@ export class Bridge {
     this.container = editor.get(VIEW_DOCUMENT)
     this.renderer = editor.get(Renderer)
     if (lib === LibraryEnum.PROCEDURE) this.animeProvider = editor.get(AnimeProvider)
-    // this.editorReadyEvent.next(editor)
     this.onEditorReady.next(editor)
     this.outlineService = editor.get(OutlineService)
   }
@@ -108,12 +111,20 @@ export class Bridge {
     this.focusDiv?.focus()
   }
 
-  // 将滚动条滚动到底部
+  /** 将滚动条滚动到底部 */
   studioScrollToBottom() {
     nextTick(() => {
       if(!this.studioScrollerEl) return
       this.studioScrollerEl.scrollTop = this.studioScrollerEl.scrollHeight
     })
+  }
+
+  // 移动端 (实验性)
+  handleEditable(is: boolean) {
+    this.onEditable.next(is)
+  }
+  handleSave() {
+    this.onSave.next()
   }
 
   destory() {

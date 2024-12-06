@@ -1,22 +1,24 @@
 import { ColorProvider, DialogProvider, ImgToUrlService, MemoProvider, OutlineService, Player, ResizeService, Structurer, ThemeProvider } from "@/editor"
 import useStore from "@/store"
 import { Editor, createEditor } from "@textbus/editor"
-import { Ref, ShallowRef, onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
+import { Ref, ShallowRef, inject, onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
 import { getNoteConfig } from "./note.config"
 import { useShell } from "@/renderer"
 import '@textbus/editor/bundles/textbus.min.css'
 import { CreatorShell } from '../../../../shell'
+import { Bridge } from "../../../bridge"
 export function createTextEditor(args: {
-  id: string, 
-  account: string, 
-  hostname: string, 
-  rootRef: Readonly<ShallowRef<HTMLElement | null>>, 
-  editorRef: Readonly<ShallowRef<HTMLElement | null>>, 
-  scrollerRef: Readonly<ShallowRef<HTMLElement | null>>, 
+  id: string
+  account: string
+  hostname: string
+  editorWrapperRef: Readonly<ShallowRef<HTMLElement | null>>
+  editorRef: Readonly<ShallowRef<HTMLElement | null>>
+  scrollerRef: Readonly<ShallowRef<HTMLElement | null>> 
   toolbarRef: Readonly<ShallowRef<HTMLElement | null>>
 }) {
-  const { id, account, hostname, rootRef, editorRef, scrollerRef, toolbarRef } = args
+  const { id, account, hostname, editorWrapperRef, editorRef, scrollerRef, toolbarRef } = args
   const { projectStore, settingStore } = useStore()
+  const bridge = inject('bridge') as Bridge
   let editor: Editor
   const shell = useShell<CreatorShell>()
   watch(
@@ -49,10 +51,11 @@ export function createTextEditor(args: {
           editor = createEditor(getNoteConfig({
             account,
             hostname,
-            rootRef: rootRef.value!,
-            editorRef: editorRef.value!,
-            scrollerRef: scrollerRef.value!, 
-            toolbarRef: toolbarRef.value!, 
+            projectEl: bridge.projectEl!,
+            editorWrapperEl: editorWrapperRef.value!,
+            editorEl: editorRef.value!,
+            scrollerEl: scrollerRef.value!,
+            toolbarEl: toolbarRef.value!,
             memos: project.memos,
             content: project.content,
             dirname: project.dirname

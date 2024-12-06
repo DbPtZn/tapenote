@@ -4,9 +4,9 @@ import { computed, onMounted, provide } from 'vue'
 import Header from './Header.vue'
 import Editor from './editor/Editor.vue'
 import { useThemeVars } from 'naive-ui'
-import { Bridge } from './bridge'
 import { LibraryEnum } from '@/enums'
 import useStore from '@/store'
+import { Bridge } from '@/views/creator/project/bridge'
 
 const bridge = new Bridge()
 provide('bridge', bridge)

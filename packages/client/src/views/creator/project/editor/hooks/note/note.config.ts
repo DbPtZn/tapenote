@@ -25,19 +25,10 @@ import {
   imageTool,
   textAlignTool,
   tableRemoveTool,
-  formatPainterTool,
   tableAddTool,
   cleanTool,
-  colorFormatter,
-  textBackgroundColorFormatLoader,
-  colorFormatLoader,
-  textBackgroundColorFormatter,
   defaultGroupTool,
   DialogProvider,
-  imageB2UComponent,
-  imageB2UComponentLoader,
-  outlineTool,
-  Clipboard,
   codeTool,
   ContextMenu,
   CustomCommander,
@@ -45,95 +36,49 @@ import {
   componentsTool,
   rootComponent,
   rootComponentLoader,
-  listComponent,
-  listComponentLoader,
   Structurer,
   ThemeProvider,
   ImgToUrlService,
-  preComponent,
-  preComponentLoader,
-  KeyboardManager,
   MemoService,
   ImgToolbarPlugin,
   ImgService,
   MessageService,
-  tableComponent,
-  tableComponentLoader,
-  dividerComponent,
-  dividerComponentLoader,
   i18n,
   dividerTool,
   ShotcutPlugin,
   Memo,
-  jumbotronComponent,
-  imageCardComponent,
-  paragraphComponent,
-  headingComponent,
-  imageCardComponentLoader,
-  jumbotronComponentLoader,
-  headingComponentLoader,
-  paragraphComponentLoader,
   MemoProvider,
   defaultComponents,
   defaultComponentLoaders,
-  blockBackgroundColorFormatter,
-  blockBackgroundColorFormatLoader,
   defaultAttributeLoaders,
   defaultAttributes,
   defaultFormatters,
   defaultFormatLoaders
 } from '@/editor'
-import { Commander, fromEvent, Injector, Keyboard } from '@textbus/core'
+import { Commander, fromEvent, Injector } from '@textbus/core'
 import {
-  alertComponent,
-  alertComponentLoader,
-  audioComponent,
-  audioComponentLoader,
-  blockComponent,
-  blockComponentLoader,
-  blockquoteComponent,
-  blockquoteComponentLoader,
-  // defaultAttributeLoaders,
-  // defaultAttributes,
-  // defaultComponentLoaders,
-  // defaultComponents,
-  // defaultFormatLoaders,
-  // defaultFormatters,
   EditorOptions,
-  katexComponent,
-  katexComponentLoader,
-  LinkJumpTipPlugin,
-  stepComponent,
-  stepComponentLoader,
-  timelineComponent,
-  timelineComponentLoader,
-  todolistComponent,
-  todolistComponentLoader,
-  videoComponent,
-  videoComponentLoader,
-  wordExplainComponent,
-  wordExplainComponentLoader
-} from '@textbus/editor'
+  LinkJumpTipPlugin} from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
 import { useUploadImg } from '../../../../_hooks'
 import { getResourceDomain } from '../../../../_hooks'
-import { resolve } from 'path'
 import { uploader } from '../uploader'
 export function getNoteConfig(args: {
   account: string
   hostname: string
   dirname: string
-  rootRef: HTMLElement
-  editorRef: HTMLElement
-  scrollerRef: HTMLElement
   memos: Memo[],
-  toolbarRef?: HTMLElement
-  controllerRef?: HTMLElement
-  content?: string
+  content?: string,
+  projectEl: HTMLElement,
+  editorWrapperEl: HTMLElement,
+  editorEl: HTMLElement,
+  scrollerEl: HTMLElement, 
+  toolbarEl?: HTMLElement,
+  controllerEl?: HTMLElement,
 }) {
-  const { account, hostname, dirname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, memos, content } = args
-  // console.log(content)
-  editorRef.classList.add('note-editor')
+  const { account, hostname, projectEl, editorWrapperEl, editorEl, scrollerEl, toolbarEl, controllerEl, memos, content } = args
+
+  editorEl.classList.add('note-editor')
   const ResourceDomain = getResourceDomain(hostname)
   const config: EditorOptions = {
     theme: 'darkline',
@@ -189,7 +134,7 @@ export function getNoteConfig(args: {
             [cleanTool]
             // [outlineTool]
           ],
-          toolbarRef!
+          toolbarEl!
         ),
       () =>
         new InlineToolbarPlugin(
@@ -199,10 +144,9 @@ export function getNoteConfig(args: {
             [boldTool, italicTool, strikeThroughTool, underlineTool, codeTool],
             [colorTool, textBackgroundTool],
             [fontSizeTool],
-            // [olTool, ulTool],
             [cleanTool]
           ],
-          scrollerRef
+          scrollerEl
         ),
       () => new ImgToolbarPlugin([`${ResourceDomain}`]),
       () => new LinkJumpTipPlugin(),
@@ -216,21 +160,19 @@ export function getNoteConfig(args: {
     setup(injector: Injector) {
       const input = injector.get(Input)
       input.caret.correctScrollTop({
-        onScroll: fromEvent(scrollerRef, 'scroll'),
+        onScroll: fromEvent(scrollerEl, 'scroll'),
         getLimit(): CaretLimit {
-          const rect = scrollerRef.getBoundingClientRect()
+          const rect = scrollerEl.getBoundingClientRect()
           return {
             top: 0,
             bottom: rect.height + rect.top
           }
         },
         setOffset(offsetScrollTop: number) {
-          scrollerRef.scrollTop += offsetScrollTop
+          scrollerEl.scrollTop += offsetScrollTop
         }
       })
 
-      // const keyboardManager = injector.get(KeyboardManager)
-      // keyboardManager.setup(injector)
       /** 依赖注入 */
       // 主题依赖
       const themeProvider = injector.get(ThemeProvider)
@@ -238,20 +180,17 @@ export function getNoteConfig(args: {
       // 组成元素
       const structurer = injector.get(Structurer)
       structurer.setup({
-        rootRef,
-        scrollerRef,
-        toolbarRef,
-        editorRef,
-        controllerRef
+        projectEl,
+        editorWrapperEl,
+        scrollerEl,
+        toolbarEl,
+        editorEl,
+        controllerEl
       })
       // 上传图片
       const imgToUrlService = injector.get(ImgToUrlService)
       const { uploadImgBase64 } = useUploadImg(account, hostname)
       imgToUrlService.setup(uploadImgBase64)
-      // imgToUrlService.onFinish.subscribe((value) => {
-      //   console.log('上传成功:')
-      //   console.log(value)
-      // })
     }
   }
   return config

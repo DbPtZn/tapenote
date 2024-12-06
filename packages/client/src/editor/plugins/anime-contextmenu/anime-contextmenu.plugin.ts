@@ -42,7 +42,7 @@ export class AnimeContextmenuPlugin implements Plugin {
     this.animeOptions = this.animeProvider.getOptions()
     const structurer = this.injector.get(Structurer)
     this.container = this.injector.get(VIEW_CONTAINER)
-    this.scrollerRef = structurer.rootRef!.parentElement
+    this.scrollerRef = structurer.editorWrapperEl!.parentElement
     const animeService = injector.get(AnimeService)
 
     this.host = createElement('div')

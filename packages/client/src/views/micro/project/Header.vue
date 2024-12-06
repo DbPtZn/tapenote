@@ -1,27 +1,14 @@
 <script lang="ts" setup>
 import { LibraryEnum, RoutePathEnum } from '@/enums'
-import { CoffeeMaker, Notebook, PlayLesson } from '@/components'
-// import { 
-//   ArrowBackIosFilled, 
-//   AddCircleOutlineFilled, 
-//   WorkspacesFilled, 
-//   AutoAwesomeMotionOutlined,
-//   SearchOutlined,
-//   PostAddOutlined,
-//   MoreHorizFilled,
-//   StickyNote2Outlined,
-//   KeyboardArrowLeftFilled,
-//   SaveFilled,
-//   CheckFilled
-// } from '@vicons/material'
 import dayjs from 'dayjs'
 import { Icon } from '@iconify/vue'
-import { DropdownOption, NIcon, useThemeVars } from 'naive-ui'
-import { Component, computed, h, inject, nextTick, onMounted, reactive, ref } from 'vue'
+import { DropdownOption, useThemeVars } from 'naive-ui'
+import { computed, h, inject, reactive, ref } from 'vue'
 import useStore from '@/store'
 import router from '@/router'
-import { Bridge } from './bridge'
 import { Subscription } from '@tanbo/stream'
+import { Bridge } from '@/views/creator/project/bridge'
+
 const props = defineProps<{
   id: string
   lib: LibraryEnum

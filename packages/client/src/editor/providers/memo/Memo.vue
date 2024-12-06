@@ -16,8 +16,8 @@ const layout = injector.get(Layout)
 const middleEl = layout.middle 
 
 const structurer = injector.get(Structurer)
-const scrollerEl = structurer.scrollerRef
-const rootEl = structurer.rootRef
+const scrollerEl = structurer.scrollerEl
+const editorWrapperEl = structurer.editorWrapperEl
 const props = defineProps<{
   id: string
   isExpanded: boolean
@@ -93,14 +93,14 @@ const { x, y } = useDraggable(memoEl, {
 
 const offsetX = computed(() => {
   const middleRect = middleEl.getBoundingClientRect()
-  const rootRect = rootEl!.getBoundingClientRect()
+  const editorWrapperRect = editorWrapperEl!.getBoundingClientRect()
   // const scrollerRect = scrollerEl!.getBoundingClientRect()
   // const workbenchRect = workbenchEl.getBoundingClientRect()
   // console.log('middleRect', middleRect.left, 'scrollerRect', scrollerRect.left, middleRect.left - scrollerRect.left)
   // console.log('x',  x.value - (middleRect.left - scrollerRect.left))
   // console.log('offsetx', (x.value - middleRect.left + rootRect.left) / middleRect.width * 100)
   // 改成百分比的模式，这样位置不会受到工作区宽度变化的影响
-  return (x.value - middleRect.left + rootRect.left) / middleRect.width * 100
+  return (x.value - middleRect.left + editorWrapperRect.left) / middleRect.width * 100
 })
 
 const offsetY = computed(() => {

@@ -279,17 +279,8 @@ onUnmounted(() => {
         <span class="saving-text">{{
           state.isSaving ? '正在保存 ... ' : `${data?.isContentUpdating || data?.isTitleUpdating ? '未保存' : ''}`
         }}</span>
-        <!-- <n-icon v-if="state.isSaving" class="rotate" :component="AutorenewOutlined" :size="22" /> -->
         <Icon v-if="state.isSaving" class="rotate" icon="material-symbols:autorenew-rounded" height="22" />
       </div>
-      <!-- <TooltipButton
-        v-if="lib === LibraryEnum.COURSE"
-        class="top-nav-btn"
-        :icon="state.isSubtitleShow ? Subtitles : SubtitlesOff"
-        :disabled="state.isReadonly"
-        :tip="'字幕'"
-        @click="navMethods.handleSubtitle"
-      /> -->
       <!-- 投稿 -->
       <n-button
         v-if="lib !== LibraryEnum.PROCEDURE"
@@ -382,7 +373,7 @@ onUnmounted(() => {
             <n-descriptions-item label="字数"> {{ data?.detial?.wordage || '' }} </n-descriptions-item>
           </n-descriptions>
         </n-tab-pane>
-        <!-- 创建工程/课程 -->
+        <!-- 创建 -->
         <n-tab-pane v-if="lib !== LibraryEnum.COURSE" class="create-pane" name="create" :tab="lib === LibraryEnum.PROCEDURE ? '动画' : '动画制作'">
           <n-space vertical>
             <div class="create-pane-header">请选择项目要保存的文件夹</div>
@@ -431,8 +422,6 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .navbar {
-  // position: relative;
-  // display: inline;
   height: 100%;
   width: 100%;
   border-top: 1px solid var(--dpz-dividerColor);

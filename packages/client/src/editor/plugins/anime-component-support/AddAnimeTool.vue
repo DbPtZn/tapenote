@@ -5,9 +5,11 @@ import { AddAnimeService } from '../../services'
 import { Editor, Layout } from '@textbus/editor'
 import { UIIcon, UIConfig } from '../../common'
 import { AnimeProvider, Structurer } from '../..'
+import { useThemeVars } from 'naive-ui'
 // import { animeComponent } from '../../components/anime/_api'
 type AnimeOption = ReturnType<AnimeProvider['getOptions']>[0]
 const injector = inject('injector') as Injector
+const themeVars = useThemeVars()
 const anime = injector.get(AnimeProvider)
 const animeOptions = anime.getOptions()
 const addAnimeService = injector.get(AddAnimeService)
@@ -18,10 +20,11 @@ const renderer = injector.get(Renderer)
 const layout = injector.get(Layout)
 const editor = injector.get(Editor)
 const container = layout.container
-const scrollerRef = structurer.scrollerRef!
+const scrollerEl = structurer.scrollerEl!
+const projectEl = structurer.projectEl!
 const caretRef = ref()
 const triggerRef = ref()
-
+// console.log(scrollerEl)
 const isPopoverShow = ref(false)
 
 let currentElement: HTMLElement | null = null
@@ -161,7 +164,7 @@ onUnmounted(() => {
           trigger="click"
           placement="right"
           :raw="true"
-          :to="scrollerRef || false"
+          :to="projectEl || false"
           :show-arrow="false"
           :show="isPopoverShow"
           :style="{
@@ -206,7 +209,7 @@ onUnmounted(() => {
   max-width: 325px;
   padding: 6px;
   border-radius: 6px;
-  // background-color: #0000002f;
+  background-color: v-bind('themeVars.cardColor');
   .option {
     display: inline-block;
     margin: 3px;

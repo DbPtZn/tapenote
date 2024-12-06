@@ -1,8 +1,4 @@
 import {
-  colorFormatLoader,
-  colorFormatter,
-  textBackgroundColorFormatter,
-  textBackgroundColorFormatLoader,
   DialogProvider,
   OutlinePlugin,
   OutlineService,
@@ -10,7 +6,6 @@ import {
   rootPlayerComponentLoader,
   rootPlayerComponent,
   Player,
-  CourseData,
   RootEventService,
   PlayerContextMenuPlugin,
   AnimeProvider,
@@ -18,30 +13,25 @@ import {
   ThemeProvider,
   animeFormatter,
   animeFormatLoader,
-   MemoProvider, MessageService, MemoService, defaultComponents, defaultComponentLoaders, defaultPlayerComponents, defaultPlayerComponentLoaders, blockBackgroundColorFormatter, defaultAttributeLoaders, defaultAttributes, defaultFormatLoaders, defaultFormatters
+   MemoProvider, MessageService, MemoService, defaultPlayerComponents, defaultPlayerComponentLoaders, defaultAttributeLoaders, defaultAttributes, defaultFormatLoaders, defaultFormatters
 } from '@/editor'
 import { fromEvent, Injector } from '@textbus/core'
 import {
-  // defaultAttributeLoaders,
-  // defaultAttributes,
-  // defaultComponentLoaders,
-  // defaultComponents,
-  // defaultFormatLoaders,
-  // defaultFormatters,
   EditorOptions,
   LinkJumpTipPlugin
 } from '@textbus/editor'
 import { CaretLimit, Input } from '@textbus/platform-browser'
 export function getCourseConfig(args: {
-  rootRef: HTMLElement,
-  editorRef: HTMLElement,
-  scrollerRef: HTMLElement, 
-  toolbarRef?: HTMLElement,
-  controllerRef?: HTMLElement,
+  projectEl: HTMLElement,
+  editorWrapperEl: HTMLElement,
+  editorEl: HTMLElement,
+  scrollerEl: HTMLElement, 
+  toolbarEl?: HTMLElement,
+  controllerEl?: HTMLElement,
   content?: string
 }) {
-  const { rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, content } = args
-  editorRef.classList.add('player-editor')
+  const { projectEl, editorWrapperEl, editorEl, scrollerEl, toolbarEl, controllerEl, content } = args
+  editorEl.classList.add('player-editor')
   const config: EditorOptions = {
     theme: 'darkline',
     autoFocus: true,
@@ -73,7 +63,7 @@ export function getCourseConfig(args: {
       MemoService
     ],
     plugins: [
-      () => new Controller(controllerRef!),
+      () => new Controller(controllerEl!),
       () => new PlayerContextMenuPlugin(),
       () => new OutlinePlugin(),
       () => new LinkJumpTipPlugin()
@@ -81,16 +71,16 @@ export function getCourseConfig(args: {
     setup(injector: Injector) {
       const input = injector.get(Input)
       input.caret.correctScrollTop({
-        onScroll: fromEvent(scrollerRef, 'scroll'),
+        onScroll: fromEvent(scrollerEl, 'scroll'),
         getLimit(): CaretLimit {
-          const rect = scrollerRef.getBoundingClientRect()
+          const rect = scrollerEl.getBoundingClientRect()
           return {
             top: 0,
             bottom: rect.height + rect.top
           }
         },
         setOffset(offsetScrollTop: number) {
-          scrollerRef.scrollTop += offsetScrollTop
+          scrollerEl.scrollTop += offsetScrollTop
         }
       })
       /** 依赖注入 */
@@ -100,15 +90,16 @@ export function getCourseConfig(args: {
       // 组成元素
       const structurer = injector.get(Structurer)
       structurer.setup({
-        rootRef,
-        scrollerRef,
-        toolbarRef,
-        editorRef,
-        controllerRef
+        projectEl,
+        editorWrapperEl,
+        scrollerEl,
+        toolbarEl,
+        editorEl,
+        controllerEl
       })
       /** 播放器依赖注入 */
       const player = injector.get(Player)
-      player.setup(injector, scrollerRef)
+      player.setup(injector, scrollerEl)
     }
   }
   return config

@@ -30,7 +30,7 @@ const themeVars = useThemeVars()
 const message = useMessage()
 const dialog = useDialog()
 
-const rootEl = useTemplateRef<HTMLElement>('rootEl')
+const editorWrapperEl = useTemplateRef<HTMLElement>('editorWrapperEl')
 const toolbarEl = useTemplateRef<HTMLElement>('toolbarEl')
 const editorEl = useTemplateRef<HTMLElement>('editorEl')
 const controllerEl = useTemplateRef<HTMLElement>('controllerEl')
@@ -61,9 +61,7 @@ const state = reactive({
   isSaving: false,
   toolbarHeight: 50, // 基于顶部固定工具条的高度调整滚动区的高度
   editorWidth: computed(() => bridge?.habit!.state.platform.width),
-  // isSubtitleShow: true, //computed(() => bridge.habit.state.subtitle.isShow),
   scrollTopPercent: 0,
-  // subtitle: ''
 })
 const autosave = computed(() => userStore.config.autosave) // 自动保存
 const saveInterval = computed(() => userStore.config.saveInterval) // 自动保存的间隔
@@ -74,6 +72,7 @@ watch(() => props.readonly, (is) => {
   state.isChangeByReadonly2 = true
 })
 // let player: Player
+console.log(bridge.projectEl)
 let editor: Editor
 let lastContent = ''
 useEditor({
@@ -81,12 +80,11 @@ useEditor({
   lib: props.lib,
   account: props.account,
   hostname: props.hostname,
-  rootRef: rootEl,
+  editorWrapperRef: editorWrapperEl,
   editorRef: editorEl,
   scrollerRef: scrollerEl,
   toolbarRef: toolbarEl,
-  controllerRef: controllerEl,
-  bridge: bridge,
+  controllerRef: controllerEl
 }).then(({ editor: edi, content }) => {
   editor = edi
   const messageService = editor.get(MessageService)
@@ -140,18 +138,6 @@ useEditor({
       })
     )
   }
-  // 这部分代码移至控制器插件中
-  // if(props.lib === LibraryEnum.COURSE) {
-  //   player = edi.get(Player)
-  //   subs.push(
-  //     player.onSubtitleUpdate.subscribe(() => {
-  //       state.subtitle = player.subtitle
-  //     })
-  //     player.onRateChange.subscribe((rate) => {
-  //       message.info(`当前播放速度：${rate}x`)
-  //     })
-  //   )
-  // }
   bridge?.setup(editor, props.lib)
 }).catch(err => {
   console.error(err)
@@ -289,7 +275,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="rootEl" :class="['editor-wrapper', bridge?.habit?.state.platform.isScrollbarShow && 'scrollbar-visible', lib === LibraryEnum.COURSE && 'player-wrapper']">
+  <div ref="editorWrapperEl" :class="['editor-wrapper', bridge?.habit?.state.platform.isScrollbarShow && 'scrollbar-visible', lib === LibraryEnum.COURSE && 'player-wrapper']">
     <div class="main" :style="{ height: '100%', flexDirection: lib === LibraryEnum.COURSE ? 'row' : 'column' }">
       <!-- 工具条 -->
       <div v-if="lib !== LibraryEnum.COURSE" ref="toolbarWrapperEl">
@@ -349,9 +335,6 @@ onUnmounted(() => {
         readonly ? 'controller-disabled' : ''
       ]" 
       />
-    <!-- <div v-if="lib === LibraryEnum.COURSE && state.isSubtitleShow" class="subtitle">
-      {{ state.subtitle }}
-    </div> -->
     <div class="scroll-top-percent">
       <div class="scroll-top-percent-text">{{ Math.floor(state.scrollTopPercent * 100) + '%' }}</div>
     </div>
@@ -393,15 +376,6 @@ onUnmounted(() => {
   height: 100%;
   width: 100%;
   background-color: var(--dpz-editor-bgColor);
-  // border-right: 1px solid v-bind('themeVars.dividerColor');
-  // border-bottom: 1px solid v-bind('themeVars.dividerColor');
-  // &:hover {
-  //   /*定义滑块 内阴影+圆角*/
-  //   ::-webkit-scrollbar-thumb {
-  //     border-radius: 10px;
-  //     background-color: v-bind('themeVars.scrollbarColor');
-  //   }
-  // }
 }
 .scrollbar-visible {
   &:hover {
@@ -550,17 +524,6 @@ onUnmounted(() => {
     }
   }
 }
-
-// .subtitle {
-//   text-align: center;
-//   position: fixed;
-//   bottom: 50px;
-//   left: 50%;
-//   transform: translateX(-50%);
-
-//   color: v-bind('themeVars.textColor1');
-//   font-size: 24px;
-// }
 
 /** 定制滚动条 */
 /*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/

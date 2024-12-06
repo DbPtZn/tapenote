@@ -13,7 +13,7 @@ import { reactive } from 'vue'
 const injector = inject<Injector>('injector')!
 const player = injector.get(Player)
 const structurer = injector.get(Structurer)
-const rootRef = structurer.rootRef as HTMLElement
+const editorWrapperEl = structurer.editorWrapperEl as HTMLElement
 const message = useMessage()
 const subs: Subscription[] = []
 const controllerData = ref<VNode[]>([])
@@ -23,10 +23,10 @@ const isAutoHide = ref(false)
 const isControllerShow = ref(true)
 
 const draggerRef = ref<HTMLElement | null>(null)
-const rect = rootRef.getBoundingClientRect()
+const rect = editorWrapperEl.getBoundingClientRect()
 const { x, y, style } = useDraggable(controllerRef, {
   initialValue: { x: rect.width - 100, y: rect.height / 2 },
-  containerElement: rootRef,
+  containerElement: editorWrapperEl,
   preventDefault: true, // 阻止默认事件 (阻止拖拽时选中文本)
   stopPropagation: true // 阻止冒泡
 })
@@ -54,10 +54,10 @@ function handleHideController() {
   isAutoHide.value = !isAutoHide.value
   if (isAutoHide.value) {
     subs.push(
-      fromEvent<MouseEvent>(rootRef, 'mousemove')
+      fromEvent<MouseEvent>(editorWrapperEl, 'mousemove')
         .pipe(auditTime(100))
         .subscribe(ev => {
-          // const rect = rootRef.getBoundingClientRect()
+          // const rect = editorWrapperEl.getBoundingClientRect()
           isControllerShow.value = rect.right - ev.clientX < 100
         })
     )

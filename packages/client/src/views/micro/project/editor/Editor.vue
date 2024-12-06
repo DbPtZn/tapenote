@@ -2,9 +2,8 @@
 import { useMessage, useThemeVars } from 'naive-ui'
 import TitleInput from './TitleInput.vue'
 import { LibraryEnum } from '@/enums'
-import { useEditor } from './hooks'
-import { computed, inject, onMounted, reactive, ref } from 'vue'
-import { Bridge } from '../bridge'
+import { useEditor } from '@/views/creator/project/editor/hooks/_index'
+import { computed, inject, onMounted, ref, useTemplateRef } from 'vue'
 import { CourseData, Player } from '@/editor'
 import { Editor } from '@textbus/editor'
 import useStore from '@/store'
@@ -12,6 +11,7 @@ import { Subscription } from '@tanbo/stream'
 import { onUnmounted } from 'vue'
 import { watchOnce } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
+import { Bridge } from '@/views/creator/project/bridge'
 
 const bridge = inject('bridge') as Bridge
 const props = defineProps<{
@@ -24,16 +24,28 @@ const props = defineProps<{
 const { projectStore, folderStore, recentStore } = useStore()
 const themeVars = useThemeVars()
 const message = useMessage()
-const rootRef = ref()
-const toolbarRef = ref()
-const controllerRef = ref()
-const toolbarWrapperRef = ref()
-const scrollerRef = ref()
-const editorRef = ref()
+// const editorWrapperRef = ref()
+// const toolbarRef = ref()
+// const controllerRef = ref()
+// const toolbarWrapperRef = ref()
+// const scrollerRef = ref()
+// const editorRef = ref()
+const editorWrapperEl = useTemplateRef<HTMLElement>('editorWrapperEl')
+const toolbarEl = useTemplateRef<HTMLElement>('toolbarEl')
+const editorEl = useTemplateRef<HTMLElement>('editorEl')
+const controllerEl = useTemplateRef<HTMLElement>('controllerEl')
+const toolbarWrapperEl = useTemplateRef<HTMLElement>('toolbarWrapperEl')
+const scrollerEl = useTemplateRef<HTMLElement>('scrollerEl')
+const coverEl = useTemplateRef<HTMLElement>('coverEl')
+
+onMounted(() => {
+  bridge.editorEl = editorEl.value
+  bridge.scrollerEl = scrollerEl.value
+  bridge.coverEl = coverEl.value
+})
 
 const data = computed(() => projectStore.get(props.id))
 const subs: Subscription[] = []
-
 let player: Player
 let editor: Editor
 let lastContent = ''
@@ -42,16 +54,15 @@ useEditor({
   lib: props.lib,
   account: props.account,
   hostname: props.hostname,
-  rootRef: rootRef,
-  editorRef: editorRef,
-  scrollerRef: scrollerRef,
-  toolbarRef: toolbarRef,
-  controllerRef: controllerRef,
-  bridge: bridge
+  editorWrapperRef: editorWrapperEl,
+  editorRef: editorEl,
+  scrollerRef: scrollerEl,
+  toolbarRef: toolbarEl,
+  controllerRef: controllerEl
 }).then(({ editor: edi, content }) => {
   editor = edi
   lastContent = content
-  bridge.setup(editor, props.lib, editorRef.value, scrollerRef.value)
+  bridge.setup(editor, props.lib)
   editor.readonly = true
   if (props.lib === LibraryEnum.COURSE) {
     player = editor.get(Player)
@@ -268,11 +279,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="rootRef" class="root">
-    <div ref="scrollerRef" class="scroller">
+  <div ref="editorWrapperEl" class="root">
+    <div ref="scrollerEl" class="scroller">
       <div class="container" v-touch:tap="handleTap" v-touch:swipe="handleSwipe">
         <input
-          ref="inputRef"
+          ref="inputEl"
           class="title-input"
           v-model="titleVal"
           type="text"
@@ -281,7 +292,7 @@ onUnmounted(() => {
           :disabled="!titleEditable"
           @input="handleTitleInput"
         />
-        <div ref="editorRef" class="editor"></div>
+        <div ref="editorEl" class="editor"></div>
       </div>
     </div>
   </div>

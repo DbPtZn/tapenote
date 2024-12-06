@@ -31,7 +31,7 @@ export class ThemeProvider {
     this.layout.middle.setAttribute('data-color', '#000000')
     this.layout.middle.style.fontSize = fontSize
     const structurer = injector.get(Structurer)
-    this.toolbarHost = structurer.toolbarRef
+    this.toolbarHost = structurer.toolbarEl
     this.subs.push(
       this.onThemeUpdate.subscribe(value => {
         switch (value) {

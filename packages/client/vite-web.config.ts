@@ -21,9 +21,9 @@ export default defineConfig(({ command, mode }) => {
         // 可以指定放置类型声明文件的位置和名称
         dts: 'src/types/components.d.ts'
       }),
-      viteCompression({
-        deleteOriginFile: false,
-      }),
+      // viteCompression({
+      //   deleteOriginFile: false,
+      // }),
       // visualizer({
       //   gzipSize: true,
       //   brotliSize: true,

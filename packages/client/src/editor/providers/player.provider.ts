@@ -65,8 +65,8 @@ export class Player {
   private anime!: AnimeProvider
   private _data: ParseData[] = [] // 数据
   private _sourceData: CourseData[] = [] // 源数据
-  private scrollerRef!: HTMLElement // 滚动条
-  private containerRef!: HTMLElement
+  private scrollerEl!: HTMLElement // 滚动条
+  private containerEl!: HTMLElement
   private subs: Subscription[] = []
   private scrollerSub!: Subscription
   private audioSubs: Subscription[] = []
@@ -136,12 +136,12 @@ export class Player {
   private keyframeHistory: number[] = []
 
   constructor() {}
-  setup(injector: Injector, scrollerRef: HTMLElement, containerRef?: HTMLElement) {
+  setup(injector: Injector, scrollerEl: HTMLElement, containerEl?: HTMLElement) {
     const structurer = injector.get(Structurer)
-    // loadData 依赖 scrollerRef， 依赖注入时应保证 structurer 依赖在前面，为了避免 structurer 顺序问题，要求在 setup 中传入 scrollerRef
-    this.scrollerRef = scrollerRef || structurer.scrollerRef!
+    // loadData 依赖 scrollerRef， 依赖注入时应保证 structurer 依赖在前面，为了避免 structurer 模块注入顺序问题，要求在 setup 中传入 scrollerEl
+    this.scrollerEl = scrollerEl || structurer.scrollerEl!
     // 指定容器： 默认容器是编辑器，但在一些场景中滚动时的容器可能是 body 之类的
-    this.containerRef = containerRef ? containerRef : injector.get(Layout).container
+    this.containerEl = containerEl ? containerEl : injector.get(Layout).container
     this.anime = injector.get(AnimeProvider)
     this.injector = injector
   }
@@ -165,7 +165,7 @@ export class Player {
               audio: audios[index],
               duration: item.duration,
               animeElementSequence: item.promoterSequence.map(item => {
-                return this.scrollerRef.querySelectorAll<HTMLElement>(`[data-id="${item}"]`)
+                return this.scrollerEl.querySelectorAll<HTMLElement>(`[data-id="${item}"]`)
               }),
               keyframeSequence: item.keyframeSequence,
               subtitleSequence: item.subtitleSequence,
@@ -259,7 +259,7 @@ export class Player {
           // console.log('播放动画', this.audio!.currentTime, keyframeSequence[this.animeCount])
           animeElementSequence[this.animeCount].forEach(el => {
             // 播放动画
-            this.applyPlay(el, this.containerRef, this.scrollerRef)
+            this.applyPlay(el, this.containerEl, this.scrollerEl)
           })
           // if(this.animeCount < animeCountLimit) this.animeCount++ // 必须允许溢出，否则达到终点后会不断重复
           this.animeCount++
@@ -270,7 +270,7 @@ export class Player {
         //   // console.log('播放动画')
         //   animeElementSequence[this.animeCount]?.forEach(el => {
         //     // 播放动画
-        //     this.applyPlay(el, this.containerRef, this.scrollerRef)
+        //     this.applyPlay(el, this.containerEl, this.scrollerEl)
         //   })
         //   this.keyframeHistory[this.animeCount] = this.keyframeSequence[this.animeCount] // 记录播放历史
         //   if (this.animeCount < keyframeSequenceLength - 1) this.animeCount++
@@ -317,7 +317,7 @@ export class Player {
       this.onStateUpdate.next('')
       this.onPlayOver.next('') // 所有音频播放完毕,发布播放结束的订阅
       // 播放结束后立即显示忽略组件会导致内容突兀变动，因此设置为在滚动事件发生后再显示
-      this.scrollerSub = fromEvent(this.scrollerRef, 'scroll').subscribe(ev => {
+      this.scrollerSub = fromEvent(this.scrollerEl, 'scroll').subscribe(ev => {
         this.showIgnoreComponent()
         this.scrollerSub.unsubscribe()
         clearTimeout(timer)
@@ -355,7 +355,7 @@ export class Player {
     if (this._isPlaying) {
       this.audio?.pause() //暂停音频
       this.pausableIntervalInstance?.pause()
-      this._scrollTop = this.scrollerRef.scrollTop //记录滚动条位置
+      this._scrollTop = this.scrollerEl.scrollTop //记录滚动条位置
       this._isPlaying = false
       this._isPause = true
     }
@@ -370,7 +370,7 @@ export class Player {
       this.pausableIntervalInstance?.resume()
       this._isPlaying = true
       this._isPause = false
-      this.scrollerRef.scrollTop = this._scrollTop
+      this.scrollerEl.scrollTop = this._scrollTop
     }
   }
 
@@ -537,7 +537,7 @@ export class Player {
     this.setAllAnimeVisible(true)
     this.onStop.next()
     this.onPlayOver.next('')
-    this.scrollerSub = fromEvent(this.scrollerRef, 'scroll').subscribe(ev => {
+    this.scrollerSub = fromEvent(this.scrollerEl, 'scroll').subscribe(ev => {
       this.showIgnoreComponent()
       this.scrollerSub.unsubscribe()
     })
@@ -557,7 +557,7 @@ export class Player {
     this._isPlaying = false
     this._isPause = false
     this._currentTime = 0
-    this._scrollTop = this.scrollerRef.scrollTop
+    this._scrollTop = this.scrollerEl.scrollTop
     this.pausableIntervalInstance?.stop()
     this.pausableIntervalInstance = undefined
     this.onSubtitleUpdate.next(this.subtitle) // 发布字幕更新订阅
@@ -565,7 +565,7 @@ export class Player {
 
   /** 初始化 */
   private init(isInitScrollTop = true) {
-    isInitScrollTop && (this.scrollerRef.scrollTop = 0)  // 初始化滚动区
+    isInitScrollTop && (this.scrollerEl.scrollTop = 0)  // 初始化滚动区
     this.total = 0
     this._totalTime = 0
     this.clear() // 初始化播放器数据状态

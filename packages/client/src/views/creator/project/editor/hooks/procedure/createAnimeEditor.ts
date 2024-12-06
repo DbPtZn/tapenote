@@ -1,23 +1,25 @@
 import { AddAnimeService, AnimeProvider, ColorProvider, DialogProvider, ImgToUrlService, MemoProvider, OutlineService, Player, Structurer, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
-import { Ref, ShallowRef, onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
+import { Ref, ShallowRef, inject, onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
 import { getProcedureConfig } from './procedure.config'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../../../../shell'
+import { Bridge } from '../../../bridge'
 export function createAnimeEditor(args: {
   id: string,
   account: string,
   hostname: string,
-  rootRef: Readonly<ShallowRef<HTMLElement | null>>,
-  editorRef: Readonly<ShallowRef<HTMLElement | null>>,
-  scrollerRef: Readonly<ShallowRef<HTMLElement | null>>,
-  toolbarRef: Readonly<ShallowRef<HTMLElement | null>>,
+  editorWrapperRef: Readonly<ShallowRef<HTMLElement | null>>
+  editorRef: Readonly<ShallowRef<HTMLElement | null>>
+  scrollerRef: Readonly<ShallowRef<HTMLElement | null>>
+  toolbarRef: Readonly<ShallowRef<HTMLElement | null>>
   controllerRef: Readonly<ShallowRef<HTMLElement | null>>
 }
 ) {
-  const { id, account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef } = args
+  const { id, account, hostname, editorWrapperRef, editorRef, scrollerRef, toolbarRef, controllerRef } = args
   const { projectStore, settingStore } = useStore()
+  const bridge = inject('bridge') as Bridge
   let editor: Editor
   const shell = useShell<CreatorShell>()
   watch(
@@ -56,11 +58,11 @@ export function createAnimeEditor(args: {
             editor = createEditor(getProcedureConfig({
               account,
               hostname,
-              rootRef: editorRef.value!,
-              editorRef: editorRef.value!,
-              scrollerRef: scrollerRef.value!,
-              toolbarRef: toolbarRef.value!,
-              controllerRef: controllerRef.value!,
+              projectEl: bridge.projectEl!,
+              editorWrapperEl: editorWrapperRef.value!,
+              editorEl: editorRef.value!,
+              scrollerEl: scrollerRef.value!,
+              toolbarEl: toolbarRef.value!,
               memos: project.memos,
               content: project.content,
               dirname: project.dirname

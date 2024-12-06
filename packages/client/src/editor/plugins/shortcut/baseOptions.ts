@@ -34,7 +34,7 @@ export function useBaseOptions(
   const keyboard = injector.get(Keyboard)
   const viewContainer = injector.get(VIEW_DOCUMENT)
   const colorOptions = colorProvider.getColorOptions()
-  const scrollerEl = structurer.scrollerRef!
+  const scrollerEl = structurer.scrollerEl!
   // const scrollerRect = scrollerEl.getBoundingClientRect()
   // const middleRect = layout.middle.getBoundingClientRect()
   const secondaryPointer = ref(1)

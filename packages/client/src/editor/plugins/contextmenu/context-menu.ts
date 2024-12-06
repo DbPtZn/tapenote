@@ -47,7 +47,7 @@ export class ContextMenu implements Plugin {
     const memoService = injector.get(MemoService)
     const structurer = injector.get(Structurer)
     const layout = injector.get(Layout)
-    const scroller = structurer.scrollerRef
+    const scrollerEl = structurer.scrollerEl
     let animeService: AnimeService | null = null
     let studioService: StudioService | null = null
     try {
@@ -91,7 +91,7 @@ export class ContextMenu implements Plugin {
                 const target = ev.target as HTMLElement
                 const targetRect = target.getBoundingClientRect()
                 const middleRect = layout.middle.getBoundingClientRect()
-                const scrollerRect = scroller!.getBoundingClientRect()
+                const scrollerRect = scrollerEl!.getBoundingClientRect()
                 //  + containeRect.left - scrollerRect.left
                 memoService.createMeno((ev.offsetX / middleRect.width) * 100, ev.offsetY + targetRect.top - scrollerRect.top)
               }

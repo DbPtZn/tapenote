@@ -28,7 +28,7 @@ const layout = injector.get(Layout)
 const selection = injector.get(Selection)
 const keyboard = injector.get(Keyboard)
 
-const scrollerEl = structurer.scrollerRef!
+const scrollerEl = structurer.scrollerEl!
 const menuEl = useTemplateRef<HTMLElement>('menuEl')
 const dropdownEl = useTemplateRef<HTMLElement>('dropdownEl')
 const popoverEl = useTemplateRef<HTMLElement>('popoverEl')

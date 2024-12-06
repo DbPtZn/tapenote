@@ -82,16 +82,17 @@ export function getProcedureConfig(args: {
   account: string
   hostname: string
   dirname: string
-  rootRef: HTMLElement
-  editorRef: HTMLElement
-  scrollerRef: HTMLElement
   memos: Memo[]
-  toolbarRef?: HTMLElement
-  controllerRef?: HTMLElement
   content?: string
+  projectEl: HTMLElement
+  editorWrapperEl: HTMLElement
+  editorEl: HTMLElement
+  scrollerEl: HTMLElement
+  toolbarEl?: HTMLElement
+  controllerEl?: HTMLElement
 }) {
-  const { account, hostname, rootRef, editorRef, scrollerRef, toolbarRef, controllerRef, memos, content } = args
-  editorRef.classList.add('anime-editor')
+  const { account, hostname, editorWrapperEl, projectEl, editorEl, scrollerEl, toolbarEl, controllerEl, memos, content } = args
+  editorEl.classList.add('anime-editor')
   const ResourceDomain = getResourceDomain(hostname)
   const config: EditorOptions = {
     theme: 'darkline',
@@ -150,7 +151,7 @@ export function getProcedureConfig(args: {
             [dividerTool],
             [cleanTool]
           ],
-          toolbarRef!
+          toolbarEl!
         ),
       () =>
         new InlineToolbarPlugin(
@@ -164,7 +165,7 @@ export function getProcedureConfig(args: {
             [animeBadgeVisibleTool, animeElementVisibleTool],
             [cleanTool]
           ],
-          scrollerRef
+          scrollerEl
         ),
       () => new ImgToolbarPlugin([`${ResourceDomain}`]),
       () => new LinkJumpTipPlugin(),
@@ -173,7 +174,7 @@ export function getProcedureConfig(args: {
       () => new ContextMenu(),
       () => new AnimeContextmenuPlugin(),
       () => new AnimeComponentSupport(),
-      () => new PreviewPlayerController(controllerRef!)
+      () => new PreviewPlayerController(controllerEl!)
     ],
     uploader(config) {
       return uploader(config, account, hostname)
@@ -181,37 +182,38 @@ export function getProcedureConfig(args: {
     setup(injector: Injector) {
       const input = injector.get(Input)
       input.caret.correctScrollTop({
-        onScroll: fromEvent(scrollerRef, 'scroll'),
+        onScroll: fromEvent(scrollerEl, 'scroll'),
         getLimit(): CaretLimit {
-          const rect = scrollerRef.getBoundingClientRect()
+          const rect = scrollerEl.getBoundingClientRect()
           return {
             top: 0,
             bottom: rect.height + rect.top
           }
         },
         setOffset(offsetScrollTop: number) {
-          scrollerRef.scrollTop += offsetScrollTop
+          scrollerEl.scrollTop += offsetScrollTop
         }
       })
       /** 依赖注入 */
       // 动画依赖
       const animeProvider = injector.get(AnimeProvider)
-      animeProvider.setup(injector, scrollerRef)
+      animeProvider.setup(injector, scrollerEl)
       // 组成元素
       const structurer = injector.get(Structurer)
       structurer.setup({
-        rootRef,
-        scrollerRef,
-        toolbarRef,
-        editorRef,
-        controllerRef
+        projectEl,
+        editorWrapperEl,
+        scrollerEl,
+        toolbarEl,
+        editorEl,
+        controllerEl
       })
       // 主题依赖
       const themeProvider = injector.get(ThemeProvider)
       themeProvider.setup(injector)
       // 播放器依赖
       const player = injector.get(Player)
-      player.setup(injector, scrollerRef)
+      player.setup(injector, scrollerEl)
       // 图片工具
       const imgToUrlService = injector.get(ImgToUrlService)
       const { uploadImgBase64 } = useUploadImg(account, hostname)

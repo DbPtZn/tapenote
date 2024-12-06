@@ -3,29 +3,37 @@ import { Injectable } from '@textbus/core'
 /** 组建成员 */
 @Injectable()
 export class Structurer {
-  // injector!: Injector
   /** 布局 */
-  editorRef: HTMLElement | null = null
-  rootRef: HTMLElement | null = null
-  scrollerRef: HTMLElement | null = null
-  controllerRef: HTMLElement | null = null
-  toolbarRef: HTMLElement | null = null
+  projectEl: HTMLElement | null = null
+  editorWrapperEl: HTMLElement | null = null
+  editorEl: HTMLElement | null = null
+  scrollerEl: HTMLElement | null = null
+  controllerEl: HTMLElement | null = null
+  toolbarEl: HTMLElement | null = null
 
-  setup(config: { rootRef?: HTMLElement, editorRef?: HTMLElement, scrollerRef?: HTMLElement, toolbarRef?: HTMLElement, controllerRef?: HTMLElement  }) {
-    const { rootRef, editorRef, scrollerRef, toolbarRef, controllerRef } = config
-    // this.injector = injector
-    this.rootRef = rootRef || null
-    this.editorRef = editorRef || null
-    this.scrollerRef = scrollerRef || null
-    this.controllerRef = controllerRef || null
-    this.toolbarRef = toolbarRef || null
+  setup(config: {
+    projectEl: HTMLElement
+    editorWrapperEl?: HTMLElement
+    editorEl?: HTMLElement
+    scrollerEl?: HTMLElement
+    toolbarEl?: HTMLElement
+    controllerEl?: HTMLElement
+  }) {
+    const { projectEl, editorWrapperEl, editorEl, scrollerEl, toolbarEl, controllerEl } = config
+    this.projectEl = projectEl || null
+    this.editorWrapperEl = editorWrapperEl || null
+    this.editorEl = editorEl || null
+    this.scrollerEl = scrollerEl || null
+    this.controllerEl = controllerEl || null
+    this.toolbarEl = toolbarEl || null
   }
 
-  destory(){
-    this.rootRef = null
-    this.editorRef = null
-    this.scrollerRef = null
-    this.controllerRef = null
-    this.toolbarRef = null
+  destory() {
+    this.projectEl = null
+    this.editorWrapperEl = null
+    this.editorEl = null
+    this.scrollerEl = null
+    this.controllerEl = null
+    this.toolbarEl = null
   }
 }

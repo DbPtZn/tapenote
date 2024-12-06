@@ -4,9 +4,7 @@ import { Plugin, Injector, Commander } from '@textbus/core'
 import _ from 'lodash'
 import { Structurer } from '../..'
 import { Layout } from '@textbus/editor'
-/**
- * 主题控制器（插件）
- */
+
 export class Clipboard implements Plugin {
   private subs: Subscription[] = []
   private editorHost: HTMLElement | null = null
@@ -22,7 +20,7 @@ export class Clipboard implements Plugin {
     // const commander = injector.get(Commander)
     // const configProvider = injector.get(ConfigProvider)
     const structurer = injector.get(Structurer)
-    this.toolbarHost = structurer.toolbarRef
+    this.toolbarHost = structurer.toolbarEl
     // this.subs.push(
     //   // fromEvent<ClipboardEvent>(this.layout.workbench, 'copy').subscribe((ev) => {
     //   //   // console.log(ev)
