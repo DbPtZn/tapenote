@@ -603,6 +603,7 @@ export class FragmentService {
         const result = await this.sherpaService.asr(filepath)
         const punText = await this.sherpaService.addPunct(result.text)
         const alignResult = this.sherpaService.align(punText, result)
+        console.log(alignResult)
         return alignResult
       }
       if(model === AsrModel.Tencent) {

@@ -16,7 +16,7 @@ const props = defineProps<{
   hostname: string
 }>()
 const bridge = inject('bridge') as Bridge
-const { folderStore, projectStore } = useStore()
+const { projectStore } = useStore()
 const data = computed(() => projectStore.get(props.id))
 const subs: Subscription[] = []
 const themeVars = useThemeVars()

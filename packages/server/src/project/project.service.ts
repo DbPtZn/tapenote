@@ -246,10 +246,7 @@ export class ProjectService {
       promoterSequence = group.promoterGroup.flat()
       keyframeSequence = group.keyframeGroup.flat()
       console.log('正在生成字幕数据...')
-      const { subtitleGroup, subtitleKeyframeGroup } = subtitleProcessing(
-        group.transcriptGroup,
-        group.fragmentDurationGroup
-      )
+      const { subtitleGroup, subtitleKeyframeGroup } = subtitleProcessing(fragments)
       subtitleSequence = subtitleGroup.flat()
       subtitleKeyframeSequence = subtitleKeyframeGroup.flat()
 
@@ -1370,37 +1367,54 @@ function generateFragmentKeyframeSquence(fragment: Fragment, accumDuration: numb
 }
 
 /** 字幕处理 */
-function subtitleProcessing(transcriptGroup: string[][], fragmentDurationGroup: number[]) {
+function subtitleProcessing(fragments: Fragment[]) {
   const subtitleGroup = []
   const subtitleKeyframeGroup = []
-  const unnecessaryReg = /[\u300a\u300b\u201c\u201d\uff08\uff09\uff5b\uff5d\u3010\u3011]/g // 非必要标点符号正则
-  const tailReg = /[\u3002\uff1b\uff0c\uff1f\uff01\u2026]/ //尾部断句标点符号正则
+  const punctuation = ['，', '。', '！', '？', '；', ',', '.', '!', '?', ';'] // 中英文常见分句符号
   let accumDuration = 0 // 每个片段字幕的起始时间
-  transcriptGroup.forEach((subtitle, index) => {
-    // a.将 string[] 合并成一个 string 并清除 # 标记
-    let txt = subtitle.join('').replace(/#/g, '')
-    // b.清除句末标点符号
-    if (tailReg.test(txt.charAt(txt.length - 1))) {
-      txt = txt.substring(0, txt.length - 1)
-    }
-    // c.清除文字中的非必要标点符号
-    txt = txt.replace(unnecessaryReg, '')
-    // d. 对文字进行分割 —— 通过指定符号(断句标点符号，如逗号、分号、句号、感叹号、问号等)进行分割
-    const slices = txt.split(tailReg)
-    // e. 遍历切割后的片段，计算每个片段的起始时间
-    const section = fragmentDurationGroup[index] / txt.length // 音频片段时长 / 总字数 = 平均每个字符的所占的时间切片
-    const sliceKeyFrameGroup = [] // 文字切片的关键帧组
-    let startTime = accumDuration // 每个片段字幕切片的起始时间
-    slices.forEach(slice => {
-      if (slice) {
-        sliceKeyFrameGroup.push(startTime)
-        startTime += slice.length * section // 计算下一个片段的起始时间
+  for (let i = 0; i < fragments.length; i++) {
+    const fragment = fragments[i]
+    // tip: 不能采用先合并字符串的方案，因为可能存在一个 token 对应多个字符的情况
+    const charResult: string[][] = []
+    const timestampResult: number[][] = []
+    let tempCharArray: string[] = []
+    let tempTimestampArray: number[] = []
+    for (let j = 0; j < fragment.transcript.length; j++) {
+      const char = fragment.transcript[j]
+      const timestamp = fragment.timestamps[j]
+
+      if (punctuation.includes(char)) {
+        if (tempCharArray.length > 0) {
+          charResult.push(tempCharArray)
+          timestampResult.push(tempTimestampArray)
+          tempCharArray = []
+          tempTimestampArray = []
+        }
+        charResult.push([char]) // 标点符号单独处理
+        timestampResult.push([timestamp])
+      } else {
+        tempCharArray.push(char) 
+        tempTimestampArray.push(timestamp)  
       }
-    })
-    accumDuration += fragmentDurationGroup[index]
-    subtitleGroup.push(slices)
-    subtitleKeyframeGroup.push(sliceKeyFrameGroup)
-  })
+    }
+    // 如果最后还有未处理的字符数组，添加到结果中
+    if (tempCharArray.length > 0) {
+      charResult.push(tempCharArray)
+      timestampResult.push(tempTimestampArray)
+    }
+    // console.log(charResult)
+    // console.log(timestampResult)
+    for (let k = 0; k < charResult.length; k++) {
+      if (charResult[k].length === 1 && punctuation.includes(charResult[k][0])) continue // 跳过单个标点符号
+      // 计算每个片段的起始时间即可
+      const subtitle = charResult[k].join('')
+      const timestamp = timestampResult[k][0]
+      subtitleGroup.push(subtitle)
+      subtitleKeyframeGroup.push(Number((timestamp + accumDuration).toFixed(2)))
+    }
+    accumDuration += fragment.duration
+  }
+  // console.log(subtitleGroup, subtitleKeyframeGroup)
   return { subtitleGroup, subtitleKeyframeGroup }
 }
 
@@ -1413,6 +1427,40 @@ function checkTitle(title: string) {
   return title
 }
 
+
+// function subtitleProcessing(transcriptGroup: string[][], fragmentDurationGroup: number[]) {
+//   const subtitleGroup = []
+//   const subtitleKeyframeGroup = []
+//   const unnecessaryReg = /[\u300a\u300b\u201c\u201d\uff08\uff09\uff5b\uff5d\u3010\u3011]/g // 非必要标点符号正则
+//   const tailReg = /[\u3002\uff1b\uff0c\uff1f\uff01\u2026]/ //尾部断句标点符号正则
+//   let accumDuration = 0 // 每个片段字幕的起始时间
+//   transcriptGroup.forEach((subtitle, index) => {
+//     // a.将 string[] 合并成一个 string 并清除 # 标记
+//     let txt = subtitle.join('').replace(/#/g, '')
+//     // b.清除句末标点符号
+//     if (tailReg.test(txt.charAt(txt.length - 1))) {
+//       txt = txt.substring(0, txt.length - 1)
+//     }
+//     // c.清除文字中的非必要标点符号
+//     txt = txt.replace(unnecessaryReg, '')
+//     // d. 对文字进行分割 —— 通过指定符号(断句标点符号，如逗号、分号、句号、感叹号、问号等)进行分割
+//     const slices = txt.split(tailReg)
+//     // e. 遍历切割后的片段，计算每个片段的起始时间
+//     const section = fragmentDurationGroup[index] / txt.length // 音频片段时长 / 总字数 = 平均每个字符的所占的时间切片
+//     const sliceKeyFrameGroup = [] // 文字切片的关键帧组
+//     let startTime = accumDuration // 每个片段字幕切片的起始时间
+//     slices.forEach(slice => {
+//       if (slice) {
+//         sliceKeyFrameGroup.push(startTime)
+//         startTime += slice.length * section // 计算下一个片段的起始时间
+//       }
+//     })
+//     accumDuration += fragmentDurationGroup[index]
+//     subtitleGroup.push(slices)
+//     subtitleKeyframeGroup.push(sliceKeyFrameGroup)
+//   })
+//   return { subtitleGroup, subtitleKeyframeGroup }
+// }
 // async copyFragment(args: {
 //   sourceProejctId: string
 //   targetProejctId: string
