@@ -9,7 +9,7 @@ import { Bridge } from '../../bridge'
 import { containsEnglish, findLowPoints, splitAudio, splitText } from '../_utils'
 import { NConfig } from '../../../_common'
 import { AudioRecorder } from '../_utils/recorder'
-
+type Fragment = ReturnType<typeof useStore>['projectStore']['data'][0]['fragments'][0]
 export function useInput(id: string, account: string, hostname: string, bridge: Bridge) {
   const { projectStore, speakerStore } = useStore()
   const message = useMessage()
@@ -20,6 +20,40 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
   const ttsSpeed = ref(1)
   const isAudioInputting = ref(false)
   const inputtingDuration = ref('00:00:00')
+  const asrUsage = ref(0)
+  const ttsUsage = ref(0)
+
+  onMounted(() => {
+    checkUsageDate()
+    updateAsrUsage()
+    updateTtsUsage()
+  })
+
+  const usaDategeKey = `usage_date:${account}&${hostname}`
+  const asrKey = `asr_usage:${account}&${hostname}`
+  const ttsKey = `tts_usage:${account}&${hostname}`
+  /** 检查 usage 记录日期，如果非当天日期，则将相关 usage 置0，然后更新 usage 至当天日期 */
+  function checkUsageDate() {
+    const currentDate = (new Date()).toISOString().split('T')[0] // 当天日期
+    const date = localStorage.getItem(usaDategeKey) // 记录日期
+    if (!date || date !== currentDate) {
+      localStorage.setItem(asrKey, '0')
+      localStorage.setItem(ttsKey, '0')
+      localStorage.setItem(usaDategeKey, currentDate)
+    } 
+  }
+
+  /** 更新 asr 使用量 */
+  function updateAsrUsage() {
+    const usage = localStorage.getItem(asrKey) || '0'
+    asrUsage.value = Math.round(Number(usage))
+  }
+
+  /** 更新 tts 使用量 */
+  function updateTtsUsage() {
+    const usage = localStorage.getItem(ttsKey) || '0'
+    ttsUsage.value = Number(usage)
+  }
 
   // 当前选择角色 ID
   const speakerId = computed(() =>
@@ -76,11 +110,13 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
         })
         return
       }
-      await projectStore.fragment(id).createByText({
+      const errMsg = await projectStore.fragment(id).createByText({
         data: [{ txt: txt }],
         speakerId: speakerId.value || '',
         speed: ttsSpeed.value
       })
+      if(errMsg && typeof errMsg === 'string') message.error(errMsg)
+      updateTtsUsage()
     } catch (error) {
       cb?.(txt)
       message.error(t('studio.msg.create_fragment_error'))
@@ -88,9 +124,10 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
   }
 
   /** 输出音频片段 */
-  function handleAudioOutput(data: { audio: Blob | undefined; duration: number }) {
+  async function handleAudioOutput(data: { audio: Blob | undefined; duration: number }) {
     if (!data.audio) return
-    projectStore
+    try {
+      const errMsg = await projectStore
       .fragment(id)
       .createByAudio([
         {
@@ -100,9 +137,21 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
           actions: []
         }
       ])
-      .catch(e => {
-        message.error(t('studio.msg.create_fragment_error'))
-      })
+      if(errMsg && typeof errMsg === 'string') message.error(errMsg)
+      updateAsrUsage()
+    } catch (error) {
+      message.error(t('studio.msg.create_fragment_error'))
+    }
+  }
+
+  async function handleRebuild(fragment: Fragment) {
+    try {
+      await projectStore.fragment(id).rebuild(fragment)
+      updateAsrUsage()
+      updateTtsUsage()
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   /** 添加空白音频过渡 */
@@ -275,8 +324,11 @@ export function useInput(id: string, account: string, hostname: string, bridge: 
     speedOptions,
     isAudioInputting,
     inputtingDuration,
+    asrUsage,
+    ttsUsage,
     handleTextOutput,
     handleAudioOutput,
+    handleRebuild,
     handleAddBlank,
     handleInputting,
     handleModeSwitch,

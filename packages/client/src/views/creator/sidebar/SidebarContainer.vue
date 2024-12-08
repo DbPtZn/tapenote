@@ -21,23 +21,23 @@ const methods = {
 }
 
 onMounted(() => {
-  // if (localStorage.getItem('is-guide-video-played') === 'true') return
-  // dialog.create({
-  //   title: '产品使用指南',
-  //   icon: () => h(Icon, { icon: 'ep:guide', height: 24 }),
-  //   content: () => h(GuideVideo),
-  //   style: 'width: 50%;height: 50%;',
-  //   positiveText: '跳过',
-  //   maskClosable: false, 
-  //   onPositiveClick: () => {
-  //     message.success('感谢您的使用')
-  //     localStorage.setItem('is-guide-video-played', 'true')
-  //   },
-  //   onClose() {
-  //     message.success('感谢您的使用')
-  //     localStorage.setItem('is-guide-video-played', 'true')
-  //   },
-  // })
+  if (localStorage.getItem('is-guide-video-played') === 'true') return
+  dialog.create({
+    title: '产品使用指南',
+    icon: () => h(Icon, { icon: 'ep:guide', height: 24 }),
+    content: () => h(GuideVideo),
+    style: 'width: 50%;height: 50%;',
+    positiveText: '跳过',
+    maskClosable: false, 
+    onPositiveClick: () => {
+      message.success('感谢您的使用')
+      localStorage.setItem('is-guide-video-played', 'true')
+    },
+    onClose() {
+      message.success('感谢您的使用')
+      localStorage.setItem('is-guide-video-played', 'true')
+    },
+  })
 })
 
 </script>

@@ -616,7 +616,7 @@ export const useProjectStore = defineStore('projectStore', {
           const speaker = speakerStore.get('', account, hostname, 'human')
           fragment.speaker.avatar = speaker?.avatar || ''
         }
-        console.log(fragment.speaker.avatar)
+        // console.log(fragment.speaker.avatar)
         const { sourceFragmentId, targetFragmentId, sourceProjectId, targetProjectId, type, position } = params
         const source = this.get(sourceProjectId)!
         const target = this.get(targetProjectId)!
@@ -767,9 +767,12 @@ export const useProjectStore = defineStore('projectStore', {
           sequence?.push(key) // 用 key 占位
         })
 
+        let errMsg = ''
         try {
-          const resp = await this.creatorApi(account!, hostname!).fragment.createByText<Fragment[]>(params)
-          const data = resp.data
+          const resp = await this.creatorApi(account!, hostname!).fragment.createByText<{ fragments: Fragment[], usage: number }>(params)
+          localStorage.setItem(`tts_usage:${account}&${hostname}`, (resp?.data?.usage || 0).toString())
+          localStorage.setItem(`usage_date:${account}&${hostname}`, (new Date()).toISOString().split('T')[0])  // 存一个当天日期
+          const data = resp.data.fragments
           data.forEach(fragment => {
             fragment.audio = ResourceDomain + fragment.audio
             fragment.speaker = speaker
@@ -810,7 +813,8 @@ export const useProjectStore = defineStore('projectStore', {
               }
             })
           }
-        } catch (error) {
+        } catch (error: any) {
+          errMsg = error?.response?.data || ''
           params.data.forEach(param => {
             // 片段创建失败的时候, 标记失败片段
             get()?.some((item, index, arr) => {
@@ -826,6 +830,7 @@ export const useProjectStore = defineStore('projectStore', {
             })
           })
         }
+        return errMsg
       }
 
       /** 通过音频创建片段 */
@@ -864,9 +869,13 @@ export const useProjectStore = defineStore('projectStore', {
           get()?.push(fragment) // 不完全片段
           sequence?.push(key) // 用 key 占位
         })
+
+        let errMsg = ''
         try {
-          const resp = await this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment[]>(params, procedureId)
-          const data = resp.data
+          const resp = await this.creatorApi(account!, hostname!).fragment.createByAudio<{ fragments: Fragment[], usage: number }>(params, procedureId)
+          localStorage.setItem(`asr_usage:${account}&${hostname}`, (resp?.data?.usage || 0).toString())
+          localStorage.setItem(`usage_date:${account}&${hostname}`, (new Date()).toISOString().split('T')[0])  // 存一个当天日期
+          const data = resp.data.fragments
           data.forEach(fragment => {
             fragment.audio = ResourceDomain + fragment.audio
             fragment.speaker = speaker
@@ -904,7 +913,8 @@ export const useProjectStore = defineStore('projectStore', {
               }
             })
           }
-        } catch (error) {
+        } catch (error: any) {
+          errMsg = error?.response?.data || ''
           params.forEach(param => {
             // 片段创建失败的时候, 标记失败片段
             get()?.some((item, index, arr) => {
@@ -922,6 +932,7 @@ export const useProjectStore = defineStore('projectStore', {
             })
           })
         }
+        return errMsg
       }
 
       /** 针对错误片段的重新创建 */
@@ -932,8 +943,9 @@ export const useProjectStore = defineStore('projectStore', {
         let data: Fragment[] = []
         try {
           if (audio && duration && actions) {
-            const resp = await this.creatorApi(account!, hostname!).fragment.createByAudio<Fragment[]>([{ key: fragment.key, audio, duration, actions, speakerId }], procedureId)
-            data = resp.data
+            const resp = await this.creatorApi(account!, hostname!).fragment.createByAudio<{ fragments: Fragment[], usage: number }>([{ key: fragment.key, audio, duration, actions, speakerId }], procedureId)
+            data = resp.data.fragments
+            localStorage.setItem(`asr_usage:${account}&${hostname}`, (resp?.data?.usage || 0).toString())
           } else if (txt) {
             const resp = await this.creatorApi(account!, hostname!).fragment.createByText<Fragment[]>({ data: [{ key: fragment.key, txt }], procedureId, speakerId, speed: speed || 1 })
             data = resp.data
@@ -1311,4 +1323,3 @@ export const useProjectStore = defineStore('projectStore', {
   },
   getters: {}
 })
-

@@ -41,8 +41,9 @@ export class FragmentController {
   @Post(`${REST.W}/create/tts`)
   async createByText(@Body() createTTSFragmentDto: CreateTTSFragmentDto, @Req() req, @Res() res) {
     try {
-      const fragments = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname, req.user.isVip)
-      res.send(fragments)
+      const { fragments, usage  } = await this.fragmentService.createByText(createTTSFragmentDto, req.user.id, req.user.dirname, req.user.isVip)
+      
+      res.send({ fragments, usage })
     } catch (error) {
       res.status(400).send(error.message)
     }
@@ -66,17 +67,14 @@ export class FragmentController {
         })
       }
       // console.log(dataArray)
-      const fragments = await this.fragmentService.createByAudio(
+      const { fragments, usage } = await this.fragmentService.createByAudio(
         dataArray,
         projectId,
         req.user.id,
         req.user.dirname,
         req.user.isVip
       )
-      // fragments.forEach((fragment, index, arr) => {
-      //   arr[index]['key'] = formData.key[index]
-      // })
-      res.send(fragments)
+      res.send({ fragments, usage })
     } catch (error) {
       console.log(error)
       res.status(400).send(error.message)
@@ -87,9 +85,6 @@ export class FragmentController {
   @UseInterceptors(AnyFilesInterceptor())
   async createBySegment(@UploadedFiles() audios, @Body() formData: any, @Req() req, @Res() res) {
     try {
-      // console.log(audios)
-      // console.log(formData)
-      // console.log(formData.key[0])
       const projectId = formData.projectId
       const sourceFragmentId = formData.sourceFragmentId
       const removeSourceFragment = formData.removeSourceFragment === 'true'

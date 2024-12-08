@@ -104,22 +104,22 @@ export function useSidebarDropDown() {
               }
             }
           },
-          // {
-          //   label: '使用指南',
-          //   key: 'guide',
-          //   icon: () => h(Icon, { icon: 'ep:guide', height: 24 }),
-          //   props: {
-          //     onClick: () => {
-          //       dialog.create({
-          //         title: '产品使用指南',
-          //         icon: () => h(Icon, { icon: 'ep:guide', height: 24 }),
-          //         content: () => h(GuideVideo),
-          //         style: 'width: 50%;height: 50%;',
-          //         positiveText: '完成'
-          //       })
-          //     }
-          //   }
-          // },
+          {
+            label: '使用指南',
+            key: 'guide',
+            icon: () => h(Icon, { icon: 'ep:guide', height: 24 }),
+            props: {
+              onClick: () => {
+                dialog.create({
+                  title: '产品使用指南',
+                  icon: () => h(Icon, { icon: 'ep:guide', height: 24 }),
+                  content: () => h(GuideVideo),
+                  style: 'width: 50%;height: 50%;',
+                  positiveText: '完成'
+                })
+              }
+            }
+          },
           {
             label: t('sidebar.input'),
             key: 'input',

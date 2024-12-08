@@ -97,16 +97,24 @@ onMounted(() => {
           fromEvent(document, 'click', true).subscribe(ev => {
             // console.log('mousedown', ev, ev.target instanceof HTMLElement)
             // TODO bug 不能使用 .contains(menuEl.value) ,因为所有包含 menuEl 的元素都算
-            if (ev.target instanceof HTMLElement && !menuEl.value!.contains(ev.target)) {
-              state.show = false
-              subs.forEach(s => s.unsubscribe())
-              arrowEvents.forEach(event => event.remove())
-              pointer.value = 1
-              menuEl.value!.scrollTop = 0
-              secondaryPointer.value = 1
-              dropdownState.show = false
-              popoverState.show = false
-            }
+            // if (ev.target instanceof HTMLElement && !menuEl.value!.contains(ev.target)) {
+            //   state.show = false
+            //   subs.forEach(s => s.unsubscribe())
+            //   arrowEvents.forEach(event => event.remove())
+            //   pointer.value = 1
+            //   menuEl.value!.scrollTop = 0
+            //   secondaryPointer.value = 1
+            //   dropdownState.show = false
+            //   popoverState.show = false
+            // }
+            state.show = false
+            subs.forEach(s => s.unsubscribe())
+            arrowEvents.forEach(event => event.remove())
+            pointer.value = 1
+            menuEl.value!.scrollTop = 0
+            secondaryPointer.value = 1
+            dropdownState.show = false
+            popoverState.show = false
           })
         ]
       }
@@ -115,7 +123,7 @@ onMounted(() => {
   })
 })
 
-/** 滚动计算 */
+/** 滚动计算: 根据指针位置计算滚动 */
 function scrollerCalculate() {
   if (!menuEl.value) return
   const selectEl = menuEl.value.querySelector('.selected')
@@ -135,9 +143,13 @@ watch(
   () => pointer.value,
   () => {
     scrollerCalculate()
+    // 指针改变时关闭正打开的弹出菜单 这样由鼠标 hover 打开的菜单会在光标移动到其它选项时关闭
+    dropdownState.show = false
+    popoverState.show = false
   }
 )
 
+const allowExpandIds = [14, 15, 16, 17, 20, 21] // 可展开项目对应的下标
 /** 展开箭头 */
 function openArrowKey() {
   const max = commonOptions.length + baseOptions.length
@@ -225,8 +237,8 @@ function openArrowKey() {
     keyboard.addShortcut({
       keymap: { key: 'ArrowRight' },
       action: function (): boolean {
-        // console.log('right')
         if (dropdownState.show) {
+          // 指针到最后一个继续 → 就回到首个
           secondaryPointer.value = secondaryPointer.value < dropdownState.optionCount ? secondaryPointer.value + 1 : 1
           return true
         }
@@ -234,7 +246,7 @@ function openArrowKey() {
           secondaryPointer.value = secondaryPointer.value < popoverState.optionCount ? secondaryPointer.value + 1 : 1
           return true
         }
-        // 可展开项
+        // 判断是否为可展开项
         if(allowExpandOptions()) return true
         pointer.value = _.clamp(pointer.value + 1, 1, max)
         return true
@@ -314,9 +326,10 @@ function openArrowKey() {
       subs.length = 0
     })
   }
+
   // 可展开项
   function allowExpandOptions() {
-    if ([14, 15, 16, 17, 20, 21].includes(pointer.value)) {
+    if (allowExpandIds.includes(pointer.value)) {
       baseOptions[pointer.value - 13].onClick()
       return true
     }
@@ -333,6 +346,14 @@ const { secondaryPointer, baseOptions, renderOption, dropdownOptions, popoverOpt
   dropdownEl,
   popoverEl
 )
+
+function handleMouseEnter (item: typeof baseOptions[0], index: number) {
+  pointer.value = index + 13
+  if (allowExpandIds.includes(pointer.value)) {
+    item.onClick() // 触发展开 会因为 pointer 改变而折叠 所以不需要再手动处理 Mouseleave 的情况
+  }
+}
+
 
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
@@ -352,7 +373,13 @@ onUnmounted(() => {
       <n-flex class="zone">
         <span class="title">常用</span>
         <div class="btns">
-          <div v-for="(item, index) in commonOptions" :class="{ btn: 1, selected: index + 1 === pointer }" :key="item.key" @click="item.onClick">
+          <div 
+            v-for="(item, index) in commonOptions" 
+            :class="{ btn: 1, selected: index + 1 === pointer }" 
+            :key="item.key" 
+            @click="item.onClick"
+            @mouseenter="pointer = index + 1"
+          >
             <TipBtn :tip="item.label">
               <Icon :icon="item.icon" height="24" />
             </TipBtn>
@@ -367,6 +394,7 @@ onUnmounted(() => {
             :key="item.key"
             :class="{ option: 1, selected: index + 13 === pointer }"
             @click.self="item.onClick"
+            @mouseenter="handleMouseEnter(item, index)"
           >
             <div class="prefix">
               <Icon class="icon" :icon="item.icon" height="24" />

@@ -2,14 +2,6 @@
 
 <template>
   <div class="guide">
-    <!-- <iframe
-      src="//player.bilibili.com/player.html?isOutside=true&aid=113605894805981&bvid=BV1sViBYLEmQ&cid=25723802129&p=1"
-      scrolling="no"
-      border="0"
-      frameborder="no"
-      framespacing="0"
-      allowfullscreen="true"
-    ></iframe> -->
     <iframe
       src="https://player.bilibili.com/player.html?isOutside=true&aid=113605894805981&bvid=BV1sViBYLEmQ&cid=25723802129&p=1"
       scrolling="no"

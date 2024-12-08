@@ -5,8 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Dir, SubmissionConfig, SubscriptionConfig, User } from './entities/user.entity'
 import { DataSource, Repository } from 'typeorm'
 import { UpdateUserPwdDto } from './dto/update-pwd.dto'
-import fs from 'fs'
-import path, { basename } from 'path'
+import { basename } from 'path'
 import { StorageService } from 'src/storage/storage.service'
 import { UpdateUserConfigDto, UpdateUserSubmissionConfigDto, UpdateUserSubscriptionConfigDto } from './dto/_api'
 import { uuidv7 } from 'uuidv7'
@@ -14,12 +13,11 @@ import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { LoggerService } from 'src/logger/logger.service'
 import { LibraryEnum } from 'src/enum'
 import { Folder } from 'src/folder/entities/folder.entity'
-import { UserModule } from './user.module'
 import { ConfigService } from '@nestjs/config'
 import { commonConfig } from 'src/config'
 import randomstring from 'randomstring'
 import bcrypt from 'bcryptjs'
-// const __rootdirname = process.cwd()
+
 @Injectable()
 export class UserService {
   private readonly common: ReturnType<typeof commonConfig>

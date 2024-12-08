@@ -1,4 +1,4 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { CreateTTSFragmentDto } from './dto/create-tts-fragment.dto'
 import { Fragment, FragmentSpeaker } from './entities/fragment.entity'
 import { StorageService } from 'src/storage/storage.service'
@@ -13,10 +13,7 @@ import {
   UpdateFragmentsTagsDto,
   UpdateSequenceDto,
   UpdateTranscriptDto,
-  CreateASRFragmentDto,
-  Action,
-  CreateSegmentFragmentDto
-} from './dto'
+  Action} from './dto'
 import { SherpaService } from 'src/sherpa/sherpa.service'
 import { CreateBlankFragmentDto } from './dto/create-blank-fragment.dto'
 import { ProjectService } from 'src/project/project.service'
@@ -27,17 +24,19 @@ import { LoggerService } from 'src/logger/logger.service'
 import { UserLoggerService } from 'src/user-logger/userLogger.service'
 import { DataSource, Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
-// import fs from 'fs'
 import fsx from 'fs-extra'
-import { Speaker } from 'src/speaker/entities/speaker.entity'
 import { SpeakerService } from 'src/speaker/speaker.service'
-// import sharp from 'sharp'
-// import Jimp from 'jimp'
+import { Cache } from 'cache-manager'
 import { basename } from 'path'
 import { UploadService } from 'src/upload/upload.service'
 import { UserService } from 'src/user/user.service'
 import { TencentService } from 'src/tencent/tencent.service'
 import { TtsModel, AsrModel } from 'src/enum'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { ConfigService } from '@nestjs/config'
+import { limitConfig } from 'src/config'
+// import sharp from 'sharp'
+// import Jimp from 'jimp'
 
 /** 根据用户是否为 vip 选择模型 */
 function getModel(isVip: boolean, type: 'human' | 'machine') {
@@ -46,10 +45,12 @@ function getModel(isVip: boolean, type: 'human' | 'machine') {
 
 @Injectable()
 export class FragmentService {
+  private readonly limit: ReturnType<typeof limitConfig>
   constructor(
     @InjectRepository(Fragment)
     private fragmentsRepository: Repository<Fragment>,
     private readonly dataSource: DataSource,
+    private readonly configService: ConfigService,
     private readonly projectService: ProjectService,
     private readonly userService: UserService,
     private readonly speakerService: SpeakerService,
@@ -59,8 +60,11 @@ export class FragmentService {
     private readonly sherpaService: SherpaService,
     private readonly userlogger: UserLoggerService,
     private readonly tencentService: TencentService,
-    private readonly logger: LoggerService
-  ) {}
+    private readonly logger: LoggerService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
+  ) {
+    this.limit = this.configService.get<ReturnType<typeof limitConfig>>('limit')
+  }
 
   async getFragmentSpeaker(speakerId: string, type: 'human' | 'machine', userId: string, dirname: string, isVip: boolean) {
     try {
@@ -110,6 +114,39 @@ export class FragmentService {
     }
   }
 
+  async checkUsageLimit(type: 'asr' | 'tts', userId: string, limit: number) {
+    // 注意，目前使用的缓存策略是默认的内存缓存，在开发环境下刷新程序会清理所有缓存
+    try {
+      console.log('check usage limit', limit)
+      if (!limit || limit === 0) return false
+      const today = getYYMMDD()
+      const key = `${type}_limit_${userId}_${today}`
+      // console.log(key)
+      const usage = await this.cacheManager.get<number>(key) || 0
+      // console.log('check usage', usage, limit)
+      return usage >= limit
+    } catch (error) {
+      console.log(error)
+      throw error
+    }  
+  }
+
+  async updateUsageLimit(type: 'asr' | 'tts', userId: string, amount: number) {
+    try {
+      const untilTime = getMsecUntilTomorrow()
+      // console.log('untilTime', untilTime)
+      const today = getYYMMDD()
+      const key = `${type}_limit_${userId}_${today}`
+      const usage = await this.cacheManager.get<number>(key) || 0
+      const newUsage = usage + amount
+      await this.cacheManager.set(key, newUsage, untilTime)
+      return newUsage
+    } catch (error) {
+      console.log(error)
+      return 0
+    }  
+  }
+
   async createByAudio(
     dataArray: {
       key: string
@@ -124,9 +161,12 @@ export class FragmentService {
     isVip: boolean
   ) {
     try {
+      const isLimit = await this.checkUsageLimit('asr', userId, this.limit.asrUsage)
+      if(isLimit) throw new Error('今日语音识别额度已用完，请明日再试！')
       const fragments: Fragment[] = []
       const audios: string[] = []
       const keys: string[] = []
+      let totalDuration = 0
       for(let i =0; i < dataArray.length; i++) {
         const data = dataArray[i]
         const { audio, duration, speakerId, actions, key } = data
@@ -195,6 +235,7 @@ export class FragmentService {
         fragments.push(fragment)
         audios.push(finalAudio)
         keys.push(key)
+        totalDuration += Number(duration)
       }
 
       if(fragments.length === 0) throw new Error('片段数据为空')
@@ -241,7 +282,8 @@ export class FragmentService {
         fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
         fragment.speaker.avatar = this.storageService.getResponsePath(fragment.speaker.avatar, dirname)
       })
-      return newFragments
+      const usage = await this.updateUsageLimit('asr', userId, totalDuration)
+      return { usage, fragments: newFragments }
     } catch (error) {
       this.userlogger.error(`创建片段失败`, error.message)
       throw error
@@ -252,6 +294,8 @@ export class FragmentService {
   async createByText(createTTSFragmentDto: CreateTTSFragmentDto, userId: string, dirname: string, isVip: boolean) {
     try {
       const { procedureId, speakerId, speed, data } = createTTSFragmentDto
+      const isLimit = await this.checkUsageLimit('tts', userId, this.limit.ttsUsage)
+      if(isLimit) throw new Error('今日语音合成额度已用完，请明日再试！')
       if (speed > 2 || speed <= 0) throw new Error('语速不能大于2或小于等于0')
       if (!procedureId || !dirname) throw new Error('缺少必要参数！')
       const procudure = await this.projectService.findOneById(procedureId, userId)
@@ -263,9 +307,11 @@ export class FragmentService {
         if(!isVip) throw new Error('免费用户无法使用付费语音合成')
       }
 
+      
       const fragments: Fragment[] = []
       const audios: string[] = []
       const keys: string[] = []
+      let totalWordage = 0
       for (let i = 0; i < data.length; i++) {
         const { key, txt } = data[i]
         if (!txt) throw new Error('文本不能为空！')
@@ -322,6 +368,7 @@ export class FragmentService {
           fragments.push(fragment)
           audios.push(finalAudio)
           keys.push(key)
+          totalWordage += text.length // 累计字数
         }
       }
 
@@ -371,7 +418,10 @@ export class FragmentService {
         fragment.audio = this.storageService.getResponsePath(fragment.audio, dirname)
         fragment.speaker.avatar = this.storageService.getResponsePath(fragment.speaker.avatar, dirname)
       })
-      return newFragments
+      console.log('totalWordage', totalWordage)
+      const usage = await this.updateUsageLimit('tts', userId, totalWordage)
+      console.log('wordage usage', usage)
+      return { fragments: newFragments, usage }
     } catch (error) {
       console.log(`创建片段失败：${error.message}`)
       this.userlogger.error(`创建片段失败，错误原因：${error.message} `)
@@ -1205,6 +1255,18 @@ function addPromoter(fragment: Fragment, actions: Action[]) {
 
   return fragment
 }
+
+/** 获取当天剩余时间（秒） */
+function getMsecUntilTomorrow(): number {
+  const now = new Date()
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) // 下一天的0点
+  return midnight.getTime() - now.getTime()
+}
+/** 获取日期 */
+function getYYMMDD(): string {
+  return new Date().toISOString().split('T')[0] // 仅保留日期部分
+}
+
 
 // function findClosestIndex(arr: number[], target: number): number {
 //   let left = 0

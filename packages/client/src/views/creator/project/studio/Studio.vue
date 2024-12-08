@@ -73,8 +73,11 @@ const {
   isAudioInputting,
   inputtingDuration,
   speedOptions,
+  asrUsage,
+  ttsUsage,
   handleTextOutput,
   handleAudioOutput,
+  handleRebuild,
   handleInputting,
   handleAddBlank,
   handleModeSwitch,
@@ -98,7 +101,6 @@ const {
   handleEdit,
   handleRemove,
   handleMove,
-  handleRebuild,
   handleDownload
 } = useFragment(props.id, bridge, checkAnimeState, () => isScrollToBottom = false, () => isScrollToBottom = true)
 
@@ -626,6 +628,14 @@ onUnmounted(() => {
         </div>
         <span class="duration"> {{ inputtingDuration }} </span>
       </div>
+      <div class="asr-usage">
+        <n-popover trigger="hover" placement="left">
+          <template #trigger>
+            <span style="font-size: 12px;">{{ recorderMode === 'ASR' ? `${asrUsage}/3600` : `${ttsUsage}/10000` }}</span>
+          </template>
+          <span>每日限额（{{ recorderMode === 'ASR' ? '秒' : '字' }}）</span>
+        </n-popover>
+      </div>
     </div>
     <!-- 下拉列表 -->
     <n-dropdown
@@ -838,6 +848,12 @@ onUnmounted(() => {
     cursor: pointer;
     position: absolute;
     top: 46px;
+    right: 6px;
+    opacity: 0.5;
+  }
+  .asr-usage {
+    position: absolute;
+    bottom: 0px;
     right: 6px;
     opacity: 0.5;
   }

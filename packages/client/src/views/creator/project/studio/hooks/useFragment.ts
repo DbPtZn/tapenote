@@ -299,10 +299,6 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     ]
   }
 
-  function handleRebuild(fragment: Fragment) {
-    projectStore.fragment(projectId).rebuild(fragment)
-  }
-
   function handlePreview() {
     player = bridge.editor?.get(Player) // 获取播放器实例
     const fragments = projectStore.fragment(projectId).getBySort()
@@ -552,6 +548,6 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
     handleEdit,
     handleRemove,
     handleMove,
-    handleRebuild
+    // handleRebuild
   }
 }

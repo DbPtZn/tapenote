@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { VNode, inject, onBeforeMount, onMounted, onUnmounted, ref } from 'vue'
 import { useMessage } from 'naive-ui'
-import { Injector, Subscription, auditTime, fromEvent } from '@textbus/core'
+import { Injector, Keyboard, Subscription, auditTime, fromEvent } from '@textbus/core'
 import _ from 'lodash'
 import { useDraggable } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
@@ -13,7 +13,8 @@ import { reactive } from 'vue'
 const injector = inject<Injector>('injector')!
 const player = injector.get(Player)
 const structurer = injector.get(Structurer)
-const editorWrapperEl = structurer.editorWrapperEl as HTMLElement
+const editorWrapperEl = structurer.editorWrapperEl!
+const scrollerEl = structurer.scrollerEl!
 const message = useMessage()
 const subs: Subscription[] = []
 const controllerData = ref<VNode[]>([])
@@ -101,6 +102,8 @@ function handleSliderMousedown() {
 }
 const playerSub: Subscription[] = []
 onMounted(() => {
+  useScrollerPause()
+  useKeyboard()
   playerSub.push(
     player.onPlay.subscribe(() => {
       silderPosition.value = (player.currentTime / player.duration) * 100
@@ -127,6 +130,47 @@ onMounted(() => {
     })
   )
 })
+
+const scrollerSub: Subscription[] = []
+function useScrollerPause() {
+  scrollerSub.push(
+    fromEvent<WheelEvent>(scrollerEl, 'wheel').subscribe((ev) => {
+      if (ev.deltaY < 0) {
+        // console.log('滚动条向上')
+        if (player.isPlaying) {
+          player.pause()
+          message.info('已暂停播放')
+        }
+      }
+    })
+  )
+}
+const KeyboardSub: Subscription[] = []
+function useKeyboard() {
+  scrollerSub.push(
+    // 监听空格键 播放暂停
+    fromEvent<KeyboardEvent>(document, 'keypress').subscribe((ev) => {
+      if (ev.key === ' ' && ev.code === 'Space') {
+        methods.playpause()
+        ev.preventDefault()
+        return
+      }
+    }),
+    // 监听键盘上下键 快进快退
+    fromEvent<KeyboardEvent>(document, 'keydown').subscribe((ev) => {
+      if (!state.isPlaying) return 
+      if (ev.key === 'ArrowDown' && ev.code === 'ArrowDown') {
+        methods.forward()
+        ev.preventDefault()
+        return
+      }
+      if (ev.key === 'ArrowUp' && ev.code === 'ArrowUp') {
+        methods.rewind()
+        ev.preventDefault()
+      }
+    })
+  )
+}
 
 const state = reactive({
   isPlaying: false,
@@ -190,6 +234,9 @@ const methods = {
 
 onUnmounted(() => {
   subs.forEach(sub => sub.unsubscribe())
+  playerSub.forEach(sub => sub.unsubscribe())
+  scrollerSub.forEach(sub => sub.unsubscribe())
+  KeyboardSub.forEach(sub => sub.unsubscribe())
   controllerData.value = []
   window.onresize = function () {}
 })
@@ -303,7 +350,7 @@ onUnmounted(() => {
       {{ formatTime(duration) }}
     </div>
   </div>
-  <div v-if="state.isSubtitleShow" class="subtitle">
+  <div v-if="state.isSubtitleShow" v-show="!!state.subtitle" class="subtitle">
     {{ state.subtitle }}
   </div>
 </template>
@@ -315,7 +362,9 @@ onUnmounted(() => {
   bottom: 50px;
   left: 50%;
   transform: translateX(-50%);
-
+  padding: 2px 12px;
+  border-radius: 6px;
+  background-color: var(--tb-subtitleBgColor);
   color: var(--tb-textColor1);
   font-size: 24px;
 }
@@ -393,7 +442,7 @@ onUnmounted(() => {
     left: -12.5px;
     width: 25px;
     height: 12px;
-    background-color: var(--ta-timelineSliderColor);
+    background-color: var(--tb-timelineSliderColor);
     border-radius: 3px;
     user-select: none;
     cursor: pointer;

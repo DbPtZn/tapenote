@@ -1,5 +1,5 @@
 import { Structurer, ColorProvider, dividerComponent, colorFormatter, textBackgroundColorFormatter, listComponent, preComponent, createCodeSlot } from '../../'
-import { Commander, ContentType, Injector, Keyboard, Renderer, Slot, Selection, fromEvent } from '@textbus/core'
+import { Commander, ContentType, Injector, Keyboard, Renderer, Slot, Selection, fromEvent, Subscription } from '@textbus/core'
 import {
   Layout,
   blockquoteComponent,
@@ -14,7 +14,7 @@ import {
   underlineFormatter
 } from '@textbus/editor'
 import { Input, VIEW_DOCUMENT } from '@textbus/platform-browser'
-import { Ref, ShallowRef, h, nextTick, reactive, ref } from 'vue'
+import { Ref, ShallowRef, h, nextTick, onUnmounted, reactive, ref } from 'vue'
 import { emojis, createEmoji } from './emoji'
 import { getComponents } from './components'
 
@@ -54,7 +54,7 @@ export function useBaseOptions(
     show: false,
     optionCount: 0,
     row: 0, // 每列选项数量
-    edge: [] as number[] // 边缘元素下标
+    edge: [] as number[] // 边缘元素下标 (标记边缘的元素，指针达到左侧边缘后再往左会跳出二级表)
   })
   const popoverOptions = ref<any[]>([])
   const renderOption = ref()
@@ -63,13 +63,21 @@ export function useBaseOptions(
     commander.delete(true) // 向后删除一位，把 / 删除
   }
 
+  let sub: Subscription | null = null
   function onClickoutside() {
-    const s = fromEvent(document, 'click', true).subscribe(ev => {
+    // 先销毁旧的监听器
+    if(sub) {
+      sub.unsubscribe()
+      sub = null
+    }
+    sub = fromEvent(document, 'click', true).subscribe(ev => {
       dropdownState.show = false
       popoverState.show = false
-      s.unsubscribe()
+      sub?.unsubscribe()
+      sub = null
     })
   }
+  onUnmounted(() => { sub?.unsubscribe() })
 
   const baseOptions = [
     {
@@ -116,7 +124,7 @@ export function useBaseOptions(
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           dropdownState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          dropdownState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
+          dropdownState.yRef = rect.top - middleRect.top // rect.top + scrollerEl.scrollTop - middleRect.top 好像用不着考虑滚动高度
           dropdownState.optionCount = dropdownOptions.value.length
           onClickoutside()
           nextTick().then(() => {
@@ -176,7 +184,7 @@ export function useBaseOptions(
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
+          popoverState.yRef = rect.top - middleRect.top // rect.top + scrollerEl.scrollTop - middleRect.top
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 4
           popoverState.edge = []
@@ -241,7 +249,7 @@ export function useBaseOptions(
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
+          popoverState.yRef = rect.top - middleRect.top // rect.top + scrollerEl.scrollTop - middleRect.top
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 4
           popoverState.edge = []
@@ -310,7 +318,7 @@ export function useBaseOptions(
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
+          popoverState.yRef = rect.top - middleRect.top // rect.top + scrollerEl.scrollTop - middleRect.top
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 10
           popoverState.edge = []
@@ -476,7 +484,7 @@ export function useBaseOptions(
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           dropdownState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          dropdownState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
+          dropdownState.yRef = rect.top - middleRect.top // rect.top + scrollerEl.scrollTop - middleRect.top
           dropdownState.optionCount = dropdownOptions.value.length
           onClickoutside()
           nextTick().then(() => {
@@ -537,7 +545,7 @@ export function useBaseOptions(
           const caretRect = input.caret.rect
           const middleRect = layout.middle.getBoundingClientRect()
           popoverState.xRef = menuRect.width + (caretRect.left - middleRect.left - 8) + 1
-          popoverState.yRef = rect.top + scrollerEl.scrollTop - middleRect.top
+          popoverState.yRef = rect.top - middleRect.top // rect.top + scrollerEl.scrollTop - middleRect.top
           popoverState.optionCount = popoverOptions.value.length
           popoverState.row = 4
           popoverState.edge = []

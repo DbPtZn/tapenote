@@ -72,7 +72,6 @@ watch(() => props.readonly, (is) => {
   state.isChangeByReadonly2 = true
 })
 // let player: Player
-console.log(bridge.projectEl)
 let editor: Editor
 let lastContent = ''
 useEditor({
@@ -292,7 +291,7 @@ onUnmounted(() => {
         />
       </div>
       <!-- 滚动区 -->
-      <div ref="scrollerEl" class="scroller" :style="{ height: `calc(100% - ${state.toolbarHeight}px)` }">
+      <div ref="scrollerEl" class="scroller" :style="{ height: `calc(100% - ${lib !== LibraryEnum.COURSE ? state.toolbarHeight : 0}px)` }">
         <div ref="coverEl" :class="{ cover: 1, 'cover-active': !!data?.cover }">
           <img
             v-if="!!data?.cover"

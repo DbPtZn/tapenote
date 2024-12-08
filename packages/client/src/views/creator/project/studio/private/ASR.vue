@@ -30,6 +30,7 @@ let data = {
 }
 let isRecording = ref(false)
 let timer
+let sub: Subscription | null = null
 const startRecorder = () => {
   // 开始录音
   // console.log('开始录音')
@@ -53,6 +54,12 @@ const startRecorder = () => {
     .catch(err => {
       console.log('启动录音失败', err)
     })
+
+  if (sub) sub.unsubscribe()
+  sub = fromEvent<KeyboardEvent>(document, 'mouseup').subscribe(e => {
+    stopRecorder()
+    sub?.unsubscribe()
+  })
 }
 
 const stopRecorder = async () => {
@@ -66,7 +73,7 @@ const stopRecorder = async () => {
     const wavData = AudioRecorder.audioBufferToWav(audiobuffer)
     const wavBlob = new Blob([wavData], { type: 'audio/wav' })
     // const wavBlob = await AudioRecorder.convertAudioBufferToOgg(audiobuffer)
-    console.log('blob 大小：', wavBlob.size / (1024 * 1024) + 'MB')
+    // console.log('blob 大小：', wavBlob.size / (1024 * 1024) + 'MB')
     data.audio = wavBlob
     data.duration = audiobuffer.duration
     emits('output', data)
@@ -76,6 +83,7 @@ const stopRecorder = async () => {
     console.log('录音失败', err)
   })
 }
+
 const isPress = ref(false)
 const keydownEvent: Subscription[] = []
 const keyupEvent: Subscription[] = []
@@ -128,16 +136,17 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  sub?.unsubscribe()
   keyupEvent.forEach(sub => sub.unsubscribe())
   keydownEvent.forEach(sub => sub.unsubscribe())
   recorder.destroy()
 })
-// function createTimer() {} // TODO 考虑是否在录音时显示录音时长
+
 </script>
 
 <template>
   <div :class="['ASR', readonly ? 'disabled' : '']">
-    <button v-if="recorder" :class="['btn', readonly ? 'disabled' : '']" :disabled="readonly" @mousedown="startRecorder()" @mouseup="stopRecorder()">
+    <button v-if="recorder" :class="['btn', readonly ? 'disabled' : '']" :disabled="readonly" @mousedown="startRecorder()">
       按住 说话
     </button>
   </div>
