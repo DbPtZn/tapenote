@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { inject } from 'vue'
+import { inject, ref } from 'vue'
 import { Injector } from '@textbus/core'
 import MemoVue from './Memo.vue'
 import { MemoService } from '../..'
@@ -10,7 +10,7 @@ const props = defineProps<{
   memos: Memo[]
 }>()
 const memoService = injector.get(MemoService)
-
+const memoData = ref(props.memos) // 重新赋值，避免直接使用 props 数据
 const methods = {
   handleResizeMemo(id: string, width: number, height: number) {
     memoService.onResize.next({ id, width, height })
@@ -36,7 +36,7 @@ const methods = {
 
 <template>
   <MemoVue
-    v-for="item in memos"
+    v-for="item in memoData"
     :key="item.id"
     :id="item.id"
     :content="item.content"

@@ -117,7 +117,7 @@ onErrorCaptured(e => {
         :resize-trigger-size="1"
       >
         <template #1>
-          <component :key="key" :is="Editor" :id="id" :lib="lib" :account="account" :hostname="hostname" :readonly="isReadonly" />
+          <component :key="key" :is="Editor" :id="id" :lib="lib" :account="account" :hostname="hostname" :readonly="isReadonly" :focus="shell?.workbench?.itemId === id" />
         </template>
         <template #2>
           <component

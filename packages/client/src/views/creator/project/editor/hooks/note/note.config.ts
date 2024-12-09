@@ -67,7 +67,6 @@ export function getNoteConfig(args: {
   account: string
   hostname: string
   dirname: string
-  memos: Memo[],
   content?: string,
   projectEl: HTMLElement,
   editorWrapperEl: HTMLElement,
@@ -76,7 +75,7 @@ export function getNoteConfig(args: {
   toolbarEl?: HTMLElement,
   controllerEl?: HTMLElement,
 }) {
-  const { account, hostname, projectEl, editorWrapperEl, editorEl, scrollerEl, toolbarEl, controllerEl, memos, content } = args
+  const { account, hostname, projectEl, editorWrapperEl, editorEl, scrollerEl, toolbarEl, controllerEl, content } = args
 
   editorEl.classList.add('note-editor')
   const ResourceDomain = getResourceDomain(hostname)

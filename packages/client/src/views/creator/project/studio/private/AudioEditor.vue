@@ -5,16 +5,15 @@ import { Icon } from '@iconify/vue'
 import WaveSurfer from 'wavesurfer.js/dist/wavesurfer'
 import Timeline from 'wavesurfer.js/plugins/timeline'
 import HoverPlugin from 'wavesurfer.js/dist/plugins/hover'
-import Minimap from 'wavesurfer.js/dist/plugins/minimap'
-import Envelope from 'wavesurfer.js/dist/plugins/envelope'
+// import Minimap from 'wavesurfer.js/dist/plugins/minimap'
+// import Envelope from 'wavesurfer.js/dist/plugins/envelope'
 import Regions, { Region } from 'wavesurfer.js/dist/plugins/regions'
-import spectrogram from 'wavesurfer.js/dist/plugins/spectrogram'
+// import spectrogram from 'wavesurfer.js/dist/plugins/spectrogram'
 import Crunker from 'crunker'
 import ControlBtn from './_utils/ControlBtn.vue'
 import audiobufferToWav from 'audiobuffer-to-wav'
 import { cropAudio, splitAudio, playCroppedAudio, deleteAudioSegments } from '../_utils/audio-process'
 import FragmentPreview from './FragmentPreview.vue'
-// import Timeline from '@losting/timeline'
 import useStore from '@/store'
 import { Subscription, auditTime, fromEvent } from '@tanbo/stream'
 import { formatTimeToMinutesSecondsMilliseconds } from '../_utils/formatTime'
@@ -47,7 +46,7 @@ const themeVars = useThemeVars()
 // const { projectStore } = useStore()
 const message = useMessage()
 const dialog = useDialog()
-const crunker = new Crunker()
+// const crunker = new Crunker()
 const waveEl = useTemplateRef<HTMLElement>('waveEl')
 const scrollerEl = useTemplateRef<HTMLDivElement>('scrollerEl')
 const timelineEl = useTemplateRef<HTMLCanvasElement>('timelineEl')
@@ -78,7 +77,8 @@ onMounted(() => {
     progressColor: '#383351',
     width: `${waveWidth}px`,
     url: props.fragment.audio,
-    autoScroll: true,
+    // autoCenter: true,
+    // autoScroll: true,
     // barAlign: 'bottom',
     normalize: true,
     dragToSeek: true,
@@ -185,46 +185,43 @@ const methods = {
     })
   },
   async handleCut() {
-    const msg = message.loading('正在处理音频，请稍等...', { duration: 0 })
     if (currentTime.value === 0 || currentTime.value >= fragment.duration) {
-      msg.destroy()
       message.warning('请选择要裁剪的区域')
       return
     }
 
     const buffer = wavesurfer.getDecodedData()
     if (!buffer) {
-      msg.destroy()
       message.warning('载入音频数据失败')
       return
     }
-
+    const msg = message.loading('正在处理音频，请稍等...', { duration: 0 })
     useSplitFragment(props.fragment, buffer, [currentTime.value], () => {
       msg.destroy()
     })
   },
   async handleCutMany() {
-    const msg = message.loading('正在处理音频，请稍等...', { duration: 0 })
+    try {
+      const cutRegions = regions.getRegions().filter(region => region.color === 'red')
+      if (cutRegions.length === 0) {
+        message.warning('找不到分割点')
+        return
+      }
 
-    const cutRegions = regions.getRegions().filter(region => region.color === 'red')
-    if (cutRegions.length === 0) {
-      msg.destroy()
-      message.warning('找不到分割点')
-      return
+      const buffer = wavesurfer.getDecodedData()
+      if (!buffer) {
+        message.warning('载入音频数据失败')
+        return
+      }
+
+      const splitPoints = cutRegions.map(region => region.start)
+      const msg = message.loading('正在处理音频，请稍等...', { duration: 0 })
+      useSplitFragment(props.fragment, buffer, splitPoints, () => {
+        msg.destroy()
+      })
+    } catch (error) {
+      console.error(error)
     }
-
-    const buffer = wavesurfer.getDecodedData()
-    if (!buffer) {
-      msg.destroy()
-      message.warning('载入音频数据失败')
-      return
-    }
-
-    const splitPoints = cutRegions.map(region => region.start)
-
-    useSplitFragment(props.fragment, buffer, splitPoints, () => {
-      msg.destroy()
-    })
   },
   handleReplay() {
     wavesurfer.stop()

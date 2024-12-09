@@ -4,7 +4,7 @@ function getData() {
     const script = document.createElement('script')
     script.src = 'metadata.json'
     script.type = 'text/javascript'
-    script.onload = function() {
+    script.onload = function () {
       // console.log('data load') 
       // console.log(metadata) // data变量应该在JSON文件中定义
       resolve(metadata)
@@ -12,7 +12,7 @@ function getData() {
     document.head.appendChild(script)
   })
 }
-document.addEventListener("DOMContentLoaded", async function() {
+document.addEventListener("DOMContentLoaded", async function () {
 
   const data = await getData()
   data.audio = 'audio.ogg'
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     const id = 'section-' + index;
     heading.setAttribute('id', id);
     link.href = '#' + id;
-    link.addEventListener('click', function(event) {
+    link.addEventListener('click', function (event) {
       event.preventDefault();
       const targetId = this.getAttribute('href').slice(1);
       const targetElement = document.getElementById(targetId);
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", async function() {
   // Function to determine which heading is currently active based on scroll position
   function setActiveLink() {
     var scrollPosition = window.scrollY || window.pageYOffset
-    headings.forEach(function(heading) {
+    headings.forEach(function (heading) {
       var rect = heading.getBoundingClientRect()
       if (rect.top > -10 && rect.top <= 100) { // 大于 -10 可以确保通过目录回滚时能激活对应的目录项
         var id = heading.getAttribute('id')
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (link) {
           // Remove active class from all links
           var links = document.querySelectorAll('#outline a')
-          links.forEach(function(link) {
+          links.forEach(function (link) {
             link.classList.remove('active-link')
           });
           // Add active class to the corresponding link
@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", async function() {
   wrapper.style.width = '880px'
   wideScreen.style.display = 'none'
   narrowScreen.style.display = 'block'
-  screenControl.addEventListener('click', function() {
+  screenControl.addEventListener('click', function () {
     if (wrapper.style.width === '880px') {
       wrapper.style.width = '80%'
       wideScreen.style.display = 'block'
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", async function() {
   const lightMode = document.getElementById('light-mode')
   darkMode.style.display = 'none'
   lightMode.style.display = 'block'
-  themeControl.addEventListener('click', function() {
+  themeControl.addEventListener('click', function () {
     const theme = document.body.getAttribute('data-theme')
     if (theme === 'dark-theme') {
       document.body.setAttribute('data-theme', 'light-theme')
@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", async function() {
   const outlineControl = document.getElementById('outline-control')
   const closeOutline = document.getElementById('close-outline')
   const openOutline = document.getElementById('open-outline')
-  outlineControl.addEventListener('click', function() {
+  outlineControl.addEventListener('click', function () {
     if (outline.classList.contains('outline-show')) {
       // outline.style.display = 'none'
       outline.classList.remove(['outline-show'])
@@ -188,10 +188,10 @@ document.addEventListener("DOMContentLoaded", async function() {
       outline.classList.add(['outline-show'])
     }
   })
-  closeOutline.addEventListener('click', function() {
+  closeOutline.addEventListener('click', function () {
     outline.classList.remove(['outline-show'])
   })
-  openOutline.addEventListener('click', function() {
+  openOutline.addEventListener('click', function () {
     outline.classList.add(['outline-show'])
   })
 
@@ -209,11 +209,11 @@ document.addEventListener("DOMContentLoaded", async function() {
     controller.style.display = 'block'
     nav.style.display = 'none'
   }
-  toControl.addEventListener('click', function() {
+  toControl.addEventListener('click', function () {
     nav.style.display = 'none'
     controller.style.display = 'block'
   })
-  toNav.addEventListener('click', function() {
+  toNav.addEventListener('click', function () {
     nav.style.display = 'block'
     controller.style.display = 'none'
   })
@@ -248,17 +248,17 @@ document.addEventListener("DOMContentLoaded", async function() {
 
   const openSubtitle = document.getElementById('open-subtitle')
   const closeSubtitle = document.getElementById('close-subtitle')
-  let isSubtitle = false
-  openSubtitle.style.display = 'block'
-  closeSubtitle.style.display = 'none'
-  setSubtitle.addEventListener('click', function() {
-    if (openSubtitle.style.display === 'none') {
-      openSubtitle.style.display = 'block'
-      closeSubtitle.style.display = 'none'
-      isSubtitle = false
-    } else {
+  let isSubtitle = true
+  openSubtitle.style.display = isSubtitle ? 'block' : 'none'
+  closeSubtitle.style.display = isSubtitle ? 'none' : 'block'
+  setSubtitle.addEventListener('click', function () {
+    if (openSubtitle.style.display === 'block') {
       openSubtitle.style.display = 'none'
       closeSubtitle.style.display = 'block'
+      isSubtitle = false
+    } else {
+      openSubtitle.style.display = 'block'
+      closeSubtitle.style.display = 'none'
       isSubtitle = true
     }
   })
@@ -287,7 +287,7 @@ document.addEventListener("DOMContentLoaded", async function() {
   /** 快捷方式 */
   const shortcut = []
   /** 播放控制 */
-  play.addEventListener('click', function() {
+  play.addEventListener('click', function () {
     if (!player.isPlaying && !player.isPause) {
       player.start()
       shortcut.push(
@@ -315,22 +315,22 @@ document.addEventListener("DOMContentLoaded", async function() {
       return
     }
   })
-  stop.addEventListener('click', function() {
+  stop.addEventListener('click', function () {
     if (!player.isPlaying && !player.isPause) return
     player.stop()
   })
-  speedDown.addEventListener('click', function() {
+  speedDown.addEventListener('click', function () {
     player.speedDown()
     createMessage(`当前播放速度：${player.rate.toFixed(1)}x`)
   })
-  speedUp.addEventListener('click', function() {
+  speedUp.addEventListener('click', function () {
     player.speedUp()
     createMessage(`当前播放速度：${player.rate.toFixed(1)}x`)
   })
-  forward.addEventListener('click', function() {
+  forward.addEventListener('click', function () {
     player.forward()
   })
-  rewind.addEventListener('click', function() {
+  rewind.addEventListener('click', function () {
     player.rewind()
   })
 
@@ -357,75 +357,75 @@ document.addEventListener("DOMContentLoaded", async function() {
 
   const subtitle = document.getElementById('subtitle')
   subtitle.style.display = 'none'
-  
   player.onSubtitleUpdate.subscribe(txt => {
+    // console.log(txt)
     subtitle.style.display = isSubtitle ? 'block' : 'none'
     subtitle.innerHTML = txt
   })
-  
+
   const timer = document.getElementById('timer')
   const closeTimer = document.getElementById('close-timer')
   const openTimer = document.getElementById('open-timer')
   const timeline = document.getElementById('timeline')
-  closeTimer.style.display = 'none'
-  openTimer.style.display = 'block'
+  closeTimer.style.display = 'block'
+  openTimer.style.display = 'none'
   timeline.style.display = 'none'
-  timer.addEventListener('click', function() {
-    if(openTimer.style.display === 'none') {
-      closeTimer.style.display = 'none'
-      openTimer.style.display = 'block'
-      timeline.style.display = 'none'
-    } else {
+  timer.addEventListener('click', function () {
+    if (openTimer.style.display === 'block') {
       closeTimer.style.display = 'block'
       openTimer.style.display = 'none'
+      timeline.style.display = 'none'
+    } else {
+      closeTimer.style.display = 'none'
+      openTimer.style.display = 'block'
       timeline.style.display = 'block'
     }
   })
 
   const timerSub = []
   player.onStateUpdate.subscribe(state => {
-    if(state === 'start') {
+    if (state === 'start') {
       timerSub.push(fromEvent(player.audio, 'timeupdate').subscribe(() => {
         // 获取当前播放时间
         const currentTime = player.currentTime
         // console.log("当前播放时间：" + currentTime + " 秒");
-        timeline.innerHTML =  durationFormat(currentTime)
+        timeline.innerHTML = durationFormat(currentTime)
       }))
     }
-    if(state === 'stop') {
+    if (state === 'stop') {
       timeline.innerHTML = durationFormat(0)
       timerSub.forEach(item => item.unsubscribe())
     }
   })
 
-  
+
   const location = document.getElementById('location')
-  const openLocation = document.getElementById('open-location')
   const closeLocation = document.getElementById('close-location')
-  openLocation.style.display = 'block'
-  closeLocation.style.display = 'none'
+  const openLocation = document.getElementById('open-location')
+  closeLocation.style.display = 'block'
+  openLocation.style.display = 'none'
   fromEvent(location, 'click').subscribe(ev => {
     if (player.isPlaying || player.isPause) {
       createMessage('播放过程中不能使用该功能')
       return
     }
-    if(openLocation.style.display === 'none') {
+    if (closeLocation.style.display === 'none') {
       closeAnimeLocation()
     } else {
       openAnimeLocation()
     }
   })
   player.onStateUpdate.subscribe(state => {
-    if(state === 'startHere' || state === 'start') {
+    if (state === 'startHere' || state === 'start') {
       closeAnimeLocation()
     }
   })
   const aniemLocationSub = []
   function openAnimeLocation() {
-    openLocation.style.display = 'none'
-    closeLocation.style.display = 'block'
+    closeLocation.style.display = 'none'
+    openLocation.style.display = 'block'
     playerRef.classList.add('show-anime')
-    animeList.forEach((item, index)=> {
+    animeList.forEach((item, index) => {
       const { nodes, keyframe } = item
       nodes.forEach(node => {
         aniemLocationSub.push(
@@ -434,13 +434,13 @@ document.addEventListener("DOMContentLoaded", async function() {
             player.startHere(keyframe, index)
           })
         )
-      })   
+      })
     })
   }
 
   function closeAnimeLocation() {
-    openLocation.style.display = 'block'
-    closeLocation.style.display = 'none'
+    closeLocation.style.display = 'block'
+    openLocation.style.display = 'none'
     playerRef.classList.remove('show-anime')
     aniemLocationSub.forEach(item => item.unsubscribe())
   }
@@ -481,7 +481,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     msgBox.appendChild(message)
     anime({
       targets: message,
-      scale: [0 ,1],
+      scale: [0, 1],
       opacity: [0, 1],
       easing: 'easeOutQuad',
       duration: 200
@@ -498,7 +498,7 @@ document.addEventListener("DOMContentLoaded", async function() {
       })
     }, 1000);
   }
-  
+
 
 
 

@@ -23,6 +23,7 @@ const props = defineProps<{
   account: string
   hostname: string
   readonly: boolean
+  focus: boolean
 }>()
 
 const { projectStore, folderStore, userStore } = useStore()
@@ -98,33 +99,43 @@ useEditor({
         data.value!.isContentUpdating = true
       }),
       editor.onSave.subscribe(() => {
-        data.value!.isContentUpdating = true
-        if(props.readonly) return
-        const content = editor.getHTML()
-        // console.log(content)
-        if(lastContent === content) {
-          data.value!.isContentUpdating = false
-          return
+        onSave()
+      }),
+      fromEvent<KeyboardEvent>(document, 'keydown').subscribe(ev => {
+        // 编辑器中的 ctrl+s 会被编辑器拦截，所以不必处理
+        if(ev.ctrlKey && ev.key === 's') {
+          console.log('保存', props.focus)
+          props.focus && onSave()
+          ev.preventDefault()
         }
-        // console.log('更新 onSave')
-        handleContentSave(content, props.id, props.account, props.hostname).then(() => {
-          message.success('保存成功')
-        })
-        lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
-        // 标题就不管 onSave 了，因为标题没有保存影响也比较小
       })
     )
+    function onSave() {
+      data.value!.isContentUpdating = true
+      if(props.readonly) return
+      const content = editor.getHTML()
+      // console.log(content)
+      if(lastContent === content) {
+        data.value!.isContentUpdating = false
+        return
+      }
+      // console.log('更新 onSave')
+      handleContentSave(content, props.id, props.account, props.hostname).then(() => {
+        message.success('保存成功')
+      })
+      lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
+      // 标题就不管 onSave 了，因为标题没有保存影响也比较小
+    }
     autosave.value && subs.push(
       editor.onChange.pipe(debounceTime(saveInterval.value)).subscribe(() => {
         if(props.readonly) return
         if(state.isChangeByReadonly2) return state.isChangeByReadonly2 = false
         const content = editor.getHTML()
         if(lastContent === content) {
-          // console.log('内容未改变，无需保存')
+          // 内容未改变，无需保存
           data.value!.isContentUpdating = false
           return
         }
-        // console.log('更新 onSave')
         handleContentSave(content, props.id, props.account, props.hostname)
         lastContent = content // 因为 onSave 会立即更新 lastContent，这样 onChange 中再判断 lastContent === content 就不会再次触发保存了
         // 标题就不管 onSave 了，因为标题没有保存影响也比较小
@@ -139,7 +150,7 @@ useEditor({
   }
   bridge?.setup(editor, props.lib)
 }).catch(err => {
-  console.error(err)
+  console.error('项目打开失败', err)
   message.error('项目打开失败！')
 })
 
@@ -221,7 +232,7 @@ const methods = {
     }).catch(err => {
       data.value!.isContentUpdating = false
       message.error('内容更新失败')
-      console.log(err)
+      console.error('内容更新失败', err)
     })
   },
   /** 标题输入时按下 enter 将焦点切换到编辑器 */

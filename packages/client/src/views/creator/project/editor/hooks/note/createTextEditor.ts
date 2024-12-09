@@ -40,8 +40,7 @@ export function createTextEditor(args: {
       editor.get(MemoProvider).destroy()
       // console.log('销毁依赖')
     } catch (error) {
-      console.log(error)
-      console.error('编辑器依赖销毁失败！')
+      console.error('编辑器依赖销毁失败！', error)
     }
   })
   return new Promise<{ editor: Editor, content: string }>((resolve, reject) => {
@@ -56,7 +55,6 @@ export function createTextEditor(args: {
             editorEl: editorRef.value!,
             scrollerEl: scrollerRef.value!,
             toolbarEl: toolbarRef.value!,
-            memos: project.memos,
             content: project.content,
             dirname: project.dirname
           }))
@@ -64,7 +62,9 @@ export function createTextEditor(args: {
             const themeProvider = editor?.get(ThemeProvider)
             themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
             // ⚠ 由于 tb 中解析嵌套 formatter 时，标签顺序可能会发生变化，所以应该在加载之后再获取 html 作为脏值检测依据
-            resolve({ editor, content: editor.getHTML() })
+            const htmlstr = editor.getHTML()
+            project.content = htmlstr // 确保一致性
+            resolve({ editor, content: htmlstr })
           })
         } catch (error) {
           console.log(error)

@@ -40,7 +40,7 @@ export function createPlayer(args: {
       editor.get(RootEventService).destory()
       // console.log('销毁依赖')
     } catch (error) {
-      console.error('依赖销毁失败！')
+      console.error('依赖销毁失败！', error)
     }
   })
   // console.log([id, editorRef, scrollerRef, controllerRef])

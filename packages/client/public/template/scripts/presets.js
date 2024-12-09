@@ -129,18 +129,18 @@ const zoom = {
 }
 
 const effectsMap = new Map([
-  ['bounceIn', { name: '弹入',  applyEffect: bounce.bounceIn }],
-  ['bounceInDown', { name: '向下弹入',  applyEffect: bounce.bounceInDown }],
-  ['bounceInLeft', { name: '自左弹入',  applyEffect: bounce.bounceInLeft }],
-  ['bounceInRight', { name: '自右弹入',  applyEffect: bounce.bounceInRight }],
-  ['bounceInUp', { name: '向上弹入',  applyEffect: bounce.bounceInUp }],
-  ['fideIn', { name: '渐入',  applyEffect: fide.fideIn }],
-  ['fideInDown', { name: '向下渐入',  applyEffect: fide.fideInDown }],
-  ['fideInUp', { name: '向上渐入',  applyEffect: fide.fideInUp }],
-  ['fideInLeft', { name: '自左渐入',  applyEffect: fide.fideInLeft }],
-  ['fideInRight', { name: '自右渐入', applyEffect: fide.fideInRight }],
-  ['filpInX', { name: '沿X轴翻转进入',  applyEffect: filp.filpInX }],
-  ['filpInY', { name: '沿Y轴翻转进入',  applyEffect: filp.filpInY }]
+  ['bounceIn', { name: '弹入',  play: bounce.bounceIn }],
+  ['bounceInDown', { name: '向下弹入',  play: bounce.bounceInDown }],
+  ['bounceInLeft', { name: '自左弹入',  play: bounce.bounceInLeft }],
+  ['bounceInRight', { name: '自右弹入',  play: bounce.bounceInRight }],
+  ['bounceInUp', { name: '向上弹入',  play: bounce.bounceInUp }],
+  ['fideIn', { name: '渐入',  play: fide.fideIn }],
+  ['fideInDown', { name: '向下渐入',  play: fide.fideInDown }],
+  ['fideInUp', { name: '向上渐入',  play: fide.fideInUp }],
+  ['fideInLeft', { name: '自左渐入',  play: fide.fideInLeft }],
+  ['fideInRight', { name: '自右渐入', play: fide.fideInRight }],
+  ['filpInX', { name: '沿X轴翻转进入',  play: filp.filpInX }],
+  ['filpInY', { name: '沿Y轴翻转进入',  play: filp.filpInY }]
 ])
 
 function getAnime(key) {

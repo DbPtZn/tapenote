@@ -1,26 +1,25 @@
 <script lang="ts" setup>
+import { useThemeVars, useDialog, useMessage, NIcon, useNotification, NButton } from 'naive-ui'
+import { computed, h, inject, onUnmounted, reactive, ref, watch } from 'vue'
+import { Icon } from '@iconify/vue'
+import { Subscription } from '@tanbo/stream'
+import dayjs from 'dayjs'
 import { LibraryEnum } from '@/enums'
 import useStore from '@/store'
-import { useThemeVars, useDialog, useMessage, NIcon, useNotification, NButton } from 'naive-ui'
-import { computed, h, inject, onUnmounted, reactive, ref } from 'vue'
-import { Icon } from '@iconify/vue'
+import { useShell } from '@/renderer'
+import { MoreHoriz, DpzButton } from '@/components'
 import { Bridge } from '../bridge'
-import { Subscription } from '@tanbo/stream'
 import { FolderTreeSelect, UnallowUserTip } from '../../_common'
 import { CreatorShell } from '../../shell'
-import { useShell } from '@/renderer'
-import dayjs from 'dayjs'
-import { Subtitles, SubtitlesOff, MoreHoriz, DpzButton } from '@/components'
 import { useSubmissionDialog } from './hooks/useSubmissionDialog'
 import { useDownloadDialog } from './hooks/useDownload'
-import TooltipButton from './private/TooltipButton.vue'
 import SubmissionCard from './private/SubmissionCard.vue'
 import SnapshotCard from './private/SnapshotCard.vue'
 import RelevantProjectCard from './private/RelevantProjectCard.vue'
 import ParentProjectCard from './private/ParentProjectCard.vue'
 import CollapseButton from './private/CollapseButton.vue'
-import { watch } from 'vue'
 import { useScreenshot } from './hooks/useScreenshot'
+
 type Snapshot = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['snapshots']>[0]
 type RelevantProject = NonNullable<ReturnType<typeof useStore>['projectStore']['data'][0]['relevantProjects']>[0]
 const bridge = inject('bridge') as Bridge
@@ -45,7 +44,7 @@ const state = reactive({
   isReadonly: computed(() => props.readonly),
   isSaving: false,
   isToolbarShow: false,
-  isDrawShow: false,
+  isDrawShow: false
 })
 
 watch(
@@ -311,7 +310,12 @@ onUnmounted(() => {
         <n-icon :component="MoreHoriz" :size="22" />
       </DpzButton>
     </div>
-    <CollapseButton v-if="lib !== LibraryEnum.COURSE" class="collapse-btn" @click="navMethods.handleToolbarCollapse" :isCollapse="state.isToolbarShow" />
+    <CollapseButton
+      v-if="lib !== LibraryEnum.COURSE"
+      class="collapse-btn"
+      @click="navMethods.handleToolbarCollapse"
+      :isCollapse="state.isToolbarShow"
+    />
   </div>
   <!-- 抽屉 -->
   <n-drawer v-if="bridge.habit" v-model:show="state.isDrawShow" :width="320" placement="right" :to="bridge.projectEl!" :disabled="state.isReadonly">
@@ -367,7 +371,7 @@ onUnmounted(() => {
           <n-descriptions label-style="white-space: nowrap;" label-placement="left" label-align="center" :column="1" :bordered="true" title="详情">
             <n-descriptions-item label="作者"> {{ data?.detial?.penname || '' }} </n-descriptions-item>
             <n-descriptions-item label="邮箱"> {{ data?.detial?.email || '' }} </n-descriptions-item>
-            <n-descriptions-item label="作者主页"> {{ data?.detial?.homepage || ''}} </n-descriptions-item>
+            <n-descriptions-item label="作者主页"> {{ data?.detial?.homepage || '' }} </n-descriptions-item>
             <n-descriptions-item label="创建时间"> {{ dayjs(data?.createAt).format('YYYY-MM-DD HH:mm:ss') }} </n-descriptions-item>
             <n-descriptions-item label="更新时间"> {{ dayjs(data?.updateAt).format('YYYY-MM-DD HH:mm:ss') }} </n-descriptions-item>
             <n-descriptions-item label="字数"> {{ data?.detial?.wordage || '' }} </n-descriptions-item>

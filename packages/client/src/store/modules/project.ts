@@ -442,6 +442,7 @@ export const useProjectStore = defineStore('projectStore', {
         const index = this.data.findIndex(i => i.id === params.id)
         const account = this.data[index].account
         const hostname = this.data[index].hostname
+        console.log('脏值检查', utils.isDiff(this.data[index].content, params.content))
         if (utils.isDiff(this.data[index].content, params.content)) {
           savingcb && savingcb()
           this.creatorApi(account, hostname).project

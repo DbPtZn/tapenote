@@ -59,6 +59,7 @@ export function useFragment(projectId: string, bridge: Bridge, checkAnimeState: 
 
   /** 右键菜单 */
   function handleContextmenu(e: MouseEvent, fragment?: Fragment) {
+    // console.log('handleContextmenu', fragment)
     player = bridge.editor?.get(Player)
     const project = projectStore.get(projectId)
     if (!project) return

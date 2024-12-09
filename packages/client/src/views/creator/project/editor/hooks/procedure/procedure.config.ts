@@ -82,7 +82,6 @@ export function getProcedureConfig(args: {
   account: string
   hostname: string
   dirname: string
-  memos: Memo[]
   content?: string
   projectEl: HTMLElement
   editorWrapperEl: HTMLElement
@@ -91,7 +90,7 @@ export function getProcedureConfig(args: {
   toolbarEl?: HTMLElement
   controllerEl?: HTMLElement
 }) {
-  const { account, hostname, editorWrapperEl, projectEl, editorEl, scrollerEl, toolbarEl, controllerEl, memos, content } = args
+  const { account, hostname, editorWrapperEl, projectEl, editorEl, scrollerEl, toolbarEl, controllerEl, content } = args
   editorEl.classList.add('anime-editor')
   const ResourceDomain = getResourceDomain(hostname)
   const config: EditorOptions = {

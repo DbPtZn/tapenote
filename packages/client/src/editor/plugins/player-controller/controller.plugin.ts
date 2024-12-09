@@ -1,11 +1,7 @@
-import { auditTime, merge, Subscription } from '@tanbo/stream'
-import { makeError, Selection, Plugin, Injector } from '@textbus/core'
-import _ from 'lodash'
-import { Tool } from './types'
+import { Plugin, Injector } from '@textbus/core'
 import ControllerView from './ControllerView.vue'
-import { App, createApp, h, VNode } from 'vue'
+import { App, createApp, h } from 'vue'
 import { UIConfig } from '../..'
-import { Player } from '../..'
 /**
  * 编辑器工具条
  */

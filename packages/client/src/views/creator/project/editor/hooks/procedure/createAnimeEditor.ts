@@ -1,7 +1,7 @@
-import { AddAnimeService, AnimeProvider, ColorProvider, DialogProvider, ImgToUrlService, MemoProvider, OutlineService, Player, Structurer, ThemeProvider } from '@/editor'
+import { AnimeProvider, ColorProvider, DialogProvider, ImgToUrlService, MemoProvider, OutlineService, Player, Structurer, ThemeProvider } from '@/editor'
 import useStore from '@/store'
 import { Editor, createEditor } from '@textbus/editor'
-import { Ref, ShallowRef, inject, onBeforeUnmount, onMounted, onUnmounted, watch } from 'vue'
+import { ShallowRef, inject, onBeforeUnmount, onMounted, watch } from 'vue'
 import { getProcedureConfig } from './procedure.config'
 import { useShell } from '@/renderer'
 import { CreatorShell } from '../../../../shell'
@@ -41,10 +41,8 @@ export function createAnimeEditor(args: {
       editor.get(Player).destory()
       editor.get(ImgToUrlService).destory()
       editor.get(MemoProvider).destroy()
-      // console.log('销毁依赖')
     } catch (error) {
-      console.error(error)
-      console.error('依赖销毁失败！')
+      console.error('依赖销毁失败！', error)
     }
   })
   
@@ -63,14 +61,16 @@ export function createAnimeEditor(args: {
               editorEl: editorRef.value!,
               scrollerEl: scrollerRef.value!,
               toolbarEl: toolbarRef.value!,
-              memos: project.memos,
+              controllerEl: controllerRef.value!,
               content: project.content,
               dirname: project.dirname
             }))
             editor.mount(editorRef.value!).then(() => {
               const themeProvider = editor?.get(ThemeProvider)
               themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
-              resolve({ editor, content: editor.getHTML() })
+              const htmlstr = editor.getHTML()
+              project.content = htmlstr // 确保一致性
+              resolve({ editor, content: htmlstr })
             })
           } catch (error) {
             console.log(error)
