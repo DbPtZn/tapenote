@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { VNode, inject, onBeforeMount, onMounted, onUnmounted, ref } from 'vue'
-import { useMessage } from 'naive-ui'
+import { MessageReactive, useMessage } from 'naive-ui'
 import { Injector, Keyboard, Subscription, auditTime, fromEvent } from '@textbus/core'
 import _ from 'lodash'
 import { useDraggable } from '@vueuse/core'
@@ -104,6 +104,7 @@ const playerSub: Subscription[] = []
 onMounted(() => {
   useScrollerPause()
   useKeyboard()
+  let msg: MessageReactive
   playerSub.push(
     player.onPlay.subscribe(() => {
       silderPosition.value = (player.currentTime / player.duration) * 100
@@ -127,6 +128,16 @@ onMounted(() => {
     }),
     player.onSubtitleUpdate.subscribe(() => {
       state.subtitle = player.subtitle
+    }),
+    player.onLoadingStateChange.subscribe(state => {
+      if(state.loading) {
+        msg = message.loading('正在加载动画数据...', { duration: 0 })
+        return
+      }
+      if(!state.loading) {
+        msg?.destroy()
+        if (state.error) message.error('加载动画音频数据失败！')
+      }
     })
   )
 })

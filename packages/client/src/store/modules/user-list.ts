@@ -1,4 +1,4 @@
-import { auth, creator } from '@/api'
+import { CreatorApi, auth, creator } from '@/api'
 import { Subject } from '@tanbo/stream'
 import _ from 'lodash'
 import { defineStore } from 'pinia'
@@ -28,6 +28,14 @@ export interface ShortcutConfig {
   key: string
 }
 
+// 用户配置与接口保持一致
+type UpdateUserConfigDto = Parameters<typeof CreatorApi.prototype.user.updateConfig>[0] 
+class UserConfig implements UpdateUserConfigDto {
+  autosave: boolean = true // 是否自动保存
+  saveInterval: number = 15000 // 自动保存间隔毫秒
+  autoLoadCourse: boolean = false // 是否自动加载 Course 数据
+}
+
 export interface Countor {
   date: string // 统计日期
   noteCount: number
@@ -55,10 +63,7 @@ export interface User {
     course: string
     procedure: string
   }
-  config: {
-    autosave: boolean // 是否自动保存
-    saveInterval: number // 自动保存间隔毫秒
-  }
+  config: UserConfig,
   submissionConfig: SubmissionConfig[]
   subscriptionConfig: SubscriptionConfig[]
   shortcutConfig: ShortcutConfig[]
@@ -257,7 +262,7 @@ export const useUserListStore = defineStore('userListStore', {
           wordCount: 0,
           storageCount: 0
         },
-        config: data.config || { autosave: true, saveInterval: 15000 },
+        config: data.config || new UserConfig(),
         submissionConfig: data.submissionConfig || [],
         subscriptionConfig: data.subscriptionConfig || [],
         shortcutConfig: data.shortcutConfig || []

@@ -313,11 +313,12 @@ export class UserService {
 
   async updateConfig(updateConfigDto: UpdateUserConfigDto, id: string) {
     try {
-      const { autosave, saveInterval } = updateConfigDto
+      const { autosave, saveInterval, autoLoadCourse } = updateConfigDto
       const user = await this.usersRepository.findOneBy({ id })
       user.config = {
-        autosave: autosave,
-        saveInterval: saveInterval
+        autosave: autosave === false ? false : true,
+        saveInterval: saveInterval < 5000 ? 5000 : saveInterval, // 自动保存最小间隔5秒
+        autoLoadCourse: autoLoadCourse || false
       }
       await this.usersRepository.save(user)
       return 'Update user config successful'

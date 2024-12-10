@@ -55,6 +55,7 @@ export class SubmissionConfig {
 export class UserConfig {
   autosave?: boolean // 是否自动保存
   saveInterval?: number // 自动保存间隔毫秒
+  autoLoadCourse?: boolean // 是否自动加载 course 数据
 }
 
 @Entity()

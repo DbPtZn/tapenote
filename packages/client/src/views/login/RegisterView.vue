@@ -29,6 +29,11 @@ const formRef = ref<FormInst | null>(null)
 const allowRegister = import.meta.env.VITE_VIEW_REGISTER === 'true'
 const message = useMessage()
 
+// 服务条款和隐私政策
+const terms = import.meta.env.VITE_TERMS_OF_SERVICE_URL || '#'
+const privacy = import.meta.env.VITE_PRIVACY_POLICY_URL || '#'
+const isAgree = ref(false)
+
 /** 表单数据 */
 const model = ref<ModelType>({
   hostname: import.meta.env.VITE_BASE_URL || '',
@@ -84,6 +89,7 @@ const { getRecaptcha } = useReCaptchaVerify()
 /** 提交注册 */
 function handleRegister(e: MouseEvent) {
   e.preventDefault()
+  if (!isAgree.value) return message.warning('请先同意服务条款和隐私政策')
   if (isQuerying.value) return message.loading('正在连接服务器...')
   if (!isHostValid.value) return message.error('服务器地址不可用！')
   formRef.value?.validate(async errors => {
@@ -203,7 +209,18 @@ function handleHostInputBlur() {
             </n-input>
           </n-form-item>
         </n-form>
+        <!-- 服务条款和隐私政策 -->
+        <div class="aggree">
+          <n-checkbox v-model:checked="isAgree" size="small">
+            <span>同意</span>
+            <span style="margin: 0 3px">笔记映画</span>
+            <a :href="terms" target="_blank">服务条款</a>
+            <span>和</span>
+            <a :href="privacy" target="_blank">隐私政策</a>
+          </n-checkbox>
+        </div>
         <n-button block class="confirm" @click="handleRegister">&nbsp;注册</n-button>
+        
         <div class="footer">
           <span>已有帐号？<a @click="handleToLogin">去登录</a></span>
         </div>
@@ -250,6 +267,18 @@ function handleHostInputBlur() {
     letter-spacing: 8px;
     border-radius: 10px;
     cursor: pointer;
+  }
+}
+.aggree {
+  display: flex;
+  justify-content: center;
+  :deep(.n-checkbox) {
+    margin: 0;
+    padding: 0;
+  }
+  a {
+    color: #999;
+    // margin: 0 5px;
   }
 }
 .footer {

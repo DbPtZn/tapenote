@@ -5,16 +5,14 @@ import type { DataTableColumns, FormInst, FormItemRule, FormRules, UploadFileInf
 import { Main, Header } from '@/components'
 import useStore from '@/store'
 import { onMounted } from 'vue'
-interface ModelType {
-  autosave: boolean 
-  saveInterval: number
-}
+type UserConfig = ReturnType<typeof useStore>['userStore']['config']
 const message = useMessage()
 const { userStore } = useStore()
 /** 表单数据 */
-const model = ref<ModelType>({
+const model = ref<UserConfig>({
   autosave: userStore.config.autosave, 
-  saveInterval: userStore.config.saveInterval
+  saveInterval: userStore.config.saveInterval,
+  autoLoadCourse: userStore.config.autoLoadCourse
 })
 /** 表单规则 */
 const rules: FormRules = {
@@ -49,11 +47,14 @@ function handleSubmit(e: MouseEvent) {
           <n-switch v-model:value="model.autosave" />
         </n-form-item>
         <n-form-item path="saveInterval" label="保存间隔">
-          <n-input-number v-model:value="model.saveInterval" :precision="0" :min="1000" :max="100000" :step="1000">
+          <n-input-number v-model:value="model.saveInterval" :precision="0" :min="5000" :max="100000" :step="1000">
             <template #suffix>
               ms
             </template>
           </n-input-number>
+        </n-form-item>
+        <n-form-item path="autoload" label="打开动画项目时自动加载数据（关闭该功能的情况下会在播放启动时加载）">
+          <n-switch v-model:value="model.autoLoadCourse" />
         </n-form-item>
       </n-form>
       <n-space :justify="'end'">

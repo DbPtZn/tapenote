@@ -42,6 +42,8 @@ export class Player {
 
   onParseDataLoaded = new Subject<ParseData[]>()
 
+  onLoadingStateChange = new Subject<{ loading: boolean, error?: any }>()  // 数据载入状态变更时 true 正在载入 false 载入完成
+
   onStateUpdate = new Subject()
 
   onSubtitleUpdate = new Subject()
@@ -146,9 +148,15 @@ export class Player {
     this.injector = injector
   }
 
-  loadData(data: CourseData[]) {
-    // 对载入的数据进行深拷贝（数据可能在过程中发生修改, 不可以使用源数据（具体到本项目中，源数据可能是 pinia 中管理的，直接使用源数据会把数据中的数组直接引用进来）
+  // 仅预装填数据（不会自动加载音频和解析数据）
+  preLoadData(data: CourseData[]) {
     this._sourceData = JSON.parse(JSON.stringify(data))
+  }
+
+  loadData(data: CourseData[]) {
+    this.onLoadingStateChange.next({ loading: true })
+    // 对载入的数据进行深拷贝（数据可能在过程中发生修改, 不可以使用源数据（具体到本项目中，源数据可能是 pinia 中管理的，直接使用源数据会把数据中的数组直接引用进来）
+    this._sourceData.length === 0 && (this._sourceData = JSON.parse(JSON.stringify(data)))
     this.onSourceDataLoaded.next(this._sourceData)
     return new Promise<ParseData[]>((resolve, reject) => {
       // 导入音频数据（在 preview 模式下是多个音频片段）
@@ -174,10 +182,12 @@ export class Player {
           })
           this._isLoaded = true
           this.onParseDataLoaded.next(this._data)
+          this.onLoadingStateChange.next({ loading: false })
           resolve(this._data)
         })
         .catch(error => {
-          console.error('音频文件加载失败2：', error)
+          console.error('音频数据加载失败：', error)
+          this.onLoadingStateChange.next({ loading: false, error })
           reject(error)
         })
     })
@@ -333,7 +343,11 @@ export class Player {
 
   /** 启动播放 */
   @UpdateState
-  start(isInitScrollTop = true) {
+  async start(isInitScrollTop = true) {
+    if(!this._isLoaded) {
+      console.log('数据未加载，开始加载数据')
+      await this.loadData(this.sourceData)
+    }
     // console.log('开始播放')
     this.hideIgnoreComponent()
     this.init(isInitScrollTop)

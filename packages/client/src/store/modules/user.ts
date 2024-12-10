@@ -38,7 +38,8 @@ export const useUserStore = defineStore('userStore', {
       },
       config: {
         autosave: true,
-        saveInterval: 15000
+        saveInterval: 15000,
+        autoLoadCourse: false
       },
       submissionConfig: [],
       subscriptionConfig: [],

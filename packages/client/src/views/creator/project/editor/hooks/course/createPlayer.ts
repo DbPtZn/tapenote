@@ -17,7 +17,7 @@ export function createPlayer(args: {
   controllerRef: Readonly<ShallowRef<HTMLElement | null>>
 }) {
   const { id, account, hostname, editorWrapperRef, editorRef, scrollerRef, controllerRef } = args
-  const { projectStore, settingStore } = useStore()
+  const { projectStore, settingStore, userStore } = useStore()
   const bridge = inject('bridge') as Bridge
   const shell = useShell<CreatorShell>()
   let editor: Editor
@@ -49,6 +49,7 @@ export function createPlayer(args: {
       projectStore
         .fetchAndSet(id, account, hostname)
         .then(project => {
+         
           const courseData: CourseData = {
             audio: project.audio,
             duration: project.duration,
@@ -57,7 +58,13 @@ export function createPlayer(args: {
             subtitleSequence: project.subtitleSequence,
             subtitleKeyframeSequence: project.subtitleKeyframeSequence
           }
-          // console.log(courseData)
+
+          // 音频换源 (检查浏览器是否支持 ogg 格式)
+          const aud = new Audio()
+          const result = aud.canPlayType('audio/ogg')
+          if (result === '') courseData.audio = courseData.audio.replace('.ogg', '.mp3')
+          aud.remove()
+
           const content = project.content
           try {
             editor = createEditor(
@@ -74,8 +81,9 @@ export function createPlayer(args: {
               const themeProvider = editor?.get(ThemeProvider)
               themeProvider?.handleThemeUpdate(settingStore.getCurrentTheme())
               /** 载入微课数据 */
+              const isAutoLoad = !!userStore.config?.autoLoadCourse
               const player = editor?.get(Player)
-              player.loadData([courseData])
+              isAutoLoad ? player.loadData([courseData]) : player.preLoadData([courseData])
               resolve({ editor, content: editor.getHTML() })
             })
           } catch (error) {

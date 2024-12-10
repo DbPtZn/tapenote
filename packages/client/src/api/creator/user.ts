@@ -23,6 +23,7 @@ interface UpdateUserPwdDto {
 interface UpdateUserConfigDto {
   autosave: boolean
   saveInterval: number
+  autoLoadCourse: boolean
 }
 
 
